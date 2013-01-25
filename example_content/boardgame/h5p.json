@@ -1,0 +1,18 @@
+{
+  "title": "Biologi-spillet",
+  "contentType": "Game",
+  "utilization": "Lær om biologi",
+  "language": "nb",
+  "author": "Amendor AS",
+  "license": "cc-by-sa",
+  "preloadedDependencies": [
+    {"machineName": "H5P.Boardgame", "majorVersion": 1, "minorVersion": 0},
+    {"machineName": "H5P.QuestionSet", "majorVersion": 1, "minorVersion": 0},
+    {"machineName": "H5P.MultiChoice", "majorVersion": 1, "minorVersion": 0},
+    {"machineName": "EmbeddedJS", "majorVersion": 1, "minorVersion": 0}
+  ],
+  "init": "H5P.Boardgame",
+  "embedTypes": ["div", "iframe"],
+  "w": 635,
+  "h": 500
+}
