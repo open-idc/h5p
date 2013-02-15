@@ -1,0 +1,9 @@
+; @file
+;  h5peditor.info ini file
+;  Contains general information about the h5peditor Drupal module.
+name = h5peditor
+description = "Enables users to create and modify HTML5 packages."
+core = 6.x
+
+dependencies[] = autoload
+dependencies[] = h5p

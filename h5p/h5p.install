@@ -27,8 +27,8 @@ function h5p_schema() {
   $schema['h5p_library_index'] = array( // TODO: Table names are usally in plural form to best describe their content. Also calling a table index is asking for confusion and trouble in SQL. A many to many relation table should have a name that reflects the tables it join together, example: http://guides.rubyonrails.org/images/habtm.png
     'description' => 'Stores information about what h5p uses what libraries.',
     'fields' => array(
-      'vid' => array(
-        'description' => 'Primary Key: The {node}.vid of the h5p node.',
+      'content_id' => array(
+        'description' => 'Primary Key: The unique identifier for a node(vid by default).',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -48,7 +48,7 @@ function h5p_schema() {
         'default' => 1,
       ),
     ),
-    'primary key' => array('vid', 'library_id'),
+    'primary key' => array('content_id', 'library_id'),
   );
 
   $schema['h5p_library'] = array( // TODO: h5p_libraries
@@ -100,13 +100,6 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
-      'init' => array(
-        'description' => 'The init function for this library',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
       'embed_types' => array(
         'description' => 'The allowed embed types for this library as a comma separated list',
         'type' => 'varchar',
@@ -121,6 +114,11 @@ function h5p_schema() {
       'preloaded_css' => array(
         'description' => 'The preloaded css for this library as a comma separated list',
         'type' => 'text',
+      ),
+      'semantics' => array(
+        'description' => 'The semantics definition in json format',
+        'type' => 'text',
+        'not null' => TRUE,
       ),
     ),
     'primary key' => array('library_id'),
@@ -154,13 +152,11 @@ function h5p_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'preloaded' => array(
-        'description' => '0 if the dependency is dynamic, 1 if this is a preloaded dependency',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
+      'dependency_type' => array(
+        'description' => 'preloaded, dynamic, or editor',
+        'type' => 'varchar',
+        'length' => 255,
         'not null' => TRUE,
-        'default' => 1,
       ),
     ),
     'primary key' => array('library_id', 'machine_name'),
@@ -169,8 +165,8 @@ function h5p_schema() {
   $schema['h5p_node'] = array(
     'description' => 'Stores information about where the h5p content is stored.',
     'fields' => array(
-      'vid' => array(
-        'description' => 'Primary Key: The {node}.vid of the h5p node.',
+      'content_id' => array(
+        'description' => 'Primary Key: The unique identifier for this node(vid by default).',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -193,15 +189,15 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'init' => array(
-        'description' => 'The init function for this package',
+      'main_library' => array(
+        'description' => 'The library we first instanciate for this node',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
     ),
-    'primary key' => array('vid'),
+    'primary key' => array('content_id'),
   );
   return $schema;
 }
@@ -213,6 +209,7 @@ function h5p_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'runtime') {
+    // TODO: Add check for zip library
     // File paths
     $h5p_path = file_create_path(file_directory_path() .'/'. variable_get('h5p_default_path', 'h5p'));
     $temp_path = $h5p_path . '/temp';

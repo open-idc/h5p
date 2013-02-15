@@ -1,0 +1,242 @@
+@import "compass/css3/border-radius";
+@import "compass/css3/box-shadow";
+@import "compass/css3/transition";
+
+.h5peditor {
+  font-size: 16px;
+  @include transition(all 0.2s ease-in);
+  
+  .field {
+    margin: 16px 0;
+    padding: 0;
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+  .errors p {
+    margin: 0 0 4px 0;
+    color: #f00;
+  }
+  label {
+    display: block;
+    font-weight: bold; 
+    font-size: 14px;
+    .label {
+      display: block;  
+    }
+  }
+  textarea, input[type="text"] {
+    width: 90%;  
+    padding: 4px 8px;
+    font-size: 16px;
+    border: 1px solid #a0a0a0;
+    background: #f9f9f9;
+    outline: none;
+    @include border-radius(8px);
+  }
+  select {
+    padding: 2px;
+  }
+  a:focus {
+    outline: none;
+    @include box-shadow(0 0 8px 2px #7fb8ff);
+  }
+  textarea:focus, input[type="text"]:focus {
+    outline: none;
+    background: #fff;
+    border-color: #53a0ff;
+    @include box-shadow(0 0 8px 0 #7fb8ff);
+  }
+  iframe {
+    width: 100%;
+    height: 0;
+    border: 0;
+    overflow: hidden;
+  }
+  ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    
+    li {
+      padding: 0 8px;
+      margin: 8px 0;
+      list-style: none;
+      background: #d5e9ff;
+      overflow: hidden;
+      @include border-radius(8px);
+      
+      & > .content {
+        margin-right: 24px;
+      }
+      & > .remove {
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        margin: 8px 0 0;
+        float: right;
+        background: inline-image("remove.png") no-repeat;
+        border: 1px solid #fff;
+        opacity: 0.8;
+          
+        &:hover {
+          opacity: 1;  
+        }
+        &:focus {
+          @include box-shadow(0 0 8px 2px #cb3535);
+        }
+      }
+      &:hover {
+        background: #c0deff;
+      }
+    }
+  }
+  .content > .field {
+    margin: 8px 0;
+  }
+  .group {
+    margin: 16px 0;
+    border: 1px solid #676767;
+    background: #d5e9ff;
+      
+    @include border-radius(8px);
+    @include box-shadow(0 0 4px #a7a7a7);
+    
+    & > .title {
+      padding: 4px 8px;
+      overflow: hidden;
+        
+      &:first-letter {
+        text-transform: uppercase;
+      }
+      .expand {
+        cursor: pointer;
+        float: left;
+        width: 13px;
+        height: 13px;
+        margin: 3px 0 0;
+        background: inline-image("expand.png") no-repeat;
+        opacity: 0.8;
+        @include transition(all 0.2s ease-in);
+          
+        &:hover {
+          opacity: 1;  
+        }
+      }
+      .text {
+        overflow: hidden;
+        padding: 0 8px;
+      }
+    }
+    & > .content {
+      display: none;
+    }
+    li {
+      background: #ebfffa;
+      &:hover {
+        background: #ccfff2;
+      }
+      .group {
+        background: #ebfffa;
+        li {
+          background: #feedff;
+          &:hover {
+            background: #fbd1ff;
+          }
+          .group {
+            background: #feedff;
+          }
+        }
+        .group {
+          background: #feedff;
+        }
+      }
+    }
+    .group {
+      background: #ebfffa;
+    }
+  }
+  .expanded {
+    & > .title {
+      border-bottom: 1px solid #676767;
+      
+      .expand {
+        background-image: inline-image("collapse.png");
+      }
+    }
+    & > .content {
+      padding: 4px 8px;
+      display: block;
+    }
+  }
+  input[type="button"] {
+    width: auto;
+    margin: 0;
+    padding: 4px 8px;
+  }
+  .dimensions input, .coordinates input {
+    width: 75px;  
+  }
+  .file {
+    position: relative;
+    
+    .thumbnail {
+      display: inline-block;
+      margin: 10px;
+      @include box-shadow(0 0 16px 0 #666666);
+      border: 1px solid #fff;
+      cursor: pointer;
+      
+      &:focus {
+        @include box-shadow(0 0 16px 2px #7fb8ff);
+      }
+    }
+    .add {
+      display: block;
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      background: inline-image("add.png");  
+    }
+    .remove {
+      display: block;
+      width: 14px;
+      height: 14px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      cursor: pointer;
+      border: 1px solid #fff;
+      background: inline-image("remove.png");  
+      
+      &:focus {
+        @include box-shadow(0 0 8px 2px #cb3535);
+      }
+    }
+    img {
+      vertical-align: bottom;  
+    }
+  }
+  .libwrap {
+    margin-top: 16px;  
+  }
+  input[type="checkbox"] {
+    margin: 4px 4px 4px 0;
+    vertical-align: bottom;
+  }
+}
+
+.h5peditor-form {
+  margin: 8px 0;
+  background: #e5f1ff;
+  padding: 8px;
+  @include border-radius(8px);
+}
+
+#h5peditor-uploader {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  top: -1px;
+  border: 0;
+}

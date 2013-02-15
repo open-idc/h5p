@@ -91,7 +91,7 @@ interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonl
   public function storeLibraryData(&$libraryData);
   
   /**
-   * Ask the framework to store contentData
+   * Stores contentData
    * 
    * @param int $contentId
    *  Framework specific id identifying the content
@@ -103,9 +103,52 @@ interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonl
    *  Any contentMainId defined by the framework, for instance to support revisioning
    */
   public function storeContentData($contentId, $contentJson, $mainJsonData, $contentMainId = NULL);
+
+  /**
+   * Copies content data
+   *
+   * @param int $contentId
+   *  Framework specific id identifying the content
+   * @param int $copyFromId
+   *  Framework specific id identifying the content to be copied
+   * @param int $contentMainId
+   *  Framework specific main id for the content, typically used in frameworks
+   *  That supports versioning. (In this case the content id will typically be
+   *  the version id, and the contentMainId will be the frameworks content id
+   */
   public function copyContentData($contentId, $copyFromId, $contentMainId = NULL);
+
+  /**
+   * Deletes content data
+   *
+   * @param int $contentId
+   *  Framework specific id identifying the content
+   */
   public function deleteContentData($contentId);
+
+  /**
+   * Saves what libraries the content uses
+   *
+   * @param int $contentId
+   *  Framework specific id identifying the content
+   * @param array $librariesInUse
+   *  List of libraries the content uses. Libraries consist of arrays with:
+   *   - libraryId stored in $librariesInUse[<place>]['library']['libraryId']
+   *   - libraryId stored in $librariesInUse[<place>]['preloaded']
+   */
   public function saveLibraryUsage($contentId, $librariesInUse);
+
+
+  /**
+   * Loads a library
+   *
+   * @param string $machineName
+   * @param int $majorVersion
+   * @param int $minorVersion
+   * @return array|FALSE
+   *  Array representing the library with dependency descriptions
+   *  FALSE if the library doesn't exist
+   */
   public function loadLibrary($machineName, $majorVersion, $minorVersion);
 }
 
@@ -122,7 +165,7 @@ class h5pValidator {
       'majorVersion' => '/^[0-9]{1,5}$/',
       'minorVersion' => '/^[0-9]{1,5}$/',
     ),
-    // 'init' => '/^[$a-z_][0-9a-z_\.$]{1,254}$/i',
+    'mainLibrary' => '/^[$a-z_][0-9a-z_\.$]{1,254}$/i',
     'embedTypes' => array('iframe', 'div'),
   );
 
@@ -160,7 +203,6 @@ class h5pValidator {
   );
 
   private $libraryOptional  = array(
-    // 'init' => '/^[$a-z_][0-9a-z_\.$]{1,254}$/i',
     'author' => '/^.{1,255}$/',
     'license' => '/^(cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT)$/',
     'description' => '/^.{1,}$/',
@@ -170,6 +212,11 @@ class h5pValidator {
       'minorVersion' => '/^[0-9]{1,5}$/',
     ),
     'preloadedDependencies' => array(
+      'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
+      'majorVersion' => '/^[0-9]{1,5}$/',
+      'minorVersion' => '/^[0-9]{1,5}$/',
+    ),
+    'editorDependencies' => array(
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
       'majorVersion' => '/^[0-9]{1,5}$/',
       'minorVersion' => '/^[0-9]{1,5}$/',
@@ -299,6 +346,20 @@ class h5pValidator {
           $valid = FALSE;
           continue;
         }
+
+        // validate json if a semantics file is provided
+        $semanticsPath = $file_path . DIRECTORY_SEPARATOR . 'semantics.json';
+        if (file_exists($semanticsPath)) {
+          $semantics = $this->getJsonData($semanticsPath, TRUE);
+          if ($semantics === FALSE) {
+            $this->h5pF->setErrorMessage($this->h5pF->t('Invalid semantics.json file has been included in the library %name', array('%name' => $file)));
+            $valid = FALSE;
+            continue;
+          }
+          else {
+            $h5pData['semantics'] = $semantics;
+          }
+        }
         
         $validLibrary = $this->isValidH5pData($h5pData, $file, $this->libraryRequired, $this->libraryOptional);
 
@@ -359,6 +420,9 @@ class h5pValidator {
       }
       if (isset($library['dynamicDependencies'])) {
         array_merge($missing, $this->getMissingDependencies($library['dynamicDependencies'], $libraries));
+      }
+      if (isset($library['editorDependencies'])) {
+        array_merge($missing, $this->getMissingDependencies($library['editorDependencies'], $libraries));
       }
     }
     return $missing;
@@ -546,7 +610,7 @@ class h5pValidator {
     return $valid;
   }
 
-  private function getJsonData($file_path) {
+  private function getJsonData($file_path, $return_as_string = FALSE) {
     $json = file_get_contents($file_path);
     if (!$json) {
       return FALSE;
@@ -555,7 +619,7 @@ class h5pValidator {
     if (!$jsonData) {
       return FALSE;
     }
-    return $jsonData;
+    return $return_as_string ? $json : $jsonData;
   }
 
   private function arrayCopy(array $array) {
@@ -718,10 +782,10 @@ class h5pCore {
     while (false !== ($file = readdir($dir))) {
         if (($file != '.') && ($file != '..')) {
             if (is_dir($source . '/' . $file)) {
-              copyTree($source . '/' . $file, $destination . '/' . $file);
+              $this->copyTree($source . '/' . $file, $destination . '/' . $file);
             }
             else {
-                copy($source . '/' . $file,$destination . '/' . $file);
+              copy($source . '/' . $file,$destination . '/' . $file);
             }
         }
     }

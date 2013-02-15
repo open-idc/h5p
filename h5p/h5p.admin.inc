@@ -10,6 +10,18 @@ function h5p_admin_settings() {
     '#description' => t('Subdirectory in the directory %dir where files will be stored. Do not include trailing slash.', array('%dir' => file_directory_path())),
   );
 
+  $h5p_nodes_exists = db_result(db_query(
+    "SELECT 1 FROM {node} WHERE type = 'h5p_content'"
+  ));
+
+  $form['h5p_revisioning'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Save content files for each revision'),
+    '#default_value' => variable_get('h5p_revisioning', '1'),
+    '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
+    '#disabled' => $h5p_nodes_exists,
+  );
+
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().
   $form['#submit'][] = 'h5p_admin_settings_submit';
