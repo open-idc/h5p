@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ *  h5peditor.install php file
+ *  Install and upgrade instructions for the h5pedtior Drupal module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function h5peditor_install() {
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function h5peditor_uninstall() {
+}
