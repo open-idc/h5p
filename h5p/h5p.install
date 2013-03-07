@@ -24,7 +24,7 @@ function h5p_uninstall() {
  * Implementation of hook_schema().
  */
 function h5p_schema() {
-  $schema['h5p_library_index'] = array( // TODO: Table names are usally in plural form to best describe their content. Also calling a table index is asking for confusion and trouble in SQL. A many to many relation table should have a name that reflects the tables it join together, example: http://guides.rubyonrails.org/images/habtm.png
+  $schema['h5p_nodes_libraries'] = array(
     'description' => 'Stores information about what h5p uses what libraries.',
     'fields' => array(
       'content_id' => array(
@@ -47,21 +47,29 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
+      'drop_css' => array(
+        'description' => '1 if this node does not want the library css included',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'primary key' => array('content_id', 'library_id'),
   );
 
-  $schema['h5p_library'] = array( // TODO: h5p_libraries
+  $schema['h5p_libraries'] = array(
     'description' => 'Stores information about what h5p uses what libraries.',
     'fields' => array(
-      'library_id' => array( // TODO: Primary identifiers are usally named just id so you can use $library->id, if it isn't you do not know what the primary identifier of an object is without going through the database schema(it could be lid, libid, etc. you don't know).
+      'library_id' => array(
         'description' => 'Primary Key: The id of the library.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'machine_name' => array(
-        'description' => 'The libraries machine name',
+        'description' => 'The library machine name',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -115,6 +123,10 @@ function h5p_schema() {
         'description' => 'The preloaded css for this library as a comma separated list',
         'type' => 'text',
       ),
+      'drop_library_css' => array(
+        'description' => 'List of libraries that should not have CSS included if this library is used. Comma separated list.',
+        'type' => 'text',
+      ),
       'semantics' => array(
         'description' => 'The semantics definition in json format',
         'type' => 'text',
@@ -124,7 +136,7 @@ function h5p_schema() {
     'primary key' => array('library_id'),
   );
   
-  $schema['h5p_library_dependency_index'] = array(
+  $schema['h5p_libraries_libraries'] = array(
     'description' => 'Stores information about library dependencies.',
     'fields' => array(
       'library_id' => array(
@@ -133,21 +145,8 @@ function h5p_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'machine_name' => array(
-        'description' => 'The libraries machine name',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'major_version' => array(
-        'description' => 'Major version of the library this library depends on.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'minor_version' => array(
-        'description' => 'Minor version of the library this library depends on.',
+      'required_library_id' => array(
+        'description' => 'Primary Key: The id of a h5p library.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -159,10 +158,10 @@ function h5p_schema() {
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('library_id', 'machine_name'),
+    'primary key' => array('library_id', 'required_library_id'),
   );
   
-  $schema['h5p_node'] = array(
+  $schema['h5p_nodes'] = array(
     'description' => 'Stores information about where the h5p content is stored.',
     'fields' => array(
       'content_id' => array(
@@ -189,12 +188,12 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'main_library' => array(
+      'main_library_id' => array(
         'description' => 'The library we first instanciate for this node',
-        'type' => 'varchar',
-        'length' => 255,
+        'description' => 'Primary Key: The id of a h5p library.',
+        'type' => 'int',
+        'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => '',
       ),
     ),
     'primary key' => array('content_id'),
@@ -224,7 +223,7 @@ function h5p_requirements($phase) {
       $requirements['h5p_dirs'] = array(
         'value' => t('Missing temp directory.'),
         'severity' => REQUIREMENT_ERROR,
-        'description' => t("The h5p module's temp directory %temp_dir is missing.", array('%temp_dir' => $temp_path)), // TODO: misleading variable name: %temp_dir - note that it isn't the directory it self, it's the _path_ to the directory.
+        'description' => t("The h5p module's temp directory %temp_path is missing.", array('%temp_path' => $temp_path)),
       );
     }
     else {

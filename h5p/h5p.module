@@ -43,7 +43,6 @@ function h5p_node_info() {
  * Implementation of hook_perm().
  */
 function h5p_perm() {
-  // TODO: Note that it isn't normal to split permissions for editing and deleting content.
   return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p');
 } 
 
@@ -106,9 +105,9 @@ function h5p_form(&$node, $form_state) {
     '#default_value' => isset($node->json_content) ? $node->json_content : ''
   );
 
-  $form['main_library'] = array(
+  $form['main_library_id'] = array(
     '#type' => 'value',
-    '#default_value' => isset($node->main_library) ? $node->main_library : ''
+    '#default_value' => isset($node->main_library_id) ? $node->main_library_id : ''
   );
 
   $form['embed_type'] = array(
@@ -125,7 +124,7 @@ function h5p_form(&$node, $form_state) {
 function h5p_form_validate($form, &$form_state) {
   // Avoid blocking node deletion with missing files.
   if ($form_state['values']['op'] == t('Delete')) {
-    return; // TODO: Move #validate to submit button?
+    return;
   }
 
   $validators = array(
@@ -133,10 +132,10 @@ function h5p_form_validate($form, &$form_state) {
   );
   // New uploads need to be saved in temp in order to be viewable
   // during node preview.
-  $temporary_file_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-')); // TODO: Use DIRECTORY_SEPARATOR and tmp instead of temp (temp is short for temperature hence /tmp on unix systems).
+  $temporary_file_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-'));
   if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
     // We're good to go.
-    $form_state['values']["new_h5p"] = TRUE; // TODO: Use single quotas, double quotas are usally reserved for JSON, HTML, etc.
+    $form_state['values']['new_h5p'] = TRUE;
     $_SESSION['h5p_upload'] = $form_state['values']['h5p'] = $file->filepath;
     $_SESSION['h5p_upload_folder'] = $temporary_file_path;
   }
@@ -164,15 +163,15 @@ function h5p_validate($node, &$form) {
 function h5p_insert($node) {
   // @todo: Make sure node_load -> node_save works by implementing presave
   if (isset($_SESSION['h5p_upload'])) {
-    $h5p_core = _h5p_get_instance('saver');
+    $h5p_core = _h5p_get_instance('storage');
     $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
   }
   else {
     db_query(
-      "INSERT INTO {h5p_node}
-      (content_id, nid, json_content, embed_type, main_library)
-      VALUES (%d, %d, '%s', '%s', '%s')",
-      h5p_get_content_id($node), $node->nid, $node->json_content, $node->embed_type, $node->main_library
+      "INSERT INTO {h5p_nodes}
+      (content_id, nid, json_content, embed_type, main_library_id)
+      VALUES (%d, %d, '%s', '%s', %d)",
+      h5p_get_content_id($node), $node->nid, $node->json_content, $node->embed_type, $node->main_library_id
     );
   }
 }
@@ -186,20 +185,21 @@ function h5p_update($node) {
       h5p_insert($node);
     }
     else {
-      $h5p_core = _h5p_get_instance('saver');
+      $h5p_core = _h5p_get_instance('storage');
       $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
     }
   }
   elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
-    $h5p_core = _h5p_get_instance('saver');
+    $h5p_core = _h5p_get_instance('storage');
     $h5p_core->copyPackage($node->vid, $node->old_vid, $node->nid);
+    h5p_insert($node);
   }
   else {
     db_query(
-      "UPDATE {h5p_node}
-      SET json_content = '%s', embed_type = '%s', main_library = '%s'
+      "UPDATE {h5p_nodes}
+      SET json_content = '%s', embed_type = '%s', main_library_id = '%d'
       WHERE content_id = %d",
-      $node->json_content, $node->embed_type, $node->main_library, h5p_get_content_id($node)
+      $node->json_content, $node->embed_type, $node->main_library_id, h5p_get_content_id($node)
     );
   }
 }
@@ -208,9 +208,9 @@ function h5p_update($node) {
  * Implementation of hook_delete().
  */
 function h5p_delete($node) {
-  $h5p_core = _h5p_get_instance('saver');
+  $h5p_core = _h5p_get_instance('storage');
   
-  $res = db_query("SELECT content_id FROM {h5p_node} WHERE nid = %d", $node->nid);
+  $res = db_query("SELECT content_id FROM {h5p_nodes} WHERE nid = %d", $node->nid);
   while ($content_id = db_result($res)) {
     $h5p_core->deletePackage($content_id);
   }
@@ -221,10 +221,18 @@ function h5p_delete($node) {
  */
 function h5p_load($node) {
   $h5p = db_fetch_object(db_query(
-    "SELECT json_content, embed_type, main_library
-    FROM {h5p_node}
+    "SELECT hn.json_content, hn.embed_type, hn.main_library_id, hl.machine_name, hl.major_version, hl.minor_version
+    FROM {h5p_nodes} hn
+    JOIN {h5p_libraries} hl ON hn.main_library_id = hl.library_id
     WHERE content_id = %d", h5p_get_content_id($node)
   ));
+  $h5p->main_library = array(
+    'libraryId' => $h5p->main_library_id,
+    'machineName' => $h5p->machine_name,
+    'majorVersion' => $h5p->major_version,
+    'minorVersion' => $h5p->minor_version
+  );
+  unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version);
   return $h5p;
 }
 
@@ -234,31 +242,31 @@ function h5p_load($node) {
  * @param object $node
  *  The node we want to fetch filepaths for
  * @return array
- *  A 3 dimensional array holding the filepaths to all css and js files that
+ *  A 2 dimensional array holding the filepaths to all css and js files that
  *  needs to be added to the page for this node
  */
 function h5p_get_file_paths($node) {
   $result = db_query(
-    "SELECT hl.library_id, preloaded_css, preloaded_js
-    FROM {h5p_library_index} hli
-    JOIN {h5p_library} hl ON hli.library_id = hl.library_id
-    WHERE hli.content_id = %d
-    AND hli.preloaded = 1", h5p_get_content_id($node)
+    "SELECT hl.library_id, preloaded_css, preloaded_js, hnl.drop_css
+    FROM {h5p_nodes_libraries} hnl
+    JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
+    WHERE hnl.content_id = %d
+    AND hnl.preloaded = 1", h5p_get_content_id($node)
   );
   $to_return = array(
     'preloadedJs' => array(),
     'preloadedCss' => array(),
   );
   $h5p_path = _h5p_get_h5p_path();
-  while ($paths = db_fetch_array($result)) {
-    if (!empty($paths['preloaded_js'])) {
-      foreach (explode(',', $paths['preloaded_js']) as $value) {
-        $to_return['preloadedJs'][] = $h5p_path . '/libraries/' . $paths['library_id'] . '/' . trim($value);
+  while ($library_data = db_fetch_array($result)) {
+    if (!empty($library_data['preloaded_js'])) {
+      foreach (explode(',', $library_data['preloaded_js']) as $value) {
+        $to_return['preloadedJs'][] = $h5p_path . '/libraries/' . $library_data['library_id'] . '/' . trim($value);
       }
     }
-    if (!empty($paths['preloaded_css'])) {
-      foreach (explode(',', $paths['preloaded_css']) as $value) {
-        $to_return['preloadedCss'][] = $h5p_path . '/libraries/' . $paths['library_id'] . '/' . $paths['preloaded_css'];
+    if (!empty($library_data['preloaded_css']) && $library_data['drop_css'] != 1) {
+      foreach (explode(',', $library_data['preloaded_css']) as $value) {
+        $to_return['preloadedCss'][] = $h5p_path . '/libraries/' . $library_data['library_id'] . '/' . trim($value);
       }
     }
   }
@@ -270,7 +278,6 @@ function h5p_get_file_paths($node) {
  */
 function h5p_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
-
   if (!$teaser) {
     $file_paths = h5p_get_file_paths($node);
 
@@ -282,7 +289,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
     }
     $settings = array(
       'h5p' => array(
-        'mainLibrary' => $node->main_library,
+        'mainLibrary' => $node->main_library['machineName'],
         'jsonContent' => array(
           h5p_get_content_id($node) => $node->json_content,
         ),
@@ -295,7 +302,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
     drupal_add_js(drupal_get_path('module', 'h5p') . '/library/js/flowplayer-3.2.12.min.js');
     drupal_add_js(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js');
     $node->content['h5p'] = array(
-      '#value' => '<div class="h5p-content" data-class="' . $node->main_library . '" data-content-id="' . h5p_get_content_id($node) . '"></div>',
+      '#value' => '<div class="h5p-content" data-class="' . $node->main_library['machineName'] . '" data-content-id="' . h5p_get_content_id($node) . '"></div>',
       '#weight' => 1,
     );
   }
@@ -311,7 +318,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
  */
 function _h5p_check_settings() {
   // File paths
-  $path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p')); // TODO: DIRECTORY_SEPARATOR ?
+  $path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p'));
   
   // Save these as variables so that they may be passed as references
   $temp_path = $path . '/temp';
@@ -351,12 +358,12 @@ function _h5p_maintain_session_variables() {
  * This function stores the h5p core in a static variable so that the variables there will
  * be kept between validating and saving the node for instance
  *
- * @staticvar h5pDrupal $interface
+ * @staticvar H5PDrupal $interface
  *  The interface between the H5P library and drupal
- * @staticvar h5pCore $core
+ * @staticvar H5PCore $core
  *  Core functions and storage in the h5p library
  * @param string $type
- *  Specifies the instance to be returned; validator, saver og interface
+ *  Specifies the instance to be returned; validator, storage og interface
  * @return object
  *  The instance og h5p specified by type
  */
@@ -367,15 +374,15 @@ function _h5p_get_instance($type) {
     $path = drupal_get_path('module', 'h5p');
     require_once $path . '/library/h5p.classes.php';
     require_once $path . '/h5p.classes.inc';
-    $interface = new h5pDrupal();
-    $core = new h5pCore($interface);
+    $interface = new H5PDrupal();
+    $core = new H5PCore($interface);
   }
   
   switch ($type) {
     case 'validator':
-      return new h5pValidator($interface, $core);
-    case 'saver':
-      return new h5pSaver($interface, $core);
+      return new H5PValidator($interface, $core);
+    case 'storage':
+      return new H5PStorage($interface, $core);
     case 'interface':
       return $interface;
   }

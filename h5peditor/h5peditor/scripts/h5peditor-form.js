@@ -1,33 +1,47 @@
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
 /**
  * Construct a form from library semantics.
  */
-function H5peditorForm() {
+ns.Form = function () {
   this.params = {};
   this.readies = [];
-  this.$form = H5peditor.$('<div class="h5peditor-form"></div>');
-}
+  this.commonFields = {};
+  this.$form = ns.$('<div class="h5peditor-form"><div class="tree"></div><div class="common"></div></div>');
+  this.$common = this.$form.children('.common');
+  this.library = '';
+};
 
 /**
  * Replace the given element with our form.
+ * 
+ * @param {jQuery} $element
+ * @returns {undefined}
  */
-H5peditorForm.prototype.replace = function ($element) {
+ns.Form.prototype.replace = function ($element) {
   $element.replaceWith(this.$form);
-}
+  this.offset = this.$form.offset();
+};
 
 /**
  * Remove the current form.
  */
-H5peditorForm.prototype.remove = function () {
+ns.Form.prototype.remove = function () {
   this.$form.remove();
-}
+};
 
 /**
  * Wrapper for processing the semantics.
+ * 
+ * @param {Array} semantics
+ * @param {Object} defaultParams
+ * @returns {undefined}
  */
-H5peditorForm.prototype.processSemantics = function (semantics, defaultParams) {
+ns.Form.prototype.processSemantics = function (semantics, defaultParams) {
   try {
     this.params = defaultParams;
-    H5peditorForm.processSemanticsChunk(semantics, this.params, this.$form, this);
+    ns.processSemanticsChunk(semantics, this.params, this.$form.children('.tree'), this);
     
     // Run ready callbacks.
     for (var i = 0; i < this.readies.length; i++) {
@@ -37,109 +51,22 @@ H5peditorForm.prototype.processSemantics = function (semantics, defaultParams) {
     // TODO: Validate fields on submit
   }
   catch (error) {
-    var $error = H5peditor.$('<div class="h5peditor-error">' + H5peditor.t('semanticsError', {':error': error}) + '</div>');
+    if (window['console'] !== undefined && typeof console.error === 'function') {
+      console.error(error.stack);
+    }
+
+    var $error = ns.$('<div class="h5peditor-error">' + ns.t('semanticsError', {':error': error}) + '</div>');
     this.$form.replaceWith($error);
     this.$form = $error;
   }
-}
+};
 
 /**
  * Collect functions to execute once the tree is complete.
+ * 
+ * @param {function} ready
+ * @returns {undefined}
  */
-H5peditorForm.prototype.ready = function (ready) {
+ns.Form.prototype.ready = function (ready) {
   this.readies.push(ready);
-}
-
-/**
- * Recursive processing of the semantics chunks.
- */
-H5peditorForm.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent) {
-  parent.children = [];
-  
-  for (var i = 0; i < semanticsChunk.length; i++) {
-    var field = semanticsChunk[i];
-      
-    // TODO: Translate all error messages.
-    
-    // Check generic field properties.
-    if (field.name == undefined) {
-      throw H5peditor.t('missingProperty', {':index': i, ':property': 'name'});
-    }
-    if (field.type == undefined) {
-      throw H5peditor.t('missingProperty', {':index': i, ':property': 'type'});
-    }
-    
-    // Set default value.
-    if (params[field.name] == undefined && field['default'] != undefined) {
-      params[field.name] = field['default'];
-    }
-    
-    // TODO: Set a default label if label == undefined or skip if label == 0. This should be done inside the class it self and not here.
-    
-    // TODO: Remove later, this is here for debugging purposes.
-    if (H5peditor.fieldTypes[field.type] == undefined) {
-      $wrapper.append('<div>[field:' + field.type + ':' + field.name + ']</div>');
-      continue;
-    }
-
-    var fieldInstance = new H5peditor.fieldTypes[field.type](parent, field, params[field.name], function (field, value) {
-      if (value == undefined) {
-        delete params[field.name];
-      }
-      else {
-        params[field.name] = value;
-      }
-    });
-    fieldInstance.appendTo($wrapper);
-    parent.children.push(fieldInstance);
-  }
-}
-
-/**
- * Find field from path.
- */
-H5peditorForm.findField = function (path, parent) {
-  if (typeof path == 'string') {
-    path = path.split('/');
-  }
-  
-  if (path[0] == '..') {
-    path.splice(0, 1)
-    return H5peditorForm.findField(path, parent.parent);
-  }
-  
-  for (var i = 0; i < parent.children.length; i++) {
-    if (parent.children[i].field.name == path[0]) {
-      path.splice(0, 1)
-      if (path.length > 1) {
-        return H5peditorForm.findField(path, parent.children[i]);
-      }
-      else {
-        return parent.children[i];
-      }
-    }
-  }
-  
-  return false;
-}
-
-/**
- * Create HTML wrapper for error messages.
- */
-H5peditorForm.createError = function (message) {
-  return '<p>' + message + '</p>';
-}
-
-/**
- * Create HTML wrapper for field items.
- */
-H5peditorForm.createItem = function (type, content) {
-  return '<div class="field ' + type + '">' + content + '<div class="errors"></div></div>';
-}
-
-/**
- * Create HTML for select options.
- */
-H5peditorForm.createOption = function (value, text, selected) {
-  return '<option value="' + value + '"' + (selected != undefined && selected ? ' selected="selected"' : '') + '>' + text + '</option>';
-}
+};

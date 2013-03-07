@@ -58,12 +58,33 @@ H5P.Coords = function(x, y, w, h) {
   return this;
 };
 
+/**
+ *@param {string} library
+ *  library in the format machineName majorVersion.minorVersion
+ * @returns
+ *  library as an object with machineName, majorVersion and minorVersion properties
+ *  return false if the library parameter is invalid
+ */
+H5P.libraryFromString = function (library) {
+  var regExp = /(.+)\s(\d)+\.(\d)$/g;
+  var res = regExp.exec(library);
+  if (res !== null) {
+    return {
+      'machineName': res[1],
+      'majorVersion': res[2],
+      'minorVersion': res[3]
+    };
+  }
+  else {
+    return false;
+  }
+};
 // Play a video. $target is jQuery object to attach video to. (Appended).
 // Params are video-params from content. cp is content path. onEnded is
 // function to call when finished.
 //
 // TODO: Try to get rid of content path.
-H5P.playVideo = function ($target, params, cp, onEnded) {
+H5P.playVideo = function ($target, params, skipButtonText, cp, onEnded) {
   var $ = H5P.jQuery;
 
   var width = 635,  // TODO: These should come from some dimension setting.
@@ -81,33 +102,52 @@ H5P.playVideo = function ($target, params, cp, onEnded) {
   var sources = '';
   var willWork = false; // Used for testing if video tag is supported, AND for testing if we can play back our given formats
 
-  var $video = $('<video width="' + width + '" height="' + height + '" autoplay></video>');
-  if ($video[0].canPlayType !== undefined) {
-    for (var key in params) {
-      sources += '<source src="' + cp + params[key] + '" type="' + key + '">';
-      willWork = willWork || $video[0].canPlayType(key);
+  var video = document.createElement('video');
+  video.autoplay = true;
+  video.width = width;
+  video.height = height;
+
+  if (video.canPlayType !== undefined) {
+    for (var i = 0; i < params.length; i++) {
+      var file = params[i];
+      // TODO: The files should probably be in their own group.
+      if (file.mime.indexOf('video') === 0) {
+        if (video.canPlayType(file.mime)) {
+          var source = document.createElement('source');
+          source.src = cp + file.path;
+          source.type = file.mime;
+          video.appendChild(source);
+          willWork = willWork || true;
+        }
+      }
     }
-    $video.html(sources);
 
     if (willWork) {
-      $container.append($video);
+      $container.append(video);
+      $(video).on('ended', function() {
+        onEnded();
+      });
     }
   }
-
+  
   var fplayer = undefined;
   if (!willWork) {
     // use flowplayer fallback
     var fp_container = document.createElement("div");
+    fp_container.width = "100%";
+    fp_container.height = "100%";
     fplayer = flowplayer(fp_container, {
       src: "http://releases.flowplayer.org/swf/flowplayer-3.2.16.swf",
-      wmode: "opaque"
+      wmode: "opaque",
+      width: width,
+      height: height
     }, {
       buffering: true,
       clip: {
-        url: window.location.protocol + '//' + window.location.host + cp + params['video/mp4'],
+        url: window.location.protocol + '//' + window.location.host + cp + params[0].path,
         autoPlay: true,
         autoBuffering: true,
-        onFinish: function (ev) {
+        onFinish: function () {
           onEnded();
         },
         onError: function () {
@@ -126,8 +166,8 @@ H5P.playVideo = function ($target, params, cp, onEnded) {
     return;
   }
 
-  if (params.skipButtonText) {
-    var $skipButton = $('<a class="button skip">' + params.skipButtonText + '</a>').click(function (ev) {
+  if (skipButtonText) {
+    var $skipButton = $('<a class="button skip">' + skipButtonText + '</a>').click(function (ev) {
       if (fplayer !== undefined) {
         // Must stop this first. Errorama if we don't
         fplayer.stop().close().unload();

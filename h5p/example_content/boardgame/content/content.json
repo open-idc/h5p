@@ -1,0 +1,1221 @@
+{
+  "title": "Spillet om dyrenes organsystem",
+  "background": {
+    "path": "img/bg2/Bakgrunn-spillebrett.png",
+    "width": 635,
+    "height": 500
+  },
+  "size": {
+    "width": 635,
+    "height": 500
+  },
+  "introduction": {
+    "text": "Velkommen til organsystemspillet.<br/><br/>Din oppgave er å hjelpe Nils gjennom alle de ulike økosystemene ved å svare på spørsmål om dyrenes organsystem.",
+    "startButtonText": "Fortsett"
+  },
+  "hotspots": [
+    {
+      "title": "Havet",
+      "coords": {
+        "x": 222,
+        "y": 355
+      },
+      "image": {
+        "path": "img/spots/Unplayed-HAV.png",
+        "width": 60,
+        "height": 60
+      },
+      "passedImage": {
+        "path": "img/spots/Pass-HAV.png",
+        "width": 60,
+        "height": 60
+      },
+      "failedImage": {
+        "path": "img/spots/Fail-HAV.png",
+        "width": 60,
+        "height": 60
+      },
+      "action": {
+        "library": "H5P.QuestionSet 1.0",
+        "params": {
+          "backgroundImage": {
+            "path": "img/bg2/Bakgrunn-HAV.png",
+            "width": 635,
+            "height": 500
+          },
+          "progressType": "dots",
+          "introPage": {
+            "showIntroPage": true,
+            "title": "",
+            "introduction": "",
+            "startButtonText": "Start quiz"
+          },
+          "endGame": {
+            "showResultPage": true,
+            "resultPage": {
+              "successGreeting": "",
+              "successComment": "Du har svart rett på mer enn 50%. Dette brettet er <em>bestått</em>.",
+              "failGreeting": "",
+              "failComment": "Du har ikke nok rette svar. Dette brettet er <em>ikke bestått</em>.",
+              "scoreString": "Du klarte @score av @total",
+              "finishButtonText": "Fortsett"
+            },
+            "animations": {
+              "showAnimations": true,
+              "skippable": true,
+              "skipButtonText": "Hopp over video",
+              "successVideo": [
+                {
+                  "path": "video/Hav_correct.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Hav_correct.webm",
+                  "mime": "video/webm"
+                }
+              ],
+              "failVideo": [
+                {
+                  "path": "video/Hav_wrong.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Hav_wrong.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "questions": [
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "Saltvannsfisk",
+                "question": "",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "tar opp salt aktivt gjennom gjellene",
+                    "correct": false
+                  },
+                  {
+                    "text": "skiller ut salt gjennom gjellene",
+                    "correct": true
+                  },
+                  {
+                    "text": "har samme saltkonsentrasjon i kroppen som i vannet utenfor",
+                    "correct": false
+                  },
+                  {
+                    "text": "avgir salt ved diffusjon gjennom overflaten",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "Gassutveksling hos fisker",
+                "question": "",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "Fisker puster i vann og trenger ikke oksygen",
+                    "correct": false
+                  },
+                  {
+                    "text": "Fisker tar opp oksygen der blod og vann går motsatt vei i gjellene",
+                    "correct": true
+                  },
+                  {
+                    "text": "Fisker får hovedsakelig dekt sitt oksygenbehov ved at de går til vannoverflaten og puster inn luft",
+                    "correct": false
+                  },
+                  {
+                    "text": "Siden fisker svelger store mengder med vann, får de dekt sitt oksygenbehov ved at oksygenet i vannet diffunderer over i blodet.",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Blodårene i gjellene hos fisk følger motstrømsprinsippet som sørger for at ",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "Blodet strømmer til og fra gjellene",
+                    "correct": false
+                  },
+                  {
+                    "text": "Gassutveksling med omgivelsene skjer effektivt",
+                    "correct": true
+                  },
+                  {
+                    "text": "Årene ligger beskyttet i gjellebladene",
+                    "correct": false
+                  },
+                  {
+                    "text": "At aktive fisk kan puste når de er i ro",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Diffusjon av oksygen i vann er",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "raskere enn i luft",
+                    "correct": false
+                  },
+                  {
+                    "text": "langsommere enn i luft",
+                    "correct": true
+                  },
+                  {
+                    "text": "effektivt da det er mer oppløst oksygen i vann enn i luft",
+                    "correct": false
+                  },
+                  {
+                    "text": "avhengig av et organsystem",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "Flervalgsspørsmål",
+                "question": "Hvorfor skiller ikke saltvannsfisk ut ammoniakk slik som ferskvannsfisk gjør? (flere utsagn kan være riktige)",
+                "singleAnswer": false,
+                "answers": [
+                  {
+                    "text": "Ammoniakk er giftig og må derfor løses opp i og skilles ut i store mengder fortynnet urin.",
+                    "correct": true
+                  },
+                  {
+                    "text": "Saltkonsentrasjon i saltvannsfisk er for høy til at ammoniakk kan dannes.",
+                    "correct": false
+                  },
+                  {
+                    "text": "I saltvann kan ammoniakk gi en uønsket giftvirkning på omgivelsene.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Saltvannsfisk sparer på vannet, skiller ut svært små mengder konsentrert urin. Ammoniakk i en slik konsentrert form ville ha skadet fisken.",
+                    "correct": true
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Stranda",
+      "coords": {
+        "x": 340,
+        "y": 291
+      },
+      "image": {
+        "path": "img/spots/Unplayed-STRAND.png",
+        "width": 60,
+        "height": 60
+      },
+      "passedImage": {
+        "path": "img/spots/Pass-STRAND.png",
+        "width": 60,
+        "height": 60
+      },
+      "failedImage": {
+        "path": "img/spots/Fail-STRAND.png",
+        "width": 60,
+        "height": 60
+      },
+      "action": {
+        "library": "H5P.QuestionSet 1.0",
+        "params": {
+          "backgroundImage": {
+            "path": "img/bg2/Bakgrunn-STRAND.png",
+            "width": 635,
+            "height": 500
+          },
+          "progressType": "dots",
+          "introPage": {
+            "showIntroPage": true,
+            "title": "",
+            "introduction": "",
+            "startButtonText": "Start quiz"
+          },
+          "endGame": {
+            "showResultPage": true,
+            "resultPage": {
+              "successGreeting": "",
+              "successComment": "Du har svart rett på mer enn 50%. Dette brettet er <em>bestått</em>.",
+              "failGreeting": "",
+              "failComment": "Du har ikke nok rette svar. Dette brettet er <em>ikke bestått</em>.",
+              "scoreString": "Du klarte @score av @total",
+              "finishButtonText": "Fortsett"
+            },
+            "animations": {
+              "showAnimations": true,
+              "skippable": true,
+              "skipButtonText": "Hopp over video",
+              "successVideo": [
+                {
+                  "path": "video/Strand_correct.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Strand_correct.webm",
+                  "mime": "video/webm"
+                }
+              ],
+              "failVideo": [
+                {
+                  "path": "video/Strand_wrong.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Strand_wrong.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "questions": [
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvordan puster skilpadder",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "med lunger",
+                    "correct": true
+                  },
+                  {
+                    "text": "med gjeller",
+                    "correct": false
+                  },
+                  {
+                    "text": "gjennom huden",
+                    "correct": false
+                  },
+                  {
+                    "text": "med en kombinasjon av gjeller og hud",
+                    "correct": false
+                  },
+                  {
+                    "text": "med lunger og gjennom huden",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Uttrykket «dobbelt kretsløp» betyr at",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "det er dobbelt så effektivt",
+                    "correct": false
+                  },
+                  {
+                    "text": "blodet går to ganger innom hjertet per runde i kroppen",
+                    "correct": true
+                  },
+                  {
+                    "text": "blodet passerer lungene to ganger per runde i kroppen",
+                    "correct": false
+                  },
+                  {
+                    "text": "det hele tiden er kontakt mellom venene og arteriene",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hos enkelte organismer er gassutveksling gjennom overflaten tilstrekkelig fordi",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "overflate/volum-forholdet er stort",
+                    "correct": false
+                  },
+                  {
+                    "text": "de ikke trenger oksygen",
+                    "correct": true
+                  },
+                  {
+                    "text": "de lever i saltvann",
+                    "correct": false
+                  },
+                  {
+                    "text": "overflate/volum-forholdet er lite",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "Hjerte og kretsløp hos fisker",
+                "question": "Krokodillene har noe mer effektivt sirkulasjonssystem enn hoggorm siden",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "de har flere hjerter",
+                    "correct": false
+                  },
+                  {
+                    "text": "de har skjellhud med godt utviklet sirkulasjonssystem",
+                    "correct": false
+                  },
+                  {
+                    "text": "det oksygenfattige og oksygenrike blodet er mer adskilt i hjertet",
+                    "correct": true
+                  },
+                  {
+                    "text": "de er vekselvarme dyr",
+                    "correct": false
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Myr",
+      "coords": {
+        "x": 433,
+        "y": 220
+      },
+      "image": {
+        "path": "img/spots/Unplayed-MYR.png",
+        "width": 60,
+        "height": 60
+      },
+      "passedImage": {
+        "path": "img/spots/Pass-MYR.png",
+        "width": 60,
+        "height": 60
+      },
+      "failedImage": {
+        "path": "img/spots/Fail-MYR.png",
+        "width": 60,
+        "height": 60
+      },
+      "action": {
+        "library": "H5P.QuestionSet 1.0",
+        "params": {
+          "backgroundImage": {
+            "path": "img/bg2/Bakgrunn-MYR.png",
+            "width": 635,
+            "height": 500
+          },
+          "progressType": "dots",
+          "introPage": {
+            "showIntroPage": true,
+            "title": "",
+            "introduction": "",
+            "startButtonText": "Start quiz"
+          },
+          "endGame": {
+            "showResultPage": true,
+            "resultPage": {
+              "successGreeting": "",
+              "successComment": "Du har svart rett på mer enn 50%. Dette brettet er <em>bestått</em>.",
+              "failGreeting": "",
+              "failComment": "Du har ikke nok rette svar. Dette brettet er <em>ikke bestått</em>.",
+              "scoreString": "Du klarte @score av @total",
+              "finishButtonText": "Fortsett"
+            },
+            "animations": {
+              "showAnimations": true,
+              "skippable": true,
+              "skipButtonText": "Hopp over video",
+              "successVideo": [
+                {
+                  "path": "video/Myr_correct.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Myr_correct.webm",
+                  "mime": "video/webm"
+                }
+              ],
+              "failVideo": [
+                {
+                  "path": "video/Myr_wrong.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Myr_wrong.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "questions": [
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvilket av disse dyrene mangler sirkulasjonssystem?",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "padde",
+                    "correct": false
+                  },
+                  {
+                    "text": "meitemark",
+                    "correct": false
+                  },
+                  {
+                    "text": "mygg",
+                    "correct": false
+                  },
+                  {
+                    "text": "flatormer",
+                    "correct": true
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hva kalles respirasjonsorganene til insekter?",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "trakeér",
+                    "correct": true
+                  },
+                  {
+                    "text": "nefridier",
+                    "correct": false
+                  },
+                  {
+                    "text": "sulfider",
+                    "correct": false
+                  },
+                  {
+                    "text": "luftsekker",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Trakeéene er fyllt med:",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "blod",
+                    "correct": false
+                  },
+                  {
+                    "text": "vevsvæske",
+                    "correct": false
+                  },
+                  {
+                    "text": "gass",
+                    "correct": true
+                  },
+                  {
+                    "text": "slim",
+                    "correct": false
+                  },
+                  {
+                    "text": "vann",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Insektenes ekskresjonssystem er regulert av:",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "direkte utskilling gjennom hele kroppsoverflaten",
+                    "correct": false
+                  },
+                  {
+                    "text": "et system av rør som ligger fritt i kroppshulen og som tømmer avfallsstoffer til tarmen",
+                    "correct": true
+                  },
+                  {
+                    "text": "metanefridier som drenerer avfallstoffer fra kroppshulen til overflaten",
+                    "correct": false
+                  },
+                  {
+                    "text": "protonefridier som ved hjelp av flageller tømmer avfallsstoffer til kroppshulen",
+                    "correct": false
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Ferskvann",
+      "coords": {
+        "x": 294,
+        "y": 163
+      },
+      "image": {
+        "path": "img/spots/Unplayed-VANN.png",
+        "width": 60,
+        "height": 60
+      },
+      "passedImage": {
+        "path": "img/spots/Pass-VANN.png",
+        "width": 60,
+        "height": 60
+      },
+      "failedImage": {
+        "path": "img/spots/Fail-VANN.png",
+        "width": 60,
+        "height": 60
+      },
+      "action": {
+        "library": "H5P.QuestionSet 1.0",
+        "params": {
+          "backgroundImage": {
+            "path": "img/bg2/Bakgrunn-VANN.png",
+            "width": 635,
+            "height": 500
+          },
+          "progressType": "dots",
+          "introPage": {
+            "showIntroPage": true,
+            "title": "",
+            "introduction": "",
+            "startButtonText": "Start quiz"
+          },
+          "endGame": {
+            "showResultPage": true,
+            "resultPage": {
+              "successGreeting": "",
+              "successComment": "Du har svart rett på mer enn 50%. Dette brettet er <em>bestått</em>.",
+              "failGreeting": "",
+              "failComment": "Du har ikke nok rette svar. Dette brettet er <em>ikke bestått</em>.",
+              "scoreString": "Du klarte @score av @total",
+              "finishButtonText": "Fortsett"
+            },
+            "animations": {
+              "showAnimations": true,
+              "skippable": true,
+              "skipButtonText": "Hopp over video",
+              "successVideo": [
+                {
+                  "path": "video/Vann_correct.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Vann_correct.webm",
+                  "mime": "video/webm"
+                }
+              ],
+              "failVideo": [
+                {
+                  "path": "video/Vann_wrong.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Vann_wrong.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "questions": [
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Amfibier kvitter seg med CO<sub>2</sub> fra celleåndingen, hovedsakelig",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "via lunger",
+                    "correct": true
+                  },
+                  {
+                    "text": "via gjeller",
+                    "correct": false
+                  },
+                  {
+                    "text": "via huden",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvordan kan vi si at “amfibier er delvis tilpasset et liv på land”? (Flere mulige svar)",
+                "singleAnswer": false,
+                "answers": [
+                  {
+                    "text": "fordi froskene lever på land, men trives best i vannet",
+                    "correct": false
+                  },
+                  {
+                    "text": "fordi formeringa (egg- og yngelstadium) er avhengig av vann",
+                    "correct": true
+                  },
+                  {
+                    "text": "fordi voksne amfibier stadig går på land for å varme og tørke seg",
+                    "correct": false
+                  },
+                  {
+                    "text": "fordi de må holde huden fuktig for at gassutveksling skal kunne skje gjennom huden",
+                    "correct": true
+                  },
+                  {
+                    "text": "fordi de benytter en kombinasjon av gjeller, lunger og hud til respirasjon",
+                    "correct": true
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hva er riktig om gjeller og motstrømsprinsippet? (Flere mulige svar)",
+                "singleAnswer": false,
+                "answers": [
+                  {
+                    "text": "gjellene er tynne med forgreinede gjelleblad for å øke overflaten",
+                    "correct": true
+                  },
+                  {
+                    "text": "gjellebladene og kapillærårene er ikke nært tilknyttet hverandre",
+                    "correct": false
+                  },
+                  {
+                    "text": "gjellelokket er en port som stenges når fisken er mettet på oksygen",
+                    "correct": false
+                  },
+                  {
+                    "text": "vann og blod strømmer samme vei",
+                    "correct": false
+                  },
+                  {
+                    "text": "effekten på gassutvekslingen øker når det er stor forskjell på oksygenkonsentrasjon i vann og blod som møtes",
+                    "correct": true
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvilken rekkefølge i hendelsene er riktig i forhold til sirkulasjonen hos fisk:",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "hjertekammer – forkammer – gjeller – kropp",
+                    "correct": false
+                  },
+                  {
+                    "text": "forkammer – hjertekammer – gjeller – kropp",
+                    "correct": true
+                  },
+                  {
+                    "text": "forkammer – gjeller – hjertekammer – kropp",
+                    "correct": false
+                  },
+                  {
+                    "text": "venstreforkammer – hjertekammer – gjeller – høyreforkammer - hjertekammer – kropp",
+                    "correct": false
+                  },
+                  {
+                    "text": "forkammer – venstre hjertekammer – høyre hjertekammer – gjeller – kropp",
+                    "correct": false
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Skogen",
+      "coords": {
+        "x": 135,
+        "y": 210
+      },
+      "image": {
+        "path": "img/spots/Unplayed-SKOG.png",
+        "width": 60,
+        "height": 60
+      },
+      "passedImage": {
+        "path": "img/spots/Pass-SKOG.png",
+        "width": 60,
+        "height": 60
+      },
+      "failedImage": {
+        "path": "img/spots/Fail-SKOG.png",
+        "width": 60,
+        "height": 60
+      },
+      "action": {
+        "library": "H5P.QuestionSet 1.0",
+        "params": {
+          "backgroundImage": {
+            "path": "img/bg2/Bakgrunn-SKOG.png",
+            "width": 635,
+            "height": 500
+          },
+          "progressType": "dots",
+          "introPage": {
+            "showIntroPage": true,
+            "title": "",
+            "introduction": "",
+            "startButtonText": "Start quiz"
+          },
+          "endGame": {
+            "showResultPage": true,
+            "resultPage": {
+              "successGreeting": "",
+              "successComment": "Du har svart rett på mer enn 50%. Dette brettet er <em>bestått</em>.",
+              "failGreeting": "",
+              "failComment": "Du har ikke nok rette svar. Dette brettet er <em>ikke bestått</em>.",
+              "scoreString": "Du klarte @score av @total",
+              "finishButtonText": "Fortsett"
+            },
+            "animations": {
+              "showAnimations": true,
+              "skippable": true,
+              "skipButtonText": "Hopp over video",
+              "successVideo": [
+                {
+                  "path": "video/Skog_correct.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Skog_correct.webm",
+                  "mime": "video/webm"
+                }
+              ],
+              "failVideo": [
+                {
+                  "path": "video/Skog_wrong.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Skog_wrong.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "questions": [
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hva er ekskresjon?",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "utskilling av avføringsprodukter, men ikke urin",
+                    "correct": false
+                  },
+                  {
+                    "text": "utskilling av CO<sub>2</sub>",
+                    "correct": false
+                  },
+                  {
+                    "text": "lagring av stoffer som kroppen trenger",
+                    "correct": false
+                  },
+                  {
+                    "text": "utskilling av rester fra forbrenningsprosesser i cellene",
+                    "correct": true
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvordan transporteres det meste av karbondioksidet (CO<sub>2</sub>) i blodet?",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "som fri CO<sub>2</sub>",
+                    "correct": false
+                  },
+                  {
+                    "text": "som karbonsyre (H<sub>2</sub>CO<sub>3</sub>)",
+                    "correct": false
+                  },
+                  {
+                    "text": "som bikarbonat (HCO<sub>3</sub><sup>-</sup>)",
+                    "correct": true
+                  },
+                  {
+                    "text": "som CO<sub>2</sub> bundet til hemoglobin",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvorfor er det ofte forskjell i lengden på nyrekanalen hos et pattedyr med begrenset tilgang på vann og hos et pattedyr som har ubegrenset vanntilgang?",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "De med begrenset tilgang på vann er avhengige av å reabsorbere større mengder vann.",
+                    "correct": true
+                  },
+                  {
+                    "text": "De med ubegrenset tilgang på vann må produsere større mengder konsentrert urin.",
+                    "correct": false
+                  },
+                  {
+                    "text": "De med ubegrenset tilgang på vann skiller ut salter via kjertler i nyrene.",
+                    "correct": false
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Fjellet",
+      "coords": {
+        "x": 442,
+        "y": 66
+      },
+      "image": {
+        "path": "img/spots/Unplayed-FJELL.png",
+        "width": 60,
+        "height": 60
+      },
+      "passedImage": {
+        "path": "img/spots/Pass-FJELL.png",
+        "width": 60,
+        "height": 60
+      },
+      "failedImage": {
+        "path": "img/spots/Fail-FJELL.png",
+        "width": 60,
+        "height": 60
+      },
+      "action": {
+        "library": "H5P.QuestionSet 1.0",
+        "params": {
+          "backgroundImage": {
+            "path": "img/bg2/Bakgrunn-FJELL.png",
+            "width": 635,
+            "height": 500
+          },
+          "progressType": "dots",
+          "introPage": {
+            "showIntroPage": true,
+            "title": "",
+            "introduction": "",
+            "startButtonText": "Start quiz"
+          },
+          "endGame": {
+            "showResultPage": true,
+            "resultPage": {
+              "successGreeting": "",
+              "successComment": "Du har svart rett på mer enn 50%. Dette brettet er <em>bestått</em>.",
+              "failGreeting": "",
+              "failComment": "Du har ikke nok rette svar. Dette brettet er <em>ikke bestått</em>.",
+              "scoreString": "Du klarte @score av @total",
+              "finishButtonText": "Fortsett"
+            },
+            "animations": {
+              "showAnimations": true,
+              "skippable": true,
+              "skipButtonText": "Hopp over video",
+              "successVideo": [
+                {
+                  "path": "video/Fjell_correct.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Fjell_correct.webm",
+                  "mime": "video/webm"
+                }
+              ],
+              "failVideo": [
+                {
+                  "path": "video/Fjell_wrong.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "video/Fjell_wrong.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "questions": [
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hensikten med luftsekkene hos fugler er å",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "sørge for kontinuerlig strøm av blod gjennom hjerte",
+                    "correct": false
+                  },
+                  {
+                    "text": "sørge for kontinuerlig strøm av O<sub>2</sub> gjennom lungene",
+                    "correct": true
+                  },
+                  {
+                    "text": "sørge for at fuglene holder seg lettere i luften",
+                    "correct": false
+                  },
+                  {
+                    "text": "sørge for at fuglene har tilgang på oksygen når de flyr høyt",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Fugler som spiser fisk fra havet, slik som lomvi og lundefugl, får i seg for mye salt. Hvordan løser de dette problemet?",
+                "singleAnswer": true,
+                "answers": [
+                  {
+                    "text": "De drikker ferskvann.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Saltet omdannes til ioner og brukes i fuglenes kroppsfunksjoner.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Saltet skilles ut gjennom en egen kjertel.",
+                    "correct": true
+                  },
+                  {
+                    "text": "Saltes brukes som en del av fuglenes næring.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Saltet reagerer med andre stoffer og nøytraliseres.",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Hvilke fellestrekk finner vi hos fugler og krypdyr? (Flere svar mulig)",
+                "singleAnswer": false,
+                "answers": [
+                  {
+                    "text": "indre befruktning",
+                    "correct": true
+                  },
+                  {
+                    "text": "like respirasjonsorganer",
+                    "correct": false
+                  },
+                  {
+                    "text": "samme ekskresjonsprodukt",
+                    "correct": true
+                  },
+                  {
+                    "text": "lett beinbygning",
+                    "correct": false
+                  },
+                  {
+                    "text": "legger egg",
+                    "correct": true
+                  },
+                  {
+                    "text": "antall tær med klør på (“armer og bein”)",
+                    "correct": false
+                  },
+                  {
+                    "text": "yngelpleie/ruging",
+                    "correct": false
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Marker de påstandene som er riktige. (Flere svar mulig)",
+                "singleAnswer": false,
+                "answers": [
+                  {
+                    "text": "Dyr med konstant kroppstemperatur (jevnvarme dyr) trenger mer effektivt oksygenopptak enn vekselvarme dyr.",
+                    "correct": true
+                  },
+                  {
+                    "text": "Vekselvarme dyr går i dvale om vinteren.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Dyr som lever høyt til fjells har lettere tilgang på oksygen.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Blodsirkulasjonen er viktig for avkjøling av varme områder på kroppen.",
+                    "correct": true
+                  }
+                ]
+              }
+            },
+            {
+              "library": "H5P.MultiChoice 1.0",
+              "params": {
+                "title": "",
+                "question": "Marker de påstandene som er riktige. (Flere svar mulig)",
+                "singleAnswer": false,
+                "answers": [
+                  {
+                    "text": "Dyr som lever høyt til fjells har mer hemoglobin i blodet.",
+                    "correct": true
+                  },
+                  {
+                    "text": "Hjertet er en muskel.",
+                    "correct": true
+                  },
+                  {
+                    "text": "Rypa senker kroppstemperaturen om vinteren for å spare energi.",
+                    "correct": false
+                  },
+                  {
+                    "text": "Fjellreven benytter seg av motstrømsprinsippet i føttene for å gjenbruke varme.",
+                    "correct": true
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "progress": {
+    "enabled": true,
+    "incremental": true,
+    "includeFailed": false,
+    "coords": {
+      "x": 20,
+      "y": 360
+    },
+    "images": [
+      {
+        "path": "img/progress/level0.png",
+        "width": 172,
+        "height": 100
+      },
+      {
+        "path": "img/progress/level1.png",
+        "width": 172,
+        "height": 100
+      },
+      {
+        "path": "img/progress/level2.png",
+        "width": 172,
+        "height": 100
+      },
+      {
+        "path": "img/progress/level3.png",
+        "width": 172,
+        "height": 100
+      },
+      {
+        "path": "img/progress/level4.png",
+        "width": 172,
+        "height": 100
+      },
+      {
+        "path": "img/progress/level5.png",
+        "width": 172,
+        "height": 100
+      },
+      {
+        "path": "img/progress/level6.png",
+        "width": 172,
+        "height": 100
+      }
+    ]
+  },
+  "skippable": true,
+  "skipButtonText": "Hopp over video",
+  "endVideo": [
+    {
+      "path": "video/Slutt.mp4",
+      "mime": "video/mp4"
+    },
+    {
+      "path": "video/Strand_correct.webm",
+      "mime": "video/webm"
+    }
+  ],
+  "endResults": {
+    "text": "Gratulerer, oppgavene er løst!<br/>Du greide @percentage% riktige svar.",
+    "solutionButtonText": "Fasit",
+    "retryButtonText": "Prøv igjen"
+  }
+}
