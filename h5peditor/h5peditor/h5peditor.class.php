@@ -7,22 +7,28 @@ class H5peditor {
   );
   public static $scripts = array(
     'scripts/h5peditor.js',
+    'scripts/h5peditor-editor.js',
     'scripts/h5peditor-library-selector.js',
     'scripts/h5peditor-form.js',
     'scripts/h5peditor-text.js',
+    'scripts/h5peditor-html.js',
+    'scripts/h5peditor-number.js',
+    'scripts/h5peditor-textarea.js',
     'scripts/h5peditor-file.js',
+    'scripts/h5peditor-video.js',
     'scripts/h5peditor-group.js',
     'scripts/h5peditor-boolean.js',
     'scripts/h5peditor-list.js',
     'scripts/h5peditor-library.js',
     'scripts/h5peditor-dimensions.js',
     'scripts/h5peditor-coordinates.js',
+    'ckeditor/ckeditor.js',
   );
   private $storage, $files_directory;
 
   /**
    * Constructor.
-   * 
+   *
    * @param object $storage
    * @param string $files_directory
    */
@@ -33,14 +39,14 @@ class H5peditor {
 
   /**
    * Create directories for uploaded content.
-   * 
+   *
    * @param int $id
    * @return boolean
    */
   public function createDirectories($id) {
     $this->content_directory = $this->files_directory . '/h5p/content/' . $id . '/';
 
-    $sub_directories = array('', 'files', 'images');
+    $sub_directories = array('', 'files', 'images', 'videos');
     foreach ($sub_directories AS $sub_directory) {
       $sub_directory = $this->content_directory . $sub_directory;
       if (!is_dir($sub_directory) && !@mkdir($sub_directory)) {
@@ -52,47 +58,46 @@ class H5peditor {
   }
 
   /**
-   * Move uploaded files and remove old files.
-   * 
-   * @param string $old_library
-   * @param string $old_parameters
-   * @param string $new_library
-   * @param string $new_parameters
+   * Move uploaded files, remove old files and update library usage.
+   *
+   * @param string $oldLibrary
+   * @param string $oldParameters
+   * @param object $newLibrary
+   * @param string $newParameters
    */
-  public function processParameters($contentId, $new_library, $new_parameters, $old_library = NULL, $old_parameters = NULL) {
-    // TODO: Add support for versioning of libraries and dependencies
-    $new_files = array();
-    $old_files = array();
-    $new_libraries = array($new_library, 'EmbeddedJS');
-    $old_libraries = array($old_library, 'EmbeddedJS');
+  public function processParameters($contentId, $newLibrary, $newParameters, $oldLibrary = NULL, $oldParameters = NULL) {
+    $newFiles = array();
+    $oldFiles = array();
+    $newLibraries = array($newLibrary['machineName'] => $newLibrary);
+    $oldLibraries = array($oldLibrary);
 
     // Find new libraries and files.  
-    $this->processSemantics($new_files, $new_libraries, json_decode($this->storage->getSemantics($new_library)), $new_parameters);
-
-    // TODO: Replace this with code that is aware of library versions
-    foreach ($new_libraries as $key => $library_name) {
-      // TODO: This is temporary. There is to be no queries in here!
-      $new_libraries[$key] = array();
-      $new_libraries[$key]['library']['libraryId'] = db_result(db_query(
-          "SELECT library_id
-        FROM {h5p_library}
-        WHERE machine_name = '%s'", $library_name
-        ));
-      $new_libraries[$key]['preloaded'] = 1; // TODO: This is just for testing/demoing...
+    $this->processSemantics($newFiles, $newLibraries, json_decode($this->storage->getSemantics($newLibrary['machineName'], $newLibrary['majorVersion'], $newLibrary['minorVersion'])), $newParameters);
+    
+    $h5pStorage = _h5p_get_instance('storage');
+    
+    $librariesUsed = $newLibraries; // Copy
+    
+    foreach ($newLibraries as $library) {
+      $libraryFull = $h5pStorage->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      $librariesUsed[$library['machineName']]['library'] = $libraryFull;
+      $librariesUsed[$library['machineName']]['preloaded'] = 1;
+      $h5pStorage->getLibraryUsage($librariesUsed, $libraryFull);
     }
-    $frameworkInterface = _h5p_get_instance('interface'); // TODO: saver???
-    $frameworkInterface->saveLibraryUsage($contentId, $new_libraries);
+    
+    $h5pStorage->h5pF->deleteLibraryUsage($contentId);
+    $h5pStorage->h5pF->saveLibraryUsage($contentId, $librariesUsed);
 
-    if ($old_library) {
+    if ($oldLibrary) {
       // Find old files and libraries.
-      $this->processSemantics($old_files, $old_libraries, json_decode($this->storage->getSemantics($old_library)), $old_parameters);
+      $this->processSemantics($oldFiles, $oldLibraries, json_decode($this->storage->getSemantics($oldLibrary['machineName'], $oldLibrary['majorVersion'], $oldLibrary['minorVersion'])), $oldParameters);
 
       // Remove old files.
-      for ($i = 0, $s = count($old_files); $i < $s; $i++) {
-        if (!in_array($old_files[$i], $new_files)) {
-          $remove_file = $this->content_directory . $old_files[$i];
-          unlink($remove_file);
-          $this->storage->removeFile($remove_file);
+      for ($i = 0, $s = count($oldFiles); $i < $s; $i++) {
+        if (!in_array($oldFiles[$i], $newFiles)) {
+          $removeFile = $this->content_directory . $oldFiles[$i];
+          unlink($removeFile);
+          $this->storage->removeFile($removeFile);
         }
       }
     }
@@ -113,8 +118,8 @@ class H5peditor {
       if (!isset($params->{$field->name})) {
         continue;
       }
-      
-      $this->processField($field, $params->{$field->name}, $files, $libraries);
+      $paramsToProcess = $field->type == 'library' ? $params : $params->{$field->name};
+      $this->processField($field, $paramsToProcess, $files, $libraries);
     }
   }
 
@@ -146,11 +151,26 @@ class H5peditor {
           $files[] = $params->path;
         }
         break;
+        
+      case 'video': 
+        if (is_array($params)) {
+          for ($i = 0, $s = count($params); $i < $s; $i++) {
+            $temp_file = $h5peditor_path . $params[$i]->path;
+            if (file_exists($temp_file)) {
+              rename($temp_file, $this->content_directory . $params[$i]->path);
+              $this->storage->removeFile($temp_file);
+            }
+
+            $files[] = $params[$i]->path;
+          }
+        }
+        break;
 
       case 'library':
         if (isset($params->library) && isset($params->params)) {
-          $libraries[$params->library] = $params->library; // TODO: Add version info
-          $this->processSemantics($files, $libraries, json_decode($this->storage->getSemantics($params->library)), $params->params);
+          $libraryData = h5peditor_get_library_property($params->library);
+          $libraries[$libraryData['machineName']] = $libraryData;
+          $this->processSemantics($files, $libraries, json_decode($this->storage->getSemantics($libraryData['machineName'], $libraryData['majorVersion'], $libraryData['minorVersion'])), $params->params);
         }
         break;
 
@@ -184,15 +204,14 @@ class H5peditor {
    * @param string $library_name
    *  Name of the library we want to fetch data for
    */
-  public function getLibraryData($libraryName) {
-    // TODO: Support different versions of the lib
+  public function getLibraryData($machineName, $majorVersion, $minorVersion) {
     $libraryData = new stdClass();
-    $libraryData->semantics = $this->storage->getSemantics($libraryName);
+    $libraryData->semantics = $this->storage->getSemantics($machineName, $majorVersion, $minorVersion);
 
-    $editorLibraryNames = $this->storage->getEditorLibraries($libraryName);
+    $editorLibraryIds = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
 
-    foreach ($editorLibraryNames as $editorLibraryName) {
-      $filePaths = $this->storage->getFilePaths($editorLibraryName);
+    foreach ($editorLibraryIds as $editorLibraryId) {
+      $filePaths = $this->storage->getFilePaths($editorLibraryId);
 
       if (!empty($filePaths['js'])) {
         $libraryData->javascript = '';

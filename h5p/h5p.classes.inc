@@ -1,7 +1,7 @@
 <?php
 
 // TODO: Validate file endings against a setting for security
-class h5pDrupal implements h5pFramework {
+class H5PDrupal implements H5PFrameworkInterface {
   public function setErrorMessage($message){
     drupal_set_message($message, 'error');
   }
@@ -23,7 +23,7 @@ class h5pDrupal implements h5pFramework {
   public function getLibraryId($machineName, $majorVersion, $minorVersion) {
     $library_id = db_result(db_query(
       "SELECT library_id
-      FROM {h5p_library}
+      FROM {h5p_libraries}
       WHERE machine_name = '%s'
       AND major_version = %d
       AND minor_version = %d",
@@ -33,7 +33,7 @@ class h5pDrupal implements h5pFramework {
   public function isPatchedLibrary($library) {
     $result = db_result(db_query(
       "SELECT 1
-      FROM {h5p_library}
+      FROM {h5p_libraries}
       WHERE machine_name = '%s'
       AND major_version = %d
       AND minor_version = %d
@@ -42,9 +42,18 @@ class h5pDrupal implements h5pFramework {
     return $result === '1';
   }
 
-  public function storeLibraryData(&$libraryData, $new = TRUE) {
+  public function saveLibraryData(&$libraryData, $new = TRUE) {
     $preloadedJs = $this->pathsToCsv($libraryData, 'preloadedJs');
     $preloadedCss =  $this->pathsToCsv($libraryData, 'preloadedCss');
+    $dropLibraryCss = '';
+    if (isset($libraryData['dropLibraryCss'])) {
+      $libs = array();
+      foreach ($libraryData['dropLibraryCss'] as $lib) {
+        $libs[] = $lib['machineName'];
+      }
+      $dropLibraryCss = implode(', ', $libs);
+    }
+
     $embedTypes = '';
     if (isset($libraryData['embedTypes'])) {
       $embedTypes = implode(', ', $libraryData['embedTypes']);
@@ -53,33 +62,24 @@ class h5pDrupal implements h5pFramework {
       $libraryData['semantics'] = '';
     }
     if ($new) {
-      db_query("INSERT INTO {h5p_library}
-        (machine_name, title, major_version, minor_version, patch_version, runnable, embed_types, preloaded_js, preloaded_css, semantics)
-        VALUES ('%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s')",
+      db_query("INSERT INTO {h5p_libraries}
+        (machine_name, title, major_version, minor_version, patch_version, runnable, embed_types, preloaded_js, preloaded_css, drop_library_css, semantics)
+        VALUES ('%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s', '%s')",
         $libraryData['machineName'], $libraryData['title'], $libraryData['majorVersion'], $libraryData['minorVersion'],
-        $libraryData['patchVersion'], $libraryData['runnable'], $embedTypes, $preloadedJs, $preloadedCss, $libraryData['semantics']
+        $libraryData['patchVersion'], $libraryData['runnable'], $embedTypes, $preloadedJs, $preloadedCss, $dropLibraryCss, $libraryData['semantics']
       );
-      $libraryId = db_last_insert_id('h5p_library', 'library_id');
+      $libraryId = db_last_insert_id('h5p_libraries', 'library_id');
       $libraryData['libraryId'] = $libraryId;
     }
     else {
-      db_query("UPDATE {h5p_library}
+      db_query("UPDATE {h5p_libraries}
         SET title = '%s', patch_version = %d, runnable = %d,
-        embed_types = '%s', preloaded_js = '%s', preloaded_css = '%s', semantics = '%s'
+        embed_types = '%s', preloaded_js = '%s', preloaded_css = '%s', drop_library_css = '%s', semantics = '%s'
         WHERE library_id = %d",
         $libraryData['title'], $libraryData['patchVersion'], $libraryData['runnable'], $embedTypes,
-        $preloadedJs, $preloadedCss, $libraryData['semantics'], $libraryData['libraryId']
+        $preloadedJs, $preloadedCss, $dropLibraryCss, $libraryData['semantics'], $libraryData['libraryId']
       );
       $this->deleteLibraryDependencies($libraryData['libraryId']);
-    }
-    if (isset($libraryData['preloadedDependencies'])) {
-      $this->storeLibraryDependencies($libraryId, $libraryData['preloadedDependencies'], 'preloaded');
-    }
-    if (isset($libraryData['dynamicDependencies'])) {
-      $this->storeLibraryDependencies($libraryId, $libraryData['dynamicDependencies'], 'dynamic');
-    }
-    if (isset($libraryData['editorDependencies'])) {
-      $this->storeLibraryDependencies($libraryId, $libraryData['editorDependencies'], 'editor');
     }
   }
 
@@ -95,89 +95,91 @@ class h5pDrupal implements h5pFramework {
   }
   
   private function deleteLibraryDependencies($libraryId) {
-    db_query("DELETE FROM {h5p_library_dependency_index} WHERE library_id = %d", $libraryId);
+    db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
   }
 
-  private function storeLibraryDependencies($libraryId, $dependencies, $dependency_type) {
-    $query = 
-      "INSERT INTO {h5p_library_dependency_index}
-      (library_id, machine_name, major_version, minor_version, dependency_type) VALUES";
-    $sql_args = array();
-    $first = TRUE;
+  public function saveLibraryDependencies($libraryId, $dependencies, $dependency_type) {
     foreach ($dependencies as $dependency) {
-      if (!$first) {
-        $query .= ",";
-      }
-      $query .= " (%d, '%s', %d, %d, '%s')";
-      $sql_args[] = $libraryId;
-      $sql_args[] = $dependency['machineName'];
-      $sql_args[] = $dependency['majorVersion'];
-      $sql_args[] = $dependency['minorVersion'];
-      $sql_args[] = $dependency_type;
-      $first = FALSE;
+      db_query(
+        "INSERT INTO {h5p_libraries_libraries} (library_id, required_library_id, dependency_type)
+        SELECT %d, hl.library_id, '%s'
+        FROM {h5p_libraries} hl
+        WHERE machine_name = '%s'
+        AND major_version = %d
+        AND minor_version = %d",
+        $libraryId, $dependency_type, $dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']
+      );
     }
-    db_query($query, $sql_args);
   }
 
-  public function storeContentData($contentId, $contentJson, $mainJsonData, $contentMainId = NULL) {
+  public function saveContentData($contentId, $contentJson, $mainJsonData, $mainLibraryId, $contentMainId = NULL) {
     $embedTypes = '';
     if (isset($mainJsonData['embedTypes'])) {
       $embedTypes = implode(', ', $mainJsonData['embedTypes']);
     }
     db_query(
-      "INSERT INTO {h5p_node}
-      (content_id, nid, json_content, embed_type, main_library)
-      VALUES (%d, %d, '%s', '%s', '%s')",
-      $contentId, $contentMainId, $contentJson, $embedTypes, $mainJsonData['mainLibrary']
+      "INSERT INTO {h5p_nodes}
+      (content_id, nid, json_content, embed_type, main_library_id)
+      VALUES (%d, %d, '%s', '%s', %d)",
+      $contentId, $contentMainId, $contentJson, $embedTypes, $mainLibraryId
     );
     // @todo: Add support for allowing the user to select embed type
   }
 
-  public function copyContentData($contentId, $copyFromId, $contentMainId = NULL) {
+  public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
     db_query(
-      "INSERT INTO {h5p_node} (content_id, nid, json_content, embed_type, main_library)
-      SELECT %d, %d, hns.json_content, hns.embed_type, hns.main_library
-      FROM {h5p_node} hns
-      WHERE hns.content_id = %d
-      ", $contentId, $contentMainId, $copyFromId
-    );
-    db_query(
-      "INSERT INTO {h5p_library_index} (content_id, library_id, preloaded)
-      SELECT %d, hlis.library_id, hlis.preloaded
-      FROM {h5p_library_index} hlis
-      WHERE hlis.content_id = %d", $contentId, $copyFromId
+      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css)
+      SELECT %d, hnl.library_id, hnl.preloaded, hnl.drop_css
+      FROM {h5p_nodes_libraries} hnl
+      WHERE hnl.content_id = %d", $contentId, $copyFromId
     );
   }
 
   public function deleteContentData($contentId) {
-    db_query("DELETE FROM {h5p_node} WHERE content_id = %d", $contentId);
-    db_query("DELETE FROM {h5p_library_index} WHERE content_id = %d", $contentId);
+    db_query("DELETE FROM {h5p_nodes} WHERE content_id = %d", $contentId);
+    $this->deleteLibraryUsage($contentId);
+    // @todo: Add page that lists unused libraries, allowing us to delete them
+  }
+  
+  public function deleteLibraryUsage($contentId) {
+    db_query("DELETE FROM {h5p_nodes_libraries} WHERE content_id = %d", $contentId);
     // @todo: Add page that lists unused libraries, allowing us to delete them
   }
 
   public function saveLibraryUsage($contentId, $librariesInUse) {
-    foreach ($librariesInUse as $library) {
+    $dropLibraryCssList = array();
+    foreach ($librariesInUse as $machineName => $library) {
+      if (!empty($library['library']['dropLibraryCss'])) {
+        $dropLibraryCssList = array_merge($dropLibraryCssList, explode(',', $library['library']['dropLibraryCss']));
+      }
+    }
+    foreach ($librariesInUse as $machineName => $library) {
+      $dropCss = in_array($machineName, $dropLibraryCssList) ? 1 : 0;
       db_query(
-        "INSERT IGNORE INTO {h5p_library_index}
-        (content_id, library_id, preloaded)
-        VALUES (%d, %d, %d)",
-        $contentId, $library['library']['libraryId'], $library['preloaded']
+        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css)
+        VALUES (%d, %d, %d, %d)
+        ON DUPLICATE KEY UPDATE preloaded = %d, drop_css = %d",
+        $contentId, $library['library']['libraryId'], $library['preloaded'], $dropCss, $library['preloaded'], $dropCss
       );
     }
   }
+
   public function loadLibrary($machineName, $majorVersion, $minorVersion) {
     $library = db_fetch_array(db_query(
       "SELECT library_id as libraryId, machine_name as machineName, title, major_version as majorVersion, minor_version as minorVersion,
-        patch_version as patchVersion, embed_types as embedTypes, preloaded_js as preloadedJs, preloaded_css as preloadedCss
-      FROM {h5p_library}
+        patch_version as patchVersion, embed_types as embedTypes,
+        preloaded_js as preloadedJs, preloaded_css as preloadedCss,
+        drop_library_css as dropLibraryCss
+      FROM {h5p_libraries}
       WHERE machine_name = '%s'
       AND major_version = %d
       AND minor_version = %d",
       $machineName, $majorVersion, $minorVersion));
     $result = db_query(
-      "SELECT machine_name as machineName, major_version as majorVersion, minor_version as minorVersion, dependency_type as dependencyType
-      FROM {h5p_library_dependency_index}
-      WHERE library_id = %d", $library['libraryId']
+      "SELECT hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion, hll.dependency_type as dependencyType
+      FROM {h5p_libraries_libraries} hll
+      JOIN {h5p_libraries} hl ON hll.required_library_id = hl.library_id
+      WHERE hll.library_id = %d", $library['libraryId']
     );
     while ($dependency = db_fetch_array($result)) {
       $library[$dependency['dependencyType'] . 'Dependencies'][] = array(

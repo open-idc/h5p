@@ -39,10 +39,10 @@ function h5peditor_menu() {
     'access arguments' => $h5peditor_access,
     'type' => MENU_CALLBACK,
   );
-  $items['h5peditor/libraries/%'] = array(
+  $items['h5peditor/libraries/%/%/%'] = array(
     'title' => 'H5peditor Library',
     'page callback' => 'h5peditor_library_callback',
-    'page arguments' => array(2),
+    'page arguments' => array(2, 3, 4),
     'access arguments' => $h5peditor_access,
     'type' => MENU_CALLBACK,
   );
@@ -78,13 +78,13 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
     '#type' => 'item',
     '#title' => t('Content type'),
     '#value' => '<div class="h5p-editor">' . t('Waiting for javascript...') . '</div>',
-    '#after_build' => array('h5pedtior_h5p_content_node_form_after_build'),
+    '#after_build' => array('h5peditor_h5p_content_node_form_after_build'),
     '#weight' => 12,
   );
 
   $form['h5p_library'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($form['#node']->main_library) ? $form['#node']->main_library : 0,
+    '#default_value' => isset($form['#node']->main_library) ? h5peditor_main_library_to_string($form['#node'], TRUE) : 0,
   );
 
   $form['h5p_params'] = array(
@@ -95,7 +95,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $form['#submit'][] = 'h5peditor_h5p_content_node_form_submit';
   for ($i = 0, $s = count($form['#validate']); $i < $s; $i++) {
     if ($form['#validate'][$i] == 'h5p_form_validate') {
-      $form['#validate'][$i] = 'h5pedtior_h5p_content_node_form_validate';
+      $form['#validate'][$i] = 'h5peditor_h5p_content_node_form_validate';
     }
   }
 }
@@ -103,7 +103,14 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 /**
  * Add scripts and styles to the h5p node form.
  */
-function h5pedtior_h5p_content_node_form_after_build($element) {
+function h5peditor_h5p_content_node_form_after_build($element) {
+  static $done;
+  if ($done) {
+    // Make sure we only add the js once.
+    return $element; 
+  }
+  $done = TRUE;
+  
   $module_path = drupal_get_path('module', 'h5peditor');
 
   foreach(H5peditor::$styles as $style) {
@@ -123,7 +130,7 @@ function h5pedtior_h5p_content_node_form_after_build($element) {
     'nodeVersionId' => $content_id,
     'filesPath' => base_path() . file_directory_path(),
     'fileIcon' => array(
-      'path' => base_path() . drupal_get_path('module', 'h5peditor') . '/images/binary-file.png',
+      'path' => base_path() . drupal_get_path('module', 'h5peditor') . '/h5peditor/images/binary-file.png',
       'width' => 50,
       'height' => 50,
     ),
@@ -132,7 +139,7 @@ function h5pedtior_h5p_content_node_form_after_build($element) {
   return $element;
 }
 
-function h5pedtior_h5p_content_node_form_validate($form, $form_state) {
+function h5peditor_h5p_content_node_form_validate($form, $form_state) {
   if ($form_state['values']['h5p_type'] == 'upload') {
     h5p_form_validate($form, $form_state);
     return;
@@ -152,7 +159,7 @@ function h5peditor_h5p_content_node_form_submit($form, &$form_state) {
     $form_state['values']['h5p_library_old'] = $form['#node']->main_library;
     $form_state['values']['h5p_params_old'] = $form['#node']->json_content;
   }
-  $form_state['values']['main_library'] = $form_state['values']['h5p_library'];
+  $form_state['values']['main_library_id'] = h5peditor_get_library_property($form_state['values']['h5p_library'], 'libraryId');
   $form_state['values']['json_content'] = $form_state['values']['h5p_params'];
 }
 
@@ -177,7 +184,7 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
       
       // Move files.
-      $editor->processParameters(h5p_get_content_id($node), $node->main_library, json_decode($node->json_content), isset($node->h5p_library_old) ? $node->h5p_library_old : NULL, isset($node->h5p_params_old) ? json_decode($node->h5p_params_old) : NULL);
+      $editor->processParameters(h5p_get_content_id($node), h5peditor_get_library_property($node->h5p_library), json_decode($node->json_content), isset($node->h5p_library_old) ? $node->h5p_library_old : NULL, isset($node->h5p_params_old) ? json_decode($node->h5p_params_old) : NULL);
   }
 }
 
@@ -196,13 +203,12 @@ function h5peditor_libraries_callback() {
  * 
  * @param string $library
  */
-function h5peditor_library_callback($library_name) {
-  // TODO: Add versioning here
+function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
   $storage = h5peditor_get_storage_instance();
   $h5p_editor = new H5peditor($storage, file_directory_path());
 
   header('Content-type: application/json');
-  print $h5p_editor->getLibraryData($library_name);
+  print $h5p_editor->getLibraryData($machine_name, $major_version, $minor_version);
 }
 
 /**
@@ -241,4 +247,42 @@ function h5peditor_get_storage_instance() {
   }
   
   return $storage_instance;
+}
+
+function h5peditor_main_library_to_string($node, $as_string = FALSE) {
+  if (!isset($node->main_library)) {
+    return FALSE;
+  }
+  return $node->main_library['machineName'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'];
+}
+
+function h5peditor_get_library_property($library, $property = 'all') {
+  $matches = array();
+  preg_match_all('/(.+)\s(\d)+\.(\d)$/', $library, $matches);
+  if ($matches) {
+    $library_data = array(
+      'machineName' => $matches[1][0],
+      'majorVersion' => $matches[2][0],
+      'minorVersion' => $matches[3][0],
+    );
+    switch ($property) {
+      case 'all':
+        return $library_data;
+      case 'libraryId':
+        $temp = db_result(db_query(
+          "SELECT library_id
+          FROM {h5p_libraries}
+          WHERE machine_name = '%s'
+          AND major_version = %d
+          AND minor_version = %d",
+          $library_data['machineName'], $library_data['majorVersion'], $library_data['minorVersion']
+        ));
+        return $temp;
+      default:
+        return $libraryData[$property];
+    }
+  }
+  else {
+    return FALSE;
+  }
 }
