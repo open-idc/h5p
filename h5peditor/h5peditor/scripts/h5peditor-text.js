@@ -1,19 +1,31 @@
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
 /**
  * Create a text field for the form.
+ * 
+ * @param {mixed} parent
+ * @param {Object} field
+ * @param {mixed} params
+ * @param {function} setValue
+ * @returns {ns.Text}
  */
-function H5peditorText(parent, field, params, setValue) {
+ns.Text = function (parent, field, params, setValue) {
   this.field = field;
   this.value = params;
   this.setValue = setValue;
-}
+};
 
 /**
  * Append field to wrapper.
+ * 
+ * @param {type} $wrapper
+ * @returns {undefined}
  */
-H5peditorText.prototype.appendTo = function ($wrapper) {
+ns.Text.prototype.appendTo = function ($wrapper) {
   var that = this;
   
-  this.$item = H5peditor.$(H5peditorForm.createItem(this.field.type, this.createHtml())).appendTo($wrapper);
+  this.$item = ns.$(this.createHtml()).appendTo($wrapper);
   this.$input = this.$item.children('label').children('input');
   this.$errors = this.$item.children('.errors');
   
@@ -23,66 +35,49 @@ H5peditorText.prototype.appendTo = function ($wrapper) {
     
     if (value) {
       // Set param
+      that.value = value;
       that.setValue(that.field, value);
     }
   });
-}
+};
 
 /**
  * Create HTML for the text field.
  */
-H5peditorText.prototype.createHtml = function () {
-  var html = '<label>';
+ns.Text.prototype.createHtml = function () {
+  var input = ns.createText(this.field.description, this.value, this.field.maxLength);
+  var label = ns.createLabel(this.field, input);
   
-  if (this.field.length == undefined) {
-    this.field.length = 255;
-  }
-  
-  if (this.field.label != undefined) {
-    html += '<span class="label">' + this.field.label + '</span>';
-  }
-  
-  html += '<input type="text"';
-  if (this.field.description != undefined) {
-    html += ' title="' + this.field.description + '" placeholder="' + this.field.description + '"';
-  }
-  
-  if (this.value != undefined) {
-    html += ' value="' + this.value + '"';
-  }
-  
-  return html + ' maxlength="' + this.field.length  + '"/></label>';
-}
+  return ns.createItem(this.field.type, label);
+};
 
 /**
  * Validate the current text field.
  */
-H5peditorText.prototype.validate = function () {
+ns.Text.prototype.validate = function () {
   var that = this;
   
-  var value = this.$input.val().replace(/^\s+|\s+$/g, '');
+  var value = ns.trim(this.$input.val());
     
-  if (this.field.required != undefined && this.field.required && !value.length) {
-    this.$errors.append(H5peditorForm.createError(H5peditor.t('requiredProperty', {':property': 'text field'})));
+  if ((that.field.optional === undefined || !that.field.optional) && !value.length) {
+    this.$errors.append(ns.createError(ns.t('requiredProperty', {':property': 'text field'})));
   }
-  else if (value.length > this.field.length) {
-    this.$errors.append(H5peditorForm.createError(H5peditor.t('tooLong', {':max': this.field.length})));
+  else if (value.length > this.field.maxLength) {
+    this.$errors.append(ns.createError(ns.t('tooLong', {':max': this.field.maxLength})));
   }
-  else if (this.field.regexp != undefined && !value.match(new RegExp(this.field.regexp.pattern, this.field.regexp.modifiers))) {
-    this.$errors.append(H5peditorForm.createError(H5peditor.t('invalidFormat')));
+  else if (this.field.regexp !== undefined && !value.match(new RegExp(this.field.regexp.pattern, this.field.regexp.modifiers))) {
+    this.$errors.append(ns.createError(ns.t('invalidFormat')));
   }
 
-  if (this.$errors.children().length) {
-    this.$input.keyup(function () {
-      that.$errors.html('');
-      that.$input.unbind('keyup');
-    });
-    
-    return false;
-  }
-  
-  return value;
-}
+  return ns.checkErrors(this.$errors, this.$input, value);
+};
+
+/**
+ * Remove this item.
+ */
+ns.Text.prototype.remove = function () {
+  this.$item.remove();
+};
 
 // Tell the editor what semantic field we are.
-H5peditor.fieldTypes.text = H5peditorText;
+ns.fieldTypes.text = ns.Text;

@@ -1,4 +1,7 @@
-H5peditor.init = function () {
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
+ns.init = function () {
   var h5peditor;
   var $upload = $('#edit-h5p-wrapper');
   var $editor = $('.h5p-editor');
@@ -6,21 +9,21 @@ H5peditor.init = function () {
   var $type = $('input[name="h5p_type"]');
   var library = $('#edit-h5p-library').val();
   
-  H5peditor.$ = $;
-  H5peditor.basePath = Drupal.settings.basePath + 'h5peditor/';
-  H5peditor.contentId = Drupal.settings.nodeVersionId;
-  H5peditor.filesPath = Drupal.settings.filesPath;
-  H5peditor.fileIcon = Drupal.settings.fileIcon;
+  ns.$ = $;
+  ns.basePath = Drupal.settings.basePath + 'h5peditor/';
+  ns.contentId = Drupal.settings.nodeVersionId;
+  ns.filesPath = Drupal.settings.filesPath;
+  ns.fileIcon = Drupal.settings.fileIcon;
   
   $type.change(function () {
-    if ($type.filter(':checked').val() == 'upload') {
+    if ($type.filter(':checked').val() === 'upload') {
       $create.hide();
       $upload.show();
     }
     else {
       $upload.hide();
-      if (h5peditor == undefined) {
-        h5peditor = new H5peditor(library, JSON.parse($('#edit-h5p-params').val()));
+      if (h5peditor === undefined) {
+        h5peditor = new ns.Editor(library, JSON.parse($('#edit-h5p-params').val()));
         h5peditor.replace($editor);
       }
       $create.show();
@@ -32,16 +35,16 @@ H5peditor.init = function () {
   }
 
   $('#node-form').submit(function () {
-    if (h5peditor != undefined) {
+    if (h5peditor !== undefined) {
       var params = h5peditor.getParams();
+//      console.log(params);
       if (params) {
         $('#edit-h5p-library').val(h5peditor.getLibrary());
         $('#edit-h5p-params').val(JSON.stringify(params));
       }
+//      return false;
     }
   });
-}
+};
 
-$(document).ready(function () {
-  H5peditor.init();
-});
+$(document).ready(ns.init);

@@ -1,7 +1,16 @@
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
 /**
  * Creates a coordinates picker for the form.
+ * 
+ * @param {mixed} parent
+ * @param {object} field
+ * @param {mixed} params
+ * @param {function} setValue
+ * @returns {ns.Coordinates}
  */
-function H5peditorCoordinates(parent, field, params, setValue) {
+ns.Coordinates = function (parent, field, params, setValue) {
   var that = this;
 
   this.parent = parent;
@@ -9,69 +18,97 @@ function H5peditorCoordinates(parent, field, params, setValue) {
 
   // Find image field to get max size from.
   this.findImageField('max', function (field) {
-    if (field instanceof H5peditorFile) {
-      that.setMax(field.params.width, field.params.height);
+    if (field instanceof ns.File) {
+      if (field.params !== undefined) {
+        that.setMax(field.params.width, field.params.height);
+      }
 
       field.changes.push(function (file) {
+        // TODO: This should be removed once this item is removed.
         that.setMax(file.params.width, file.params.height);
+      });
+    }
+    else if (field instanceof ns.Dimensions) {
+      if (field.params !== undefined) {
+        that.setMax(field.params.width, field.params.height);
+      }
+
+      field.changes.push(function (width, height) {
+        // TODO: This should be removed once this item is removed.
+        that.setMax(width, height);
       });
     }
   });
 
   this.params = params;
   this.setValue = setValue;
-}
+};
 
 /**
  * Set max coordinates.
+ * 
+ * @param {string} x
+ * @param {string} y
+ * @returns {undefined}
  */
-H5peditorCoordinates.prototype.setMax = function (x, y) {
+ns.Coordinates.prototype.setMax = function (x, y) {
   this.field.max = {
-    x: x,
-    y: y
+    x: parseInt(x),
+    y: parseInt(y)
+  };
+  if (this.params !== undefined) {
+    this.$errors.html('');
+    this.validate();
   }
-}
+};
 
 /**
  * Find the image field for the given property and then run the callback.
+ * 
+ * @param {string} property
+ * @param {function} callback
+ * @returns {unresolved}
  */
-H5peditorCoordinates.prototype.findImageField = function (property, callback) {
+ns.Coordinates.prototype.findImageField = function (property, callback) {
   var that = this;
   var str = 'string';
   
-  if (typeof this.field[property] != str) {
+  if (typeof this.field[property] !== str) {
     return;
   }
   
   // Find field when tree is ready.
   this.parent.ready(function () {
-    if (typeof that.field[property] != str) {
-      if (that.field[property] != undefined) {
+    if (typeof that.field[property] !== str) {
+      if (that.field[property] !== undefined) {
         callback(that.field[property]);
       }
       return; // We've already found this field before.
     }
     var path = that.field[property];
       
-    that.field[property] = H5peditorForm.findField(that.field[property], that.parent);
+    that.field[property] = ns.findField(that.field[property], that.parent);
     if (!that.field[property]) {
-      throw H5peditor.t('unknownFieldPath', {':path': path});
+      throw ns.t('unknownFieldPath', {':path': path});
     }
-    if (that.field[property].field.type != 'image') {
-      throw H5peditor.t('notImageField', {':path': path});
+    if (that.field[property].field.type !== 'image' && that.field[property].field.type !== 'dimensions') {
+      throw ns.t('notImageOrDimensionsField', {':path': path});
     }
       
     callback(that.field[property]);
   });
-}
+};
 
 /**
  * Append the field to the wrapper.
+ * 
+ * @param {jQuery} $wrapper
+ * @returns {undefined}
  */
-H5peditorCoordinates.prototype.appendTo = function ($wrapper) {
+ns.Coordinates.prototype.appendTo = function ($wrapper) {
   var that = this;
   
-  this.$item = H5peditor.$(H5peditorForm.createItem(this.field.type, this.createHtml())).appendTo($wrapper);
+  this.$item = ns.$(this.createHtml()).appendTo($wrapper);
   this.$inputs = this.$item.find('input');
   this.$errors = this.$item.children('.errors');
 
@@ -87,72 +124,57 @@ H5peditorCoordinates.prototype.appendTo = function ($wrapper) {
   }).click(function () {
     return false;
   });
-}
+};
 
 /**
  * Create HTML for the coordinates picker.
  */
-H5peditorCoordinates.prototype.createHtml = function () {
-  var html = '<label>';
+ns.Coordinates.prototype.createHtml = function () {
+  var input = ns.createText('X', this.params !== undefined ? this.params.x : undefined, 15) + ' , ' + ns.createText('Y', this.params !== undefined ? this.params.y : undefined, 15);
+  var label = ns.createLabel(this.field, input);
   
-  if (this.field.label != undefined) {
-    html += '<span class="label">' + this.field.label + '</span>';
-  }
-  
-  html += '<input type="text" placeholder="X"';
-  if (this.params != undefined) {
-    html += ' value="' + this.params.x + '"';
-  }
-  html += ' maxlength="15"/> , <input type="text" placeholder="Y"';
-  if (this.params != undefined) {
-    html += ' value="' + this.params.y + '"';
-  }
-  
-  return html + ' maxlength="15"/></label>';
-}
+  return ns.createItem(this.field.type, label);
+};
 
 /**
  * Validate the current values.
  */
-H5peditorCoordinates.prototype.validate = function () {
+ns.Coordinates.prototype.validate = function () {
   var that = this;
-  var size = {};
+  var coordinates = {};
 
   this.$inputs.each(function (i) {
-    var $input = H5peditor.$(this);
-    var value = $input.val().replace(/^\s+|\s+$/g, '');
+    var $input = ns.$(this);
+    var value = ns.trim($input.val());
     var property = i ? 'y' : 'x';
     
-    if ((that.field.optional == undefined || !that.field.optional) && !value.length) {
-      that.$errors.append(H5peditorForm.createError(H5peditor.t('requiredProperty', {':property': property})));
+    if ((that.field.optional === undefined || !that.field.optional) && !value.length) {
+      that.$errors.append(ns.createError(ns.t('requiredProperty', {':property': property})));
       return false;
     }
     else if (!value.match(new RegExp('^[0-9]+$'))) {
-      that.$errors.append(H5peditorForm.createError(H5peditor.t('onlyNumbers', {':property': property})));
-      return false;
-    }
-    else if (that.field.max != undefined && value > that.field.max[property]) {
-      that.$errors.append(H5peditorForm.createError(H5peditor.t('exceedsMax', {':property': property, ':max': that.field.max[property]})));
+      that.$errors.append(ns.createError(ns.t('onlyNumbers', {':property': property})));
       return false;
     }
     
-    size[property] = value;
+    value = parseInt(value);
+    if (that.field.max !== undefined && value > that.field.max[property]) {
+      that.$errors.append(ns.createError(ns.t('exceedsMax', {':property': property, ':max': that.field.max[property]})));
+      return false;
+    }
+    
+    coordinates[property] = value;
   });
 
-  if (this.$errors.children().length) {
-    this.$inputs.keyup(function (e) {
-      if (e.keyCode == 9) { // TAB
-        return;
-      }
-      that.$errors.html('');
-      that.$inputs.unbind('keyup');
-    });
-    
-    return false;
-  }
-  
-  return size;
-}
+  return ns.checkErrors(this.$errors, this.$inputs, coordinates);
+};
+
+/**
+ * Remove this item.
+ */
+ns.Coordinates.prototype.remove = function () {
+  this.$item.remove();
+};
 
 // Tell the editor what semantic field we are.
-H5peditor.fieldTypes.coordinates = H5peditorCoordinates;
+ns.fieldTypes.coordinates = ns.Coordinates;

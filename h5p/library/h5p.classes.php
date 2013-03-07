@@ -2,7 +2,7 @@
 /**
  * Interface defining functions the h5p library needs the framework to implement
  */
-interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonly known as a interface for classes to implement, not a framework as the name might suggest.
+interface H5PFrameworkInterface {
   /**
    * Show the user an error message
    * 
@@ -88,7 +88,7 @@ interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonl
    * @param object $libraryData
    *  Object holding the information that is to be stored
    */
-  public function storeLibraryData(&$libraryData);
+  public function saveLibraryData(&$libraryData);
   
   /**
    * Stores contentData
@@ -102,10 +102,10 @@ interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonl
    * @param int $contentMainId
    *  Any contentMainId defined by the framework, for instance to support revisioning
    */
-  public function storeContentData($contentId, $contentJson, $mainJsonData, $contentMainId = NULL);
+  public function saveContentData($contentId, $contentJson, $mainJsonData, $mainLibraryId, $contentMainId = NULL);
 
   /**
-   * Copies content data
+   * Copies library usage
    *
    * @param int $contentId
    *  Framework specific id identifying the content
@@ -116,7 +116,7 @@ interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonl
    *  That supports versioning. (In this case the content id will typically be
    *  the version id, and the contentMainId will be the frameworks content id
    */
-  public function copyContentData($contentId, $copyFromId, $contentMainId = NULL);
+  public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL);
 
   /**
    * Deletes content data
@@ -152,7 +152,7 @@ interface h5pFramework { // TODO: I suspect this is a "skeleton" or more commonl
   public function loadLibrary($machineName, $majorVersion, $minorVersion);
 }
 
-class h5pValidator {
+class H5PValidator {
   public $h5pF;
   public $h5pC;
 
@@ -234,20 +234,23 @@ class h5pValidator {
     'preloadedCss' => array(
       'path' => '/^((\\\|\/)?[a-z_\-\s0-9]+)+\.css$/i',
     ),
+    'dropLibraryCss' => array(
+      'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
+    ),
     'w' => '/^[0-9]{1,4}$/',
     'h' => '/^[0-9]{1,4}$/',
     'embedTypes' => array('iframe', 'div'),
   );
 
   /**
-   * Constructor for the h5pValidator
+   * Constructor for the H5PValidator
    *
-   * @param object $h5pFramework
-   *  The frameworks implementation of the h5pFramework interface
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
    */
-  public function __construct($h5pFramework, $h5pCore) {
-    $this->h5pF = $h5pFramework;
-    $this->h5pC = $h5pCore;
+  public function __construct($H5PFramework, $H5PCore) {
+    $this->h5pF = $H5PFramework;
+    $this->h5pC = $H5PCore;
   }
 
   /**
@@ -270,7 +273,7 @@ class h5pValidator {
       $zip->close();
     }
     else {
-      $this->h5pF->setErrorMessage($this->h5pF->t('The file you uploaded is not a valid HTML5 Pack.'));
+      $this->h5pF->setErrorMessage($this->h5pF->t('The file you uploaded is not a valid HTML5 Package.'));
       $this->h5pC->delTree($tmp_dir);
       return;
     }
@@ -283,7 +286,6 @@ class h5pValidator {
     $libraryJsonData;
     $mainH5pExists = $imageExists = $contentExists = FALSE;
     foreach ($files as $file) {
-      // TODO: Any reason not to just drop anything starting with .?
       if (in_array(substr($file, 0, 1), array('.', '_'))) {
         continue;
       }
@@ -545,16 +547,24 @@ class h5pValidator {
     $valid = TRUE;
 
     if (is_string($requirement)) {
-      // The requirement is a regexp, match it against the data
-      if (is_string($h5pData) || is_int($h5pData)) {
-        if (preg_match($requirement, $h5pData) === 0) {
-           $this->h5pF->setErrorMessage($this->h5pF->t("Invalid data provided for %property in %library", array('%property' => $property_name, '%library' => $library_name)));
-           $valid = FALSE;
+      if ($requirement == 'boolean') {
+        if (!is_bool($h5pData)) {
+         $this->h5pF->setErrorMessage($this->h5pF->t("Invalid data provided for %property in %library. Boolean expected.", array('%property' => $property_name, '%library' => $library_name)));
+         $valid = FALSE;
         }
       }
       else {
-        $this->h5pF->setErrorMessage($this->h5pF->t("Invalid data provided for %property in %library", array('%property' => $property_name, '%library' => $library_name)));
-        $valid = FALSE;
+        // The requirement is a regexp, match it against the data
+        if (is_string($h5pData) || is_int($h5pData)) {
+          if (preg_match($requirement, $h5pData) === 0) {
+             $this->h5pF->setErrorMessage($this->h5pF->t("Invalid data provided for %property in %library", array('%property' => $property_name, '%library' => $library_name)));
+             $valid = FALSE;
+          }
+        }
+        else {
+          $this->h5pF->setErrorMessage($this->h5pF->t("Invalid data provided for %property in %library", array('%property' => $property_name, '%library' => $library_name)));
+          $valid = FALSE;
+        }
       }
     }
     elseif (is_array($requirement)) {
@@ -639,20 +649,20 @@ class h5pValidator {
   }
 }
 
-class h5pSaver {
+class H5PStorage {
   
   public $h5pF;
   public $h5pC;
 
   /**
-   * Constructor for the h5pSaver
+   * Constructor for the H5PStorage
    *
-   * @param object $h5pFramework
-   *  The frameworks implementation of the h5pFramework interface
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
    */
-  public function __construct($h5pFramework, $h5pCore) {
-    $this->h5pF = $h5pFramework;
-    $this->h5pC = $h5pCore;
+  public function __construct($H5PFramework, $H5PCore) {
+    $this->h5pF = $H5PFramework;
+    $this->h5pC = $H5PCore;
   }
   
   public function savePackage($contentId, $contentMainId = NULL) {
@@ -669,24 +679,37 @@ class h5pSaver {
         // We already have the same or a newer version of this library
         continue;
       }
-      $this->h5pF->storeLibraryData($library, $new);
+      $this->h5pF->saveLibraryData($library, $new);
       
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
       $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $library['libraryId'];
       $this->h5pC->delTree($destination_path);
       rename($current_path, $destination_path);
     }
+    foreach ($this->h5pC->librariesJsonData as $key => &$library) {
+      // All libraries have been saved, we now save all the dependencies
+      if (isset($library['preloadedDependencies'])) {
+        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
+      }
+      if (isset($library['dynamicDependencies'])) {
+        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
+      }
+      if (isset($library['editorDependencies'])) {
+        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
+      }
+    }
     $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . 'content';
     $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
     rename($current_path, $destination_path);
-    
-    $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
-    $this->h5pF->storeContentData($contentId, $contentJson, $this->h5pC->mainJsonData, $contentMainId);
 
     $librariesInUse = array();
     $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData);
     $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
     $this->h5pC->delTree($this->h5pF->getUploadedH5pFolderPath());
+    
+    $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
+    $mainLibraryId = $librariesInUse[$this->h5pC->mainJsonData['mainLibrary']]['library']['libraryId'];
+    $this->h5pF->saveContentData($contentId, $contentJson, $this->h5pC->mainJsonData, $mainLibraryId, $contentMainId);
   }
 
   public function deletePackage($contentId) {
@@ -704,7 +727,7 @@ class h5pSaver {
     $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
     $this->h5pC->copyTree($source_path, $destination_path);
 
-    $this->h5pF->copyContentData($contentId, $copyFromId, $contentMainId);
+    $this->h5pF->copyLibraryUsage($contentId, $copyFromId, $contentMainId);
   }
 
   public function getLibraryUsage(&$librariesInUse, $jsonData, $dynamic = FALSE) {
@@ -733,20 +756,20 @@ class h5pSaver {
   }
 }
 
-class h5pCore {
+class H5PCore {
   public $h5pF;
   public $librariesJsonData;
   public $contentJsonData;
   public $mainJsonData;
 
   /**
-   * Constructor for the h5pSaver
+   * Constructor for the H5PCore
    *
-   * @param object $h5pFramework
-   *  The frameworks implementation of the h5pFramework interface
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
    */
-  public function __construct($h5pFramework) {
-    $this->h5pF = $h5pFramework;
+  public function __construct($H5PFramework) {
+    $this->h5pF = $H5PFramework;
   }
   
   public function isSameVersion($library, $dependency) {

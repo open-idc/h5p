@@ -1,34 +1,52 @@
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
 /**
  * Adds a file upload field to the form.
+ * 
+ * @param {mixed} parent
+ * @param {object} field
+ * @param {mixed} params
+ * @param {function} setValue
+ * @returns {ns.File}
  */
-function H5peditorFile(parent, field, params, setValue) {
+ns.File = function (parent, field, params, setValue) {
   this.field = field;
   this.params = params;
   this.setValue = setValue;
   
   this.changes = [];
-}
+};
 
 /**
  * Append field to the given wrapper.
+ * 
+ * @param {jQuery} $wrapper
+ * @returns {undefined}
  */
-H5peditorFile.prototype.appendTo = function ($wrapper) {
-  H5peditorFile.addIframe();
+ns.File.prototype.appendTo = function ($wrapper) {
+  ns.File.addIframe();
   
-  var label = this.field.label == undefined ? '' : '<label>' + this.field.label + '</label>'; 
-  this.$file = H5peditor.$(H5peditorForm.createItem(this.field.type, label + '<div class="file"></div>')).appendTo($wrapper).children('.file');
+  var label = '';
+  if (this.field.label !== 0) {
+    label = '<label>' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
+  }
+  
+  var html = ns.createItem(this.field.type, label + '<div class="file"></div>');
+  
+  this.$file = ns.$(html).appendTo($wrapper).children('.file');
   this.addFile(true);
   this.$errors = this.$file.next();
-}
+};
 
 /**
  * Creates thumbnail HTML and actions.
  */
-H5peditorFile.prototype.addFile = function (init) {
+ns.File.prototype.addFile = function (init) {
   var that = this;
   
-  if (this.params == undefined) {
-    this.$file.html('<a href="#" class="add" title="' + H5peditor.t('addFile') + '"></a>').children('.add').click(function () {
+  if (this.params === undefined) {
+    this.$file.html('<a href="#" class="add" title="' + ns.t('addFile') + '"></a>').children('.add').click(function () {
       that.uploadFile();
       return false;
     });
@@ -36,21 +54,28 @@ H5peditorFile.prototype.addFile = function (init) {
   }
 
   var thumbnail;
-  if (this.field.type == 'image') {
+  if (this.field.type === 'image') {
     thumbnail = {};
-    thumbnail.path = (init == undefined ? H5peditor.filesPath + '/h5peditor/' : H5peditor.filesPath + '/h5p/content/' + H5peditor.contentId + '/') + this.params.path,
+    thumbnail.path = (init === undefined || !ns.contentId ? ns.filesPath + '/h5peditor/' : ns.filesPath + '/h5p/content/' + ns.contentId + '/') + this.params.path,
     thumbnail.height = 100;
     thumbnail.width = thumbnail.height * (this.params.width / this.params.height);
   }
   else {
-    thumbnail = H5peditor.fileIcon;
+    thumbnail = ns.fileIcon;
   }
   
-  this.$file.html('<a href="#" title="' + H5peditor.t('changeFile') + '" class="thumbnail"><img src="' + thumbnail.path + '" width="' + thumbnail.width + '" height="' + thumbnail.height + '" alt="' + (this.field.label == undefined ? '' : this.field.label) + '"/><a href="#" class="remove" title="' + H5peditor.t('removeFile') + '"></div>').children(':eq(0)').click(function () {
+  this.$file.html('<a href="#" title="' + ns.t('changeFile') + '" class="thumbnail"><img width="' + thumbnail.width + '" height="' + thumbnail.height + '" alt="' + (this.field.label === undefined ? '' : this.field.label) + '"/><a href="#" class="remove" title="' + ns.t('removeFile') + '"></a></a>').children(':eq(0)').click(function () {
     that.uploadFile();
     return false;
-  }).next().click(function (e) {
-    if (!confirm(H5peditor.t('confirmRemoval', {':type': 'file'}))) {
+  }).children('img').error(function () {
+    var $img = ns.$(this);
+    var path = ns.filesPath + '/h5peditor/' + that.params.path;
+
+    if ($img.attr('src') !== path) {
+      ns.$(this).unbind('error').attr('src', path);
+    }
+  }).attr('src', thumbnail.path).end().next().click(function (e) {
+    if (!confirm(ns.t('confirmRemoval', {':type': 'file'}))) {
       return false;
     }
     delete that.params;
@@ -58,22 +83,22 @@ H5peditorFile.prototype.addFile = function (init) {
     that.addFile();
     return false;
   });
-}
+};
 
 /**
  * Start a new upload.
  */
-H5peditorFile.prototype.uploadFile = function () {
+ns.File.prototype.uploadFile = function () {
   var that = this;
   
-  if (H5peditorFile.$file == 0) {
+  if (ns.File.$file === 0) {
     return; // Wait for our turn :)
   }
   
-  H5peditorFile.callback = function (json) {
+  ns.File.callback = function (json) {
     try {
       var result = JSON.parse(json);
-      if (result['error'] != undefined) {
+      if (result['error'] !== undefined) {
         throw(result['error']);
       }
       
@@ -86,45 +111,53 @@ H5peditorFile.prototype.uploadFile = function () {
       }
     }
     catch (error) {
-      that.$errors.append(H5peditorForm.createError(error));
+      that.$errors.append(ns.createError(error));
     }
-  }
+  };
   
-  H5peditorFile.$field.val(JSON.stringify(this.field));
-  H5peditorFile.$file.click();
-}
+  ns.File.$field.val(JSON.stringify(this.field));
+  ns.File.$file.click();
+};
+
+/**
+ * Remove this item.
+ */
+ns.File.prototype.remove = function () {
+  // TODO: Check what happens when removed during upload.
+  this.$file.parent().remove();
+};
 
 /**
  * Add the iframe we use for uploads.
  */
-H5peditorFile.addIframe = function () {
-  if (H5peditorFile.$field != undefined) {
+ns.File.addIframe = function () {
+  if (ns.File.$field !== undefined) {
     return;
   }
   
   // All editor uploads share this iframe to conserve valuable resources.
-  H5peditor.$('<iframe id="h5peditor-uploader"></iframe>').load(function () {
+  ns.$('<iframe id="h5peditor-uploader"></iframe>').load(function () {
     var $body = $(this).contents().find('body');
     var json = $body.text();
-    if (H5peditorFile.callback != undefined) {
-      H5peditorFile.callback(json);
+    if (ns.File.callback !== undefined) {
+      ns.File.callback(json);
     }
     
     $body.html('');
-    var $form = H5peditor.$('<form method="post" enctype="multipart/form-data" action="' + H5peditor.basePath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/></form>').appendTo($body);
+    var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.basePath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/></form>').appendTo($body);
     
-    H5peditorFile.$field = $form.children('input[type="hidden"]');
-    H5peditorFile.$file = $form.children('input[type="file"]');
+    ns.File.$field = $form.children('input[type="hidden"]');
+    ns.File.$file = $form.children('input[type="file"]');
     
-    H5peditorFile.$file.change(function () {
-      H5peditorFile.$field = 0;
-      H5peditorFile.$file = 0;
+    ns.File.$file.change(function () {
+      ns.File.$field = 0;
+      ns.File.$file = 0;
       $form.submit();
     });
     
   }).appendTo('body');
-}
+};
 
 // Tell the editor what semantic field we are.
-H5peditor.fieldTypes.image = H5peditorFile;
-H5peditor.fieldTypes.file = H5peditorFile;
+ns.fieldTypes.image = ns.File;
+ns.fieldTypes.file = ns.File;

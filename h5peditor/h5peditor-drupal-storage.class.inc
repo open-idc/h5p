@@ -4,15 +4,21 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   
   function __construct() { }
   
-  public function getSemantics($library_name) {
-    return db_result(db_query("SELECT semantics FROM {h5p_library} WHERE machine_name = '%s'", $library_name));
+  public function getSemantics($machineName, $majorVersion, $minorVersion) {
+    return db_result(db_query(
+      "SELECT semantics
+      FROM {h5p_libraries}
+      WHERE machine_name = '%s'
+      AND major_version = %d
+      AND minor_version = %d",
+      $machineName, $majorVersion, $minorVersion));
   }
 
-  public function getFilePaths($library_name) {
+  public function getFilePaths($libraryId) {
     $result = db_query(
       "SELECT preloaded_css, preloaded_js, library_id
-      FROM {h5p_library} hl
-      WHERE hl.machine_name = '%s'", $library_name
+      FROM {h5p_libraries} hl
+      WHERE hl.library_id = %d", $libraryId
     );
     $file_paths = array(
       'js' => array(),
@@ -48,25 +54,28 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     $libraries = array();
     
     // Get some books from the library.
-    $libraries_result = db_query("SELECT machine_name AS name, title AS label FROM {h5p_library} WHERE runnable = 1 AND semantics IS NOT NULL");
+    $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
     while ($library = db_fetch_object($libraries_result)) {
       $libraries[] = $library;
     }
 
     return json_encode($libraries);
   }
-  public function getEditorLibraries($libraryName) {
+  public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
     $editorLibraries = array();
 
-    // TODO: Add versioning support here, and also add support for fetching additional libraries this library depends on
+    // TODO: Add support for fetching additional libraries this library depends on
     $result = db_query(
-      "SELECT hldi.machine_name
-      FROM {h5p_library_dependency_index} hldi
-      JOIN {h5p_library} hl ON hldi.library_id = hl.library_id
+      "SELECT hll.required_library_id
+      FROM {h5p_libraries} hl
+      JOIN {h5p_libraries_libraries} hll ON hll.library_id = hl.library_id
       WHERE hl.machine_name = '%s'
-    ", $libraryName);
-    while ($editorLibraryName = db_result($result)) {
-      $editorLibraries[] = $editorLibraryName;
+      AND hl.major_version = %d
+      AND hl.minor_version = %d
+      AND hll.dependency_type = 'editor'
+    ", $machineName, $majorVersion, $minorVersion);
+    while ($editorLibraryId = db_result($result)) {
+      $editorLibraries[] = $editorLibraryId;
     }
     return $editorLibraries;
   }

@@ -1,48 +1,69 @@
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
 /**
- * Create a list of fields for the form.
+ * Create a ordered list of fields for the form.
+ * 
+ * @param {mixed} parent
+ * @param {Object} field
+ * @param {mixed} params
+ * @param {function} setValue
+ * @returns {ns.List}
  */
-function H5peditorList(parent, field, params, setValue) {
+ns.List = function (parent, field, params, setValue) {
   var that = this;
   
-  if (field.max == undefined) {
+  if (field.max === undefined) {
     field.max = 15;
   }
-  if (field.entity == undefined) {
+  if (field.entity === undefined) {
     field.entity = 'item';
   }
   
-  if (params == undefined) {
+  if (params === undefined) {
     this.params = [];
     setValue(field, this.params);
   } else {
     this.params = params;
   }
-  hm = this.params;
   
   this.field = field;
   this.parent = parent;
   this.$items = [];
   this.children = [];
+  this.library = parent.library + '/' + field.name;
   
-  this.queueReady = true;
+  this.formOffset = ns.findAncestor(parent).offset;
+
+  this.passReadies = true;
   parent.ready(function () {
-    that.queueReady = false;
+    that.passReadies = false;
   });
-}
+};
 
 /**
  * Append list to wrapper.
+ * 
+ * @param {jQuery} $wrapper
+ * @returns {undefined}
  */
-H5peditorList.prototype.appendTo = function ($wrapper) {
+ns.List.prototype.appendTo = function ($wrapper) {
   var that = this;
   
-  this.$list = H5peditor.$(H5peditorForm.createItem(this.field.type, (this.field.label == undefined ? '' : '<label>' + this.field.label + '</label>') + '<ul></ul><input type="button" value="' + H5peditor.t('addEntity', {':entity': this.field.entity}) + '"/>')).appendTo($wrapper).children('ul');
+  var label = '';
+  if (this.field.label !== 0) {
+    label = '<label>' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
+  }
+  
+  var html = ns.createItem(this.field.type, label + '<ul></ul><input type="button" value="' + ns.t('addEntity', {':entity': this.field.entity}) + '"/>');
+  
+  this.$list = ns.$(html).appendTo($wrapper).children('ul');
   this.$add = this.$list.next().click(function () {
-    if (that.params.length == that.field.max) {
+    if (that.params.length === that.field.max) {
       return;  
     }
     var item = that.addItem();
-    if (item instanceof H5peditorGroup) {
+    if (item instanceof ns.Group) {
       item.expand();
     }
   });
@@ -50,64 +71,166 @@ H5peditorList.prototype.appendTo = function ($wrapper) {
   for (var i = 0; i < this.params.length; i++) {
     this.addItem(i);
   }
-}
+};
+
+/**
+ * Move the item around.
+ * 
+ * @param {jQuery} $item
+ * @param {jQuery} $placeholder
+ * @param {Integer} x
+ * @param {Integer} y
+ * @returns {unresolved}
+ */
+ns.List.prototype.move = function ($item, $placeholder, x, y) {
+  var oldIndex, newIndex;
+  
+  // Adjust so the mouse is placed on top of the icon.
+  x = x - this.adjustX;
+  y = y - this.adjustY;
+  $item.css({top: y - this.marginTop - this.formOffset.top, left: x - this.formOffset.left});
+  
+  // Try to move up.
+  var $prev = $item.prev().prev();
+  if ($prev.length && y < $prev.offset().top + ($prev.height() / 2)) {
+    $prev.insertAfter($item);
+    
+    oldIndex = this.getIndex($item);
+    newIndex = oldIndex - 1;
+    this.swap(this.$items, oldIndex, newIndex);
+    this.swap(this.params, oldIndex, newIndex);
+    this.swap(this.children, oldIndex, newIndex);
+    
+    return;
+  }
+  
+  // Try to move down.
+  var $next = $item.next();
+  if ($next.length && y + $item.height() > $next.offset().top + ($next.height() / 2)) {
+    $next.insertBefore($placeholder);
+    
+    oldIndex = this.getIndex($item);
+    newIndex = oldIndex + 1;
+    this.swap(this.$items, oldIndex, newIndex);
+    this.swap(this.params, oldIndex, newIndex);
+    this.swap(this.children, oldIndex, newIndex);
+  }
+};
+
+ns.List.prototype.swap = function (list, oldIndex, newIndex) {  
+  var oldItem = list[oldIndex];
+  list[oldIndex] = list[newIndex];
+  list[newIndex] = oldItem;
+};
 
 /**
  * Add an item to the list.
+ * 
+ * @param {integer} i
+ * @returns {unresolved}
  */
-H5peditorList.prototype.addItem = function (i) {
+ns.List.prototype.addItem = function (i) {
   var that = this;
+  var $item, $placeholder;
   
-  if (i == undefined) {
+  if (i === undefined) {
     i = this.params.length;
   }
   
-  var $item = H5peditor.$('<li><a href="#" class="remove"></a><div class="content"></div></li>').appendTo(this.$list).children('.remove').click(function () {
+  var move = function (event) {
+    that.move($item, $placeholder, event.pageX, event.pageY);
+  };
+  var up = function () {
+    // Stop tracking mouse
+    ns.$body.unbind('mousemove', move).unbind('mouseup', up);
+    $item.removeClass('moving').css({width: 'auto', height: 'auto'});
+    $placeholder.remove();
+  };
+  
+  $item = ns.$('<li><a href="#" class="order"></a><a href="#" class="remove"></a><div class="content"></div></li>').appendTo(this.$list).children('.order').mousedown(function (event) {
+    // Start tracking mouse
+    ns.$body.attr('unselectable', 'on').mouseup(up).bind('mouseleave', up).css({'-moz-user-select': 'none', '-webkit-user-select': 'none', 'user-select': 'none', '-ms-user-select': 'none'}).mousemove(move)[0].onselectstart = function () {
+      return false;
+    };
+    
+    var offset = $item.offset();
+    that.adjustX = event.pageX - offset.left;
+    that.adjustY = event.pageY - offset.top;
+    that.marginTop = parseInt($item.css('marginTop'));
+    
+    var width = $item.width();
+    var height = $item.height();
+    
+    $item.addClass('moving').css({width: width, height: height});
+    $placeholder = ns.$('<li class="placeholder" style="width:' + width + 'px;height:' + height + 'px"></li>').insertBefore($item);
+    
+    move(event);
+    return false;
+  }).click(function () {
+    return false;
+  }).next().click(function () {
     that.removeItem(that.getIndex($item));
     return false;
-  }).end();
-  this.children[i] = new H5peditor.fieldTypes[this.field.field.type](this, this.field.field, this.params[i], function (field, value) {
+  }).end().end();
+  
+  if (!this.passReadies) {
+    this.readies = [];
+  }
+  this.children[i] = new ns.fieldTypes[this.field.field.type](this, this.field.field, this.params[i], function (field, value) {
     that.params[that.getIndex($item)] = value;
   });
   this.children[i].appendTo($item.children('.content'));
+  if (!this.passReadies) {
+    for (var j = 0; j < this.readies.length; j++) {
+      this.readies[j]();
+    }
+    delete this.readies;
+  }
   
   this.$items[i] = $item;
 
   return this.children[i];
-}
+};
 
 /**
  * Remove and item from the list.
+ * 
+ * @param {integer} i
+ * @returns {unresolved}
  */
-H5peditorList.prototype.removeItem = function (i) {
-  if (!confirm(H5peditor.t('confirmRemoval', {':type': this.field.entity}))) {
+ns.List.prototype.removeItem = function (i) {
+  if (!confirm(ns.t('confirmRemoval', {':type': this.field.entity}))) {
     return;
   }
   
+  this.children[i].remove();
   this.$items[i].remove();
   
   this.$items.splice(i, 1);
   this.params.splice(i, 1);
   this.children.splice(i, 1);
-}
+};
 
 /**
  * Get the index for the given item.
+ * 
+ * @param {jQuery} $item
+ * @returns {Integer}
  */
-H5peditorList.prototype.getIndex = function ($item) {
+ns.List.prototype.getIndex = function ($item) {
   for (var i = 0; i < this.$items.length; i++) {
-    if (this.$items[i] == $item) {
+    if (this.$items[i] === $item) {
       break;
     }
   }
   
   return i;
-}
+};
 
 /**
  * Validate all fields in the list.
  */
-H5peditorList.prototype.validate = function () {
+ns.List.prototype.validate = function () {
   for (var i = 0; i < this.children.length; i++) {
     if (!this.children[i].validate()) {
       return false;
@@ -115,19 +238,30 @@ H5peditorList.prototype.validate = function () {
   }
   
   return true;
-}
+};
 
 /**
  * Collect functions to execute once the tree is complete.
+ * 
+ * @param {function} ready
+ * @returns {undefined}
  */
-H5peditorList.prototype.ready = function (ready) {
-  if (this.queueReady) {
+ns.List.prototype.ready = function (ready) {
+  if (this.passReadies) {
     this.parent.ready(ready);
   }
   else {
-    ready();
+    this.readies.push(ready);
   }
-}
+};
+
+/**
+ * Remove this item.
+ */
+ns.List.prototype.remove = function () {
+  ns.removeChildren(this.children);
+  this.$list.parent().remove();
+};
 
 // Tell the editor what semantic field we are.
-H5peditor.fieldTypes.list = H5peditorList;
+ns.fieldTypes.list = ns.List;
