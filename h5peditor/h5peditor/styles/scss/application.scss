@@ -40,6 +40,7 @@
     border: 1px solid #a0a0a0;
     background: #f9f9f9;
     outline: none;
+    min-height: 20px;
     @include border-radius(8px);
   }
   select {
@@ -61,12 +62,12 @@
     border: 0;
     overflow: hidden;
   }
-  ul {
+  .h5p-ul {
     padding: 0;
     margin: 0;
     list-style: none;
     
-    li {
+    .h5p-li {
       padding: 0 8px;
       margin: 8px 0;
       list-style: none;
@@ -147,14 +148,14 @@
     & > .content {
       display: none;
     }
-    li {
+    .h5p-li {
       background: #ebfffa;
       &:hover {
         background: #ccfff2;
       }
       .group {
         background: #ebfffa;
-        li {
+        .h5p-li {
           background: #feedff;
           &:hover {
             background: #fbd1ff;

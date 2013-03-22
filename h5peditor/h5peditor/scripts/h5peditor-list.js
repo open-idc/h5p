@@ -55,7 +55,7 @@ ns.List.prototype.appendTo = function ($wrapper) {
     label = '<label>' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
   }
   
-  var html = ns.createItem(this.field.type, label + '<ul></ul><input type="button" value="' + ns.t('addEntity', {':entity': this.field.entity}) + '"/>');
+  var html = ns.createItem(this.field.type, label + '<ul class="h5p-ul"></ul><input type="button" value="' + ns.t('addEntity', {':entity': this.field.entity}) + '"/>');
   
   this.$list = ns.$(html).appendTo($wrapper).children('ul');
   this.$add = this.$list.next().click(function () {
@@ -147,7 +147,7 @@ ns.List.prototype.addItem = function (i) {
     $placeholder.remove();
   };
   
-  $item = ns.$('<li><a href="#" class="order"></a><a href="#" class="remove"></a><div class="content"></div></li>').appendTo(this.$list).children('.order').mousedown(function (event) {
+  $item = ns.$('<li class="h5p-li"><a href="#" class="order"></a><a href="#" class="remove"></a><div class="content"></div></li>').appendTo(this.$list).children('.order').mousedown(function (event) {
     // Start tracking mouse
     ns.$body.attr('unselectable', 'on').mouseup(up).bind('mouseleave', up).css({'-moz-user-select': 'none', '-webkit-user-select': 'none', 'user-select': 'none', '-ms-user-select': 'none'}).mousemove(move)[0].onselectstart = function () {
       return false;
@@ -162,7 +162,7 @@ ns.List.prototype.addItem = function (i) {
     var height = $item.height();
     
     $item.addClass('moving').css({width: width, height: height});
-    $placeholder = ns.$('<li class="placeholder" style="width:' + width + 'px;height:' + height + 'px"></li>').insertBefore($item);
+    $placeholder = ns.$('<li class="placeholder h5p-li" style="width:' + width + 'px;height:' + height + 'px"></li>').insertBefore($item);
     
     move(event);
     return false;
