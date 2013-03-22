@@ -26,7 +26,7 @@ ns.Textarea.prototype.appendTo = function ($wrapper) {
   var that = this;
   
   this.$item = ns.$(this.createHtml()).appendTo($wrapper);
-  this.$input = this.$item.children('label').children('input');
+  this.$input = this.$item.children('label').children('textarea');
   this.$errors = this.$item.children('.errors');
   
   this.$input.change(function () {
@@ -49,7 +49,7 @@ ns.Textarea.prototype.createHtml = function () {
     input += ' title="' + this.field.description + '" placeholder="' + this.field.description + '"';
   }  
   input += '>';
-  if (this.params !== undefined) {
+  if (this.value !== undefined) {
     input += this.value;
   }
   input += '</textarea>';
