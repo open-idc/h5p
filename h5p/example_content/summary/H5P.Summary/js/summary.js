@@ -1,152 +1,187 @@
 window.H5P = window.H5P || {};
 
 H5P.Summary = function (options, contentId) {
-	if ( !(this instanceof H5P.Summary) ){
-		return new H5P.Summary(options, contentId);
-	}
+  if ( !(this instanceof H5P.Summary) ){
+    return new H5P.Summary(options, contentId);
+  }
 
-	var offset = 0;
-	var score = 0;
-	var answer = Array();
+  var offset = 0;
+  var score = 0;
+  var answer = Array();
 
-	// Function for attaching the multichoice to a DOM element.
-	var attach = function (target) {
-		var c=0; // element counter
-		var elements = Array();
-		var $ = H5P.jQuery;
-		var $target = typeof(target) === "string" ? $("#" + target) : $(target);
-		var $myDom = $target;
+  // Function for attaching the multichoice to a DOM element.
+  var attach = function (target) {
+    var c=0; // element counter
+    var elements = Array();
+    var $ = H5P.jQuery;
+    var $target = typeof(target) === "string" ? $("#" + target) : $(target);
+    var $myDom = $target;
 
-		// Create array objects
-		for (var i = 0; i < options.summaries.length; i++) {
-			elements[i] = Array();
-			for (var j = 0; j < options.summaries[i].length; j++) {
-				answer[c] = j == 0; // First claim is correct
-				elements[i][j] = {
-					id: c++,
-					text: options.summaries[i][j]
-				};
-			}
+    $target.addClass('summary-content');
 
-			// Randomize elements
-			for (var k = elements[i].length - 1; k > 0; k--) {
-				var j = Math.floor(Math.random() * (k + 1));
-				var temp = elements[i][k];
-				elements[i][k] = elements[i][j];
-				elements[i][j] = temp;
-			}
-		}
+    function do_final_evaluation(container, score) {
+      var error_count = 0;
 
-		// Create content panels
-		var $summary = $('<ul class="summary" id="summary-list"></ul>');
-		var $evaluation = $('<div class="evaluation" id="option-list">Velg riktig alternativ til å legge til oppsummeringen</div>');
-		var $score = $('<div class="score-intermediate" id="score"></div>');
-		var $options = $('<div class="options" id="option-list">');
-		var options_padding = parseInt($options.css('paddingLeft'));
+      // Count boards without errors
+      for (var i = 0; i < options.summaries.length; i++) {
+        error_count += options.summaries[i].error_count ? 1 : 0;
+      }
 
-		// Insert content
-		$myDom.append($summary);
-		$evaluation.append($score);
-		$myDom.append($evaluation);
-		$myDom.append($options);
+      // Calculate percentage
+      var percent = 100 - (error_count / options.summaries.length * 100);
 
-		// Add elements to content
-		for (var i = 0; i < elements.length; i++) {
-			var $page = $('<ul class="summary-entries" id="panel-'+i+'" data-panel="'+i+'"></ul>');
+      // Find evaluation message
+      for(var i = 0; i < options.response.length; i++) {
+        if(percent >= options.response[i].from) {
+          break;
+        }
+      }
 
-			for (var j = 0; j < elements[i].length; j++) {
-				var $node = $('<li id="node-'+elements[i][j].id+'" class="claim">'+elements[i][j].text+'</li>');
+      // Show final evaluation
+      var message = options.response[i].title + ". Du hadde "+(options.summaries.length-error_count)+" av " + options.summaries.length + " brett ("+Math.round(percent)+"%) uten feil. " + options.response[i].message;
+      var evaluation = $('<div class="score-over-'+options.response[i].from+'">'+message+'</div>');
+      container.append(evaluation);
+    }
 
-				// Add click event
-				$node.click(function(){
-					var $el = $('#'+this.id, $myDom);
-					var node_id = parseInt(this.id.replace(/[a-z\-]+/,''));
-					var classname = answer[node_id] ? 'success' : 'failed';
+    // Create array objects
+    for (var i = 0; i < options.summaries.length; i++) {
+      options.summaries[i].error_count = 0;
 
-					$el.addClass(classname);
+      elements[i] = Array();
+      for (var j = 0; j < options.summaries[i].length; j++) {
+        answer[c] = j == 0; // First claim is correct
+        elements[i][j] = {
+          id: c++,
+          text: options.summaries[i][j]
+        };
+      }
 
-					// Correct answer?
-					if(answer[node_id]){
-						var position = $el.position();
-						var summary = $summary.position();
-						var $answer = $('<li class="answer" id="">'+$el.html()+'</li>');
+      // Randomize elements
+      for (var k = elements[i].length - 1; k > 0; k--) {
+        var j = Math.floor(Math.random() * (k + 1));
+        var temp = elements[i][k];
+        elements[i][k] = elements[i][j];
+        elements[i][j] = temp;
+      }
+    }
 
-						// Insert correct claim into summary
-						$summary.append($answer);
+    // Create content panels
+    var $summary_container = $('<div class="summary-container"></div>');
+    var $summary_list = $('<ul></ul>');
+    var $evaluation = $('<div class="summary-evaluation">Velg riktig alternativ til å legge til oppsummeringen</div>');
+    var $score = $('<div></div>');
+    var $options = $('<div class="summary-options">');
+    var options_padding = parseInt($options.css('paddingLeft'));
 
-						// Move into position over clicked element
-						var w = $el.css('width');
-						var h = $el.css('height');
-						$answer.css('display', 'block');
-						$answer.css('height', h);
-						$answer.css('width', w);
-						$answer.css('position', 'absolute');
-						$answer.css('top', position.top);
-						$answer.css('left', position.left);
+    // Insert content
+    $summary_container.append($summary_list);
+    $myDom.append($summary_container);
+    $evaluation.append($score);
+    $myDom.append($evaluation);
+    $myDom.append($options);
 
-						var panel = parseInt($el.parent().attr('data-panel'));
-						var $curr_panel = $('#panel-'+panel, $myDom);
-						var $next_panel = $('#panel-'+(panel + 1), $myDom);
-						var height = $curr_panel.parent().css('height');
+    // Add elements to content
+    for (var i = 0; i < elements.length; i++) {
+      var $page = $('<ul id="panel-'+i+'" data-panel="'+i+'"></ul>');
 
-						// Fade out current panel
-						$curr_panel.fadeOut('fast', function() {
-							// Force panel height to recorded height
-							$curr_panel.parent().css('height', height);
+      for (var j = 0; j < elements[i].length; j++) {
+        var $node = $('<li id="summary-node-'+elements[i][j].id+'" class="summary-claim-unclicked">'+elements[i][j].text+'</li>');
 
-							// Animate answer to summary
-							$answer.animate(
-								{
-									top: summary.top+offset,
-									left: '-='+options_padding+'px',
-									width: '+='+(options_padding*2)+'px'
-								},
-								{
-									complete: function(){
-										// Remove position (becomes inline);
-										$(this).css('position', '');
+        // When correct claim is clicked:
+        // - Add claim to summary list
+        // - Move claim over clicked element
+        // - Animate correct claim into correct position
+        // - Show next panel
+        // When wrong claim is clicked:
+        // - Remove clickable
+        // - Add error background image (css)
+        $node.click(function(){
+          var $el = $('#'+this.id, $myDom);
+          var node_id = parseInt(this.id.replace(/[a-z\-]+/,''));
+          var classname = answer[node_id] ? 'success' : 'failed';
 
-										// Calculate offset for next summary item
-										var tpadding = parseInt($answer.css('paddingTop'))*2;
-										var tmargin = parseInt($answer.css('marginBottom'));
-										var theight = parseInt($answer.css('height'));
-										offset += theight + tpadding + tmargin + 1;
+          // Correct answer?
+          if(answer[node_id]){
+            var position = $el.position();
+            var summary = $summary_list.position();
+            var $answer = $('<li>'+$el.html()+'</li>');
 
-										// Show next panel if present
-										if($next_panel.attr('id')){
-											$curr_panel.parent().css('height', 'auto');
-											$next_panel.fadeIn('fast', function() {
-											});
-										}
-										else {
-											// Hide intermediate evaluation
-											$score.html('');
+            // Insert correct claim into summary list
+            $summary_list.append($answer);
 
-											// Show final evaluation
-											var message = score ? 'OK. Du hadde '+score+' feil' : 'Gratulerer! Du hadde ingen feil!';
-											var $evaluation = $('<div class="score-final" id="">'+message+'</div>');
-											$summary.append($evaluation);
-										}
-									}
-								}
-							);
-						});
-					}
-					else {
-						// Remove event handler (prevent repeated clicks)
-						$el.off('click');
-						$score.html('Antall feil: ' + (++score));
-					}
-				});
-				$page.append($node);
-			}
-			$options.append($page);
-		}
+            // Move into position over clicked element
+            $answer.css({ display: 'block', width: $el.css('width'), height: $el.css('height') });
+            $answer.css({ position: 'absolute', top: position.top, left: position.left });
+            $answer.css('background-position', (parseInt($el.innerWidth()) - 25) + 'px center');
 
-		// Show first panel
-		$('#panel-0', $myDom).css({ display: 'block' });
+            var panel = parseInt($el.parent().attr('data-panel'));
+            var $curr_panel = $('#panel-'+panel, $myDom);
+            var $next_panel = $('#panel-'+(panel + 1), $myDom);
+            var height = $curr_panel.parent().css('height');
 
-		return this;
+            // Fade out current panel
+            $curr_panel.fadeOut('fast', function() {
+              // Force panel height to recorded height
+              $curr_panel.parent().css('height', height);
+
+              // Animate answer to summary
+              $answer.animate(
+                {
+                  top: summary.top+offset,
+                  left: '-='+options_padding+'px',
+                  width: '+='+(options_padding*2)+'px'
+                },
+                {
+                  step: function(){
+                    // Need to reposition background image on each step as el width grows in animation
+                    $(this).css('background-position', (parseInt($(this).innerWidth()) - 25) + 'px center');
+                  },
+                  complete: function(){
+                    // Remove position (becomes inline);
+                    $(this).css('position', '');
+
+                    // Calculate offset for next summary item
+                    var tpadding = parseInt($answer.css('paddingTop'))*2;
+                    var tmargin = parseInt($answer.css('marginBottom'));
+                    var theight = parseInt($answer.css('height'));
+                    offset += theight + tpadding + tmargin + 1;
+
+                    // Show next panel if present
+                    if($next_panel.attr('id')){
+                      $curr_panel.parent().css('height', 'auto');
+                      $next_panel.fadeIn('fast');
+                    }
+                    else {
+                      // Hide intermediate evaluation
+                      $score.html('');
+
+                      do_final_evaluation($summary_container, score);
+                    }
+                  }
+                }
+              );
+            });
+          }
+          else {
+            // Remove event handler (prevent repeated clicks) and mouseover effect
+            $el.off('click');
+            $el.addClass('summary-failed');
+            $el.removeClass('summary-claim-unclicked');
+            $el.css('background-position', (parseInt($el.innerWidth()) - 25) + 'px center');
+            $score.html('Antall feil: ' + (++score));
+            panel_id = $el.parent().attr('data-panel');
+            options.summaries[panel_id].error_count++;
+          }
+        });
+        $page.append($node);
+      }
+      $options.append($page);
+    }
+
+    // Show first panel
+    $('#panel-0', $myDom).css({ display: 'block' });
+
+    return this;
   };
 
   var returnObject = {

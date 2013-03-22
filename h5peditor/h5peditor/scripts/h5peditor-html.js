@@ -145,20 +145,38 @@ ns.Html.prototype.appendTo = function ($wrapper) {
   var ckConfig = {
     extraPlugins: "",
     forcePasteAsPlainText: true,
-    enterMode: CKEDITOR.ENTER_DIV
+    enterMode: CKEDITOR.ENTER_DIV,
+    protectedSource: []
   };
   ns.$.extend(ckConfig, this.createToolbar());
 
-  this.$item.children('.ckeditor').click(function () {
-    that.ckeditor = CKEDITOR.inline(this, ckConfig);
-    that.ckeditor.on('change', function () {
-      // Validate before submit.
-      var value = that.validate();
-      if (value !== false) {
-        that.setValue(that.field, value);
-        console.log(value);
+  // Look for additions in HtmlAddons
+  if (ns.HtmlAddons) {
+    for (var tag in ns.HtmlAddons) {
+      if (that.inTags(tag)) {
+        for (var provider in ns.HtmlAddons[tag]) {
+          ns.HtmlAddons[tag][provider](ckConfig, that.tags);
+        }
       }
-    });
+    }
+  }
+
+  this.$item.children('.ckeditor').click(function () {
+    if (! ns.$(this).hasClass('cke_editable')) {
+      that.ckeditor = CKEDITOR.inline(this, ckConfig);
+      that.ckeditor.on('change', function () {
+        // Validate before submit.
+        var value = that.validate();
+        if (value !== false) {
+          that.setValue(that.field, value);
+          // console.log(value);
+        }
+      });
+      that.ckeditor.on('blur', function () {
+        // When blurred, remove completely.
+        this.destroy();
+      });
+    }
   });
 };
 
@@ -217,7 +235,7 @@ ns.Html.prototype.validate = function () {
   // will remain, without the container.
   $value.find('*').each(function () {
     if (! that.inTags(this.tagName)) {
-      $(this).replaceWith($(this).contents());
+      ns.$(this).replaceWith(ns.$(this).contents());
     }
   });
   value = $value.html();
