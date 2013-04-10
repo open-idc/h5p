@@ -1,0 +1,15 @@
+{
+  "title": "Dra og slippoppgaver",
+  "contentType": "Game",
+  "utilization": "Lær om biologi",
+  "language": "nb",
+  "author": "Amendor AS",
+  "license": "cc-by-sa",
+  "preloadedDependencies": [
+		{"machineName": "H5P.Dragndrop", "majorVersion": 1, "minorVersion": 0}
+  ],
+  "mainLibrary": "H5P.Dragndrop",
+  "embedTypes": ["div", "iframe"],
+  "w": 635,
+  "h": 500
+}

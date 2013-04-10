@@ -1,0 +1,22 @@
+{
+  "title": "H5P.DragNSort",
+  "contentType": "H5P.DragNSort",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 0,
+  "runnable": 0,
+  "machineName": "H5P.DragNSort",
+  "author": "Frode Petterson",
+  "preloadedJs": [
+    {
+      "path": "scripts/drag-N-sort.js"
+    }
+  ],
+  "preloadedDependencies": [
+    {
+      "machineName": "H5P.DragNDrop",
+      "majorVersion": 1,
+      "minorVersion": 0
+    }
+  ]
+}

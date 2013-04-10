@@ -1,0 +1,101 @@
+[
+  {
+    "name": "summaries",
+    "type": "list",
+    "label": "Summaries",
+    "description": "Liste av lister med påstander.",
+    "entity": "summary",
+    "max": 20,
+    "field": {
+      "name": "summary",
+      "type": "list",
+      "label": "Påstander, første påstand er riktig.",
+      "field": {
+        "name": "text",
+        "type": "text",
+        "label": "Påstand"
+      }
+    }
+  },
+  {
+    "name": "response",
+    "label": "Tilbakemeldinger på oppgaven",
+    "type": "group",
+    "fields": [
+      {
+        "label": "Alt riktig",
+        "name": "scorePerfect",
+        "type": "group",
+        "fields": [
+           {
+             "name": "title",
+             "type": "text",
+             "label": "Tittel"
+           },
+           {
+             "name": "message",
+             "type": "text",
+             "label": "Melding"
+           }
+        ]
+      },
+      {
+        "label": "Over 70%",
+        "name": "scoreOver70",
+        "type": "group",
+        "fields": [
+           {
+             "name": "title",
+             "type": "text",
+             "label": "Tittel"
+           },
+           {
+             "name": "message",
+             "type": "text",
+             "label": "Melding"
+           }
+        ]
+      },
+      {
+        "label": "Over 40%",
+        "name": "scoreOver40",
+        "type": "group",
+        "fields": [
+           {
+             "name": "title",
+             "type": "text",
+             "label": "Tittel"
+           },
+           {
+             "name": "message",
+             "type": "text",
+             "label": "Melding"
+           }
+        ]
+      },
+      {
+        "label": "Over 0%",
+        "name": "scoreOver0",
+        "type": "group",
+        "fields": [
+           {
+             "name": "title",
+             "type": "text",
+             "label": "Tittel"
+           },
+           {
+             "name": "message",
+             "type": "text",
+             "label": "Melding"
+           }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "summary",
+    "type": "text",
+    "label": "Oppsummering",
+    "description": "Eks: Du hadde @score av @total brett (@percent%) uten feil."
+  }
+]

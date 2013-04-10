@@ -1,0 +1,243 @@
+{
+  "slides": [
+    {
+      "background": "#efe",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "Hello world!"
+            }
+          },
+          "x": 150,
+          "y": 56,
+          "width": 400,
+          "height": 300,
+          "title": "Test text",
+          "copyright": "GPL"
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Hovedpunkt 1",
+          "subs": [
+            "Underpunkt 1-1",
+            "Underpunkt 1-2"
+          ]
+        },
+        {
+          "main": "Hovedpunkt 2"
+        },
+        {
+          "main": "Hovedpunkt 3"
+        }
+      ]
+    },
+    {
+      "background": "#eef",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "Hello slide 2!"
+            }
+          },
+          "x": 50,
+          "y": 120,
+          "width": 300,
+          "height": 200,
+          "title": "Test text 2",
+          "copyright": "LGPL"
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Hovedpunkt",
+          "subs": [
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt"
+          ]
+        },
+        {
+          "main": "Hovedpunkt",
+          "subs": [
+            "Underpunkt"
+          ]
+        },
+        {
+          "main": "Hovedpunkt 3",
+          "subs": [
+            "Underpunkt",
+            "Underpunkt"
+          ]
+        }
+      ]
+    },
+    {
+      "background": "#ffe",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "SLIDE 3"
+            }
+          },
+          "x": 10,
+          "y": 10,
+          "width": 100,
+          "height": 50
+        },
+        {
+          "action": {
+            "library": "H5P.cpImage 1.0",
+            "params": {
+              "file": {
+                "path": "images/cookies.jpg",
+                "mime": "image/jpeg"
+              }
+            }
+          },
+          "x": 20,
+          "y": 70,
+          "width": 215,
+          "height": 200
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Hovedpunkt",
+          "subs": [
+            "Underpunkt"
+          ]
+        },
+        {
+          "main": "Hovedpunkt",
+          "subs": [
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt"
+          ]
+        },
+        {
+          "main": "Hovedpunkt 3"
+        }
+      ]
+    },
+    {
+      "background": "#efe",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "Glider 4"
+            }
+          },
+          "x": 250,
+          "y": 225,
+          "width": 100,
+          "height": 30
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Hovedpunkt",
+          "subs": [
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt",
+            "Underpunkt"
+          ]
+        }
+      ]
+    },
+    {
+      "background": "#eef",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "Slide 4 1/3"
+            }
+          },
+          "x": 250,
+          "y": 225,
+          "width": 100,
+          "height": 30
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Det er viktig med god gli."
+        }
+      ]
+    },
+    {
+      "background": "#ffe",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "Slide 4 2/3"
+            }
+          },
+          "x": 250,
+          "y": 225,
+          "width": 100,
+          "height": 30
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Eg likar Jarlsberg."
+        }
+      ]
+    },
+    {
+      "background": "#efe",
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.cpText 1.0",
+            "params": {
+              "text": "FÆRDI"
+            }
+          },
+          "x": 0,
+          "y": 250,
+          "width": 150,
+          "height": 30
+        }
+      ],
+      "keywords": [
+        {
+          "main": "Hovedpunkt"
+        },
+        {
+          "main": "Hovedpunkt"
+        },
+        {
+          "main": "Hovedpunkt"
+        },
+        {
+          "main": "Hovedpunkt"
+        },
+        {
+          "main": "Hovedpunkt"
+        },
+        {
+          "main": "Hovedpunkt"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+	"text": "Skriv inn riktig form av verbene som mangler",
+	"questions":[
+		"I morgen skal Ernst *sykle|gå* (å sykle eller å gå) til skolen.",
+		"I går *var* (å være) Ernst på båttur."
+	],
+   "score": "Du hadde @score riktige av @total mulige."
+}
+

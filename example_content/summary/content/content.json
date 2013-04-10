@@ -1,0 +1,30 @@
+{
+  "summaries": [
+    ["2 + 2 = 4", "2 + 2 = 5", "2 + 2 = 3"],
+    ["3 + 3 = 6", "3 + 3 = 7", "3 + 3 = 8"],
+    ["1 + 1 = 2", "1 + 1 = 1", "1 + 1 = tre", "1 + 1 = åtte"]
+  ],
+  "response": {
+    "scorePerfect": 
+    {
+        "title": "Perfekt",
+        "message": "Gratulerer, dette hadde du full kontroll på!"
+    },
+    "scoreOver70":
+    {
+        "title": "Bra",
+        "message": "Dette kan du godt"
+    },
+    "scoreOver40":
+    {
+        "title": "Noe Bra",
+        "message": "Du må lese mer"
+    },
+    "scoreOver0":
+    {
+        "title": "Dårlig",
+        "message": "Er du sikker på at dette er noe for deg?"
+    }
+  },
+  "summary": "Du hadde @score av @total brett (@percent%) uten feil."
+}

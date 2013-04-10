@@ -1,0 +1,21 @@
+{
+  "title": "Fill in the blanks",
+  "description": "void",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 10,
+  "runnable": 1,
+  "name": "h5p-flashcard",
+  "class": "H5P.Flashcards",
+  "author": "Amendor AS",
+  "license": "cc-by-sa",
+  "machineName": "H5P.Flashcards",
+  "preloadedCss": [
+    {"path": "css/flashcards.css"}
+  ],
+  "preloadedJs": [
+    {"path": "js/flashcards.js"}
+  ],
+  "w": 635,
+  "h": 500
+}

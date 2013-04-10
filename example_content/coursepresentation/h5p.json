@@ -1,0 +1,18 @@
+{
+  "title": "H5P.CoursePresentation",
+  "contentType": "H5P.CoursePresentation",
+  "language": "nb",
+  "author": "Frode Petterson",
+  "preloadedDependencies": [
+    {
+      "machineName": "H5P.CoursePresentation", 
+      "majorVersion": 1, 
+      "minorVersion": 0
+    }
+  ],
+  "mainLibrary": "H5P.CoursePresentation",
+  "embedTypes": ["div", "iframe"],
+  "width": 640,
+  "height": 360,
+  "fullscreen": 1
+}

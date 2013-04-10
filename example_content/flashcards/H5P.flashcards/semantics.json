@@ -1,0 +1,59 @@
+[
+  {
+    "name": "title",
+    "type": "text",
+    "label": "Tittel",
+    "description": "Tittel"
+  },
+  {
+    "name": "description",
+    "type": "text",
+    "label": "Oppgavetekst",
+    "description": "Tekst til oppgaven"
+  },
+  {
+    "name": "questions",
+    "type": "list",
+    "label": "Categories",
+    "description": "Answers available for the user.",
+    "entity": "question",
+    "max": 5,
+    "field": {
+      "name": "question",
+      "type": "group",
+      "label": "Question",
+      "fields": [
+        {
+          "name": "text",
+          "type": "text",
+          "label": "Tekst",
+          "description": "Tekst"
+        },
+        {
+          "name": "answer",
+          "type": "text",
+          "label": "Svar",
+          "description": "Svar"
+        },
+        {
+          "name": "image",
+          "type": "image",
+          "label": "Bilde",
+          "description": "Bilde"
+        }
+      ]
+    }
+  },
+  {
+    "name": "width",
+    "type": "text",
+    "label": "Bredde",
+    "description": "Bredde"
+  },
+  {
+    "name": "height",
+    "type": "text",
+    "label": "Høyde",
+    "description": "Høyde"
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "title": "H5P.eLecture",
+  "contentType": "H5P.eLecture",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 0,
+  "runnable": 1,
+  "machineName": "H5P.eLecture",
+  "author": "Frode Petterson",
+  "preloadedJs": [
+    {
+      "path": "scripts/electure.js"
+    }
+  ],
+  "preloadedDependencies": [
+    {
+      "machineName": "H5P.eLectureText",
+      "majorVersion": 1,
+      "minorVersion": 0
+    }
+  ],
+  "editorDependencies": [
+    {
+      "machineName": "H5PEditor.Wizard",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5PEditor.eLecture",
+      "majorVersion": 1,
+      "minorVersion": 0
+    }
+  ]
+}

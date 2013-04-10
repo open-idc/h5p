@@ -1,0 +1,30 @@
+{
+  "electure": {
+    "video": [
+      {
+        "path": "videos/test-video.mp4",
+        "mime": "video/mp4"
+      },
+      {
+        "path": "videos/test-video.webm",
+        "mime": "video/webm"
+      }
+    ],
+    "interactions": [
+      {
+        "action": {
+          "library": "H5P.eLectureText 1.0",
+          "params": {
+            "text": "Hello world!"
+          }
+        },
+        "x": 150,
+        "y": 56,
+        "ctc": false,
+        "pause": true,
+        "from": 2,
+        "to": 2
+      }
+    ]
+  }
+}

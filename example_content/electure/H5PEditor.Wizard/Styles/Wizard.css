@@ -1,0 +1,55 @@
+.field.wizard > ol {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+.field.wizard > ol > li {
+  position: relative;
+  display: table-cell;
+}
+.field.wizard > ol > li > a {
+  display: block;
+  background: #cee5ff;
+  margin-right: 20px;
+  padding: 5px 0 5px 10px;
+}
+.field.wizard > ol > li > a:hover {
+  text-decoration: none;  
+}
+.field.wizard > ol > li > a:before, .field.wizard > ol > li > a:after {
+  position: absolute;
+  left: -10px;
+  border-top: 15px solid #cee5ff;
+  border-bottom: 15px solid #cee5ff;
+  border-left: 10px solid transparent;
+  content: "";
+  width: 0;
+  height: 0;
+  top: 0;
+}
+.field.wizard > ol > li > a:after {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: #cee5ff;
+  right: 10px;
+  left: auto;
+}
+.field.wizard > ol > li:first-child > a:before {
+  border: 0;
+}
+.field.wizard > ol > li:last-child > a:after {
+  border: 0;
+}
+.field.wizard > ol > li:last-child > a {
+  margin-right: 0;
+}
+.field.wizard > ol > li > a.active {
+  background: #b6cae1;
+}
+.field.wizard > ol > li > a.active:before {
+  border-top-color: #b6cae1;
+  border-bottom-color: #b6cae1;
+}
+.field.wizard > ol > li > a.active:after {
+  border-left-color: #b6cae1;
+}

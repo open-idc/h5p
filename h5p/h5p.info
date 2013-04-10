@@ -1,6 +1,0 @@
-; @file
-;  h5p.info ini file
-;  Contains general information about the h5p Drupal module.
-name = h5p manager
-description = "Enables privileged users to share HTML5 packages."
-core = 6.x
