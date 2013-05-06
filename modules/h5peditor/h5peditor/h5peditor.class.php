@@ -96,7 +96,7 @@ class H5peditor {
 
       // Remove old files.
       for ($i = 0, $s = count($oldFiles); $i < $s; $i++) {
-        if (!in_array($oldFiles[$i], $newFiles)) {
+        if (!in_array($oldFiles[$i], $newFiles) && substr($oldFiles[$i], 0, 7) != 'http://') {
           $removeFile = $this->content_directory . $oldFiles[$i];
           unlink($removeFile);
           $this->storage->removeFile($removeFile);
@@ -177,6 +177,9 @@ class H5peditor {
 
       case 'group':
         if (isset($params)) {
+          if (count($field->fields) == 1) {
+            $params = (object) array($field->fields[0]->name => $params);
+          }
           $this->processSemantics($files, $libraries, $field->fields, $params);
         }
         break;
@@ -201,9 +204,14 @@ class H5peditor {
     $libraryData = new stdClass();
     $libraryData->semantics = $this->storage->getSemantics($machineName, $majorVersion, $minorVersion);
 
+    $language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
+    if ($language) {
+      $libraryData->language = $language;
+    }
+
     $editorLibraryIds = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
 
-    foreach ($editorLibraryIds as $editorLibraryId) {
+    foreach ($editorLibraryIds as $editorLibraryId => $editorLibrary) {
       $filePaths = $this->storage->getFilePaths($editorLibraryId);
 
       if (!empty($filePaths['js'])) {
@@ -214,6 +222,13 @@ class H5peditor {
           // TODO: rtrim and check substr(-1) === '}'? jsmin?
           $libraryData->javascript .= "\n" . file_get_contents($jsFilePath);
         }
+      }
+      $language = $this->storage->getLanguage($editorLibrary['machineName'], $editorLibrary['majorVersion'], $editorLibrary['minorVersion']);
+      if ($language) {
+        if (!isset($libraryData->javascript)) {
+          $libraryData->javascript = '';
+        }
+        $libraryData->javascript .= '; H5PEditor.language["' . $editorLibrary['machineName'] . '"] = ' . $language . ';';
       }
       if (!empty($filePaths['css'])) {
         if (!isset($libraryData->css)) {

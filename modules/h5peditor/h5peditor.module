@@ -84,7 +84,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 
   $form['h5p_library'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($form['#node']->main_library) ? h5peditor_main_library_to_string($form['#node'], TRUE) : 0,
+    '#default_value' => isset($form['#node']->main_library) ? h5peditor_main_library_to_string($form['#node'], TRUE) : (isset($form['#node']->h5p_library) ? $form['#node']->h5p_library : 0),
   );
 
   $form['h5p_params'] = array(
@@ -104,13 +104,14 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
  * Add scripts and styles to the h5p node form.
  */
 function h5peditor_h5p_content_node_form_after_build($element) {
+  global $language;
   static $done;
   if ($done) {
     // Make sure we only add the js once.
-    return $element; 
+    return $element;
   }
   $done = TRUE;
-  
+
   $node = menu_get_object();
   if (isset($node)) {
     h5p_add_files_and_settings($node);
@@ -125,32 +126,42 @@ function h5peditor_h5p_content_node_form_after_build($element) {
     }
     drupal_add_js($module_path . '/js/h5pintegration.js');
   }
-  
+
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
-  
+
   // Add our own styles
   foreach(H5peditor::$styles as $style) {
     drupal_add_css($h5peditor_module_path . '/h5peditor/' . $style);
   }
-  
+
   //  Add our own scripts
   foreach(H5peditor::$scripts as $script) {
     drupal_add_js($h5peditor_module_path . '/h5peditor/' . $script);
   }
   drupal_add_js($h5peditor_module_path . '/scripts/application.js');
 
+  // Add translation
+  $language_file = $h5peditor_module_path . '/h5peditor/language/' . $language->language . '.js';
+  if (!file_exists($language_file)) {
+    $language_file = $h5peditor_module_path . '/h5peditor/language/en.js';
+  }
+  drupal_add_js($language_file);
+
   $node = menu_get_object();
   $content_id = isset($node) ? h5p_get_content_id($node) : 0;
-  
+
   drupal_add_js(array(
-    'nodeVersionId' => $content_id,
-    'filesPath' => base_path() . file_directory_path(),
-    'fileIcon' => array(
-      'path' => base_path() . drupal_get_path('module', 'h5peditor') . '/h5peditor/images/binary-file.png',
-      'width' => 50,
-      'height' => 50,
+    'h5peditor' => array(
+      'nodeVersionId' => $content_id,
+      'filesPath' => base_path() . file_directory_path(),
+      'fileIcon' => array(
+        'path' => base_path() . drupal_get_path('module', 'h5peditor') . '/h5peditor/images/binary-file.png',
+        'width' => 50,
+        'height' => 50,
+      ),
+      'ajaxPath' => url('h5peditor/'),
     ),
-    ), 'setting');
+  ), 'setting');
 
   return $element;
 }
@@ -170,7 +181,7 @@ function h5peditor_h5p_content_node_form_submit($form, &$form_state) {
   if ($form_state['values']['h5p_type'] == 'upload') {
     return;
   }
-  
+
   if (isset($form['#node']->main_library)) {
     $form_state['values']['h5p_library_old'] = $form['#node']->main_library;
     $form_state['values']['h5p_params_old'] = $form['#node']->json_content;
@@ -191,14 +202,14 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
       $storage = h5peditor_get_storage_instance();
       $editor = new H5peditor($storage, file_directory_path(), base_path());
-      
+
       $content_id = h5p_get_content_id($node);
-      
+
       if (!$editor->createDirectories($content_id)) {
         drupal_set_message('Unable to create h5p content directories.', 'error');
         return;
       }
-      
+
       // Move files.
       $editor->processParameters(h5p_get_content_id($node), h5peditor_get_library_property($node->h5p_library), json_decode($node->json_content), isset($node->h5p_library_old) ? $node->h5p_library_old : NULL, isset($node->h5p_params_old) ? json_decode($node->h5p_params_old) : NULL);
   }
@@ -217,7 +228,7 @@ function h5peditor_libraries_callback() {
 
 /**
  * Callback that returns all library data
- * 
+ *
  * @param string $library
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
@@ -234,36 +245,36 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
  */
 function h5peditor_files_callback() {
   $file = new H5peditorFile(file_directory_path(), base_path());
-  
+
   if (!$file->isLoaded()) {
     drupal_not_found();
     return;
   }
-  
+
   if ($file->validate() && $file->copy()) {
     $storage = h5peditor_get_storage_instance();
-    
+
     // Add file to DB so Drupal can clean it up.
     $storage->addFile($file);
   }
-  
+
   header('Content-type: application/json');
   print $file->getResult();
 }
 
 /**
  * Keeps track of our storage instance, saving valuable resources.
- * 
+ *
  * @staticvar H5peditorDrupalStorage $storage_instance
  * @return \H5peditorDrupalStorage
  */
 function h5peditor_get_storage_instance() {
   static $storage_instance;
-  
+
   if (!$storage_instance) {
     $storage_instance = new H5peditorDrupalStorage();
   }
-  
+
   return $storage_instance;
 }
 

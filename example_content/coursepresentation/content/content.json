@@ -7,275 +7,167 @@
           "action": {
             "library": "H5P.Text 1.0",
             "params": {
-              "text": "Hello world!"
+              "text": "<h2>What is H5P?</h2><ul><li>HTML5 content/application</li><li>All HTML5 technology may be used</li><li>Can be easily uploaded as a file to a LMS or CMS</li><li>Generic editor for editing published content and creating new content</li><li>H5P.org for sharing reusable libraries</li></ul>"
             }
           },
-          "x": 0,
-          "y": 0,
-          "width": 40,
-          "height": 30,
-          "metadata": {
-            "title": "Test text",
-            "lisence": "GPL"
-          }
-        },
-        {
-          "action": {
-            "library": "H5P.Video 1.0",
-            "params": {
-              "files": [
-                {
-                  "path": "videos/test-video.mp4",
-                  "mime": "video/mp4"
-                },
-                {
-                  "path": "videos/test-video.webm",
-                  "mime": "video/webm"
-                }
-              ]
-            }
-          },
-          "x": 10,
-          "y": 10,
-          "width": 80,
-          "height": 80
-        }
-      ],
-      "keywords": [
-        {
-          "main": "Hovedpunkt 1",
-          "subs": [
-            "Underpunkt 1-1",
-            "Underpunkt 1-2"
-          ]
-        },
-        {
-          "main": "Hovedpunkt 2"
-        },
-        {
-          "main": "Hovedpunkt 3"
-        }
-      ]
-    },
-    {
-      "background": "#eef",
-      "elements": [
-        {
-          "action": {
-            "library": "H5P.Blanks 1.0",
-            "params": {
-              "text": "Skriv inn riktig form av verbene som mangler",
-              "questions": [
-                "I morgen skal Ernst *sykle/gå* (å sykle eller å gå) til skolen.",
-                "I går *var* (å være) Ernst på båttur."
-              ],
-              "score": "Du hadde @score riktige av @total mulige."
-            }
-          },
-          "x": 5,
-          "y": 5,
-          "width": 90,
-          "height": 90,
-          "metadata": {
-            "title": "Test Blanks 1",
-            "lisence": "LGPL"
-          }
-        }
-      ],
-      "keywords": [
-        {
-          "main": "Hovedpunkt",
-          "subs": [
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt"
-          ]
-        },
-        {
-          "main": "Hovedpunkt",
-          "subs": [
-            "Underpunkt"
-          ]
-        },
-        {
-          "main": "Hovedpunkt 3",
-          "subs": [
-            "Underpunkt",
-            "Underpunkt"
-          ]
-        }
-      ]
-    },
-    {
-      "background": "#ffe",
-      "elements": [
-        {
-          "action": {
-            "library": "H5P.Text 1.0",
-            "params": {
-              "text": "SLIDE 3"
-            }
-          },
-          "x": 0,
-          "y": 0,
-          "width": 17,
-          "height": 10
+          "x": 3.0200318714030168,
+          "y": 5.366726296958856,
+          "width": 51.216389244558265,
+          "height": 90.51878354203936,
+          "metadata": {}
         },
         {
           "action": {
             "library": "H5P.Image 1.0",
             "params": {
               "file": {
-                "path": "images/cookies.jpg",
-                "mime": "image/jpeg"
+                "path": "images/file-517545c8332d7.png",
+                "mime": "image/png"
               }
             }
           },
-          "x": 7.1875,
-          "y": 20,
-          "width": 33.59375,
-          "height": 55.56,
-          "solution": "This is a picture."
+          "x": 42.88445257392283,
+          "y": 5.366726296958856,
+          "width": 30.290835924638746,
+          "height": 32.379248658318424,
+          "metadata": {}
+        }
+      ],
+      "keywords": [
+        {"main":"1. About H5P"}
+      ]
+    },
+    {
+      "elements": [
+        {
+          "action": {
+            "library": "H5P.Text 1.0",
+            "params": {
+              "text": "<h1>Why H5P</h1><ul><li>H5P content works nicely on mobile devices</li><li>LMS/CMS independent</li><li>Content may be edited and reproduced using a web-browser</li><li>Top universal design</li><li>GPL lisenced (Open and free)</li><li>Scale advantages</li><li>Reuse of code and content across different projects and applications</li><li>Easy management of content and applications</li></ul>"
+            }
+          },
+          "height": 85.86762075134169,
+          "width": 92.04316809950613,
+          "x": 3.0200318714030168,
+          "y": 5.366726296958856,
+          "metadata": {}
         }
       ],
       "keywords": [
         {
-          "main": "Hovedpunkt",
-          "subs": [
-            "Underpunkt"
-          ]
-        },
-        {
-          "main": "Hovedpunkt",
-          "subs": [
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt"
-          ]
-        },
-        {
-          "main": "Hovedpunkt 3"
+          "main": "2. Why H5P"
         }
       ]
     },
     {
-      "background": "#efe",
       "elements": [
         {
           "action": {
-            "library": "H5P.Audio 1.0",
+            "library": "H5P.Text 1.0",
             "params": {
+              "text": "<div>Screenshot from the editor</div>"
+            }
+          },
+          "height": 8.407871198568873,
+          "width": 59.11834644229011,
+          "x": 3.0200318714030168,
+          "y": 5.366726296958856,
+          "metadata": {}
+        },
+        {
+          "action": {
+            "library": "H5P.Image 1.0",
+            "params": {
+              "file": {
+                "path": "images/file-517547679ef0b.PNG",
+                "mime": "image/png"
+              }
+            }
+          },
+          "x": 2.9696980068796357,
+          "y": 16.705425992634726,
+          "width": 93.36016096579478,
+          "height": 80.14311270125224,
+          "metadata": {}
+        }
+      ],
+      "keywords": [
+        {
+          "main": "3. Screenshot from the H5P editor"
+        }
+      ]
+    },
+    {"elements": [
+        {
+          "action": {
+            "library": "H5P.Text 1.0",
+            "params": {
+              "text": "<div>H5P obviously also supports videos</div>"
+            }
+          },
+          "height": 7.5134168157423975,
+          "width": 84.43387598317176,
+          "x": 3.0200318714030168,
+          "y": 5.366726296958856,
+          "metadata": {}
+        },
+        {
+          "action": {
+            "library": "H5P.Video 1.0",
+            "params": {
+              "fitToWrapper": 1,
+              "controls": 1,
               "files": [
                 {
-                  "path": "audios/sample-sound.mp3",
-                  "mime": "audio/mp3"
+                  "path": "videos/files-51755042cad37.mp4",
+                  "mime": "video/mp4"
                 },
                 {
-                  "path": "audios/sample-sound.ogg",
-                  "mime": "application/ogg"
+                  "path": "videos/files-5175504a1a028.webm",
+                  "mime": "video/webm"
                 }
               ]
             }
           },
-          "x": 10,
-          "y": 10,
-          "width": 80,
-          "height": 80
+          "x": 2.9696980068796357,
+          "y": 14.73762635041648,
+          "width": 84.72654106456923,
+          "height": 73.34525939177102,
+          "metadata": {}
         }
       ],
       "keywords": [
         {
-          "main": "Hovedpunkt",
-          "subs": [
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt",
-            "Underpunkt"
-          ]
+          "main": "4. H5P supports video"
         }
       ]
     },
     {
-      "background": "#eef",
       "elements": [
         {
           "action": {
-            "library": "H5P.Text 1.0",
+            "library": "H5P.Blanks 1.0",
             "params": {
-              "text": "Slide 4 1/3"
+              "questions": [
+                "All *HTML5* technologies may be used",
+                "H5P is *GPL* lisenced",
+                "Content may be edited using a *web-browser/browser*"
+              ],
+              "score": "You got @score of @total blanks correct.",
+              "showSolutions": "Show solutions",
+              "close": "Close"
             }
           },
-          "x": 25,
-          "y": 2.25,
-          "width": 10,
-          "height": 30
+          "x": 2.9696980068796357,
+          "y": 5.435300769021132,
+          "width": 94.38448875068593,
+          "height": 67.44186046511628,
+          "metadata": {}
         }
       ],
       "keywords": [
         {
-          "main": "Det er viktig med god gli."
-        }
-      ]
-    },
-    {
-      "background": "#ffe",
-      "elements": [
-        {
-          "action": {
-            "library": "H5P.Text 1.0",
-            "params": {
-              "text": "Slide 4 2/3"
-            }
-          },
-          "x": 25,
-          "y": 22.5,
-          "width": 100,
-          "height": 50
-        }
-      ],
-      "keywords": [
-        {
-          "main": "Eg likar Jarlsberg."
-        }
-      ]
-    },
-    {
-      "background": "#efe",
-      "elements": [
-        {
-          "action": {
-            "library": "H5P.Text 1.0",
-            "params": {
-              "text": "FÆRDI"
-            }
-          },
-          "x": 0,
-          "y": 25,
-          "width": 1.5,
-          "height": 3
-        }
-      ],
-      "keywords": [
-        {
-          "main": "Hovedpunkt"
-        },
-        {
-          "main": "Hovedpunkt"
-        },
-        {
-          "main": "Hovedpunkt"
-        },
-        {
-          "main": "Hovedpunkt"
-        },
-        {
-          "main": "Hovedpunkt"
-        },
-        {
-          "main": "Hovedpunkt"
+          "main": "5. Test"
         }
       ]
     }
@@ -295,6 +187,9 @@
     "okScore": "Nice effort! You got @percent correct!",
     "badScore": "You need to work more on this. You only got @percent correct...",
     "total": "TOTAL",
-    "showSolutions": "Show solutions"
+    "showSolutions": "Show solutions",
+    "title": "Title",
+    "author": "Author",
+    "lisence": "Lisence"
   }
 }

@@ -4,7 +4,7 @@
   "description": "Provides you with flowplayer for all your Flash needs.",
   "majorVersion": 1,
   "minorVersion": 0,
-  "patchVersion": 0,
+  "patchVersion": 2,
   "runnable": 0,
   "machineName": "flowplayer",
   "preloadedJs": [

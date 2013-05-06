@@ -106,13 +106,13 @@ H5PEditor.Istribute.prototype.validate = function () {
   var value = H5PEditor.trim(this.$input.val());
     
   if ((that.field.optional === undefined || !that.field.optional) && !value.length) {
-    this.$errors.append(H5PEditor.createError(H5PEditor.t('requiredProperty', {':property': 'text field'})));
+    this.$errors.append(H5PEditor.createError(H5PEditor.t('core', 'requiredProperty', {':property': 'text field'})));
   }
   else if (value.length > this.field.maxLength) {
-    this.$errors.append(H5PEditor.createError(H5PEditor.t('tooLong', {':max': this.field.maxLength})));
+    this.$errors.append(H5PEditor.createError(H5PEditor.t('core', 'tooLong', {':max': this.field.maxLength})));
   }
   else if (this.field.regexp !== undefined && !value.match(new RegExp(this.field.regexp.pattern, this.field.regexp.modifiers))) {
-    this.$errors.append(H5PEditor.createError(H5PEditor.t('invalidFormat')));
+    this.$errors.append(H5PEditor.createError(H5PEditor.t('core', 'invalidFormat')));
   }
 
   return H5PEditor.checkErrors(this.$errors, this.$input, value);
