@@ -111,10 +111,19 @@ function h5peditor_h5p_content_node_form_after_build($element) {
   }
   $done = TRUE;
   
-  // Add JS from the H5P module.
-  $h5p_module_path = drupal_get_path('module', 'h5p'); 
-  foreach(H5PCore::$scripts as $script) {
-    drupal_add_js($h5p_module_path . '/library/' . $script);
+  $node = menu_get_object();
+  if (isset($node)) {
+    h5p_add_files_and_settings($node);
+  }
+  else {
+    $module_path = drupal_get_path('module', 'h5p');
+    foreach (H5PCore::$styles as $style) {
+      drupal_add_css($module_path . '/library/' . $style);
+    }
+    foreach (H5PCore::$scripts as $script) {
+      drupal_add_js($module_path . '/library/' . $script);
+    }
+    drupal_add_js($module_path . '/js/h5pintegration.js');
   }
   
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
@@ -200,9 +209,10 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  */
 function h5peditor_libraries_callback() {
   $storage = h5peditor_get_storage_instance();
-  
-  header('Content-type: application/json');
-  print $storage->getLibraries();
+
+  drupal_set_header("Cache-Control: no-cache");
+  drupal_set_header('Content-type: application/json');
+  echo $storage->getLibraries();
 }
 
 /**
@@ -214,8 +224,9 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
   $storage = h5peditor_get_storage_instance();
   $h5p_editor = new H5peditor($storage, file_directory_path());
 
-  header('Content-type: application/json');
-  print $h5p_editor->getLibraryData($machine_name, $major_version, $minor_version);
+  drupal_set_header("Cache-Control: no-cache");
+  drupal_set_header('Content-type: application/json');
+  echo $h5p_editor->getLibraryData($machine_name, $major_version, $minor_version);
 }
 
 /**

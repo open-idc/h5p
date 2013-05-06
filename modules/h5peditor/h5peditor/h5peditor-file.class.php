@@ -34,12 +34,45 @@ class H5peditorFile {
     // Get the field.
     $this->field = json_decode($_POST['field']);
     
-    $this->type = $_FILES['file']['type'];
+
+    if (function_exists('finfo_file')) {
+      $finfo = finfo_open(FILEINFO_MIME_TYPE);
+      $this->type = finfo_file($finfo, $_FILES['file']['tmp_name']);
+      finfo_close($finfo);
+    }
+    elseif (function_exists('mime_content_type')) {
+      // Deprecated, only when finfo isn't available.
+      $this->type = mime_content_type($_FILES['file']['tmp_name']);
+    }
+    else {
+      $this->type = $_FILES['file']['type'];
+    }
+    
+    $this->extension = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
+    
     $this->size = $_FILES['file']['size'];
   }
   
   public function isLoaded() {
     return is_object($this->result);
+  }
+  
+  /**
+   * Check current file up agains mime types and extensions in the given list.
+   * 
+   * @param array $mimes List to check against.
+   * @return boolean
+   */
+  public function check($mimes) {
+    foreach ($mimes as $mime => $extension) {
+      // TODO: Either remove everything that has to do with mime types, or make it work
+      // Currently we're experiencing trouble with mime types on different servers...
+      if (/*$this->type === $mime && */strtolower($this->extension) === $extension) {
+        $this->type = $mime;
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
   
   public function validate() {
@@ -50,7 +83,7 @@ class H5peditorFile {
     }
     
     // Check if mime type is allowed.
-    if (isset($this->field->mimes) && !in_array($this->type, $this->field->mimes)) {
+    if ((isset($this->field->mimes) && !in_array($this->type, $this->field->mimes)) || substr($this->extension, 0, 3) === 'php') {
       $this->result->error = t("File type isn't allowed.");
       return FALSE;
     }
@@ -62,6 +95,16 @@ class H5peditorFile {
         return FALSE;
         
       case 'image':
+        $allowed = array(
+          'image/png' => 'png',
+          'image/jpeg' => 'jpg',
+          'image/gif' => 'gif',
+        );
+        if (!$this->check($allowed)) {
+          $this->result->error = t('Invalid image file format. Use jpg, png or gif.');
+          return FALSE;
+        }
+        
         $image = @getimagesize($_FILES['file']['tmp_name']);
         if (!$image) {
           $this->result->error = t('File is not an image.');
@@ -70,23 +113,45 @@ class H5peditorFile {
         
         $this->result->width = $image[0];
         $this->result->height = $image[1];
+        $this->result->mime = $this->type;
         break;
 
       case 'audio':
-        if (substr($this->type, 0, 5) != 'audio') {
-          $this->result->error = t('File is not a audio.');
+        $allowed = array(
+          'audio/mpeg' => 'mp3',
+          'audio/mp3' => 'mp3',
+          'audio/x-wav' => 'wav',
+          'audio/wav' => 'wav',
+          //'application/ogg' => 'ogg',
+          'audio/ogg' => 'ogg',
+          //'video/ogg' => 'ogg',
+        );
+        if (!$this->check($allowed)) {
+          $this->result->error = t('Invalid audio file format. Use mp3 or wav.');
+          return FALSE;
+
         }
+        
         $this->result->mime = $this->type;
         break;
         
       case 'video':
-        if (substr($this->type, 0, 5) != 'video') {
-          $this->result->error = t('File is not a video.');
+        $allowed = array(
+          'video/mp4' => 'mp4',
+          'video/webm' => 'webm',
+         // 'application/ogg' => 'ogv',
+          'video/ogg' => 'ogv',
+        );
+        if (!$this->check($allowed)) {
+          $this->result->error = t('Invalid video file format. Use mp4 or webm.');
+          return FALSE;
         }
+        
         $this->result->mime = $this->type;
         break;
         
       case 'file':
+        // TODO: Try to get file extension for type and check that it matches the current extension.
         $this->result->mime = $this->type;
     }
     
