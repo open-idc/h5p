@@ -169,6 +169,30 @@ function h5p_schema() {
     'primary key' => array('library_id', 'required_library_id'),
   );
 
+  $schema['h5p_libraries_languages'] = array(
+    'description' => 'Stores translations for the languages.',
+    'fields' => array(
+      'library_id' => array(
+        'description' => 'Primary Key: The id of a h5p library.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'language_code' => array(
+        'description' => 'Primary Key: The language code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'language_json' => array(
+        'description' => 'The translations defined in json format',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('library_id', 'language_code'),
+  );
+
   $schema['h5p_nodes'] = array(
     'description' => 'Stores information about where the h5p content is stored.',
     'fields' => array(
@@ -258,6 +282,37 @@ function h5p_update_6100() {
     'unsigned' => TRUE,
     'not null' => TRUE,
     'default' => 0,
+  ));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function h5p_update_6101() {
+  $ret = array();
+  db_create_table($ret, 'h5p_libraries_languages', array(
+    'description' => 'Stores translations for the languages.',
+    'fields' => array(
+      'library_id' => array(
+        'description' => 'Primary Key: The id of a h5p library.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'language_code' => array(
+        'description' => 'Primary Key: The language code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'language_json' => array(
+        'description' => 'The translations defined in json format',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('library_id', 'language_code'),
   ));
   return $ret;
 }

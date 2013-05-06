@@ -10,6 +10,8 @@ var ns = H5PEditor;
  */
 ns.widgets = {};
 
+ns.language = {};
+
 /**
  * Keeps track of which semantics are loaded.
  */
@@ -26,46 +28,31 @@ ns.semanticsLoaded = {};
 ns.isIE = navigator.userAgent.match(/; MSIE \d+.\d+;/) !== null;
 
 /**
- * The current localization mapping. To be translated by your framework.
- */
-ns.l10n = {
-  missingTranslation: '[Missing translation :key]',
-  loading: 'Loading :type...',
-  selectLibrary: 'Select the library you wish to use for your content.',
-  unknownFieldPath: 'Unable to find ":path".',
-  notImageField: '":path" is not an image.',
-  notImageOrDimensionsField: '":path" is not an image or dimensions field.',
-  requiredProperty: 'The :property is required and must have a value.',
-  onlyNumbers: 'The :property value can only contain numbers.',
-  exceedsMax: 'The :property value exceeds the maximum of :max.',
-  exceedsMin: 'The :property value exceeds the minimum of :min.',
-  outOfStep: 'The :property value can only be changed in steps of :step.',
-  addFile: 'Add file',
-  removeFile: 'Remove file',
-  confirmRemoval: 'Are you sure you wish to remove this :type?',
-  changeFile: 'Change file',
-  semanticsError: 'Semantics error: :error',
-  missingProperty: 'Field :index is missing its :property property.',
-  expandCollapse: 'Expand/Collapse',
-  addEntity: 'Add :entity',
-  tooLong: 'Field value is too long, should contain :max letters or less.',
-  invalidFormat: 'Field value contains an invalid format or characters that are forbidden.',
-  confirmChangeLibrary: 'Are you sure you wish to change library?'
-};
-
-/**
  * Translate text strings.
  *
+ * @param {String} library
+ *  library machineName, or "core"
  * @param {String} key
  * @param {Object} vars
  * @returns {String|@exp;H5peditor@call;t}
  */
-ns.t = function (key, vars) {
-  if (ns.l10n[key] === undefined) {
-    return key === 'missingTranslation' ? '[Missing translation "' + key + '"]' : ns.t('missingTranslation', {':key': key});
+ns.t = function (library, key, vars) {
+  if (ns.language[library] === undefined) {
+    return 'Missing translations for library ' + library;
   }
 
-  var translation = ns.l10n[key];
+  if (library == 'core') {
+    if (ns.language[library][key] === undefined) {
+      return 'Missing translation for ' + key;
+    }
+    var translation = ns.language[library][key];
+  }
+  else {
+    if (ns.language[library]['libraryStrings'] === undefined || ns.language[library]['libraryStrings'][key] === undefined) {
+      return ns.t('core', 'missingTranslation', {':key': key});
+    }
+    var translation = ns.language[library]['libraryStrings'][key];
+  }
 
   // Replace placeholder with variables.
   for (var placeholder in vars) {
@@ -101,8 +88,13 @@ ns.loadLibrary = function (libraryName, callback) {
       ns.loadedSemantics[libraryName] = 0; // Indicates that others should queue.
       ns.semanticsLoaded[libraryName] = []; // Other callbacks to run once loaded.
       var library = ns.libraryFromString(libraryName);
-      ns.$.get(ns.basePath + 'libraries/' + library.machineName + '/' + library.majorVersion + '/' + library.minorVersion, function (libraryData) {
-        libraryData.semantics = JSON.parse(libraryData.semantics);
+      ns.$.get(ns.ajaxPath + 'libraries/' + library.machineName + '/' + library.majorVersion + '/' + library.minorVersion, function (libraryData) {
+        var semantics = JSON.parse(libraryData.semantics);
+        if (libraryData.language !== undefined) {
+          var language = JSON.parse(libraryData.language);
+          semantics = ns.$.extend(true, [], semantics, language.semantics);
+        }
+        libraryData.semantics = semantics;
         ns.loadedSemantics[libraryName] = libraryData.semantics;
 
         // Add CSS.
@@ -112,14 +104,7 @@ ns.loadLibrary = function (libraryName, callback) {
 
         // Add JS.
         if (libraryData.javascript !== undefined) {
-          try {
-            eval.apply(window, [libraryData.javascript]);
-          }
-          catch (error) {
-            if (window['console'] !== undefined && typeof console.error === 'function') {
-              console.error(error.stack);
-            }
-          }
+          eval.apply(window, [libraryData.javascript]);
         }
 
         callback(libraryData.semantics);
@@ -159,10 +144,10 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent) {
 
     // Check generic field properties.
     if (field.name === undefined) {
-      throw ns.t('missingProperty', {':index': i, ':property': 'name'});
+      throw ns.t('core', 'missingProperty', {':index': i, ':property': 'name'});
     }
     if (field.type === undefined) {
-      throw ns.t('missingProperty', {':index': i, ':property': 'type'});
+      throw ns.t('core', 'missingProperty', {':index': i, ':property': 'type'});
     }
 
     // Set default value.
