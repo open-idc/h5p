@@ -16,7 +16,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
   public function getFilePaths($libraryId) {
     $result = db_query(
-      "SELECT preloaded_css, preloaded_js, library_id
+      "SELECT hl.preloaded_css, hl.preloaded_js, hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion
       FROM {h5p_libraries} hl
       WHERE hl.library_id = %d", $libraryId
     );
@@ -25,15 +25,16 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       'css' => array(),
     );
     $h5p_path = _h5p_get_h5p_path();
+    $h5p_core = _h5p_get_instance('core');
     while ($paths = db_fetch_array($result)) {
       if (!empty($paths['preloaded_js'])) {
         foreach (explode(',', $paths['preloaded_js']) as $js_path) {
-          $file_paths['js'][] = $h5p_path . '/libraries/' . $paths['library_id'] . '/' . trim($js_path);
+          $file_paths['js'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($js_path);
         }
       }
       if (!empty($paths['preloaded_css'])) {
         foreach (explode(',', $paths['preloaded_css']) as $css_path) {
-          $file_paths['css'][] = $h5p_path . '/libraries/' . $paths['library_id'] . '/' . trim($css_path);
+          $file_paths['css'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($css_path);
         }
       }
     }
@@ -52,11 +53,27 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   
   public function getLibraries() {
     $libraries = array();
-    
-    // Get some books from the library.
-    $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
-    while ($library = db_fetch_object($libraries_result)) {
-      $libraries[] = $library;
+
+    if (isset($_POST['libraries'])) {
+      // Get details for the specified libraries.
+      foreach ($_POST['libraries'] as $libraryName) {
+        $matches = array();
+        preg_match_all('/(.+)\s(\d)+\.(\d)$/', $libraryName, $matches);
+        if ($matches) {
+          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
+          if ($library) {
+            $library->uberName = $libraryName;
+            $libraries[] = $library;
+          }
+        }
+      }
+    }
+    else {
+      // Get some books from the library.
+      $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
+      while ($library = db_fetch_object($libraries_result)) {
+        $libraries[] = $library;
+      }
     }
 
     return json_encode($libraries);

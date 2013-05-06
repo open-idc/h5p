@@ -170,6 +170,14 @@ interface H5PFrameworkInterface {
    *  FALSE if the library doesn't exist
    */
   public function loadLibrary($machineName, $majorVersion, $minorVersion);
+
+  /**
+   * Delete all dependencies belonging to given library
+   *
+   * @param int $libraryId
+   *  Library Id
+   */
+  public function deleteLibraryDependencies($libraryId);
 }
 
 /**
@@ -252,10 +260,10 @@ class H5PValidator {
       'type' => '/^(css|js)$/',
     ),
     'preloadedJs' => array(
-      'path' => '/^((\\\|\/)?[a-z_\-\s0-9]+)+\.js$/i',
+      'path' => '/^((\\\|\/)?[a-z_\-\s0-9\.]+)+\.js$/i',
     ),
     'preloadedCss' => array(
-      'path' => '/^((\\\|\/)?[a-z_\-\s0-9]+)+\.css$/i',
+      'path' => '/^((\\\|\/)?[a-z_\-\s0-9\.]+)+\.css$/i',
     ),
     'dropLibraryCss' => array(
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
@@ -263,6 +271,7 @@ class H5PValidator {
     'w' => '/^[0-9]{1,4}$/',
     'h' => '/^[0-9]{1,4}$/',
     'embedTypes' => array('iframe', 'div'),
+    'fullscreen' => '/^(0|1)$/',
   );
 
   /**
@@ -284,7 +293,7 @@ class H5PValidator {
    */
   public function isValidPackage() {
     // Create a temporary dir to extract package in.
-    $tmp_dir = $this->h5pF->getUploadedH5pFolderPath();
+    $tmpDir = $this->h5pF->getUploadedH5pFolderPath();
     $tmp_path = $this->h5pF->getUploadedH5pPath();
 
     $valid = TRUE;
@@ -292,19 +301,19 @@ class H5PValidator {
     // Extract and then remove the package file.
     $zip = new ZipArchive;
     if ($zip->open($tmp_path) === true) {
-      $zip->extractTo($tmp_dir);
+      $zip->extractTo($tmpDir);
       $zip->close();
     }
     else {
       $this->h5pF->setErrorMessage($this->h5pF->t('The file you uploaded is not a valid HTML5 Package.'));
-      $this->h5pC->delTree($tmp_dir);
+      $this->h5pC->delTree($tmpDir);
       return;
     }
     unlink($tmp_path);
 
     // Process content and libraries
     $libraries = array();
-    $files = scandir($tmp_dir);
+    $files = scandir($tmpDir);
     $mainH5pData;
     $libraryJsonData;
     $mainH5pExists = $imageExists = $contentExists = FALSE;
@@ -312,10 +321,10 @@ class H5PValidator {
       if (in_array(substr($file, 0, 1), array('.', '_'))) {
         continue;
       }
-      $file_path = $tmp_dir . DIRECTORY_SEPARATOR . $file;
+      $filePath = $tmpDir . DIRECTORY_SEPARATOR . $file;
       // Check for h5p.json file.
       if (strtolower($file) == 'h5p.json') {
-        $mainH5pData = $this->getJsonData($file_path);
+        $mainH5pData = $this->getJsonData($filePath);
         if ($mainH5pData === FALSE) {
           $valid = FALSE;
           $this->h5pF->setErrorMessage($this->h5pF->t('Could not find or parse the main h5p.json file'));
@@ -337,12 +346,12 @@ class H5PValidator {
       }
       // Content directory holds content.
       elseif ($file == 'content') {
-        if (!is_dir($file_path)) {
+        if (!is_dir($filePath)) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Invalid content folder'));
           $valid = FALSE;
           continue;
         }
-        $contentJsonData = $this->getJsonData($file_path . DIRECTORY_SEPARATOR . 'content.json');
+        $contentJsonData = $this->getJsonData($filePath . DIRECTORY_SEPARATOR . 'content.json');
         if ($contentJsonData === FALSE) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Could not find or parse the content.json file'));
           $valid = FALSE;
@@ -356,48 +365,19 @@ class H5PValidator {
 
       // The rest should be library folders
       else {
-         if (!is_dir($file_path)) {
+         if (!is_dir($filePath)) {
           // Ignore this. Probably a file that shouldn't have been included.
           continue;
         }
-        if (preg_match('/^[\w0-9\-\.]{1,255}$/i', $file) === 0) {
-          $this->h5pF->setErrorMessage($this->h5pF->t('Invalid library name: %name', array('%name' => $file)));
-          $valid = FALSE;
-          continue;
-        }
-        $h5pData = $this->getJsonData($file_path . DIRECTORY_SEPARATOR . 'library.json');
-        if ($h5pData === FALSE) {
-          $this->h5pF->setErrorMessage($this->h5pF->t('Could not find library.json file with valid json format for library %name', array('%name' => $file)));
-          $valid = FALSE;
-          continue;
-        }
-
-        // validate json if a semantics file is provided
-        $semanticsPath = $file_path . DIRECTORY_SEPARATOR . 'semantics.json';
-        if (file_exists($semanticsPath)) {
-          $semantics = $this->getJsonData($semanticsPath, TRUE);
-          if ($semantics === FALSE) {
-            $this->h5pF->setErrorMessage($this->h5pF->t('Invalid semantics.json file has been included in the library %name', array('%name' => $file)));
-            $valid = FALSE;
-            continue;
-          }
-          else {
-            $h5pData['semantics'] = $semantics;
-          }
-        }
         
-        $validLibrary = $this->isValidH5pData($h5pData, $file, $this->libraryRequired, $this->libraryOptional);
+        $libraryH5PData = $this->getLibraryData($file, $filePath, $tmpDir);
 
-        if (isset($h5pData['preloadedJs'])) {
-          $validLibrary = $this->isExistingFiles($h5pData['preloadedJs'], $tmp_dir, $file) && $validLibrary;
+        if ($libraryH5PData) {
+          $libraries[$file] = $libraryH5PData;
         }
-        if (isset($h5pData['preloadedCss'])) {
-          $validLibrary = $this->isExistingFiles($h5pData['preloadedCss'], $tmp_dir, $file) && $validLibrary;
+        else {
+          $valid = FALSE;
         }
-        if ($validLibrary) {
-          $libraries[$file] = $h5pData;
-        }
-        $valid = $validLibrary && $valid;
       }
     }
     if (!$contentExists) {
@@ -413,19 +393,77 @@ class H5PValidator {
       $this->h5pC->mainJsonData = $mainH5pData;
       $this->h5pC->contentJsonData = $contentJsonData;
       
-      $libraries['mainH5pData'] = $mainH5pData;
+      $libraries['mainH5pData'] = $mainH5pData; // Check for the dependencies in h5p.json as well as in the libraries
       $missingLibraries = $this->getMissingLibraries($libraries);
       foreach ($missingLibraries as $missing) {
         if ($this->h5pF->getLibraryId($missing['machineName'], $missing['majorVersion'], $missing['minorVersion'])) {
           unset($missingLibraries[$missing['machineName']]);
         }
       }
+      if (!empty($missingLibraries)) {
+        foreach ($missingLibraries as $library) {
+          $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => $this->h5pC->libraryToString($library))));
+        }
+      }
       $valid = empty($missingLibraries) && $valid;
     }
     if (!$valid) {
-      $this->h5pC->delTree($tmp_dir);
+      $this->h5pC->delTree($tmpDir);
     }
     return $valid;
+  }
+
+  /**
+   * Validates a H5P library
+   *
+   * @param string $file
+   *  Name of the library folder
+   * @param string $filePath
+   *  Path to the library folder
+   * @param string $tmpDir
+   *  Path to the temporary upload directory
+   * @return object|boolean
+   *  H5P data from library.json and semantics if the library is valid
+   *  FALSE if the library isn't valid
+   */
+  public function getLibraryData($file, $filePath, $tmpDir) {
+    if (preg_match('/^[\w0-9\-\.]{1,255}$/i', $file) === 0) {
+      $this->h5pF->setErrorMessage($this->h5pF->t('Invalid library name: %name', array('%name' => $file)));
+      return FALSE;
+    }
+    $h5pData = $this->getJsonData($filePath . DIRECTORY_SEPARATOR . 'library.json');
+    if ($h5pData === FALSE) {
+      $this->h5pF->setErrorMessage($this->h5pF->t('Could not find library.json file with valid json format for library %name', array('%name' => $file)));
+      return FALSE;
+    }
+
+    // validate json if a semantics file is provided
+    $semanticsPath = $filePath . DIRECTORY_SEPARATOR . 'semantics.json';
+    if (file_exists($semanticsPath)) {
+      $semantics = $this->getJsonData($semanticsPath, TRUE);
+      if ($semantics === FALSE) {
+        $this->h5pF->setErrorMessage($this->h5pF->t('Invalid semantics.json file has been included in the library %name', array('%name' => $file)));
+        return FALSE;
+      }
+      else {
+        $h5pData['semantics'] = $semantics;
+      }
+    }
+
+    $validLibrary = $this->isValidH5pData($h5pData, $file, $this->libraryRequired, $this->libraryOptional);
+
+    if (isset($h5pData['preloadedJs'])) {
+      $validLibrary = $this->isExistingFiles($h5pData['preloadedJs'], $tmpDir, $file) && $validLibrary;
+    }
+    if (isset($h5pData['preloadedCss'])) {
+      $validLibrary = $this->isExistingFiles($h5pData['preloadedCss'], $tmpDir, $file) && $validLibrary;
+    }
+    if ($validLibrary) {
+      return $h5pData;
+    }
+    else {
+      return FALSE;
+    }
   }
 
   /**
@@ -441,13 +479,13 @@ class H5PValidator {
     $missing = array();
     foreach ($libraries as $library) {
       if (isset($library['preloadedDependencies'])) {
-        array_merge($missing, $this->getMissingDependencies($library['preloadedDependencies'], $libraries));
+        $missing = array_merge($missing, $this->getMissingDependencies($library['preloadedDependencies'], $libraries));
       }
       if (isset($library['dynamicDependencies'])) {
-        array_merge($missing, $this->getMissingDependencies($library['dynamicDependencies'], $libraries));
+        $missing = array_merge($missing, $this->getMissingDependencies($library['dynamicDependencies'], $libraries));
       }
       if (isset($library['editorDependencies'])) {
-        array_merge($missing, $this->getMissingDependencies($library['editorDependencies'], $libraries));
+        $missing = array_merge($missing, $this->getMissingDependencies($library['editorDependencies'], $libraries));
       }
     }
     return $missing;
@@ -486,18 +524,18 @@ class H5PValidator {
    * Triggers error messages if files doesn't exist
    *
    * @param array $files
-   *  List of file paths relative to $tmp_dir
-   * @param string $tmp_dir
+   *  List of file paths relative to $tmpDir
+   * @param string $tmpDir
    *  Path to the directory where the $files are stored.
    * @param string $library
    *  Name of the library we are processing
    * @return boolean
    *  TRUE if all the files excists
    */
-  private function isExistingFiles($files, $tmp_dir, $library) {
+  private function isExistingFiles($files, $tmpDir, $library) {
     foreach ($files as $file) {
       $path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $file['path']);
-      if (!file_exists($tmp_dir . DIRECTORY_SEPARATOR . $library . DIRECTORY_SEPARATOR . $path)) {
+      if (!file_exists($tmpDir . DIRECTORY_SEPARATOR . $library . DIRECTORY_SEPARATOR . $path)) {
         $this->h5pF->setErrorMessage($this->h5pF->t('The file "%file" is missing from library: "%name"', array('%file' => $path, '%name' => $library)));
         return FALSE;
       }
@@ -675,7 +713,7 @@ class H5PValidator {
   /**
    * Fetch json data from file
    * 
-   * @param string $file_path
+   * @param string $filePath
    *  Path to the file holding the json string
    * @param boolean $return_as_string
    *  If true the json data will be decoded in order to validate it, but will be
@@ -685,8 +723,8 @@ class H5PValidator {
    *  string if the $return as string parameter is set
    *  array otherwise
    */
-  private function getJsonData($file_path, $return_as_string = FALSE) {
-    $json = file_get_contents($file_path);
+  private function getJsonData($filePath, $return_as_string = FALSE) {
+    $json = file_get_contents($filePath);
     if (!$json) {
       return FALSE;
     }
@@ -754,6 +792,7 @@ class H5PStorage {
     // Save the libraries we processed during validation
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
       $libraryId = $this->h5pF->getLibraryId($key, $library['majorVersion'], $library['minorVersion']);
+      $library['saveDependencies'] = TRUE;
       if (!$libraryId) {
         $new = TRUE;
       }
@@ -762,26 +801,31 @@ class H5PStorage {
         $library['libraryId'] = $libraryId;
       }
       else {
+        $library['libraryId'] = $libraryId;
         // We already have the same or a newer version of this library
+        $library['saveDependencies'] = FALSE;
         continue;
       }
       $this->h5pF->saveLibraryData($library, $new);
       
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
-      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $library['libraryId'];
+      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $this->h5pC->libraryToString($library, TRUE);
       $this->h5pC->delTree($destination_path);
       rename($current_path, $destination_path);
     }
-    // All libraries have been saved, we now save all the dependencies
+
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
-      if (isset($library['preloadedDependencies'])) {
-        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
-      }
-      if (isset($library['dynamicDependencies'])) {
-        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
-      }
-      if (isset($library['editorDependencies'])) {
-        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
+      if ($library['saveDependencies']) {
+        $this->h5pF->deleteLibraryDependencies($library['libraryId']);
+        if (isset($library['preloadedDependencies'])) {
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
+        }
+        if (isset($library['dynamicDependencies'])) {
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
+        }
+        if (isset($library['editorDependencies'])) {
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
+        }
       }
     }
     // Move the content folder
@@ -887,6 +931,9 @@ class H5PStorage {
  */
 class H5PCore {
   
+  public static $styles = array(
+    'styles/h5p.css',
+  );
   public static $scripts = array(
     'js/jquery.js',
     'js/h5p.js',
@@ -972,6 +1019,18 @@ class H5PCore {
         }
     }
     closedir($dir);
+  }
+
+  /**
+   * Writes library data as string on the form {machineName} {majorVersion}.{minorVersion}
+   *
+   * @param array $library
+   *  With keys machineName, majorVersion and minorVersion
+   * @return string
+   *  On the form {machineName} {majorVersion}.{minorVersion}
+   */
+  public function libraryToString($library, $folderName = FALSE) {
+    return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
 }
 ?>

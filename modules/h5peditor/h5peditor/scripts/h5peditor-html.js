@@ -3,7 +3,7 @@ var ns = H5PEditor;
 
 /**
  * Adds a html text field to the form.
- * 
+ *
  * @param {type} parent
  * @param {type} field
  * @param {type} params
@@ -16,8 +16,9 @@ ns.Html = function (parent, field, params, setValue) {
   this.setValue = setValue;
   this.tags = ns.$.merge(['br'], (this.field.tags || this.defaultTags));
 };
+ns.Html.first = true;
 
-ns.Html.prototype.defaultTags = ['strong', 'em', 'del', 'h1', 'h2', 'a', 'ul', 'ol', 'img', 'table'];
+ns.Html.prototype.defaultTags = ['strong', 'em', 'del', 'h2', 'h3', 'a', 'ul', 'ol', 'img', 'table'];
 
 ns.Html.prototype.inTags = function (value) {
   return (ns.$.inArray(value.toLowerCase(), this.tags) >= 0);
@@ -121,7 +122,7 @@ ns.Html.prototype.createToolbar = function () {
 
   var ret = {
     toolbar: toolbar
-  }
+  };
   // Set format_tags if not empty. CKeditor does not like empty format_tags.
   if (formats.length > 0) {
     ret['format_tags'] = formats.join(';');
@@ -131,15 +132,15 @@ ns.Html.prototype.createToolbar = function () {
 
 /**
  * Append field to wrapper.
- * 
+ *
  * @param {type} $wrapper
  * @returns {undefined}
  */
 ns.Html.prototype.appendTo = function ($wrapper) {
   var that = this;
 
-  this.$item = ns.$(ns.createItem(this.field.type, this.createHtml())).appendTo($wrapper);
-  this.$input = this.$item.children('label').children('input');
+  this.$item = ns.$(ns.createItem(this.field.type, this.createHtml(), this.field.description)).appendTo($wrapper);
+  this.$input = this.$item.children('.ckeditor');
   this.$errors = this.$item.children('.errors');
 
   var ckConfig = {
@@ -161,23 +162,53 @@ ns.Html.prototype.appendTo = function ($wrapper) {
     }
   }
 
-  this.$item.children('.ckeditor').click(function () {
-    if (! ns.$(this).hasClass('cke_editable')) {
-      that.ckeditor = CKEDITOR.inline(this, ckConfig);
-      that.ckeditor.on('change', function () {
-        // Validate before submit.
-        var value = that.validate();
-        if (value !== false) {
-          that.setValue(that.field, value);
-          // console.log(value);
+
+  var $textarea = this.$item.children('.ckeditor:not(.cke_editable)');
+  if ($textarea.length !== 0) {
+    that.ckeditor = CKEDITOR.inline($textarea[0], ckConfig);
+    that.ckeditor.on('change', function () {
+      // Validate before submit.
+      var value = that.validate();
+      if (value !== false) {
+        that.setValue(that.field, value);
+      }
+    });
+    // Add events to ckeditor. It is beeing done here since we know it exists at this point...
+    if (ns.Html.first) {
+      CKEDITOR.on('dialogDefinition', function(e) {
+        // Take the dialog name and its definition from the event data.
+        var dialogName = e.data.name;
+        var dialogDefinition = e.data.definition;
+
+        // Check if the definition is from the dialog window you are interested in (the "Link" dialog window).
+        if (dialogName == 'link') {
+          // Get a reference to the "Link Info" tab.
+          var targetTab = dialogDefinition.getContents('target');
+
+          // Set the default value for the URL field.
+          var urlField = targetTab.get('linkTargetType');
+          urlField['default'] = '_blank';
         }
       });
-      that.ckeditor.on('blur', function () {
-        // When blurred, remove completely.
-        this.destroy();
-      });
+      ns.Html.first = false;
     }
-  });
+  }
+
+// Alternative if the above code makes the page very slow.
+// (should not be necessary, the above code has been tested with >30 ckeditor on one page.)
+//
+//  this.$item.children('.ckeditor:not(.cke_editable)').focus(function () {
+//    that.ckeditor = CKEDITOR.inline(this, ckConfig);
+//    that.ckeditor.on('change', function () {
+//      // Validate before submit.
+//      var value = that.validate();
+//      if (value !== false) {
+//        that.setValue(that.field, value);
+//      }
+//    });
+//  }).blur(function () {
+//    that.ckeditor.destroy();
+//  });
 };
 
 /**
@@ -191,16 +222,12 @@ ns.Html.prototype.createHtml = function () {
   }
   html += '</label>';
 
-  html += '<div class="ckeditor" contenteditable="true"';
-  if (this.field.description !== undefined) {
-    html += ' title="' + this.field.description + '" placeholder="' + this.field.description + '"';
-  }
-  html += '>';
+  html += '<div class="ckeditor" tabindex="0" contenteditable="true">';
 
   if (this.value !== undefined) {
     html += this.value;
   }
-  html += '</textarea>';
+  html += '</div>';
 
   return html;
 };
@@ -215,7 +242,8 @@ ns.Html.prototype.validate = function () {
   }
 
   // Get contents from editor
-  var value = this.ckeditor.getData();
+  var value = this.ckeditor !== undefined ? this.ckeditor.getData() : this.$input.html();
+
   var $value = ns.$('<div/>');
   if (value) { // Appending an empty object fails..
     $value.append($(value));
@@ -223,7 +251,7 @@ ns.Html.prototype.validate = function () {
   var textValue = $value.text();
 
   // Check if we have any text at all.
-  if (this.field.required && !textValue.length) {
+  if (!this.field.optional && !textValue.length) {
     // We can accept empty text, if there's an image instead.
     if (! (this.inTags("img") && $value.find('img').length > 0)) {
       this.$errors.append(ns.createError(this.field.label + ' is required and must have some text or at least an image in it.'));
@@ -252,6 +280,10 @@ ns.Html.prototype.validate = function () {
  * Remove this item.
  */
 ns.Html.prototype.remove = function () {
+  if (this.ckeditor !== undefined) {
+    this.ckeditor.destroy();
+  }
+
   this.$item.remove();
 };
 

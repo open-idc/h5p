@@ -37,19 +37,17 @@ ns.init = function () {
   $('#node-form').submit(function () {
     if (h5peditor !== undefined) {
       var params = h5peditor.getParams();
-//      console.log(params);
-      if (params) {
+      
+      if (params === false) {
+        return false;
+      }
+      
+      if (params !== undefined) {
         $('#edit-h5p-library').val(h5peditor.getLibrary());
         $('#edit-h5p-params').val(JSON.stringify(params));
       }
-//      return false;
     }
   });
 };
 
 $(document).ready(ns.init);
-
-var H5PIntegration = H5PIntegration || {};
-H5PIntegration.getContentPath = function (id) {
-  return Drupal.settings.filesPath + '/h5p/content/' + id + '/'; // TODO: Get path from variable_get().
-};

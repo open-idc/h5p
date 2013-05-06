@@ -96,22 +96,26 @@ class H5PDrupal implements H5PFrameworkInterface {
     if (!isset($libraryData['semantics'])) {
       $libraryData['semantics'] = '';
     }
+    if (!isset($libraryData['fullscreen'])) {
+      $libraryData['fullscreen'] = 0;
+    }
     if ($new) {
       db_query("INSERT INTO {h5p_libraries}
-        (machine_name, title, major_version, minor_version, patch_version, runnable, embed_types, preloaded_js, preloaded_css, drop_library_css, semantics)
-        VALUES ('%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s', '%s')",
+        (machine_name, title, major_version, minor_version, patch_version, runnable, fullscreen, embed_types, preloaded_js, preloaded_css, drop_library_css, semantics)
+        VALUES ('%s', '%s', %d, %d, %d, %d, %d, '%s', '%s', '%s', '%s', '%s')",
         $libraryData['machineName'], $libraryData['title'], $libraryData['majorVersion'], $libraryData['minorVersion'],
-        $libraryData['patchVersion'], $libraryData['runnable'], $embedTypes, $preloadedJs, $preloadedCss, $dropLibraryCss, $libraryData['semantics']
+        $libraryData['patchVersion'], $libraryData['runnable'], $libraryData['fullscreen'], $embedTypes, $preloadedJs,
+        $preloadedCss, $dropLibraryCss, $libraryData['semantics']
       );
       $libraryId = db_last_insert_id('h5p_libraries', 'library_id');
       $libraryData['libraryId'] = $libraryId;
     }
     else {
       db_query("UPDATE {h5p_libraries}
-        SET title = '%s', patch_version = %d, runnable = %d,
+        SET title = '%s', patch_version = %d, runnable = %d, fullscreen = %d,
         embed_types = '%s', preloaded_js = '%s', preloaded_css = '%s', drop_library_css = '%s', semantics = '%s'
         WHERE library_id = %d",
-        $libraryData['title'], $libraryData['patchVersion'], $libraryData['runnable'], $embedTypes,
+        $libraryData['title'], $libraryData['patchVersion'], $libraryData['runnable'], $libraryData['fullscreen'], $embedTypes,
         $preloadedJs, $preloadedCss, $dropLibraryCss, $libraryData['semantics'], $libraryData['libraryId']
       );
       $this->deleteLibraryDependencies($libraryData['libraryId']);
@@ -140,12 +144,9 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
   
   /**
-   * Delete all dependencies belonging to given library
-   * 
-   * @param int $libraryId
-   *  Library Id
+   * Implements deleteLibraryDependencies
    */
-  private function deleteLibraryDependencies($libraryId) {
+  public function deleteLibraryDependencies($libraryId) {
     db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
   }
 
@@ -239,9 +240,8 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function loadLibrary($machineName, $majorVersion, $minorVersion) {
     $library = db_fetch_array(db_query(
       "SELECT library_id as libraryId, machine_name as machineName, title, major_version as majorVersion, minor_version as minorVersion,
-        patch_version as patchVersion, embed_types as embedTypes,
-        preloaded_js as preloadedJs, preloaded_css as preloadedCss,
-        drop_library_css as dropLibraryCss
+        patch_version as patchVersion, embed_types as embedTypes, preloaded_js as preloadedJs, preloaded_css as preloadedCss, drop_library_css as dropLibraryCss,
+        fullscreen, runnable, semantics
       FROM {h5p_libraries}
       WHERE machine_name = '%s'
       AND major_version = %d
