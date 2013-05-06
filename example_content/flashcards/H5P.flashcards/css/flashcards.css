@@ -7,7 +7,7 @@
 .flashcard .fasit-container {
   display: none;
   position: absolute;
-  top: -40px;
+  top: -55px;
   text-align: center;
   width: inherit;
   height: 30px;
@@ -24,13 +24,22 @@
   position: relative;
   margin-top: 20px;
   width: 400px;
-  height: 280px;
   margin-left:auto;
   margin-right:auto;
   overflow: hidden;
 }
 .flashcard-image {
+  position: relative;
   background-color: black;
+}
+.flashcard-image-text {
+  color: black;
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  text-align: center;
+  opacity: 0.6;
+  background-color: white;
 }
 .flashcard-image img {
   border: 0px;
@@ -55,7 +64,6 @@
 .flashcard .flashcards,.flashcard-question {
   font-size: 14px;
   width: 400px;
-  height: 280px;
   position: absolute;
 }
 .flashcard-inner-panel .navigation {
@@ -172,4 +180,8 @@
   background: -ms-linear-gradient(top,  #ffffff 0%,#e3f5ab 47%,#c2ef6e 100%); /* IE10+ */
   background: linear-gradient(to bottom,  #ffffff 0%,#e3f5ab 47%,#c2ef6e 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#c2ef6e',GradientType=0 ); /* IE6-9 */
+}
+
+.flashcard .correct-answer .h5p-input, .flashcard .wrong-answer .h5p-input {
+  background-color: #ebebeb;
 }

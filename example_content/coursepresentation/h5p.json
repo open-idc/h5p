@@ -1,18 +1,43 @@
 {
   "title": "H5P.CoursePresentation",
   "contentType": "H5P.CoursePresentation",
-  "language": "nb",
+  "language": "eng",
   "author": "Frode Petterson",
   "preloadedDependencies": [
     {
       "machineName": "H5P.CoursePresentation", 
       "majorVersion": 1, 
       "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Image",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Text",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Video",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Audio",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Blanks",
+      "majorVersion": 1,
+      "minorVersion": 0
     }
   ],
   "mainLibrary": "H5P.CoursePresentation",
   "embedTypes": ["div", "iframe"],
   "width": 640,
-  "height": 360,
+  "height": 400,
   "fullscreen": 1
 }

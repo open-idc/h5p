@@ -3,14 +3,14 @@ var H5P = H5P || {};
 /**
  * A class that easily helps your sort stuff.
  *
- * @param {object} containerOffset
+ * @param {jQuery} $container
  * @returns {undefined}
  */
-H5P.DragNSort = function (containerOffset) {
+H5P.DragNSort = function ($container) {
   var that = this;
   
   this.placeholderHtml = '<li class="h5p-placeholder"></li>';
-  this.dnd = new H5P.DragNDrop(containerOffset);
+  this.dnd = new H5P.DragNDrop($container);
   
   this.dnd.startMovingCallback = function (event) {
     return that.startMoving(event);

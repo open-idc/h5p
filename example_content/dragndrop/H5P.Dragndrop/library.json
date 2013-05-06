@@ -5,13 +5,14 @@
   "minorVersion": 0,
   "patchVersion": 10,
   "runnable": 1,
-  "name": "h5p-dragndrop",
-  "class": "H5P.Dragndrop",
   "author": "Amendor AS",
   "license": "cc-by-sa",
   "machineName": "H5P.Dragndrop",
   "preloadedCss": [
     {"path": "css/dragndrop.css"}
+  ],
+	"preloadedDependencies": [
+    {"machineName": "jQuery.ui", "majorVersion": 1, "minorVersion": 10, "defaultStyles": true}
   ],
   "preloadedJs": [
     {"path": "js/dragndrop.js"}

@@ -1,9 +1,11 @@
 {
-	"text": "Skriv inn riktig form av verbene som mangler",
+	"text": "Fill in the missing celebrity names",
 	"questions":[
-		"I morgen skal Ernst *sykle|gå* (å sykle eller å gå) til skolen.",
-		"I går *var* (å være) Ernst på båttur."
+		"Justin *Bieber* is one of the most famous celebrities in the world.",
+		"Elvis *Presley* is the greatest rock star ever."
 	],
-   "score": "Du hadde @score riktige av @total mulige."
+   "score": "You got @score of @total possible points.",
+   "showSolutions": "Show solutions",
+   "close": "Close"
 }
 

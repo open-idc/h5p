@@ -2,6 +2,7 @@ var H5P = H5P || {};
 
 H5P.Dragndrop = function (options, contentId) {
 
+  var target;
   var $ = H5P.jQuery;
 
   if ( !(this instanceof H5P.Dragndrop) ){
@@ -13,7 +14,7 @@ H5P.Dragndrop = function (options, contentId) {
   var allAnswered = function() {
     var droppables = 0;
     var answers = 0;
-    $('.droppable').each(function (idx, el) {
+    target.find('.droppable').each(function (idx, el) {
       droppables++;
       if($(el).data('content')) {
         answers++;
@@ -22,17 +23,13 @@ H5P.Dragndrop = function (options, contentId) {
     return (droppables == answers);
   };
 
-  var getTotal = function() {
-    var count = 0;
-    $('.droppable').each(function (idx, el) {
-      count++;
-    });
-    return count;
+  var getMaxScore = function() {
+    return target.find('.droppable').length;
   }
 
   var getScore = function() {
     var score = 0;
-    $('.droppable').each(function (idx, el) {
+    target.find('.droppable').each(function (idx, el) {
       if($(el).data('content')) {
         var index = $(el).data('content').replace(/[a-z\-]+/,'');
         var target = options.draggables[index].target;
@@ -47,7 +44,7 @@ H5P.Dragndrop = function (options, contentId) {
   var showScore = function() {
     var score = 0;
     var count = 0;
-    $('.droppable').each(function (idx, el) {
+    target.find('.droppable').each(function (idx, el) {
       count++;
       if($(el).data('content')) {
         var index = $(el).data('content').replace(/[a-z\-]+/,'');
@@ -66,28 +63,21 @@ H5P.Dragndrop = function (options, contentId) {
     $('#score').html(options.scoreText.replace('@score', score).replace('@total', count));
   }
 
-  var buttons = Array(
-    {
-      text: options.scoreShow,
-      click: showScore,
-      className: 'button show-score'
-    }
-  );
-
-  var attach = function (target) {
+  var attach = function(board) {
     var $ = H5P.jQuery;
     var droppables = options.droppables;
     var draggables = options.draggables;
-    var panel = options.panel;
-    var target = typeof(target) === "string" ? $("#" + target) : $(target);
+    var panel = options.panel[0];
     var $dragndrop = $('<div class="dragndrop"></div>');
 
-    $('.question-container').html('<div class="multichoice"><div class="title">'+options.title+'</div></div>');
+    target = typeof(board) === "string" ? $("#" + board) : $(board);
+
+    target.html('<div class="dragndrop-title">'+panel.title+'</div>');
 
     $dragndrop.css({ width: panel.width, height: panel.height });
     if(panel.image){
       $dragndrop.css({ backgroundImage: 'url('+cp+panel.image.path+')' });
-      $dragndrop.css({ backgroundPosition: panel.image.coords.x + 'px ' + panel.image.coords.y + 'px' });
+      $dragndrop.css({ backgroundPosition: panel.coords.x + 'px ' + panel.coords.y + 'px' });
     }
     target.append($dragndrop);
 
@@ -117,6 +107,19 @@ H5P.Dragndrop = function (options, contentId) {
       return $el;
     }
 
+    var buttons = Array();
+
+    if($('.qs-footer').length) {
+      // Hack to fix boardgame fit
+      var w = target.parent().parent().innerWidth() - 2*parseInt(target.parent().css('paddingLeft'));
+      $('.dragndrop-title').css('width', w);
+    }
+    else {
+      // Add show score button when not boardgame
+      var buttons = Array( { text: options.scoreShow, click: showScore, className: 'button show-score' });
+    }
+
+
     // Add buttons
     for (var i = 0; i < buttons.length; i++) {
       $button = addElement(null, buttons[i].className, buttons[i]);
@@ -139,7 +142,7 @@ H5P.Dragndrop = function (options, contentId) {
     }
 
     // Make droppables
-    $('.droppable').each(function (idx, el) {
+    target.find('.droppable').each(function (idx, el) {
       $(el).droppable({
         scope: $(el).data('scope'),
         activeClass: 'droppable-active',
@@ -187,7 +190,7 @@ H5P.Dragndrop = function (options, contentId) {
     });
 
     // Make draggables
-    $('.draggable').each(function (idx, el) {
+    target.find('.draggable').each(function (idx, el) {
       $(el).draggable({
         scope: $(el).data('scope'),
         revert: 'invalid',
@@ -212,8 +215,8 @@ H5P.Dragndrop = function (options, contentId) {
     getAnswerGiven: function() {
       return allAnswered();
     },
-    totalScore: function() {
-      return getTotal();
+    getMaxScore: function() {
+      return getMaxScore();
     }
   };
 

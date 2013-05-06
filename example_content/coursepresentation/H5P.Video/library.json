@@ -1,0 +1,23 @@
+{
+  "title": "Video",
+  "contentType": "Media",
+  "description": "Simple library that displays a video.",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 2,
+  "runnable": 0,
+  "machineName": "H5P.Video",
+  "author": "Frode Petterson",
+  "preloadedJs": [
+    {
+      "path": "scripts/video.js"
+    }
+  ],
+  "preloadedDependencies": [
+    {
+      "machineName": "flowplayer",
+      "majorVersion": 1,
+      "minorVersion": 0
+    }
+  ]
+}

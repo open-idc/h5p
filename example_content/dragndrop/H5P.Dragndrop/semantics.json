@@ -1,0 +1,140 @@
+[
+  {
+    "name": "panel",
+    "type": "list",
+    "label": "Panel",
+    "entity": "panel",
+    "max": 1,
+    "field": {
+      "name": "panel",
+      "type": "group",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "label": "Tittel"
+        },
+        {
+          "name": "image",
+          "type": "image",
+          "label": "Bilde"
+        },
+        {
+          "name": "coords",
+          "type": "group",
+          "widget": "coordinates",
+          "label": "Image Position"
+        }
+      ]
+    }
+  },
+  {
+    "name": "content",
+    "type": "list",
+    "label": "Innhold",
+    "entity": "content",
+    "field": {
+      "name": "content",
+      "type": "group",
+      "fields": [
+        {
+           "name": "id",
+           "type": "text",
+           "label": "Id"
+        },
+        {
+           "name": "text",
+           "type": "text",
+           "label": "Tekst"
+        },
+        {
+          "name": "coords",
+          "type": "group",
+          "widget": "coordinates",
+          "label": "Position"
+        }
+      ]
+    }
+  },
+  {
+    "name": "droppables",
+    "type": "list",
+    "label": "Droppables",
+    "entity": "content",
+    "field": {
+      "name": "droppables",
+      "type": "group",
+      "fields": [
+        {
+           "name": "id",
+           "type": "text",
+           "label": "Id"
+        },
+        {
+           "name": "scope",
+           "type": "text",
+           "label": "Scope"
+        },
+        {
+           "name": "width",
+           "type": "number",
+           "label": "Bredde"
+        },
+        {
+           "name": "height",
+           "type": "number",
+           "label": "Høyde"
+        },
+        {
+           "name": "className",
+           "type": "text",
+           "label": "Class Name"
+        },
+        {
+          "name": "coords",
+          "type": "group",
+          "widget": "coordinates",
+          "label": "Position"
+        }
+      ]
+    }
+  },
+  {
+    "name": "draggables",
+    "type": "list",
+    "label": "Draggables",
+    "entity": "content",
+    "field": {
+      "name": "draggables",
+      "type": "group",
+      "fields": [
+        {
+           "name": "text",
+           "type": "text",
+           "label": "Text"
+        },
+        {
+           "name": "scope",
+           "type": "text",
+           "label": "Scope"
+        },
+        {
+           "name": "target",
+           "type": "text",
+           "label": "Target"
+        },
+        {
+           "name": "className",
+           "type": "text",
+           "label": "Class Name"
+        },
+        {
+          "name": "coords",
+          "type": "group",
+          "widget": "coordinates",
+          "label": "Position"
+        }
+      ]
+    }
+  }
+]

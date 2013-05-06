@@ -1,32 +1,36 @@
 {
-  "title": "Hvilket dyr ser du på bildet?",
-  "description": "Skriv inn navnet på dyret i feltet under.",
-  "questions": [
+  "title": "What animal?",
+  "description": "Type in the name of the animals you see in the pictures.",
+  "cards": [
     {
-       "text": "As well as (Så vel som)"
+      "text": "What animal?",
+      "image": {
+        "path": "img/image1.jpg",
+        "width": 250,
+        "height": 200
+      },
+      "answer": "Duck"
     },
     {
       "image": {
-        "path": "img/image1.jpg"
+        "path": "img/image2.png",
+        "width": 400,
+        "height": 300
       },
-      "answer": "and"
+      "answer": "Horse"
     },
     {
       "image": {
-        "path": "img/image2.jpg"
+        "path": "img/image3.jpg",
+        "width": 267,
+        "height": 200
       },
-      "answer": "hest"
-    },
-    {
-      "image": {
-        "path": "img/image3.jpg"
-      },
-      "answer": "elefant"
+      "answer": "elephant"
     }
   ],
-  "label": "Oppgave @task av @total",
-  "next": "neste",
-  "previous": "forrige",
-  "score": "fasit"
+  "progressText": "Card @card of @total",
+  "next": "Next",
+  "previous": "Previous",
+  "checkAnswerText": "Check answer"
 }
 

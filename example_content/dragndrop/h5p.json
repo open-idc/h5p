@@ -6,6 +6,7 @@
   "author": "Amendor AS",
   "license": "cc-by-sa",
   "preloadedDependencies": [
+		{"machineName": "jQuery.ui", "majorVersion": 1, "minorVersion": 0},
 		{"machineName": "H5P.Dragndrop", "majorVersion": 1, "minorVersion": 0}
   ],
   "mainLibrary": "H5P.Dragndrop",

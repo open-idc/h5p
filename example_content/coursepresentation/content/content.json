@@ -5,17 +5,40 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Text 1.0",
             "params": {
               "text": "Hello world!"
             }
           },
-          "x": 150,
-          "y": 56,
-          "width": 400,
-          "height": 300,
-          "title": "Test text",
-          "copyright": "GPL"
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 30,
+          "metadata": {
+            "title": "Test text",
+            "lisence": "GPL"
+          }
+        },
+        {
+          "action": {
+            "library": "H5P.Video 1.0",
+            "params": {
+              "files": [
+                {
+                  "path": "videos/test-video.mp4",
+                  "mime": "video/mp4"
+                },
+                {
+                  "path": "videos/test-video.webm",
+                  "mime": "video/webm"
+                }
+              ]
+            }
+          },
+          "x": 10,
+          "y": 10,
+          "width": 80,
+          "height": 80
         }
       ],
       "keywords": [
@@ -39,17 +62,24 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Blanks 1.0",
             "params": {
-              "text": "Hello slide 2!"
+              "text": "Skriv inn riktig form av verbene som mangler",
+              "questions": [
+                "I morgen skal Ernst *sykle/gå* (å sykle eller å gå) til skolen.",
+                "I går *var* (å være) Ernst på båttur."
+              ],
+              "score": "Du hadde @score riktige av @total mulige."
             }
           },
-          "x": 50,
-          "y": 120,
-          "width": 300,
-          "height": 200,
-          "title": "Test text 2",
-          "copyright": "LGPL"
+          "x": 5,
+          "y": 5,
+          "width": 90,
+          "height": 90,
+          "metadata": {
+            "title": "Test Blanks 1",
+            "lisence": "LGPL"
+          }
         }
       ],
       "keywords": [
@@ -81,19 +111,19 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Text 1.0",
             "params": {
               "text": "SLIDE 3"
             }
           },
-          "x": 10,
-          "y": 10,
-          "width": 100,
-          "height": 50
+          "x": 0,
+          "y": 0,
+          "width": 17,
+          "height": 10
         },
         {
           "action": {
-            "library": "H5P.cpImage 1.0",
+            "library": "H5P.Image 1.0",
             "params": {
               "file": {
                 "path": "images/cookies.jpg",
@@ -101,10 +131,11 @@
               }
             }
           },
-          "x": 20,
-          "y": 70,
-          "width": 215,
-          "height": 200
+          "x": 7.1875,
+          "y": 20,
+          "width": 33.59375,
+          "height": 55.56,
+          "solution": "This is a picture."
         }
       ],
       "keywords": [
@@ -132,15 +163,24 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Audio 1.0",
             "params": {
-              "text": "Glider 4"
+              "files": [
+                {
+                  "path": "audios/sample-sound.mp3",
+                  "mime": "audio/mp3"
+                },
+                {
+                  "path": "audios/sample-sound.ogg",
+                  "mime": "application/ogg"
+                }
+              ]
             }
           },
-          "x": 250,
-          "y": 225,
-          "width": 100,
-          "height": 30
+          "x": 10,
+          "y": 10,
+          "width": 80,
+          "height": 80
         }
       ],
       "keywords": [
@@ -163,14 +203,14 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Text 1.0",
             "params": {
               "text": "Slide 4 1/3"
             }
           },
-          "x": 250,
-          "y": 225,
-          "width": 100,
+          "x": 25,
+          "y": 2.25,
+          "width": 10,
           "height": 30
         }
       ],
@@ -185,15 +225,15 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Text 1.0",
             "params": {
               "text": "Slide 4 2/3"
             }
           },
-          "x": 250,
-          "y": 225,
+          "x": 25,
+          "y": 22.5,
           "width": 100,
-          "height": 30
+          "height": 50
         }
       ],
       "keywords": [
@@ -207,15 +247,15 @@
       "elements": [
         {
           "action": {
-            "library": "H5P.cpText 1.0",
+            "library": "H5P.Text 1.0",
             "params": {
               "text": "FÆRDI"
             }
           },
           "x": 0,
-          "y": 250,
-          "width": 150,
-          "height": 30
+          "y": 25,
+          "width": 1.5,
+          "height": 3
         }
       ],
       "keywords": [
@@ -239,5 +279,22 @@
         }
       ]
     }
-  ]
+  ],
+  "l10n": {
+    "prev": "Prev",
+    "prevSlide": "Previous slide",
+    "scrollLeft": "Scroll - left",
+    "jumpToSlide": "Jump to slide",
+    "scrollRight": "Scroll - right",
+    "next": "Next",
+    "slide": "Slide",
+    "nextSlide": "Next slide",
+    "yourScore": "Your Score",
+    "maxScore": "Max Score",
+    "goodScore": "Congratulations! You got @percent correct!",
+    "okScore": "Nice effort! You got @percent correct!",
+    "badScore": "You need to work more on this. You only got @percent correct...",
+    "total": "TOTAL",
+    "showSolutions": "Show solutions"
+  }
 }

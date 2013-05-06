@@ -1,0 +1,53 @@
+[
+  {
+    "name": "title",
+    "type": "text",
+    "label": "Title"
+  },
+  {
+    "name": "description",
+    "type": "text",
+    "label": "Task description",
+    "default": "Sit in pairs and make up sentences where you include the expressions below.<br/>Example: I should have said yes, HOWEVER I kept my mouth shut."
+  },
+  {
+    "name": "dialogs",
+    "type": "list",
+    "label": "Dialogs",
+    "entity": "dialog",
+    "max": 20,
+    "field": {
+      "name": "question",
+      "type": "group",
+      "label": "Question",
+      "fields": [
+        {
+          "name": "text",
+          "type": "text",
+          "label": "Text",
+          "description": "Hint for the first part of the dialogue"
+        },
+        {
+          "name": "answer",
+          "type": "text",
+          "label": "Answer",
+          "description": "Hint for the second part of the dialogue"
+        }
+      ]
+    }
+  },
+  {
+    "label": "Text for the turn button",
+    "name": "answer",
+    "type": "text",
+    "default": "Turn",
+    "common": true
+  },
+  {
+    "label": "Text for the next button",
+    "type": "text",
+    "name": "next",
+    "default": "Next",
+    "common": true
+  }
+]

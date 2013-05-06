@@ -2,58 +2,75 @@
   {
     "name": "title",
     "type": "text",
-    "label": "Tittel",
-    "description": "Tittel"
+    "label": "Title"
   },
   {
     "name": "description",
     "type": "text",
-    "label": "Oppgavetekst",
-    "description": "Tekst til oppgaven"
+    "label": "Task description"
   },
   {
-    "name": "questions",
+    "name": "cards",
     "type": "list",
-    "label": "Categories",
-    "description": "Answers available for the user.",
-    "entity": "question",
-    "max": 5,
+    "label": "Cards",
+    "entity": "card",
+    "max": 50,
     "field": {
-      "name": "question",
+      "name": "card",
       "type": "group",
-      "label": "Question",
+      "label": "Card",
       "fields": [
         {
           "name": "text",
           "type": "text",
-          "label": "Tekst",
-          "description": "Tekst"
+          "label": "Question",
+          "optional": true,
+          "description": "Optional textual question for the card. (The card may use just an image, just a text or both)"
         },
         {
           "name": "answer",
           "type": "text",
-          "label": "Svar",
-          "description": "Svar"
+          "label": "Answer",
+          "optional": true,
+          "description": "Optional answer(solution) for the card."
         },
         {
           "name": "image",
           "type": "image",
-          "label": "Bilde",
-          "description": "Bilde"
+          "label": "Image",
+          "optional": true,
+          "description": "Optional text for the card. (The card may use just an image, just a text or both)"
         }
       ]
     }
   },
   {
-    "name": "width",
+    "label": "Progress text",
+    "name": "progressText",
     "type": "text",
-    "label": "Bredde",
-    "description": "Bredde"
+    "default": "Card @card of @total",
+    "description": "Progress text, variables available: @card and @total. Example: 'Card @card of @total'",
+    "common": true
   },
   {
-    "name": "height",
+    "label": "Text for the next button",
+    "name": "next",
     "type": "text",
-    "label": "Høyde",
-    "description": "Høyde"
+    "default": "Next",
+    "common": true
+  },
+  {
+    "label": "Text for the previous button",
+    "name": "previous",
+    "type": "text",
+    "default": "Previous",
+    "common": true
+  },
+  {
+    "label": "Text for the check answers button",
+    "name": "checkAnswerText",
+    "type": "text",
+    "default": "Check answer",
+    "common": true
   }
 ]

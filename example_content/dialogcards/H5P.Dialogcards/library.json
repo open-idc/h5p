@@ -1,0 +1,17 @@
+{
+  "title": "Dialogue cards",
+  "description": "void",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 14,
+  "runnable": 1,
+  "author": "Amendor AS",
+  "license": "cc-by-sa",
+  "machineName": "H5P.Dialogcards",
+  "preloadedCss": [
+    {"path": "css/dialogcards.css"}
+  ],
+  "preloadedJs": [
+    {"path": "js/dialogcards.js"}
+  ]
+}

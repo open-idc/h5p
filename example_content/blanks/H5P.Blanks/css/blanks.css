@@ -1,18 +1,22 @@
-.h5p-content {
+.h5p-blanks {
   position: relative;
   background-color: #F5F5F5;
   overflow: hidden;
 }
-.h5p-content .answer-panel {
+.h5p-blanks .blanks-panel {
+  overflow: hidden;
+  padding: 1em;
+}
+.h5p-blanks .h5p-answer-panel {
   display: block;
   position: absolute;
   background-color: #EEEEEE;
   z-index: 1;
 }
-.answer-panel .score {
-  padding-left: 20px;
+.h5p-blanks .h5p-answer-panel .h5p-score {
+  padding-left: 1.5em;
 }
-.h5p-content .answer-question {
+.h5p-blanks .h5p-answer-question {
   -moz-box-shadow: inset 0px 1px 0px 0px #ffffff;
   -webkit-box-shadow: inset 0px 1px 0px 0px #ffffff;
   box-shadow: inset 0px 1px 0px 0px #ffffff;
@@ -26,44 +30,41 @@
   border: 1px solid #dcdcdc;
   color: #777777;
   font-family: arial;
-  font-size: 15px;
+  font-size: 0.875em;
   font-weight: bold;
-  padding: 6px 14px;
+  padding: 0.3em 1em;
   text-decoration: none;
   text-shadow: 1px 1px 0px #ffffff;
-  margin: 0px;
-  margin: 5px;
-  padding-right: 30px;
+  margin: 0.4em;
 }
-.h5p-content .correct-answer {
+.h5p-blanks .h5p-correct-answer {
   color: green;
 }
-.h5p-content .answer-list {
+.h5p-blanks .h5p-answer-list {
   color: green;
 }
-.h5p-content .wrong-answer {
+.h5p-blanks .h5p-wrong-answer {
   text-decoration: line-through;
   color: red;
 }
 
-.h5p-content .blanks-panel {
+.h5p-blanks .h5p-blanks-panel {
   overflow: hidden;
   position: relative;
-  font-size: 24px;
-  padding: 20px;
-  padding-bottom: 60px;
+  padding: 1.5em;
+  padding-bottom: 5em;
 }
-.h5p-content .blanks-question,.answer-question {
-  padding-top: 20px;
-  font-size: 14px;
+.h5p-blanks .h5p-blanks-question {
+  padding-top: 1em;
+  font-size: 1em;
 }
-.h5p-content .button {
-  position: absolute;
+.h5p-blanks .h5p-button {
+  float: right;
   cursor: pointer;
   color: #2d2c28;
 
-  font-size: 16px;
-  padding: 11px 16px;
+  font-size: 1.1em;
+  padding: 0.4em 0.7em;
   text-align: center;
 
   border: 1px solid #808080;
@@ -77,10 +78,11 @@
   background: -ms-linear-gradient(top,  #ffffff 0%,#e0e0e0 100%); /* IE10+ */
   background: linear-gradient(to bottom,  #ffffff 0%,#e0e0e0 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e0e0e0',GradientType=0 ); /* IE6-9 */
-  bottom: 10px;
-  right: 10px;
+  bottom: 0.8em;
+  right: 0.8em;
+  margin-top: 0.8em;
 }
-.h5p-content .button:hover {
+.h5p-blanks .h5p-button:hover {
   background: #dddddd; /* Old browsers */
   background: -moz-linear-gradient(top,  #ffffff 0%, #e3f5ab 47%, #c2ef6e 100%); /* FF3.6+ */
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(47%,#e3f5ab), color-stop(100%,#c2ef6e)); /* Chrome,Safari4+ */
@@ -89,4 +91,12 @@
   background: -ms-linear-gradient(top,  #ffffff 0%,#e3f5ab 47%,#c2ef6e 100%); /* IE10+ */
   background: linear-gradient(to bottom,  #ffffff 0%,#e3f5ab 47%,#c2ef6e 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#c2ef6e',GradientType=0 ); /* IE6-9 */
+}
+.h5p-blanks .h5p-answer-panel .h5p-button {
+  margin: 0.8em;
+}
+
+.h5p-blanks input.h5p-blanks-input {
+  width: 7em;
+  font-size: 1em;
 }

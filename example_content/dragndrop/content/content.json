@@ -1,13 +1,18 @@
 {
-  "panel": {
-    "image": {
-      "path": "img\/cod.jpg",
+  "panel":[
+    {
+      "title": "Oppgave",
+      "image": {
+        "path": "img/cod.png",
+        "width": 350,
+        "height": 162
+      },
       "coords": {
         "x": 160,
         "y": 10
       }
     }
-  },
+  ],
   "content": [
     {
       "id":"score",
@@ -68,8 +73,8 @@
       "className": "left-items"
     },
     {
-      "scope": "target1",
       "text": "2",
+      "scope": "target1",
       "coords": {
         "x": 30,
         "y": 80
@@ -77,8 +82,8 @@
       "className": "left-items"
     },
     {
-      "scope": "target1",
       "text": "3",
+      "scope": "target1",
       "coords": {
         "x": 30,
         "y": 110
@@ -86,8 +91,8 @@
       "className": "left-items"
     },
     {
-      "scope": "target1",
       "text": "3,5",
+      "scope": "target1",
       "coords": {
         "x": 30,
         "y": 140
@@ -95,8 +100,8 @@
       "className": "left-items"
     },
     {
-      "scope": "target1",
       "text": "4",
+      "scope": "target1",
       "coords": {
         "x": 30,
         "y": 170
@@ -104,8 +109,8 @@
       "className": "left-items"
     },
     {
-      "scope": "target2",
       "text": "enkelt",
+      "scope": "target2",
       "coords": {
         "x": 600,
         "y": 50
@@ -113,9 +118,9 @@
       "className": "right-items"
     },
     {
+      "text": "dobbelt",
       "scope": "target2",
       "target": "target2",
-      "text": "dobbelt",
       "coords": {
         "x": 600,
         "y": 80
