@@ -120,6 +120,16 @@ class H5PDrupal implements H5PFrameworkInterface {
       );
       $this->deleteLibraryDependencies($libraryData['libraryId']);
     }
+    // Update languages
+    db_query("DELETE FROM {h5p_libraries_languages}
+      WHERE library_id = %d", $libraryData['libraryId']);
+    if (isset($libraryData['language'])) {
+      foreach ($libraryData['language'] as $languageCode => $languageJson) {
+        db_query("INSERT INTO {h5p_libraries_languages}
+          (library_id, language_code, language_json)
+          VALUES (%d, '%s', '%s')", $libraryData['libraryId'], $languageCode, $languageJson);
+      }
+    }
   }
 
   /**

@@ -14,6 +14,20 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       $machineName, $majorVersion, $minorVersion));
   }
 
+  public function getLanguage($machineName, $majorVersion, $minorVersion) {
+    global $language;
+    $lang = db_result(db_query(
+      "SELECT language_json
+      FROM {h5p_libraries_languages} hlt
+      JOIN {h5p_libraries} hl ON hl.library_id = hlt.library_id
+      WHERE hl.machine_name = '%s'
+      AND hl.major_version = %d
+      AND hl.minor_version = %d
+      AND hlt.language_code = '%s'",
+      $machineName, $majorVersion, $minorVersion, $language->language));
+    return $lang;
+  }
+
   public function getFilePaths($libraryId) {
     $result = db_query(
       "SELECT hl.preloaded_css, hl.preloaded_js, hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion
@@ -83,7 +97,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
     // TODO: Add support for fetching additional libraries this library depends on
     $result = db_query(
-      "SELECT hll.required_library_id AS id, hl2.machine_name AS machineName, hl2.major_version AS majorVersion, hl2.minor_version AS minorVersion
+      "SELECT hll.required_library_id AS libraryId, hl2.machine_name AS machineName, hl2.major_version AS majorVersion, hl2.minor_version AS minorVersion
       FROM {h5p_libraries} hl
       JOIN {h5p_libraries_libraries} hll ON hll.library_id = hl.library_id
       JOIN {h5p_libraries} hl2 ON hl2.library_id = hll.required_library_id
@@ -95,9 +109,9 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     
     $jsonData = array('preloadedDependencies' => array());
     while ($editorLibrary = db_fetch_object($result)) {
-      $editorLibraries[] = $editorLibrary->id;
+      $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
       
-      $jsonData['preloadedDependencies'][$editorLibrary->id] = array(
+      $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
         'machineName' => $editorLibrary->machineName,
         'majorVersion' => $editorLibrary->majorVersion,
         'minorVersion' => $editorLibrary->minorVersion
@@ -110,8 +124,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     $storage->getLibraryUsage($libraries, $jsonData);
     
     foreach ($libraries as $library) {
-      if ($library['preloaded'] && !in_array($library['library']['libraryId'], $editorLibraries)) {
-        $editorLibraries[] = $library['library']['libraryId'];
+      if ($library['preloaded']) {
+        $editorLibraries[$library['library']['libraryId']] = $library['library'];
       }
     }
     

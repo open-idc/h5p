@@ -11,9 +11,10 @@ ns.init = function () {
   
   ns.$ = H5P.jQuery;
   ns.basePath = Drupal.settings.basePath + 'h5peditor/';
-  ns.contentId = Drupal.settings.nodeVersionId;
-  ns.filesPath = Drupal.settings.filesPath;
-  ns.fileIcon = Drupal.settings.fileIcon;
+  ns.contentId = Drupal.settings.h5peditor.nodeVersionId;
+  ns.filesPath = Drupal.settings.h5peditor.filesPath;
+  ns.fileIcon = Drupal.settings.h5peditor.fileIcon;
+  ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
   
   $type.change(function () {
     if ($type.filter(':checked').val() === 'upload') {

@@ -162,16 +162,40 @@ ns.Html.prototype.appendTo = function ($wrapper) {
     }
   }
 
+//  var $textarea = this.$item.children('.ckeditor:not(.cke_editable)');
+//  if ($textarea.length !== 0) {
+//    that.ckeditor = CKEDITOR.inline($textarea[0], ckConfig);
+//    that.ckeditor.on('change', function () {
+//      // Validate before submit.
+//      var value = that.validate();
+//      if (value !== false) {
+//        that.setValue(that.field, value);
+//      }
+//      that.$input.change(); // Small hack to update summary
+//    });
+//    that.ckeditor.on('instanceReady', function() {
+//      that.ckeditor.setReadOnly(false);
+//      if (that.ckeditor.keystrokeHandler.blockedKeystrokes[8] !== undefined) {
+//        // Enable backspace hack (See bug: http://dev.ckeditor.com/ticket/9761).
+//        delete that.ckeditor.keystrokeHandler.blockedKeystrokes[8];
+//      }
+//    });
+//
+//
+//  }
 
-  var $textarea = this.$item.children('.ckeditor:not(.cke_editable)');
-  if ($textarea.length !== 0) {
-    that.ckeditor = CKEDITOR.inline($textarea[0], ckConfig);
+// Alternative if the above code makes the page very slow.
+// (should not be necessary, the above code has been tested with >30 ckeditor on one page.)
+//
+  this.$item.children('.ckeditor:not(.cke_editable)').focus(function () {
+    that.ckeditor = CKEDITOR.inline(this, ckConfig);
     that.ckeditor.on('change', function () {
       // Validate before submit.
       var value = that.validate();
       if (value !== false) {
         that.setValue(that.field, value);
       }
+      that.$input.change(); // Small hack to update summary
     });
     // Add events to ckeditor. It is beeing done here since we know it exists at this point...
     if (ns.Html.first) {
@@ -181,7 +205,7 @@ ns.Html.prototype.appendTo = function ($wrapper) {
         var dialogDefinition = e.data.definition;
 
         // Check if the definition is from the dialog window you are interested in (the "Link" dialog window).
-        if (dialogName == 'link') {
+        if (dialogName === 'link') {
           // Get a reference to the "Link Info" tab.
           var targetTab = dialogDefinition.getContents('target');
 
@@ -192,23 +216,9 @@ ns.Html.prototype.appendTo = function ($wrapper) {
       });
       ns.Html.first = false;
     }
-  }
-
-// Alternative if the above code makes the page very slow.
-// (should not be necessary, the above code has been tested with >30 ckeditor on one page.)
-//
-//  this.$item.children('.ckeditor:not(.cke_editable)').focus(function () {
-//    that.ckeditor = CKEDITOR.inline(this, ckConfig);
-//    that.ckeditor.on('change', function () {
-//      // Validate before submit.
-//      var value = that.validate();
-//      if (value !== false) {
-//        that.setValue(that.field, value);
-//      }
-//    });
-//  }).blur(function () {
-//    that.ckeditor.destroy();
-//  });
+  }).blur(function () {
+    that.ckeditor.destroy();
+  });
 };
 
 /**

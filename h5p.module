@@ -298,10 +298,16 @@ function h5p_get_file_paths($node) {
 function h5p_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   if (!$teaser) {
-    h5p_add_files_and_settings($node);
+    if (isset($node->main_library)) {
+      h5p_add_files_and_settings($node);
+      $html = '<div class="h5p-content" data-class="' . $node->main_library['machineName'] . '" data-content-id="' . h5p_get_content_id($node) . '"></div>';
+    }
+    else {
+      $html = '<div>' . t('Sorry, preview of H5P content is not yet available.') . '</div>';
+    }
 
     $node->content['h5p'] = array(
-      '#value' => '<div class="h5p-content" data-class="' . $node->main_library['machineName'] . '" data-content-id="' . h5p_get_content_id($node) . '"></div>',
+      '#value' => $html,
       '#weight' => 1,
     );
   }
