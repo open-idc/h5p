@@ -22,6 +22,7 @@ ns.Library = function (parent, field, params, setValue) {
 
   this.field = field;
   this.parent = parent;
+  this.changes = [];
 
   this.passReadies = true;
   parent.ready(function () {
@@ -40,7 +41,7 @@ ns.Library.prototype.appendTo = function ($wrapper) {
 
   var html = '';
   if (this.field.label !== 0) {
-    html = '<label>' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
+    html = '<label class="h5peditor-label">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
   }
 
   html = '<div class="field ' + this.field.type + '">' + html + '<select>' + ns.createOption('-', 'Loading...') + '</select>';
@@ -103,6 +104,10 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
     }
 
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
+
+    for (var i = 0; i < that.changes.length; i++) {
+      that.changes[i]();
+    }
   });
 };
 
@@ -114,13 +119,15 @@ ns.Library.prototype.validate = function () {
     return false;
   }
 
+  var valid = true;
+
   for (var i = 0; i < this.children.length; i++) {
-    if (!this.children[i].validate()) {
-      return false;
+    if (this.children[i].validate() === false) {
+      valid = false;
     }
   }
 
-  return true;
+  return valid;
 };
 
 /**

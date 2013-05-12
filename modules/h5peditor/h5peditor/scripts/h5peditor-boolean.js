@@ -26,7 +26,7 @@ ns.Boolean.prototype.createHtml = function () {
   }
   input += '/>';
 
-  var html = '<label>' + input;
+  var html = '<label class="h5peditor-label">' + input;
   if (this.field.label !== 0) {
     html += this.field.label === undefined ? this.field.name : this.field.label;
   }
@@ -39,7 +39,7 @@ ns.Boolean.prototype.createHtml = function () {
  * "Validate" the current boolean field.
  */
 ns.Boolean.prototype.validate = function () {
-  return this.$input.is(':checked') ? true : false;
+  return true;
 };
 
 /**
@@ -57,8 +57,8 @@ ns.Boolean.prototype.appendTo = function ($wrapper) {
 
   this.$input.change(function () {
     // Validate
-    var value = that.validate();
-    that.setValue(that.field, value);
+    that.value = that.$input.is(':checked') ? true : false;
+    that.setValue(that.field, that.value);
   });
 };
 

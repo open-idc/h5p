@@ -79,9 +79,13 @@ ns.Html.prototype.createToolbar = function () {
 
   // Links.
   if (this.inTags("a")) {
+    var items = ["Link", "Unlink"];
+    if (this.inTags("anchor")) {
+      items.push("Anchor");
+    }
     toolbar.push({
       name: "links",
-      items: ["Link", "Unlink", "Anchor"]
+      items: items
     });
   }
 
@@ -162,41 +166,25 @@ ns.Html.prototype.appendTo = function ($wrapper) {
     }
   }
 
-//  var $textarea = this.$item.children('.ckeditor:not(.cke_editable)');
-//  if ($textarea.length !== 0) {
-//    that.ckeditor = CKEDITOR.inline($textarea[0], ckConfig);
-//    that.ckeditor.on('change', function () {
-//      // Validate before submit.
-//      var value = that.validate();
-//      if (value !== false) {
-//        that.setValue(that.field, value);
-//      }
-//      that.$input.change(); // Small hack to update summary
-//    });
-//    that.ckeditor.on('instanceReady', function() {
-//      that.ckeditor.setReadOnly(false);
-//      if (that.ckeditor.keystrokeHandler.blockedKeystrokes[8] !== undefined) {
-//        // Enable backspace hack (See bug: http://dev.ckeditor.com/ticket/9761).
-//        delete that.ckeditor.keystrokeHandler.blockedKeystrokes[8];
-//      }
-//    });
-//
-//
-//  }
+  this.$item.children('.ckeditor').focus(function () {
+    if (ns.Html.current === that) {
+      return;
+    }
+    else if (ns.Html.current !== undefined) {
+      ns.Html.current.ckeditor.destroy();
+      delete ns.Html.current.ckeditor;
+    }
 
-// Alternative if the above code makes the page very slow.
-// (should not be necessary, the above code has been tested with >30 ckeditor on one page.)
-//
-  this.$item.children('.ckeditor:not(.cke_editable)').focus(function () {
+    H5P.jQuery(this).trigger('blur');
+    ns.Html.current = that;
+
+    ckConfig.startupFocus = true;
     that.ckeditor = CKEDITOR.inline(this, ckConfig);
-    that.ckeditor.on('change', function () {
-      // Validate before submit.
-      var value = that.validate();
-      if (value !== false) {
-        that.setValue(that.field, value);
-      }
-      that.$input.change(); // Small hack to update summary
+
+    that.ckeditor.on('blur', function () {
+      that.validate();
     });
+
     // Add events to ckeditor. It is beeing done here since we know it exists at this point...
     if (ns.Html.first) {
       CKEDITOR.on('dialogDefinition', function(e) {
@@ -216,8 +204,6 @@ ns.Html.prototype.appendTo = function ($wrapper) {
       });
       ns.Html.first = false;
     }
-  }).blur(function () {
-    that.ckeditor.destroy();
   });
 };
 
@@ -225,10 +211,10 @@ ns.Html.prototype.appendTo = function ($wrapper) {
  * Create HTML for the HTML field.
  */
 ns.Html.prototype.createHtml = function () {
-  var html = '<label>';
+  var html = '<label class="h5peditor-label">';
 
   if (this.field.label !== undefined) {
-    html += '<span class="label">' + this.field.label + '</span>';
+    html += '<span class="h5peditor-label">' + this.field.label + '</span>';
   }
   html += '</label>';
 
@@ -254,10 +240,7 @@ ns.Html.prototype.validate = function () {
   // Get contents from editor
   var value = this.ckeditor !== undefined ? this.ckeditor.getData() : this.$input.html();
 
-  var $value = ns.$('<div/>');
-  if (value) { // Appending an empty object fails..
-    $value.append($(value));
-  }
+  var $value = ns.$('<div>' + value + '</div>');
   var textValue = $value.text();
 
   // Check if we have any text at all.
@@ -283,6 +266,10 @@ ns.Html.prototype.validate = function () {
     return false;
   }
 
+  this.value = value;
+  this.setValue(this.field, value);
+  this.$input.change(); // Trigger change event.
+
   return value;
 };
 
@@ -290,10 +277,6 @@ ns.Html.prototype.validate = function () {
  * Remove this item.
  */
 ns.Html.prototype.remove = function () {
-  if (this.ckeditor !== undefined) {
-    this.ckeditor.destroy();
-  }
-
   this.$item.remove();
 };
 

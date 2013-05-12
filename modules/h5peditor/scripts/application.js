@@ -8,14 +8,14 @@ ns.init = function () {
   var $create = $editor.parent().hide();
   var $type = $('input[name="h5p_type"]');
   var library = $('#edit-h5p-library').val();
-  
+
   ns.$ = H5P.jQuery;
   ns.basePath = Drupal.settings.basePath + 'h5peditor/';
   ns.contentId = Drupal.settings.h5peditor.nodeVersionId;
   ns.filesPath = Drupal.settings.h5peditor.filesPath;
   ns.fileIcon = Drupal.settings.h5peditor.fileIcon;
   ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
-  
+
   $type.change(function () {
     if ($type.filter(':checked').val() === 'upload') {
       $create.hide();
@@ -30,7 +30,7 @@ ns.init = function () {
       $create.show();
     }
   });
-  
+
   if (library) {
     $type.filter('input[value="create"]').attr('checked', true).change();
   }
@@ -38,11 +38,15 @@ ns.init = function () {
   $('#node-form').submit(function () {
     if (h5peditor !== undefined) {
       var params = h5peditor.getParams();
-      
+
       if (params === false) {
-        return false;
+        // return false;
+        /*
+         * TODO: Give good feedback when validation fails. Currently it seems save and delete buttons
+         * aren't working, but the user doesn't get any indication of why they aren't working.
+         */
       }
-      
+
       if (params !== undefined) {
         $('#edit-h5p-library').val(h5peditor.getLibrary());
         $('#edit-h5p-params').val(JSON.stringify(params));
