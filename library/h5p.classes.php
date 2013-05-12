@@ -202,20 +202,12 @@ class H5PValidator {
 
   private $h5pOptional = array(
     'contentType' => '/^.{1,255}$/',
-    'description' => '/^.{1,}$/',
     'author' => '/^.{1,255}$/',
     'license' => '/^(cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT)$/',
     'dynamicDependencies' => array(
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
       'majorVersion' => '/^[0-9]{1,5}$/',
       'minorVersion' => '/^[0-9]{1,5}$/',
-    ),
-    'externalResources' => array(
-      'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
-      'majorVersion' => '/^[0-9]{1,5}$/',
-      'minorVersion' => '/^[0-9]{1,5}$/',
-      'url' => '/^http:\/\/[a-z_\-\.0-9]+\.[a-z]{2, 10}$/i',
-      'type' => '/^(css|js)$/',
     ),
     'w' => '/^[0-9]{1,4}$/',
     'h' => '/^[0-9]{1,4}$/',
@@ -251,13 +243,6 @@ class H5PValidator {
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
       'majorVersion' => '/^[0-9]{1,5}$/',
       'minorVersion' => '/^[0-9]{1,5}$/',
-    ),
-    'externalResources' => array(
-      'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
-      'majorVersion' => '/^[0-9]{1,5}$/',
-      'minorVersion' => '/^[0-9]{1,5}$/',
-      'url' => '/^http:\/\/[a-z_\-\.0-9]+\.[a-z]{2, 10}$/i',
-      'type' => '/^(css|js)$/',
     ),
     'preloadedJs' => array(
       'path' => '/^((\\\|\/)?[a-z_\-\s0-9\.]+)+\.js$/i',

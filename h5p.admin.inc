@@ -21,6 +21,13 @@ function h5p_admin_settings() {
     '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
     '#disabled' => $h5p_nodes_exists,
   );
+  
+  $form['h5p_export'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable export of all H5P content'),
+    '#default_value' => variable_get('h5p_export', '1'),
+    '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files."),
+  );
 
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().

@@ -33,8 +33,6 @@ ns.List = function (parent, field, params, setValue) {
   this.children = [];
   this.library = parent.library + '/' + field.name;
 
-  this.formOffset = ns.findAncestor(parent).offset;
-
   this.passReadies = true;
   parent.ready(function () {
     that.passReadies = false;
@@ -52,7 +50,7 @@ ns.List.prototype.appendTo = function ($wrapper) {
 
   var label = '';
   if (this.field.label !== 0) {
-    label = '<label>' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
+    label = '<label class="h5peditor-label">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
   }
 
   var html = ns.createItem(this.field.type, label + '<ul class="h5p-ul"></ul><input type="button" value="' + ns.t('core', 'addEntity', {':entity': this.field.entity}) + '"/>', this.field.description);
@@ -157,6 +155,7 @@ ns.List.prototype.addItem = function (i) {
     that.adjustX = event.pageX - offset.left;
     that.adjustY = event.pageY - offset.top;
     that.marginTop = parseInt($item.css('marginTop'));
+    that.formOffset = that.$list.offsetParent().offset();
 
     var width = $item.width();
     var height = $item.height();
@@ -233,13 +232,15 @@ ns.List.prototype.getIndex = function ($item) {
  * Validate all fields in the list.
  */
 ns.List.prototype.validate = function () {
+  var valid = true;
+
   for (var i = 0; i < this.children.length; i++) {
-    if (!this.children[i].validate()) {
-      return false;
+    if (this.children[i].validate() === false) {
+      valid = false;
     }
   }
 
-  return true;
+  return valid;
 };
 
 /**
