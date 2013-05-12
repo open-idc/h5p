@@ -10,8 +10,6 @@ var H5P = H5P || {};
  * @returns {undefined} Nothing.
  */
 H5P.CoursePresentation = function (params, id, editor) {
-  this.swipeThreshold = 100; // px
-
   this.slides = params.slides;
   this.slidesWithSolutions = [];
   this.editor = editor;
@@ -183,6 +181,8 @@ H5P.CoursePresentation.prototype.resize = function (fullscreen) {
     fontSize: (this.fontSize * (width / this.width)) + 'px'
   });
 
+  this.swipeThreshold = (width / this.width) * 100; // Default swipe threshold is 100px.
+
   if (fullscreen) {
     this.$wrapper.focus();
   }
@@ -320,8 +320,8 @@ H5P.CoursePresentation.prototype.addElementSolutionButton = function (element, e
  * @returns {undefined}
  */
 H5P.CoursePresentation.prototype.showPopup = function (popupContent) {
-  var $popup = H5P.jQuery('<div class="h5p-popup-overlay"><div class="h5p-popup-container">' + popupContent +
-           '<a href="#" class="h5p-button h5p-close-popup">' + this.l10n.close + '</a></div></div>')
+  var $popup = H5P.jQuery('<div class="h5p-popup-overlay"><div class="h5p-popup-container"><div class="h5p-popup-wrapper">' + popupContent +
+           '</div><a href="#" class="h5p-button h5p-close-popup">' + this.l10n.close + '</a></div></div>')
   .prependTo(this.$wrapper).find('.h5p-close-popup').click(function(event) {
     event.preventDefault();
     $popup.remove();
@@ -426,7 +426,7 @@ H5P.CoursePresentation.prototype.initTouchEvents = function () {
 
   this.$slidesWrapper.bind('touchstart', function (event) {
     // Set start positions
-    startX = event.originalEvent.touches[0].pageX;
+    lastX = startX = event.originalEvent.touches[0].pageX;
     startY = event.originalEvent.touches[0].pageY;
     prevX = parseInt(that.$current.addClass('h5p-touch-move').prev().addClass('h5p-touch-move').css('left'));
     nextX = parseInt(that.$current.next().addClass('h5p-touch-move').css('left'));

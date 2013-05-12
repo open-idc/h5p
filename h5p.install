@@ -18,6 +18,8 @@ function h5p_install() {
  */
 function h5p_uninstall() {
   drupal_uninstall_schema('h5p');
+  variable_del('h5p_export');
+  variable_del('h5p_revisioning');
 }
 
 /**
@@ -222,10 +224,32 @@ function h5p_schema() {
       ),
       'main_library_id' => array(
         'description' => 'The library we first instanciate for this node',
-        'description' => 'Primary Key: The id of a h5p library.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
+      ),
+      'content_type' => array(
+        'description' => 'Content type as defined in h5p.json',
+        'type' => 'varchar',
+        'length' => 127,
+      ),
+      'author' => array(
+        'description' => 'Author as defined in h5p.json',
+        'type' => 'varchar',
+        'length' => 127,
+      ),
+      'license' => array(
+        'description' => 'License as defined in h5p.json',
+        'type' => 'varchar',
+        'length' => 7,
+      ),
+      'meta_keywords' => array(
+        'description' => 'Keywords as defined in h5p.json',
+        'type' => 'text',
+      ),
+      'meta_description' => array(
+        'description' => 'Meta description as defined in h5p.json',
+        'type' => 'text',
       ),
     ),
     'primary key' => array('content_id'),
@@ -314,5 +338,37 @@ function h5p_update_6101() {
     ),
     'primary key' => array('library_id', 'language_code'),
   ));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function h5p_update_6102() {
+  $ret = array();
+  db_add_field($ret, 'h5p_nodes', 'content_type', array(
+    'description' => 'Content type as defined in h5p.json',
+    'type' => 'varchar',
+    'length' => 127,
+  ));
+  db_add_field($ret, 'h5p_nodes', 'author', array(
+    'description' => 'Author as defined in h5p.json',
+    'type' => 'varchar',
+    'length' => 127,
+  ));
+  db_add_field($ret, 'h5p_nodes', 'license', array(
+    'description' => 'License as defined in h5p.json',
+    'type' => 'varchar',
+    'length' => 7,
+  ));
+  db_add_field($ret, 'h5p_nodes', 'meta_keywords', array(
+    'description' => 'Keywords as defined in h5p.json',
+    'type' => 'text',
+  ));
+  db_add_field($ret, 'h5p_nodes', 'meta_description', array(
+    'description' => 'Meta description as defined in h5p.json',
+    'type' => 'text',
+  ));
+  
   return $ret;
 }

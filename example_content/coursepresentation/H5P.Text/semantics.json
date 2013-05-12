@@ -3,6 +3,18 @@
     "name": "text",
     "type": "text",
     "widget": "html",
-    "label": "Text"
+    "label": "Text",
+    "tags": [
+      "strong",
+      "em",
+      "del",
+      "a",
+      "ul",
+      "ol",
+      "math",
+      "h2",
+      "h3",
+      "hr"
+    ]
   }
 ]

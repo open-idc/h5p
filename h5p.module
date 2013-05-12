@@ -237,7 +237,7 @@ function h5p_delete($node) {
  */
 function h5p_load($node) {
   $h5p = db_fetch_object(db_query(
-      "SELECT hn.json_content, hn.embed_type, hn.main_library_id, hl.machine_name, hl.major_version, hl.minor_version
+    "SELECT hn.json_content, hn.embed_type, hn.main_library_id, hl.machine_name, hl.major_version, hl.minor_version
     FROM {h5p_nodes} hn
     JOIN {h5p_libraries} hl ON hn.main_library_id = hl.library_id
     WHERE content_id = %d", h5p_get_content_id($node)

@@ -105,8 +105,8 @@ H5PEditor.CoursePresentation.prototype.addElement = function (library) {
     },
     x: 0,
     y: 0,
-    width: libraryName === 'H5P.Audio' ? 45 : 30,
-    height: libraryName === 'H5P.Audio' ? 15 : 20
+    width: libraryName === 'H5P.Audio' ? 45 : 40,
+    height: libraryName === 'H5P.Audio' ? 15 : 40
   };
 
   this.params[this.cp.$current.index()].elements.push(elParams);
@@ -203,6 +203,13 @@ H5PEditor.CoursePresentation.prototype.initializeDNB = function () {
     var params = that.params[that.cp.$current.index()].elements[that.dnb.dnd.$element.index()];
     params.x = x;
     params.y = y;
+    if (that.dnb.newElement) {
+      that.dnb.dnd.$element.dblclick();
+    }
+  };
+
+  // Edit element when it is dropped.
+  this.dnb.dnd.releaseCallback = function () {
     if (that.dnb.newElement) {
       that.dnb.dnd.$element.dblclick();
     }
@@ -580,16 +587,25 @@ H5PEditor.CoursePresentation.prototype.sortSlide = function ($element, direction
 
   var index = this.cp.$current.index();
 
+  var keywordsEnabled = this.cp.$currentKeyword !== undefined;
+
   // Move slides and keywords.
   if (direction === -1) {
     this.cp.$current.insertBefore($element.removeClass('h5p-previous'));
-    this.cp.$currentKeyword.insertBefore(this.cp.$currentKeyword.prev());
+    if (keywordsEnabled) {
+      this.cp.$currentKeyword.insertBefore(this.cp.$currentKeyword.prev());
+    }
   }
   else {
     this.cp.$current.insertAfter($element.addClass('h5p-previous'));
-    this.cp.$currentKeyword.insertAfter(this.cp.$currentKeyword.next());
+    if (keywordsEnabled) {
+      this.cp.$currentKeyword.insertAfter(this.cp.$currentKeyword.next());
+    }
   }
-  this.cp.scrollToKeywords();
+
+  if (keywordsEnabled) {
+    this.cp.scrollToKeywords();
+  }
 
   // Update slideination
   var newIndex = index + direction;
@@ -701,7 +717,7 @@ H5PEditor.CoursePresentation.prototype.removeKeywords = function ($button) {
     }
     if (this.params[i].elements !== undefined) {
       for (var j = 0; j < this.params[i].elements.length; j++) {
-        if (this.params[i].elements[j].x) {
+        if (this.params[i].elements[j].x !== undefined) {
           this.params[i].elements[j].x = parseFloat(this.params[i].elements[j].x) + oldWidth;
         }
         if (this.params[i].elements[j].width) {
@@ -730,10 +746,29 @@ H5PEditor.CoursePresentation.prototype.processElement = function (element, $wrap
   var tmpChildren = this.children;
 
   // Add form - needs to be done here so common fields work.
-  var popupTitle = H5PEditor.t('H5PEditor.CoursePresentation', 'popupTitle', {':type': element.action.library.split('.')[1].split(' ')[0]})
+  var popupTitle = H5PEditor.t('H5PEditor.CoursePresentation', 'popupTitle', {':type': element.action.library.split('.')[1].split(' ')[0]});
   var $form = H5P.jQuery('<div title="' + popupTitle + '"></div>');
   H5PEditor.processSemanticsChunk(that.field.field.fields[0].field.fields, element, $form, this);
   $form.children('.library:first').children('label, select').hide().next().css('margin-top', '0');
+
+  // Set correct aspect ratio on new images.
+  var library = this.children[0];
+  var libraryChange = function () {
+    if (library.children[0].field.type === 'image') {
+      library.children[0].changes.push(function (params) {
+        if (params.width !== undefined && params.height !== undefined) {
+          element.height = element.width * (params.width / params.height) * 1.7781753130590339892665474060823 * that.cp.slideWidthRatio;
+          console.log(element.width, element.height);
+        }
+      });
+    }
+  };
+  if (library.children === undefined) {
+    library.changes.push(libraryChange);
+  }
+  else {
+    libraryChange();
+  }
 
   tmpChildren[index][elementIndex] = this.children;
   this.children = tmpChildren;
@@ -818,9 +853,15 @@ H5PEditor.CoursePresentation.prototype.showElementForm = function ($form, $wrapp
           var elementKids = slideKids[elementIndex];
           var elements = that.params[slideIndex].elements;
 
-          // Validate children (will remove tmp flags on files)
+          // Validate children
+          var valid = true;
           for (var i = 0; i < elementKids.length; i++) {
-            elementKids[i].validate();
+            if (elementKids[i].validate() === false) {
+              valid = false;
+            }
+          }
+          if (!valid) {
+            return false;
           }
 
           // Update params
@@ -878,4 +919,4 @@ H5PEditor.language["H5PEditor.CoursePresentation"] = {
     "keywordsTip": "Drag in keywords using the two buttons above.",
     "popupTitle": "Edit :type"
   }
-}
+};

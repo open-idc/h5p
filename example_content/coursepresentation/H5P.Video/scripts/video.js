@@ -21,8 +21,6 @@ H5P.Video = function (params, contentPath) {
  * @param {jQuery} $wrapper Our poor container.
  */
 H5P.Video.prototype.attach = function ($wrapper) {
-  var that = this;
-
   // Check if browser supports video.
   var video = document.createElement('video');
   if (video.canPlayType === undefined) {
@@ -58,6 +56,7 @@ H5P.Video.prototype.attach = function ($wrapper) {
 
   video.className = 'h5p-video';
   video.controls = this.params.controls === undefined ? true : this.params.controls;
+  video.autoplay = this.params.autoplay === undefined ? false : this.params.autoplay;
 
   if (this.params.fitToWrapper === undefined || this.params.fitToWrapper) {
     video.setAttribute('width', '100%');
@@ -65,11 +64,6 @@ H5P.Video.prototype.attach = function ($wrapper) {
   }
 
   $wrapper.html(video);
-
-  if (this.params.autoplay !== undefined && this.params.autoplay) {
-    video.play();
-  }
-
   this.video = video;
 };
 
@@ -80,7 +74,7 @@ H5P.Video.prototype.attach = function ($wrapper) {
  * @returns {undefined}
  */
 H5P.Video.prototype.attachFlash = function ($wrapper) {
-  $wrapper = $('<div class="h5p-video-flash"></div>').appendTo($wrapper);
+  $wrapper = $('<div class="h5p-video-flash" style="width:100%;height:100%"></div>').appendTo($wrapper);
 
   if (this.params.files !== undefined) {
     for (var i = 0; i < this.params.files.length; i++) {

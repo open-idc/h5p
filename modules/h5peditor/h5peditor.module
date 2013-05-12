@@ -60,12 +60,13 @@ function h5peditor_menu() {
  * Implements hook_form_FORM_ID_alter().
  */
 function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
+  $node = isset($form['#node']->translation_source) ? $form['#node']->translation_source : $form['#node'];
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),
     '#options' => array(
       'upload' => t('Upload'),
-      'create' => isset($form['#node']->nid) ? t('Edit') : t('Create'),
+      'create' => isset($node->nid) ? t('Edit') : t('Create'),
     ),
     '#default_value' => 'upload',
     '#weight' => 10,
@@ -78,18 +79,18 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
     '#type' => 'item',
     '#title' => t('Content type'),
     '#value' => '<div class="h5p-editor">' . t('Waiting for javascript...') . '</div>',
-    '#after_build' => array('h5peditor_h5p_content_node_form_after_build'),
     '#weight' => 12,
   );
+  $form['#after_build'][] = 'h5peditor_h5p_content_node_form_after_build';
 
   $form['h5p_library'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($form['#node']->main_library) ? h5peditor_main_library_to_string($form['#node'], TRUE) : (isset($form['#node']->h5p_library) ? $form['#node']->h5p_library : 0),
+    '#default_value' => isset($node->main_library) ? h5peditor_main_library_to_string($node, TRUE) : (isset($node->h5p_library) ? $node->h5p_library : 0),
   );
 
   $form['h5p_params'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($form['#node']->json_content) ? $form['#node']->json_content : '{}',
+    '#default_value' => isset($node->json_content) ? $node->json_content : '{}',
   );
 
   $form['#submit'][] = 'h5peditor_h5p_content_node_form_submit';
@@ -103,16 +104,17 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 /**
  * Add scripts and styles to the h5p node form.
  */
-function h5peditor_h5p_content_node_form_after_build($element) {
+function h5peditor_h5p_content_node_form_after_build($form) {
   global $language;
   static $done;
   if ($done) {
     // Make sure we only add the js once.
-    return $element;
+    return $form;
   }
   $done = TRUE;
 
-  $node = menu_get_object();
+  $node = isset($form['#node']->translation_source) ? $form['#node']->translation_source : $form['#node'];
+
   if (isset($node)) {
     h5p_add_files_and_settings($node);
   }
@@ -147,7 +149,6 @@ function h5peditor_h5p_content_node_form_after_build($element) {
   }
   drupal_add_js($language_file);
 
-  $node = menu_get_object();
   $content_id = isset($node) ? h5p_get_content_id($node) : 0;
 
   drupal_add_js(array(
@@ -163,7 +164,7 @@ function h5peditor_h5p_content_node_form_after_build($element) {
     ),
   ), 'setting');
 
-  return $element;
+  return $form;
 }
 
 function h5peditor_h5p_content_node_form_validate($form, $form_state) {
@@ -208,6 +209,11 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       if (!$editor->createDirectories($content_id)) {
         drupal_set_message('Unable to create h5p content directories.', 'error');
         return;
+      }
+
+      if (isset($node->translation_source)) {
+        $storage = _h5p_get_instance('storage');
+        $storage->copyPackage(h5p_get_content_id($node), h5p_get_content_id($node->translation_source), $node->nid);
       }
 
       // Move files.
