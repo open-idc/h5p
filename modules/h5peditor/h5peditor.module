@@ -114,20 +114,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   $done = TRUE;
 
   $node = isset($form['#node']->translation_source) ? $form['#node']->translation_source : $form['#node'];
-
-  if (isset($node)) {
-    h5p_add_files_and_settings($node);
-  }
-  else {
-    $module_path = drupal_get_path('module', 'h5p');
-    foreach (H5PCore::$styles as $style) {
-      drupal_add_css($module_path . '/library/' . $style);
-    }
-    foreach (H5PCore::$scripts as $script) {
-      drupal_add_js($module_path . '/library/' . $script);
-    }
-    drupal_add_js($module_path . '/js/h5pintegration.js');
-  }
+  h5p_add_files_and_settings($node);
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
 
@@ -149,18 +136,19 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   }
   drupal_add_js($language_file);
 
-  $content_id = isset($node) ? h5p_get_content_id($node) : 0;
+  $content_id = isset($node->json_content) ? h5p_get_content_id($node) : 0;
 
   drupal_add_js(array(
     'h5peditor' => array(
       'nodeVersionId' => $content_id,
       'filesPath' => base_path() . file_directory_path(),
       'fileIcon' => array(
-        'path' => base_path() . drupal_get_path('module', 'h5peditor') . '/h5peditor/images/binary-file.png',
+        'path' => base_path() . $h5peditor_module_path . '/h5peditor/images/binary-file.png',
         'width' => 50,
         'height' => 50,
       ),
       'ajaxPath' => url('h5peditor/'),
+      'modulePath' => $h5peditor_module_path,
     ),
   ), 'setting');
 
@@ -239,7 +227,9 @@ function h5peditor_libraries_callback() {
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
   $storage = h5peditor_get_storage_instance();
-  $h5p_editor = new H5peditor($storage, file_directory_path());
+  $h5p_editor = new H5peditor($storage, file_directory_path(), base_path());
+
+  // TODO: CACHE!!!
 
   drupal_set_header("Cache-Control: no-cache");
   drupal_set_header('Content-type: application/json');

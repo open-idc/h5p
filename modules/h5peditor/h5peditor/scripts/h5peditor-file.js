@@ -81,6 +81,11 @@ ns.File.prototype.addFile = function (init) {
     delete that.params;
     that.setValue(that.field);
     that.addFile();
+
+    for (var i = 0; i < that.changes.length; i++) {
+      that.changes[i]();
+    }
+
     return false;
   });
 };
@@ -182,7 +187,7 @@ ns.File.addIframe = function () {
     }
 
     $body.html('');
-    var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.basePath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/></form>').appendTo($body);
+    var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.ajaxPath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/></form>').appendTo($body);
 
     ns.File.$field = $form.children('input[type="hidden"]');
     ns.File.$file = $form.children('input[type="file"]');

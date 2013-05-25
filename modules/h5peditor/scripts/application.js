@@ -10,7 +10,7 @@ ns.init = function () {
   var library = $('#edit-h5p-library').val();
 
   ns.$ = H5P.jQuery;
-  ns.basePath = Drupal.settings.basePath + 'h5peditor/';
+  ns.basePath = Drupal.settings.basePath +  Drupal.settings.h5peditor.modulePath + '/h5peditor/';
   ns.contentId = Drupal.settings.h5peditor.nodeVersionId;
   ns.filesPath = Drupal.settings.h5peditor.filesPath;
   ns.fileIcon = Drupal.settings.h5peditor.fileIcon;

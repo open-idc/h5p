@@ -41,7 +41,7 @@ ns.t = function (library, key, vars) {
     return 'Missing translations for library ' + library;
   }
 
-  if (library == 'core') {
+  if (library === 'core') {
     if (ns.language[library][key] === undefined) {
       return 'Missing translation for ' + key;
     }
@@ -99,12 +99,30 @@ ns.loadLibrary = function (libraryName, callback) {
 
         // Add CSS.
         if (libraryData.css !== undefined) {
-          ns.$('head').append('<style type="text/css">' + libraryData.css + '</style>');
+          var css = '';
+          for (var path in libraryData.css) {
+            if (!H5P.cssLoaded(path)) {
+              css += libraryData.css[path];
+              H5P.loadedCss.push(path);
+            }
+          }
+          if (css) {
+            ns.$('head').append('<style type="text/css">' + css + '</style>');
+          }
         }
 
         // Add JS.
         if (libraryData.javascript !== undefined) {
-          eval.apply(window, [libraryData.javascript]);
+          var js = '';
+          for (var path in libraryData.javascript) {
+            if (!H5P.jsLoaded(path)) {
+              js += libraryData.javascript[path];
+              H5P.loadedJs.push(path);
+            }
+          }
+          if (js) {
+            eval.apply(window, [js]);
+          }
         }
 
         callback(libraryData.semantics);
@@ -131,7 +149,7 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent) {
   parent.children = [];
 
   if (parent.passReadies === undefined) {
-    throw 'Widget tried to run processSemanticsChunk without handling ready callbacks.' + parent.field.name;
+    throw 'Widget tried to run processSemanticsChunk without handling ready callbacks. [field:' + parent.field.type + ':' + parent.field.name + ']';
   }
 
   if (!parent.passReadies) {
