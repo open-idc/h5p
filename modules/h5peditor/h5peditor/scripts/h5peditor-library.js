@@ -54,7 +54,7 @@ ns.Library.prototype.appendTo = function ($wrapper) {
   this.$select = $field.children('select');
   this.$libraryWrapper = $field.children('.libwrap');
 
-  ns.$.post(ns.basePath + 'libraries', {libraries: that.field.options}, function (data) {
+  ns.$.post(ns.ajaxPath + 'libraries', {libraries: that.field.options}, function (data) {
     var options = ns.createOption('-', '-');
     for (var i = 0; i < data.length; i++) {
       var library = data[i];
@@ -66,6 +66,12 @@ ns.Library.prototype.appendTo = function ($wrapper) {
         that.loadLibrary(ns.$(this).val());
       }
     });
+
+    if (data.length === 1) {
+      that.$select.hide();
+      $field.children('.h5peditor-label').hide();
+      that.loadLibrary(that.$select.children(':last').val());
+    }
   });
 
   // Load default library.

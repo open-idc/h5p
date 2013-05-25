@@ -710,6 +710,7 @@ H5PEditor.CoursePresentation.prototype.removeKeywords = function ($button) {
   delete this.cp.$keywords;
   var oldWidth = parseFloat(this.cp.keywordsWidth);
   this.cp.keywordsWidth = 0;
+  this.cp.slideWidthRatio = 1;
   this.cp.$slidesWrapper.removeClass('h5p-keyword-slides');
   for (var i = 0; i < this.params.length; i++) {
     if (this.params[i].keywords !== undefined) {
@@ -756,9 +757,12 @@ H5PEditor.CoursePresentation.prototype.processElement = function (element, $wrap
   var libraryChange = function () {
     if (library.children[0].field.type === 'image') {
       library.children[0].changes.push(function (params) {
+        if (params === undefined) {
+          return;
+        }
+        
         if (params.width !== undefined && params.height !== undefined) {
-          element.height = element.width * (params.width / params.height) * 1.7781753130590339892665474060823 * that.cp.slideWidthRatio;
-          console.log(element.width, element.height);
+          element.height = element.width * (params.height / params.width) * that.cp.slideRatio * that.cp.slideWidthRatio;
         }
       });
     }

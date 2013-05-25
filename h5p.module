@@ -237,7 +237,7 @@ function h5p_delete($node) {
  */
 function h5p_load($node) {
   $h5p = db_fetch_object(db_query(
-    "SELECT hn.json_content, hn.embed_type, hn.main_library_id, hl.machine_name, hl.major_version, hl.minor_version
+      "SELECT hn.json_content, hn.embed_type, hn.main_library_id, hl.machine_name, hl.major_version, hl.minor_version
     FROM {h5p_nodes} hn
     JOIN {h5p_libraries} hl ON hn.main_library_id = hl.library_id
     WHERE content_id = %d", h5p_get_content_id($node)
@@ -316,21 +316,8 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
 }
 
 function h5p_add_files_and_settings($node) {
-  $settings = array(
-    'h5p' => array(
-      'mainLibrary' => $node->main_library['machineName'],
-      'jsonContent' => array(
-        h5p_get_content_id($node) => $node->json_content,
-      ),
-      'fullScreen' => array(
-        h5p_get_content_id($node) => db_result(db_query('SELECT fullscreen FROM {h5p_libraries} WHERE library_id = %d', $node->main_library['libraryId']))
-      ),
-      'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
-    )
-  );
-  drupal_add_js($settings, 'setting');
-
   $module_path = drupal_get_path('module', 'h5p');
+  $content_id = h5p_get_content_id($node);
   foreach (H5PCore::$styles as $style) {
     drupal_add_css($module_path . '/library/' . $style);
   }
@@ -339,12 +326,31 @@ function h5p_add_files_and_settings($node) {
   }
   drupal_add_js($module_path . '/js/h5pintegration.js');
 
-  $file_paths = h5p_get_file_paths($node);
-  foreach ($file_paths['preloadedJs'] as $js_path) {
-    drupal_add_js($js_path);
-  }
-  foreach ($file_paths['preloadedCss'] as $css_path) {
-    drupal_add_css($css_path);
+  if (isset($node->json_content)) {
+    $settings = array(
+      'h5p' => array(
+        'content' => array(
+          $content_id => array(
+            'mainLibrary' => $node->main_library['machineName'], // TODO: Is this needed at all?
+            'jsonContent' => $node->json_content,
+            'fullScreen' => db_result(db_query('SELECT fullscreen FROM {h5p_libraries} WHERE library_id = %d', $node->main_library['libraryId']))
+          ),
+        ),
+        'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
+      )
+    );
+
+    $file_paths = h5p_get_file_paths($node);
+    foreach ($file_paths['preloadedJs'] as $js_path) {
+      drupal_add_js($js_path);
+      $settings['h5p']['loadedJs'][] = $js_path;
+    }
+    foreach ($file_paths['preloadedCss'] as $css_path) {
+      drupal_add_css($css_path);
+      $settings['h5p']['loadedCss'][] = $css_path;
+    }
+
+    drupal_add_js($settings, 'setting');
   }
 }
 

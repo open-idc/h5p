@@ -15,12 +15,18 @@ H5P.Video = function (params, contentPath) {
   }
 };
 
+// For android specific stuff.
+H5P.Video.android = navigator.userAgent.indexOf('Android') !== -1;
+
 /**
  * Wipe out the content of the wrapper and put our HTML in it.
  *
  * @param {jQuery} $wrapper Our poor container.
  */
 H5P.Video.prototype.attach = function ($wrapper) {
+//  this.attachFlash($wrapper);return;
+  var that = this;
+
   // Check if browser supports video.
   var video = document.createElement('video');
   if (video.canPlayType === undefined) {
@@ -54,6 +60,22 @@ H5P.Video.prototype.attach = function ($wrapper) {
     video.addEventListener('ended', this.endedCallback, false);
   }
 
+  if (this.loadedCallback !== undefined) {
+    if (H5P.Video.android) {
+      var play = function () {
+        video.addEventListener('durationchange', function (e) {
+          // On Android duration isn't available until after play.
+          that.loadedCallback();
+        }, false);
+        video.removeEventListener('play', play ,false);
+      };
+      video.addEventListener('play', play, false);
+    }
+    else {
+      video.addEventListener('loadedmetadata', this.loadedCallback, false);
+    }
+  }
+
   video.className = 'h5p-video';
   video.controls = this.params.controls === undefined ? true : this.params.controls;
   video.autoplay = this.params.autoplay === undefined ? false : this.params.autoplay;
@@ -74,7 +96,7 @@ H5P.Video.prototype.attach = function ($wrapper) {
  * @returns {undefined}
  */
 H5P.Video.prototype.attachFlash = function ($wrapper) {
-  $wrapper = $('<div class="h5p-video-flash" style="width:100%;height:100%"></div>').appendTo($wrapper);
+  $wrapper = H5P.jQuery('<div class="h5p-video-flash" style="width:100%;height:100%"></div>').appendTo($wrapper);
 
   if (this.params.files !== undefined) {
     for (var i = 0; i < this.params.files.length; i++) {
@@ -116,6 +138,10 @@ H5P.Video.prototype.attachFlash = function ($wrapper) {
     options.clip.onError = this.endedCallback;
   }
 
+  if (this.loadedCallback !== undefined) {
+    options.clip.onMetaData = this.loadedCallback;
+  }
+
   this.flowplayer = flowplayer($wrapper[0], {
     src: "http://releases.flowplayer.org/swf/flowplayer-3.2.16.swf",
     wmode: "opaque"
@@ -123,7 +149,35 @@ H5P.Video.prototype.attachFlash = function ($wrapper) {
 };
 
 /**
- * Stop the video. TODO: Rename to pause?
+ * Play the clip.
+ *
+ * @returns {undefined}
+ */
+H5P.Video.prototype.play = function () {
+  if (this.flowplayer !== undefined) {
+    this.flowplayer.play();
+  }
+  else {
+    this.video.play();
+  }
+};
+
+/**
+ * Pause the clip.
+ *
+ * @returns {undefined}
+ */
+H5P.Video.prototype.pause = function () {
+  if (this.flowplayer !== undefined) {
+    this.flowplayer.pause();
+  }
+  else {
+    this.video.pause();
+  }
+};
+
+/**
+ * Stop the video.
  *
  * @returns {undefined}
  */
@@ -133,5 +187,104 @@ H5P.Video.prototype.stop = function () {
   }
   if (this.video !== undefined) {
     this.video.pause();
+  }
+};
+
+/**
+ * Get current time in clip.
+ *
+ * @returns Float
+ */
+H5P.Video.prototype.getTime = function () {
+  if (this.flowplayer !== undefined) {
+    return this.flowplayer.getTime();
+  }
+  else {
+    return this.video.currentTime;
+  }
+};
+
+/**
+ * Get current time in clip.
+ *
+ * @returns Float
+ */
+H5P.Video.prototype.getDuration = function () {
+  if (this.flowplayer !== undefined) {
+    return this.flowplayer.getClip().metaData.duration;
+  }
+  else {
+    return this.video.duration;
+  }
+};
+
+/**
+ * Jump to the given time in the video clip.
+ *
+ * @param {int} time
+ * @returns {undefined}
+ */
+H5P.Video.prototype.seek = function (time) {
+  if (this.flowplayer !== undefined) {
+    this.flowplayer.seek(time);
+  }
+  else {
+    var seekable = false;
+    for (var i = 0; i < this.video.seekable.length; i++) {
+      if (time >= this.video.seekable.start(i) && time <= this.video.seekable.end(i)) {
+        seekable = true;
+        break;
+      }
+    }
+
+    if (seekable) {
+      this.video.currentTime = time;
+    }
+  }
+};
+
+/**
+ * Mute the video
+ *
+ * @returns {undefined}
+ */
+H5P.Video.prototype.mute = function () {
+  if (this.flowplayer !== undefined) {
+    this.flowplayer.mute();
+  }
+  else {
+    this.video.muted = true;
+  }
+};
+
+/**
+ * Unmute the video
+ *
+ * @returns {undefined}
+ */
+H5P.Video.prototype.unmute = function () {
+  if (this.flowplayer !== undefined) {
+    this.flowplayer.unmute();
+  }
+  else {
+    this.video.muted = false;
+  }
+};
+
+/**
+ * Resize the video DOM to use all available space.
+ *
+ * @returns {undefined}
+ */
+H5P.Video.prototype.resize = function () {
+  if (this.flowplayer !== undefined) {
+    var $object = H5P.jQuery(this.flowplayer.getParent()).children('object');
+    var clip = this.flowplayer.getClip();
+
+    $object.css('height', $object.width() * (clip.metaData.height / clip.metaData.width));
+  }
+  else {
+    var $video = H5P.jQuery(this.video);
+    $video.css('height', $video.width() * (this.video.videoHeight / this.video.videoWidth));
   }
 };
