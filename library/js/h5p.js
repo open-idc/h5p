@@ -12,16 +12,16 @@ H5P.init = function () {
   }
 
   if (H5P.fullScreenBrowserPrefix === undefined) {
-    if (document.cancelFullScreen) {
+    if (document.documentElement.requestFullScreen) {
       H5P.fullScreenBrowserPrefix = '';
     }
-    else if (document.webkitCancelFullScreen) {
+    else if (document.documentElement.webkitRequestFullScreen && navigator.userAgent.indexOf('Android') === -1) { // Skip Android
       H5P.fullScreenBrowserPrefix = 'webkit';
     }
-    else if (document.mozCancelFullScreen) {
+    else if (document.documentElement.mozRequestFullScreen) {
       H5P.fullScreenBrowserPrefix = 'moz';
     }
-    else if (document.msCancelFullScreen) {
+    else if (document.documentElement.msRequestFullScreen) {
       H5P.fullScreenBrowserPrefix = 'ms';
     }
   }
@@ -80,6 +80,9 @@ H5P.fullScreen = function ($el, obj) {
         return;
       }
       $el.add(H5P.$body).removeClass('h5p-fullscreen');
+      if (obj.resize !== undefined) {
+        obj.resize(false);
+      }
       document.removeEventListener(eventName, arguments.callee, false);
     });
 
@@ -173,13 +176,13 @@ H5P.libraryFromString = function (library) {
  * @param {type} recursive
  * @returns {object} A clone of object.
  */
-H5P.cloneObject = function (object, recursive, array) {
-  var clone = array !== undefined && array ? [] : {};
+H5P.cloneObject = function (object, recursive) {
+  var clone = object instanceof Array ? [] : {};
 
   for (var i in object) {
     if (object.hasOwnProperty(i)) {
       if (recursive !== undefined && recursive && typeof object[i] === 'object') {
-        clone[i] = H5P.cloneObject(object[i], recursive, object[i] instanceof Array);
+        clone[i] = H5P.cloneObject(object[i], recursive);
       }
       else {
         clone[i] = object[i];
@@ -198,6 +201,38 @@ H5P.cloneObject = function (object, recursive, array) {
  */
 H5P.trim = function (value) {
   return value.replace(/^\s+|\s+$/g, '');
+};
+
+/**
+ * Check if javascript path/key is loaded.
+ *
+ * @param {String} path
+ * @returns {Boolean}
+ */
+H5P.jsLoaded = function (path) {
+  for (var i = 0; i < H5P.loadedJs.length; i++) {
+    if (H5P.loadedJs[i] === path) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Check if styles path/key is loaded.
+ *
+ * @param {String} path
+ * @returns {Boolean}
+ */
+H5P.cssLoaded = function (path) {
+  for (var i = 0; i < H5P.loadedCss.length; i++) {
+    if (H5P.loadedCss[i] === path) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 // We have several situations where we want to shuffle an array, extend array

@@ -151,6 +151,7 @@ ns.Html.prototype.appendTo = function ($wrapper) {
     extraPlugins: "",
     forcePasteAsPlainText: true,
     enterMode: CKEDITOR.ENTER_DIV,
+    allowedContent: true, // Disables the ckeditor content filter, might consider using it later... Must make sure it doesn't remove math...
     protectedSource: []
   };
   ns.$.extend(ckConfig, this.createToolbar());
@@ -167,6 +168,10 @@ ns.Html.prototype.appendTo = function ($wrapper) {
   }
 
   this.$item.children('.ckeditor').focus(function () {
+    if (ns.Html.first) {
+      CKEDITOR.basePath = ns.basePath + '/ckeditor/';
+    }
+
     if (ns.Html.current === that) {
       return;
     }
