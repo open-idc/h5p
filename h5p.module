@@ -317,7 +317,6 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
 
 function h5p_add_files_and_settings($node) {
   $module_path = drupal_get_path('module', 'h5p');
-  $content_id = h5p_get_content_id($node);
   foreach (H5PCore::$styles as $style) {
     drupal_add_css($module_path . '/library/' . $style);
   }
@@ -327,6 +326,7 @@ function h5p_add_files_and_settings($node) {
   drupal_add_js($module_path . '/js/h5pintegration.js');
 
   if (isset($node->json_content)) {
+    $content_id = h5p_get_content_id($node);
     $settings = array(
       'h5p' => array(
         'content' => array(

@@ -14,9 +14,10 @@ ns.Coordinates = function (parent, field, params, setValue) {
   var that = this;
 
   this.parent = parent;
-  this.field = field;
+  this.field = H5P.cloneObject(field, true); // TODO: Cloning is a quick fix, make sure this field doesn't change semantics!
 
   // Find image field to get max size from.
+  // TODO: Use followField?
   this.findImageField('max', function (field) {
     if (field instanceof ns.File) {
       if (field.params !== undefined) {
