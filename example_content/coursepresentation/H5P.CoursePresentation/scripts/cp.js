@@ -148,7 +148,7 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
     that.showSolutions();
     event.preventDefault();
   });
-  if (this.slides.length === 1 && this.editor === undefined) {
+  if (this.slides.length === 1 && this.editor === undefined && this.slidesWithSolutions.length) {
     $solutionsButton.show();
   }
 
@@ -637,7 +637,7 @@ H5P.CoursePresentation.prototype.jumpToSlide = function (slideNumber, noScroll) 
   this.jumpSlideination(slideNumber, noScroll);
 
   // Show show solutions button on last slide
-  if (slideNumber === this.slides.length - 1 && this.editor === undefined) {
+  if (slideNumber === this.slides.length - 1 && this.editor === undefined && this.slidesWithSolutions.length) {
     H5P.jQuery('.h5p-show-solutions', this.$container).show();
   }
 

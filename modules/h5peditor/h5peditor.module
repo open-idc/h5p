@@ -125,7 +125,9 @@ function h5peditor_h5p_content_node_form_after_build($form) {
 
   //  Add our own scripts
   foreach(H5peditor::$scripts as $script) {
-    drupal_add_js($h5peditor_module_path . '/h5peditor/' . $script);
+    // Make sure ckeditor doesn't get aggregated.
+    $preprocess = $script !== 'ckeditor/ckeditor.js';
+    drupal_add_js($h5peditor_module_path . '/h5peditor/' . $script, 'module', 'header', FALSE, TRUE, $preprocess);
   }
   drupal_add_js($h5peditor_module_path . '/scripts/application.js');
 

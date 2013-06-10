@@ -1,0 +1,195 @@
+{
+  "interactiveVideo": {
+    "video": {
+      "files": [
+        {
+          "path": "http://vjs.zencdn.net/v/oceans.mp4",
+          "mime": "video/mp4"
+        },
+        {
+          "path": "http://vjs.zencdn.net/v/oceans.webm",
+          "mime": "video/webm"
+        }
+      ],
+      "copyright": "<p>No copyright information available.</p>"
+    },
+    "interactions": [
+      {
+        "action": {
+          "library": "H5P.Text 1.0",
+          "params": {
+            "text": "<div>This is a MÅSE!\n<hr>\n<ul>\n\t<li>Måses like fish</li>\n\t<li>and bones!</li>\n</ul>\n</div>\n"
+          }
+        },
+        "x": 41.18115062444983,
+        "y": 22.03050696331522,
+        "ctc": false,
+        "pause": true,
+        "duration": {
+          "from": 2,
+          "to": 2
+        }
+      },
+      {
+        "action": {
+          "library": "H5P.Image 1.0",
+          "params": {
+            "file": {
+              "path": "cm.gif",
+              "mime": "image/gif"
+            },
+            "alt": "Thinking...",
+            "title": "MONSTER!!!"
+          }
+        },
+        "x": 90.46655420806087,
+        "y": 82.96045865413647,
+        "ctc": false,
+        "pause": false,
+        "duration": {
+          "from": 0,
+          "to": 10
+        }
+      },
+      {
+        "action": {
+          "library": "H5P.MultiChoice 1.0",
+          "params": {
+            "singleAnswer": true,
+            "singlePoint": true,
+            "answers": [
+              {
+                "text": "0,75cm"
+              },
+              {
+                "correct": true,
+                "text": "2cm"
+              },
+              {
+                "text": "5cm"
+              }
+            ],
+            "UI": {
+              "showSolutionButton": "Show solution",
+              "correctText": "Correct!",
+              "almostText": "Almost!",
+              "wrongText": "Wrong!"
+            },
+            "question": "<div>Hvor tykk bør en hvalbiff som skal grilles være</div>\n"
+          }
+        },
+        "x": 18.470196177062377,
+        "y": 11.794999716938406,
+        "ctc": true,
+        "pause": false,
+        "duration": {
+          "from": 10,
+          "to": 30
+        }
+      },
+      {
+        "action": {
+          "library": "H5P.Text 1.0",
+          "params": {
+            "text": "<div>Måsestup!</div>\n"
+          }
+        },
+        "x": 47.83702213279678,
+        "y": 45.036986714975846,
+        "duration": {
+          "from": 9,
+          "to": 9
+        }
+      },
+      {
+        "action": {
+          "library": "H5P.Text 1.0",
+          "params": {
+            "text": "<div>Hai!</div>\n"
+          }
+        },
+        "x": 52.96780684104628,
+        "y": 52.76645531400967,
+        "duration": {
+          "from": 35,
+          "to": 35
+        },
+        "pause": true
+      },
+      {
+        "action": {
+          "library": "H5P.Text 1.0",
+          "params": {
+            "text": "<div>Haimat:)</div>\n\n<div>NOMNOM</div>\n"
+          }
+        },
+        "x": 88.38028169014085,
+        "y": 36.82442632850242,
+        "duration": {
+          "from": 37,
+          "to": 37
+        },
+        "pause": true
+      },
+      {
+        "action": {
+          "library": "H5P.MultiChoice 1.0",
+          "params": {
+            "singleAnswer": true,
+            "singlePoint": true,
+            "answers": [
+              {
+                "text": "ca. 2000\n"
+              },
+              {
+                "text": "500\n"
+              },
+              {
+                "correct": true,
+                "text": "ca. 1000\n"
+              }
+            ],
+            "UI": {
+              "showSolutionButton": "Show solution",
+              "correctText": "Correct!",
+              "almostText": "Almost!",
+              "wrongText": "Wrong!"
+            },
+            "question": "<div>Hvor mange fisker så du?</div>\n"
+          }
+        },
+        "x": 86.16700201207244,
+        "y": 14.360658212560388,
+        "duration": {
+          "from": 45,
+          "to": 46
+        }
+      }
+    ],
+    "summary": {
+      "library": "H5P.Summary 1.0",
+      "params": {
+        "summaries": [],
+        "response": {
+          "scorePerfect": {
+            "title": "PERFECT!",
+            "message": "You got everything correct on your first try. Be proud!"
+          },
+          "scoreOver70": {
+            "title": "Great!",
+            "message": "You got most of the statements correct on your first try!"
+          },
+          "scoreOver40": {
+            "title": "Ok",
+            "message": "You got some of the statements correct on your first try. There is still room for improvement."
+          },
+          "scoreOver0": {
+            "title": "Not good",
+            "message": "You need to work more on this"
+          }
+        },
+        "summary": "You got @score of @total statements (@percent %) correct."
+      }
+    }
+  }
+}

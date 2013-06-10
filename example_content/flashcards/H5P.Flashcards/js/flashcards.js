@@ -56,7 +56,11 @@ H5P.Flashcards = function (options, contentId) {
   };
 
   var showScore = function(){
-    var i = Math.round(-parseInt($('#flashcards').css('left')) / parseInt($('#flashcards').css('width')));
+    var left = -parseInt($('#flashcards').css('left'));
+    if (isNaN(left)) {
+      left = 0;
+    }
+    var i = Math.round(left / parseInt($('#flashcards').css('width')));
     $('#'+$panel.attr('id')+'-fasit-'+i).fadeIn('slow');
 
     var $answer = $('#'+$panel.attr('id')+'-input-'+i).attr('disabled', 'disabled');
@@ -110,7 +114,7 @@ H5P.Flashcards = function (options, contentId) {
     // Panel setup
     var $cards = addElement($panel, null, 'flashcard-inner-panel', { });
     var $flashcards = addElement($cards, 'flashcards', 'flashcards', { });
-    var $navigation = addElement($cards, 'navigation', 'navigation', { });
+    var $navigation = addElement($cards, null, 'h5p-flashcards-nav', { });
 
     var $prev = addElement($navigation, 'previous-flashcard', 'flashcard-navigation-button', {
       text: that.options.previous,

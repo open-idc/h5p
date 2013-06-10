@@ -18,7 +18,7 @@ ns.Html = function (parent, field, params, setValue) {
 };
 ns.Html.first = true;
 
-ns.Html.prototype.defaultTags = ['strong', 'em', 'del', 'h2', 'h3', 'a', 'ul', 'ol', 'img', 'table'];
+ns.Html.prototype.defaultTags = ['strong', 'em', 'del', 'h2', 'h3', 'a', 'ul', 'ol', 'table', 'hr'];
 
 ns.Html.prototype.inTags = function (value) {
   return (ns.$.inArray(value.toLowerCase(), this.tags) >= 0);

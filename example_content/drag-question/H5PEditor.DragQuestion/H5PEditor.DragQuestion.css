@@ -1,0 +1,53 @@
+.h5peditor-dragnbar {
+  font-size: 1em;
+  overflow: hidden;
+}
+.h5peditor-dragnbar .h5p-dragnbar-ul {
+  float: right;
+  margin: 0;
+  list-style: none;
+}
+.h5peditor-dragnbar .h5p-dragnbar-li {
+  float: left;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.h5peditor-dragnbar .h5p-dragnbar-a {
+  border: 0.0625em solid #b881e7;
+  margin: 0.25em;
+  border-radius: 0.5em;
+  display: block;
+  padding: 0.25em 0.75em;
+  background: #d8c6e7;
+}
+.h5peditor-dragnbar .h5p-dragnbar-a:before {
+  content: "?";
+}
+.h5peditor-dragnbar .h5p-dragnbar-a:hover {
+  text-decoration: none;
+}
+.h5peditor-dragnbar .h5p-dragnbar-text-button:before {
+  content: "T";
+}
+.h5peditor-dragnbar .h5p-dragnbar-image-button:before {
+  content: "I";
+}
+.h5peditor-dragnbar .h5p-dragnbar-dropzone-button:before {
+  content: "DZ";
+}
+
+.h5peditor-dragquestion {
+  padding: 0.5em 1em;
+}
+.h5peditor-dragquestion.h5p-ready {
+  padding: 0;
+  background-size: 100% 100%;
+  position: relative;
+  border: 1px solid #73b897;
+  border-radius: 0.25em;
+  overflow: hidden;
+}
+.h5p-dq-element {
+  position: absolute;
+}
