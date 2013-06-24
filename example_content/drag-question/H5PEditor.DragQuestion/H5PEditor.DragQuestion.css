@@ -1,3 +1,6 @@
+.h5peditor-dragquestion-wrapper {
+  position: relative;
+}
 .h5peditor-dragnbar {
   font-size: 1em;
   overflow: hidden;
@@ -14,27 +17,34 @@
   background: transparent;
 }
 .h5peditor-dragnbar .h5p-dragnbar-a {
-  border: 0.0625em solid #b881e7;
+  width: 1em;
+  line-height: 1.5em;
+  text-align: center;
+  border: 0.0625em solid #027AC6;
   margin: 0.25em;
   border-radius: 0.5em;
   display: block;
   padding: 0.25em 0.75em;
-  background: #d8c6e7;
+  background: #CEE5FF;
+  color: #000;
 }
 .h5peditor-dragnbar .h5p-dragnbar-a:before {
+  font-family: "H5PFontAwesome";
   content: "?";
 }
 .h5peditor-dragnbar .h5p-dragnbar-a:hover {
   text-decoration: none;
 }
 .h5peditor-dragnbar .h5p-dragnbar-text-button:before {
+  font-size: 1.125em;
+  font-weight: bold;
   content: "T";
 }
 .h5peditor-dragnbar .h5p-dragnbar-image-button:before {
-  content: "I";
+  content: "\f03e";
 }
 .h5peditor-dragnbar .h5p-dragnbar-dropzone-button:before {
-  content: "DZ";
+  content: "\f140";
 }
 
 .h5peditor-dragquestion {
@@ -43,6 +53,7 @@
 .h5peditor-dragquestion.h5p-ready {
   padding: 0;
   background-size: 100% 100%;
+  background-color: #FFFFFF;
   position: relative;
   border: 1px solid #73b897;
   border-radius: 0.25em;
@@ -50,4 +61,63 @@
 }
 .h5p-dq-element {
   position: absolute;
+  overflow: hidden;
+  line-height: 1.25em;
+  border-radius: 0.5em;
+  border: 0.0625em solid #dcdcdc;
+  cursor: pointer;
+  text-align: center;
+  padding: 0.125em;
+}
+.h5p-dq-element:hover {
+  border: 0.0625em solid #aaaaaa;
+}
+
+.h5p-dq-dz {
+  position: absolute;
+  border: 0.125em solid #f5f5f5;
+  background-color: #ffffff;
+  border-radius: 0.5em;
+}
+
+.h5peditor-dragquestion .h5p-moving {
+  opacity: 0.75;
+}
+
+.h5p-dq-label {
+  position: absolute;
+  bottom: 100%;
+  font-size: 0.75em;
+}
+
+.h5peditor-fluid-dialog {
+  display: none;
+  background: #e5fff2;
+  border-radius: 0.25em;
+}
+.h5peditor-fd-inner {
+  padding: 0.5em;
+}
+.h5peditor-fd-buttons {
+  overflow: hidden;
+}
+a.h5peditor-fd-button {
+  float: right;
+  background: #156f3d;
+  color:  #fff;
+  padding: 0.25em 0.5em;
+  border-radius: 0.25em;
+  margin: 0.5em;
+}
+a.h5peditor-fd-button:hover {
+  text-decoration: none;
+}
+.h5p-dq-dz-label {
+  position: absolute;
+  background: #efe2c9;
+  font-size: 0.5em;
+  line-height: 1.25em;
+  top: -1.375em;
+  left: -0.125em;
+  padding: 0 0.25em;
 }

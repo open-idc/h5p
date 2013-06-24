@@ -17,7 +17,6 @@ H5P.InteractiveVideo = (function ($) {
   function C(params, id) {
     this.params = params.interactiveVideo;
     this.contentPath = H5P.getContentPath(id);
-
     this.visibleInteractions = [];
 
     this.l10n = {
@@ -36,7 +35,6 @@ H5P.InteractiveVideo = (function ($) {
       license: 'License',
       time: 'Time',
       interactionsCopyright: 'Copyright information regarding interactions used in this interactive video',
-      error: 'Sorry, could not load the video.',
       "U": "Undisclosed",
       "CC BY": "Attribution",
       "CC BY-SA": "Attribution-ShareAlike",
@@ -49,6 +47,8 @@ H5P.InteractiveVideo = (function ($) {
       "CC PDM": "Public Domain Mark",
       "C": "Copyright"
     };
+
+    this.justVideo = navigator.userAgent.match(/iPhone|iPod/i) ? true : false;
   };
 
   /**
@@ -70,6 +70,12 @@ H5P.InteractiveVideo = (function ($) {
     // Video with interactions
     this.$videoWrapper = $container.children('.h5p-video-wrapper');
     this.attachVideo(this.$videoWrapper);
+
+    if (this.justVideo) {
+      this.$videoWrapper.find('video').css('minHeight', '200px');
+      $container.children(':not(.h5p-video-wrapper)').remove();
+      return;
+    }
 
     // Controls
     this.$controls = $container.children('.h5p-controls');
@@ -100,13 +106,39 @@ H5P.InteractiveVideo = (function ($) {
 
     this.video = new H5P.Video({
       files: this.params.video.files,
-      controls: false,
+      controls: this.justVideo,
       autoplay: false,
       fitToWrapper: false
     }, this.contentPath);
 
-    this.video.errorCallback = function () {
-      that.$container.html('<div class="h5p-video-error">' + that.l10n.error + '</div>');
+    if (this.justVideo) {
+      this.video.attach($wrapper);
+      return;
+    }
+
+    this.video.errorCallback = function (errorCode, errorMessage) {
+      if (errorCode instanceof Event) {
+        // Video
+        switch (errorCode.target.error.code) {
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMessage = 'Media playback has been aborted';
+            break;
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMessage = 'Network failure';
+            break;
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMessage = 'Unable to decode media';
+            break;
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage = 'Video format not supported';
+            break;
+          case MediaError.MEDIA_ERR_ENCRYPTED:
+            errorMessage = 'Encrypted';
+            break;
+        }
+      }
+
+      that.$container.html('<div class="h5p-video-error">Error: ' + errorMessage + '.</div>');
       that.remove();
       if (that.editor !== undefined) {
         delete that.editor.IV;
@@ -149,15 +181,15 @@ H5P.InteractiveVideo = (function ($) {
   C.prototype.loaded = function () {
     var that = this;
 
-    if (this.video.flowplayer !== undefined) {
-      this.video.flowplayer.getPlugin('play').hide();
-    }
-
     this.resizeEvent = function() {
       that.resize();
     };
     H5P.$window.resize(this.resizeEvent);
     this.resize();
+
+    if (this.video.flowplayer !== undefined) {
+      this.video.flowplayer.getPlugin('play').hide();
+    }
 
     var duration = this.video.getDuration();
     var time = C.humanizeTime(duration);
@@ -272,6 +304,11 @@ H5P.InteractiveVideo = (function ($) {
 			range: 'min',
       max: 0,
       start: function () {
+        if (that.$splash !== undefined) {
+          that.$splash.remove();
+          delete that.$splash;
+        }
+
         if (that.playing === undefined) {
           if (that.controls.$slider.slider('option', 'max') !== 0) {
             that.playing = false;
@@ -317,11 +354,6 @@ H5P.InteractiveVideo = (function ($) {
   C.prototype.resize = function (fullScreen) {
     var fullscreenOn = H5P.$body.hasClass('h5p-fullscreen') || H5P.$body.hasClass('h5p-semi-fullscreen');
 
-    if (fullScreen === false && !this.$dialogWrapper.hasClass('.h5p-hidden')) {
-      // Remove any open dialogs when exiting fullscreen.
-      this.hideDialog();
-    }
-
     this.controls.$buffered.attr('width', this.controls.$slider.width());
 
     this.$videoWrapper.css({
@@ -332,6 +364,7 @@ H5P.InteractiveVideo = (function ($) {
     });
     this.video.resize();
 
+    var width;
     if (fullscreenOn) {
       var videoHeight = this.$videoWrapper.height();
       var controlsHeight = this.$controls.height();
@@ -339,13 +372,14 @@ H5P.InteractiveVideo = (function ($) {
 
       if (videoHeight + controlsHeight <= containerHeight) {
         this.$videoWrapper.css('marginTop', (containerHeight - controlsHeight - videoHeight) / 2);
+        width = this.$videoWrapper.width();
       }
       else {
         var $video = this.$videoWrapper.find('.h5p-video, .h5p-video-flash > object');
         var ratio = this.$videoWrapper.width() / videoHeight;
 
         var height = containerHeight - controlsHeight;
-        var width = height * ratio;
+        width = height * ratio;
         $video.css('height', height);
         this.$videoWrapper.css({
           marginLeft: (this.$container.width() - width) / 2,
@@ -359,7 +393,7 @@ H5P.InteractiveVideo = (function ($) {
         // Update icon if we some how got out of fullscreen.
         this.controls.$fullscreen.removeClass('h5p-exit').attr('title', this.l10n.fullscreen);
       }
-      var width = this.$container.width();
+      width = this.$container.width();
     }
 
     this.$container.css('fontSize', (this.fontSize * (width / this.width)) + 'px');
@@ -433,10 +467,9 @@ H5P.InteractiveVideo = (function ($) {
       if (Math.floor(lastSecond) !== second) {
         that.toggleInteractions(second);
 
-        if (that.editor !== undefined && that.editor.dnb.dnd.$coordinates !== undefined) {
+        if (that.editor !== undefined) {
           // Remove coordinates picker while playing
-          that.editor.dnb.dnd.$coordinates.remove();
-          delete that.editor.dnb.dnd.$coordinates;
+          that.editor.removeCoordinatesPicker();
         }
 
         // Update timer
@@ -555,7 +588,7 @@ H5P.InteractiveVideo = (function ($) {
     // Transition in
     setTimeout(function () {
       $interaction.removeClass('h5p-hidden');
-
+      that.positionLabel($interaction);
     }, 1);
 
     if (interaction.pause && this.playing) {
@@ -563,6 +596,21 @@ H5P.InteractiveVideo = (function ($) {
     }
 
     return $interaction;
+  };
+
+  /**
+   *
+   * @param {type} $interaction
+   * @returns {undefined}
+   */
+  C.prototype.positionLabel = function ($interaction) {
+    var $label = $interaction.children('.h5p-interaction-label');
+    if ($label.length) {
+      $label.removeClass('h5p-left-label');
+      if (parseInt($interaction.css('left')) + $label.position().left + $label.outerWidth() > this.$videoWrapper.width()) {
+        $label.addClass('h5p-left-label');
+      }
+    }
   };
 
   /**
@@ -626,17 +674,7 @@ H5P.InteractiveVideo = (function ($) {
       var interactionInstance = new (H5P.classFromName(lib))(interaction.action.params, this.contentPath);
       interactionInstance.attach($dialog);
 
-      if (lib === 'H5P.Image') {
-        // Make sure images dosn't strech.
-        $dialog.children('img').load(function () {
-          that.$dialog.css({
-            height: ''
-          });
-          // Reposition after image has loaded.
-          that.positionDialog(interaction, $button);
-        });
-      }
-      else if (lib === 'H5P.Summary') {
+      if (lib === 'H5P.Summary') {
         interaction.bigDialog = true;
       }
     }
@@ -657,19 +695,90 @@ H5P.InteractiveVideo = (function ($) {
    * @returns {undefined}
    */
   C.prototype.positionDialog = function (interaction, $button) {
+    // Reset dialog styles
     this.$dialog.removeClass('h5p-big').css({
-        left: '',
-        top: '',
-        height: ''
-      });
+      left: '',
+      top: '',
+      height: '',
+      width: '',
+      fontSize: ''
+    }).children().css('width', '');
+
     if (interaction === undefined || interaction.bigDialog !== undefined && interaction.bigDialog) {
       this.$dialog.addClass('h5p-big');
     }
     else {
-      // Position dialog horizontally
+      // How much of the player should the interaction cover?
+      var interactionMaxFillRatio = 0.8;
       var buttonWidth = $button.outerWidth(true);
-      var containerWidth = this.$container.width();
       var buttonPosition = $button.position();
+      var containerWidth = this.$container.width();
+      var containerHeight = this.$container.height();
+      var that = this;
+      // Determine size
+      var height = this.$dialog.height();
+
+      // Special case for images
+      if (interaction.action.library.split(' ')[0] === 'H5P.Image' && height > 1) {
+        var $img = this.$dialog.find('img');
+        var imgHeight, imgWidth, maxWidth;
+        if (buttonPosition.left > (containerWidth / 2) - (buttonWidth / 2)) {
+          // Space to the left of the button minus margin
+          var maxWidth = buttonPosition.left * (1 - (1 - interactionMaxFillRatio)/2);
+        }
+        else {
+          // Space to the right of the button minus margin
+          var maxWidth = (containerWidth - buttonPosition.left - buttonWidth) * (1 - (1 - interactionMaxFillRatio)/2);
+        }
+        var maxHeight = containerHeight * interactionMaxFillRatio;
+
+        // Use image size info if it is stored
+        if (interaction.action.params.file.height !== undefined) {
+          imgHeight = interaction.action.params.file.height;
+          imgWidth = interaction.action.params.file.width;
+        }
+        // Image size info is missing. We must find image size
+        else {
+          // TODO: Where are these vars used?
+          var img = $img[0]; // Get my img elem
+          var realWidth, realHeight;
+
+          // TODO: Note that we allready have an img with the approperiate source attached to the DOM, wouldn't attaching another cause double loading?
+          $("<img/>") // Make in memory copy of image to avoid css issues
+            .attr("src", $img.attr("src")) // TODO: Check img.complete ? The image might be in cache.
+            .load(function() { // TODO: Is load needed multiple times or would one('load') suffice?
+              // Note that we're actually changing the params here if we're in the editor.
+              interaction.action.params.file.width = this.width;   // Note: $(this).width() will not work for in memory images.
+              interaction.action.params.file.height = this.height;
+              that.positionDialog(interaction, $button);
+          });
+          // TODO: What happens to our in memory img now? Could we reuse it?
+        }
+        // Resize image and dialog container
+        if (typeof imgWidth != "undefined") { // TODO: imgWidth !== undefined is insanely faster than string comparison...
+          if (imgHeight > maxHeight) {
+            imgWidth = imgWidth * maxHeight / imgHeight;
+            imgHeight = maxHeight;
+          }
+          if (imgWidth > maxWidth) {
+            imgHeight = imgHeight * maxWidth / imgWidth;
+            imgWidth = maxWidth;
+          }
+          $img.css({
+            width: imgWidth,
+            height: imgHeight
+          });
+          this.$dialog.css({
+            width: imgWidth + 1.5 * this.fontSize, // TODO: What is 1.5? Where are the docs?
+            height: imgHeight
+          })
+          .children('.h5p-dialog-inner').css('width', 'auto');
+        }
+      }
+
+      // TODO: This function is HUGE, could some of it maybe be moved to H5P.Image? Content sizing shouldn't be a part of positioning the dialog, it should happen before. If we're waiting for something to load show a dialog with a throbber or something...
+
+      // Position dialog horizontally
       var left = buttonPosition.left;
 
       if (buttonPosition.left > (containerWidth / 2) - (buttonWidth / 2)) {
@@ -683,22 +792,22 @@ H5P.InteractiveVideo = (function ($) {
       }
 
       // Position dialog vertically
-      var top = buttonPosition.top;
+      var marginTop = parseInt(this.$videoWrapper.css('marginTop'));
+      if (isNaN(marginTop)) {
+        marginTop = 0;
+      }
+
+      var top = buttonPosition.top + marginTop;
       var containerHeight = this.$container.height();
-      var totalHeight = buttonPosition.top + this.$dialog.outerHeight(true);
+      var totalHeight = top + this.$dialog.outerHeight(true);
 
       if (totalHeight > containerHeight) {
         top -= totalHeight - containerHeight;
       }
-      var marginTop = parseInt(this.$videoWrapper.css('marginTop'));
-      if (!isNaN(marginTop)) {
-        top += marginTop;
-      }
 
       this.$dialog.removeClass('h5p-big').css({
         top: (top / (containerHeight / 100)) + '%',
-        left: (left / (containerWidth / 100)) + '%',
-        height: Math.ceil(this.$dialog.height() / (containerHeight / 100)) + '%'
+        left: (left / (containerWidth / 100)) + '%'
       });
     }
   };
@@ -717,7 +826,9 @@ H5P.InteractiveVideo = (function ($) {
       that.$dialogWrapper.hide();
     }, 201);
 
-    this.play(this.playing ? true : undefined);
+    if ((this.editor === undefined || this.playing) && (this.hasEnded === undefined || this.hasEnded === false)) {
+      this.play(this.playing ? true : undefined);
+    }
   };
 
   /**

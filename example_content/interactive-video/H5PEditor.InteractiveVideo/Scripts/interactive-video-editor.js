@@ -110,10 +110,33 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
     this.IV.attach(this.$editor);
 
     // Add DragNBar.
-    this.dnb = new H5P.DragNBar(that.getButtons(), this.IV.$videoWrapper);
+    this.$bar = $('<div class="h5peditor-dragnbar">' + C.t('loading') + '</div>').prependTo(this.$editor);
+    $.post(H5PEditor.ajaxPath + 'libraries', {libraries: this.field.field.fields[5].options}, function (libraries) {
+      that.createDragNBar(libraries);
+    });
+
+    if (this.forms === undefined) {
+      // Process semantics to make forms
+      this.forms = [];
+      for (var i = 0; i < this.params.length; i++) {
+        this.processInteraction(i);
+      }
+    }
+  };
+
+  /**
+   *
+   * @param {type} libraries
+   * @returns {undefined}
+   */
+  C.prototype.createDragNBar = function (libraries) {
+    var that = this;
+
+    this.dnb = new H5P.DragNBar(this.getButtons(libraries), this.IV.$videoWrapper);
 
     // Update params when the element is dropped.
     this.dnb.stopMovingCallback = function (x, y) {
+      that.IV.positionLabel(that.dnb.dnd.$element);
       var params = that.params[that.dnb.dnd.$element.data('id')];
       params.x = x;
       params.y = y;
@@ -130,16 +153,7 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
       }
     };
 
-    this.$bar = $('<div class="h5peditor-dragnbar"></div>').prependTo(this.$editor);
     this.dnb.attach(this.$bar);
-
-    if (this.forms === undefined) {
-      // Process semantics to make forms
-      this.forms = [];
-      for (var i = 0; i < this.params.length; i++) {
-        this.processInteraction(i);
-      }
-    }
   };
 
   /**
@@ -174,6 +188,9 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
     var that = this;
 
     $interaction.mousedown(function (event) {
+      if (that.dnb === undefined) {
+        return false;
+      }
       if (that.IV.playing) {
         that.IV.pause(true);
       }
@@ -190,9 +207,6 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
       that.IV.$dialog.children('.h5p-dialog-hide').hide();
       var $buttons = $('<div class="h5p-dialog-buttons"><a href="#" class="h5p-button h5p-done">' + C.t('done') + '</a><a href="#" class="h5p-button h5p-remove">' + C.t('remove') + '</a></div>').appendTo(that.IV.$dialog).children('.h5p-done').click(function () {
         if (that.validDialog(id)) {
-          that.IV.visibleInteractions[id].remove();
-          delete that.IV.visibleInteractions[id];
-          that.IV.toggleInteraction(id);
           that.hideDialog();
         }
         return false;
@@ -231,14 +245,30 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
 
     if (valid) {
       this.forms[id].detach();
+
+      // Remove old visible
+      this.IV.visibleInteractions[id].remove();
+      delete this.IV.visibleInteractions[id];
+
+      // Check if we should show again
       this.IV.toggleInteraction(id);
-      if (this.dnb.dnd.$coordinates !== undefined) {
-        this.dnb.dnd.$coordinates.remove();
-        delete this.dnb.dnd.$coordinates;
-      }
+
+      this.removeCoordinatesPicker();
     }
 
     return valid;
+  };
+
+  /**
+   * Removes that fine coordinates picker.....
+   *
+   * @returns {undefined}
+   */
+  C.prototype.removeCoordinatesPicker = function () {
+    if (this.dnb !== undefined && this.dnb.dnd.$coordinates !== undefined) {
+      this.dnb.dnd.$coordinates.remove();
+      delete this.dnb.dnd.$coordinates;
+    }
   };
 
   /**
@@ -277,11 +307,7 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
       }
     }
 
-    if (this.dnb.dnd.$coordinates !== undefined) {
-      // Remove coordiantes picker
-      this.dnb.dnd.$coordinates.remove();
-      delete this.dnb.dnd.$coordinates;
-    }
+    this.removeCoordinatesPicker();
   };
 
   /**
@@ -289,12 +315,10 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
    *
    * @returns {Array}
    */
-  C.prototype.getButtons = function () {
-    var options = this.field.field.fields[5].options;
-
+  C.prototype.getButtons = function (libraries) {
     var buttons = [];
-    for (var i = 0; i < options.length; i++) {
-      buttons.push(this.getButton(options[i]));
+    for (var i = 0; i < libraries.length; i++) {
+      buttons.push(this.getButton(libraries[i]));
     }
 
     return buttons;
@@ -308,11 +332,11 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
    */
   C.prototype.getButton = function (library) {
     var that = this;
-    var id = library.split(' ')[0].split('.')[1].toLowerCase();
+    var id = library.name.split('.')[1].toLowerCase();
 
     return {
       id: id,
-      title: C.t('insertElement', {':type': id === 'summary' ? 'statements' : id }),
+      title: C.t('insertElement', {':type': id === 'summary' ? 'statements' : library.title.toLowerCase() }),
       createElement: function () {
         if (that.IV.playing) {
           that.IV.pause(true);
@@ -323,7 +347,7 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
         var duration = Math.floor(that.IV.video.getDuration());
         var interaction = {
           action: {
-            library: library,
+            library: library.uberName,
             params: {}
           },
           x: 0,
@@ -355,10 +379,7 @@ H5PEditor.widgets.interactiveVideo = H5PEditor.InteractiveVideo = (function ($) 
       this.IV.remove();
       delete this.IV;
 
-      if (this.dnb.dnd.$coordinates !== undefined) {
-        this.dnb.dnd.$coordinates.remove();
-        delete this.dnb.dnd.$coordinates;
-      }
+      this.removeCoordinatesPicker();
     }
   };
 
@@ -439,6 +460,7 @@ H5PEditor.language['H5PEditor.InteractiveVideo'] = {
     insertElement: 'Click and drag to place :type',
     popupTitle: 'Edit :type',
     done: 'Done',
+    loading: 'Loading...',
     remove: 'Remove',
     removeInteraction: 'Are you sure you wish to remove this interaction?'
   }

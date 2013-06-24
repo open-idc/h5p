@@ -154,8 +154,30 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
 
   H5P.$window.resize(function() {
     that.resize(false);
- });
+  });
   this.resize(false);
+
+  // In view mode, make continuous text smaller if it
+  // does not fit inside container
+  if (this.editor === undefined) {
+    H5P.jQuery('.h5p-ct > .ct', $container).each(function (){
+      var percent = 100;
+      var $ct = $(this);
+      var parentHeight = $ct.parent().height();
+
+      while ($ct.height() > parentHeight) {
+        percent = percent - 2;
+        $ct.css({
+          fontSize: percent + '%',
+          lineHeight: (percent + 65) + '%'
+        });
+
+        if (percent < 50) {
+          break; // Just in case. Makes no sense going further.
+        }
+      }
+    });
+  }
 };
 
 H5P.CoursePresentation.prototype.resize = function (fullscreen) {

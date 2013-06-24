@@ -33,6 +33,11 @@
       "machineName": "H5P.Blanks",
       "majorVersion": 1,
       "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.ContinuousText",
+      "majorVersion": 1,
+      "minorVersion": 0
     }
   ],
   "mainLibrary": "H5P.CoursePresentation",
