@@ -1,3 +1,4 @@
+// TODO: Why can't h5pintegration.js just hook into the H5P namespace instead of creating its own?
 var H5PIntegration = H5PIntegration || {};
 var H5P = H5P || {};
 
@@ -13,6 +14,9 @@ H5PIntegration.getJsonContent = function (contentId) {
 H5PIntegration.getContentPath = function (contentId) {
   if (Drupal.settings.h5p !== undefined) {
     return Drupal.settings.h5p.jsonContentPath + contentId + '/';
+  }
+  else if (Drupal.settings.h5peditor !== undefined)  {
+    return Drupal.settings.h5peditor.filesPath + '/h5peditor/';
   }
 };
 
