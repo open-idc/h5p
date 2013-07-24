@@ -58,15 +58,17 @@ ns.File.prototype.addFile = function () {
   var thumbnail;
   if (this.field.type === 'image') {
     thumbnail = {};
-    thumbnail.path = ns.filesPath + this.params.path,
+    thumbnail.path = H5P.getPath(this.params.path, H5PEditor.contentId),
     thumbnail.height = 100;
-    thumbnail.width = thumbnail.height * (this.params.width / this.params.height);
+    if (this.params.width !== undefined) {
+      thumbnail.width = thumbnail.height * (this.params.width / this.params.height);
+    }
   }
   else {
     thumbnail = ns.fileIcon;
   }
 
-  this.$file.html('<a href="#" title="' + ns.t('core', 'changeFile') + '" class="thumbnail"><img width="' + thumbnail.width + '" height="' + thumbnail.height + '" alt="' + (this.field.label === undefined ? '' : this.field.label) + '"/><a href="#" class="remove" title="' + ns.t('core', 'removeFile') + '"></a></a>').children(':eq(0)').click(function () {
+  this.$file.html('<a href="#" title="' + ns.t('core', 'changeFile') + '" class="thumbnail"><img ' + (thumbnail.width === undefined ? '' : ' width="' + thumbnail.width + '"') + 'height="' + thumbnail.height + '" alt="' + (this.field.label === undefined ? '' : this.field.label) + '"/><a href="#" class="remove" title="' + ns.t('core', 'removeFile') + '"></a></a>').children(':eq(0)').click(function () {
     that.uploadFile();
     return false;
   }).children('img').attr('src', thumbnail.path).end().next().click(function (e) {
@@ -181,7 +183,7 @@ ns.File.addIframe = function () {
     }
 
     $body.html('');
-    var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.ajaxPath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/><input name="contentId" type="hidden" value="' + ns.contentId + '"/></form>').appendTo($body);
+    var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.ajaxPath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/><input name="contentId" type="hidden" value="' + (ns.contentId === undefined ? 0 : ns.contentId) + '"/></form>').appendTo($body);
 
     ns.File.$field = $form.children('input[name="field"]');
     ns.File.$file = $form.children('input[name="file"]');

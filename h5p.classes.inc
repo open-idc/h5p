@@ -5,45 +5,49 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements setErrorMessage
    */
-  public function setErrorMessage($message){
-    drupal_set_message($message, 'error');
+  public function setErrorMessage($message) {
+    if (user_access('create h5p')) {
+      drupal_set_message($message, 'error');
+    }
   }
-  
+
   /**
    * Implements setInfoMessage
    */
-  public function setInfoMessage($message){
-    drupal_set_message($message);
+  public function setInfoMessage($message) {
+    if (user_access('create h5p')) {
+      drupal_set_message($message);
+    }
   }
-  
+
   /**
    * Implements t
    */
   public function t($message, $replacements = array()) {
     return t($message, $replacements);
   }
-  
+
   /**
    * Implements getH5PPath
    */
   public function getH5pPath() {
     return _h5p_get_h5p_path();
   }
-  
+
   /**
    * Implements getUploadedH5PFolderPath
    */
   public function getUploadedH5pFolderPath() {
     return $_SESSION['h5p_upload_folder'];
   }
-  
+
   /**
    * Implements getUploadedH5PPath
    */
   public function getUploadedH5pPath() {
     return $_SESSION['h5p_upload'];
   }
-  
+
   /**
    * Implements getLibraryId
    */
@@ -57,9 +61,9 @@ class H5PDrupal implements H5PFrameworkInterface {
       $machineName, $majorVersion, $minorVersion));
     return $library_id;
   }
-  
+
   /**
-   * Impements isPatchedLibrary
+   * Implements isPatchedLibrary
    */
   public function isPatchedLibrary($library) {
     $result = db_result(db_query(
@@ -74,13 +78,20 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * Implements mayUpdateLibraries
+   */
+  public function mayUpdateLibraries() {
+    return user_access('update h5p libraries');
+  }
+
+  /**
    * Implements saveLibraryData
    */
   public function saveLibraryData(&$libraryData, $new = TRUE) {
     $preloadedJs = $this->pathsToCsv($libraryData, 'preloadedJs');
     $preloadedCss =  $this->pathsToCsv($libraryData, 'preloadedCss');
     $dropLibraryCss = '';
-    
+
     if (isset($libraryData['dropLibraryCss'])) {
       $libs = array();
       foreach ($libraryData['dropLibraryCss'] as $lib) {
@@ -134,7 +145,7 @@ class H5PDrupal implements H5PFrameworkInterface {
 
   /**
    * Convert list of file paths to csv
-   * 
+   *
    * @param array $libraryData
    *  Library data as found in library.json files
    * @param string $key
@@ -152,7 +163,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     return '';
   }
-  
+
   /**
    * Implements deleteLibraryDependencies
    */
@@ -193,6 +204,17 @@ class H5PDrupal implements H5PFrameworkInterface {
     );
     // @todo: Add support for allowing the user to select embed type
   }
+  
+  /**
+   * Implement getWhitelist
+   */
+  public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
+    $whitelist = variable_get('h5p_whitelist', $defaultContentWhitelist);
+    if ($isLibrary) {
+      $whitelist .= ' ' . variable_get('h5p_library_whitelist_extras', $defaultLibraryWhitelist);;
+    }
+    return $whitelist;
+  }
 
   /**
    * Implements copyLibraryUsage
@@ -214,7 +236,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $this->deleteLibraryUsage($contentId);
     // @todo: Add page that lists unused libraries, allowing us to delete them
   }
-  
+
   /**
    * Implements deleteLibraryUsage
    */
@@ -271,6 +293,26 @@ class H5PDrupal implements H5PFrameworkInterface {
       );
     }
     return $library;
+  }
+
+  /**
+   * Implements getLibrarySemantics
+   *
+   * Calls modules implementing hook_alter_h5p_semantics().
+   */
+  public function getLibrarySemantics($machineName, $majorVersion, $minorVersion) {
+    $library = db_fetch_array(db_query(
+      "SELECT semantics
+        FROM {h5p_libraries}
+        WHERE machine_name = '%s'
+        AND major_version = %d
+        AND minor_version = %d",
+      $machineName, $majorVersion, $minorVersion));
+    $semantics = json_decode($library['semantics']);
+
+    drupal_alter('h5p_semantics', $semantics);
+
+    return $semantics;
   }
 }
 

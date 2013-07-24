@@ -5,15 +5,15 @@
 interface H5PFrameworkInterface {
   /**
    * Show the user an error message
-   * 
+   *
    * @param string $message
    *  The error message
    */
   public function setErrorMessage($message);
-  
+
   /**
    * Show the user an information message
-   * 
+   *
    * @param string $message
    *  The error message
    */
@@ -21,9 +21,9 @@ interface H5PFrameworkInterface {
 
   /**
    * Translation function
-   * 
+   *
    * @param string $message
-   *  The english string to be translated. 
+   *  The english string to be translated.
    * @param type $replacements
    *   An associative array of replacements to make after translation. Incidences
    *   of any key in this array are replaced with the corresponding value. Based
@@ -35,29 +35,29 @@ interface H5PFrameworkInterface {
    * @return string Translated string
    */
   public function t($message, $replacements = array());
-  
+
   /**
    * Get the Path to the last uploaded h5p
-   * 
+   *
    * @return string Path to the folder where the last uploaded h5p for this session is located.
    */
   public function getUploadedH5pFolderPath();
-  
+
   /**
    * @return string Path to the folder where all h5p files are stored
    */
   public function getH5pPath();
-  
+
   /**
    * Get the path to the last uploaded h5p file
-   * 
+   *
    * @return string Path to the last uploaded h5p
    */
   public function getUploadedH5pPath();
-  
+
   /**
    * Get id to an excisting library
-   * 
+   *
    * @param string $machineName
    *  The librarys machine name
    * @param int $majorVersion
@@ -68,10 +68,21 @@ interface H5PFrameworkInterface {
    *  The id of the specified library or FALSE
    */
   public function getLibraryId($machineName, $majorVersion, $minorVersion);
-  
+
   /**
-   * Is the library a patched version of an excisting library?
-   * 
+   * Get file extension whitelist
+   *
+   * The default extension list is part of h5p, but admins should be allowed to modify it
+   *
+   * @param boolean $isLibrary
+   * @param string $defaultContentWhitelist
+   * @param string $defaultLibraryWhitelist
+   */
+  public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist);
+
+  /**
+   * Is the library a patched version of an existing library?
+   *
    * @param object $library
    *  The library data for a library we are checking
    * @return boolean
@@ -79,20 +90,29 @@ interface H5PFrameworkInterface {
    *  FALSE otherwise
    */
   public function isPatchedLibrary($library);
-  
+
+  /**
+   * Is the current user allowed to update libraries?
+   *
+   * @return boolean
+   *  TRUE if the user is allowed to update libraries
+   *  FALSE if the user is not allowed to update libraries
+   */
+  public function mayUpdateLibraries();
+
   /**
    * Store data about a library
-   * 
+   *
    * Also fills in the libraryId in the libraryData object if the object is new
-   * 
+   *
    * @param object $libraryData
    *  Object holding the information that is to be stored
    */
   public function saveLibraryData(&$libraryData);
-  
+
   /**
    * Stores contentData
-   * 
+   *
    * @param int $contentId
    *  Framework specific id identifying the content
    * @param string $contentJson
@@ -103,10 +123,10 @@ interface H5PFrameworkInterface {
    *  Any contentMainId defined by the framework, for instance to support revisioning
    */
   public function saveContentData($contentId, $contentJson, $mainJsonData, $mainLibraryId, $contentMainId = NULL);
-  
+
   /**
    * Save what libraries a library is dependending on
-   * 
+   *
    * @param int $libraryId
    *  Library Id for the library we're saving dependencies for
    * @param array $dependencies
@@ -140,12 +160,12 @@ interface H5PFrameworkInterface {
 
   /**
    * Delete what libraries a content item is using
-   * 
+   *
    * @param int $contentId
    *  Content Id of the content we'll be deleting library usage for
    */
   public function deleteLibraryUsage($contentId);
-  
+
   /**
    * Saves what libraries the content uses
    *
@@ -170,6 +190,18 @@ interface H5PFrameworkInterface {
    *  FALSE if the library doesn't exist
    */
   public function loadLibrary($machineName, $majorVersion, $minorVersion);
+
+  /**
+   * Loads and decodes library semantics.
+   *
+   * @param string $machineName
+   * @param int $majorVersion
+   * @param int $minorVersion
+   * @return array|FALSE
+   *  Array representing the library with dependency descriptions
+   *  FALSE if the library doesn't exist
+   */
+  public function getLibrarySemantics($machineName, $majorVersion, $minorVersion);
 
   /**
    * Delete all dependencies belonging to given library
@@ -268,6 +300,7 @@ class H5PValidator {
   public function __construct($H5PFramework, $H5PCore) {
     $this->h5pF = $H5PFramework;
     $this->h5pC = $H5PCore;
+    $this->h5pCV = new H5PContentValidator($this->h5pF, $this->h5pC);
   }
 
   /**
@@ -344,17 +377,22 @@ class H5PValidator {
         }
         else {
           $contentExists = TRUE;
-          // In the future we might let the librarys provide validation functions for content.json
+          // In the future we might let the libraries provide validation functions for content.json
+        }
+
+        if (!$this->h5pCV->validateContentFiles($filePath)) {
+          $valid = FALSE;
+          continue;
         }
       }
 
       // The rest should be library folders
-      else {
+      elseif ($this->h5pF->mayUpdateLibraries()) {
          if (!is_dir($filePath)) {
           // Ignore this. Probably a file that shouldn't have been included.
           continue;
         }
-        
+
         $libraryH5PData = $this->getLibraryData($file, $filePath, $tmpDir);
 
         if ($libraryH5PData) {
@@ -377,7 +415,7 @@ class H5PValidator {
       $this->h5pC->librariesJsonData = $libraries;
       $this->h5pC->mainJsonData = $mainH5pData;
       $this->h5pC->contentJsonData = $contentJsonData;
-      
+
       $libraries['mainH5pData'] = $mainH5pData; // Check for the dependencies in h5p.json as well as in the libraries
       $missingLibraries = $this->getMissingLibraries($libraries);
       foreach ($missingLibraries as $missing) {
@@ -388,6 +426,9 @@ class H5PValidator {
       if (!empty($missingLibraries)) {
         foreach ($missingLibraries as $library) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => $this->h5pC->libraryToString($library))));
+        }
+        if (!$this->h5pF->mayUpdateLibraries()) {
+           $this->h5pF->setInfoMessage($this->h5pF->t("Note that the libraries may exist in the file you uploaded, but you're not allowed to upload new libraries. Contact the site administrator about this."));
         }
       }
       $valid = empty($missingLibraries) && $valid;
@@ -458,6 +499,8 @@ class H5PValidator {
     }
 
     $validLibrary = $this->isValidH5pData($h5pData, $file, $this->libraryRequired, $this->libraryOptional);
+
+    $validLibrary = $this->h5pCV->validateContentFiles($filePath, TRUE) && $validLibrary;
 
     if (isset($h5pData['preloadedJs'])) {
       $validLibrary = $this->isExistingFiles($h5pData['preloadedJs'], $tmpDir, $file) && $validLibrary;
@@ -666,7 +709,7 @@ class H5PValidator {
 
   /**
    * Validates the required h5p data in libraray.json and h5p.json
-   * 
+   *
    * @param mixed $h5pData
    *  Data to be validated
    * @param array $requirements
@@ -696,7 +739,7 @@ class H5PValidator {
 
   /**
    * Validates h5p data against a set of allowed values(options)
-   * 
+   *
    * @param array $selected
    *  The option(s) that has been specified
    * @param array $allowed
@@ -719,7 +762,7 @@ class H5PValidator {
 
   /**
    * Fetch json data from file
-   * 
+   *
    * @param string $filePath
    *  Path to the file holding the json string
    * @param boolean $return_as_string
@@ -744,7 +787,7 @@ class H5PValidator {
 
   /**
    * Helper function that copies an array
-   * 
+   *
    * @param array $array
    *  The array to be copied
    * @return array
@@ -771,7 +814,7 @@ class H5PValidator {
  * This class is used for saving H5P files
  */
 class H5PStorage {
-  
+
   public $h5pF;
   public $h5pC;
 
@@ -785,18 +828,23 @@ class H5PStorage {
     $this->h5pF = $H5PFramework;
     $this->h5pC = $H5PCore;
   }
-  
+
   /**
    * Saves a H5P file
-   * 
+   *
    * @param int $contentId
    *  The id of the content we are saving
    * @param int $contentMainId
    *  The main id for the content we are saving. This is used if the framework
    *  we're integrating with uses content id's and version id's
+   * @return boolean
+   *  TRUE if one or more libraries were updated
+   *  FALSE otherwise
    */
   public function savePackage($contentId, $contentMainId = NULL) {
     // Save the libraries we processed during validation
+    $library_saved = FALSE;
+    $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
       $libraryId = $this->h5pF->getLibraryId($key, $library['majorVersion'], $library['minorVersion']);
       $library['saveDependencies'] = TRUE;
@@ -813,12 +861,20 @@ class H5PStorage {
         $library['saveDependencies'] = FALSE;
         continue;
       }
+
+      if (!$mayUpdateLibraries) {
+        // This shouldn't happen, but just to be safe...
+        continue;
+      }
+
       $this->h5pF->saveLibraryData($library, $new);
-      
+
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
       $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $this->h5pC->libraryToString($library, TRUE);
       $this->h5pC->delTree($destination_path);
       rename($current_path, $destination_path);
+
+      $library_saved = TRUE;
     }
 
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
@@ -845,16 +901,18 @@ class H5PStorage {
     $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData);
     $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
     $this->h5pC->delTree($this->h5pF->getUploadedH5pFolderPath());
-    
+
     // Save the data in content.json
     $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
     $mainLibraryId = $librariesInUse[$this->h5pC->mainJsonData['mainLibrary']]['library']['libraryId'];
     $this->h5pF->saveContentData($contentId, $contentJson, $this->h5pC->mainJsonData, $mainLibraryId, $contentMainId);
+
+    return $library_saved;
   }
 
   /**
    * Delete an H5P package
-   * 
+   *
    * @param int $contentId
    *  The content id
    */
@@ -865,23 +923,26 @@ class H5PStorage {
 
   /**
    * Update an H5P package
-   * 
+   *
    * @param int $contentId
    *  The content id
    * @param int $contentMainId
    *  The content main id (used by frameworks supporting revisioning)
+   * @return boolean
+   *  TRUE if one or more libraries were updated
+   *  FALSE otherwise
    */
   public function updatePackage($contentId, $contentMainId = NULL) {
     $this->deletePackage($contentId);
-    $this->savePackage($contentId, $contentMainId);
+    return $this->savePackage($contentId, $contentMainId);
   }
 
   /**
    * Copy/clone an H5P package
-   * 
+   *
    * May for instance be used if the content is beeing revisioned without
    * uploading a new H5P package
-   * 
+   *
    * @param int $contentId
    *  The new content id
    * @param int $copyFromId
@@ -899,7 +960,7 @@ class H5PStorage {
 
   /**
    * Identify what libraries are beeing used taking all dependencies into account
-   * 
+   *
    * @param array $librariesInUse
    *  List of libraries in use, indexed by machineName
    * @param array $jsonData
@@ -937,7 +998,7 @@ class H5PStorage {
  * Functions and storage shared by the other H5P classes
  */
 class H5PCore {
-  
+
   public static $styles = array(
     'styles/h5p.css',
   );
@@ -946,7 +1007,10 @@ class H5PCore {
     'js/h5p.js',
     'js/flowplayer-3.2.12.min.js',
   );
-  
+
+  public static $defaultContentWhitelist = 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf';
+  public static $defaultLibraryWhitelistExtras = 'js css';
+
   public $h5pF;
   public $librariesJsonData;
   public $contentJsonData;
@@ -961,12 +1025,12 @@ class H5PCore {
   public function __construct($H5PFramework) {
     $this->h5pF = $H5PFramework;
   }
-  
+
   /**
    * Check if a library is of the version we're looking for
-   * 
+   *
    * Same verision means that the majorVersion and minorVersion is the same
-   * 
+   *
    * @param array $library
    *  Data from library.json
    * @param array $dependency
@@ -1017,11 +1081,11 @@ class H5PCore {
     @mkdir($destination);
     while (false !== ($file = readdir($dir))) {
         if (($file != '.') && ($file != '..')) {
-            if (is_dir($source . '/' . $file)) {
-              $this->copyTree($source . '/' . $file, $destination . '/' . $file);
+            if (is_dir($source . DIRECTORY_SEPARATOR . $file)) {
+              $this->copyTree($source . DIRECTORY_SEPARATOR . $file, $destination . DIRECTORY_SEPARATOR . $file);
             }
             else {
-              copy($source . '/' . $file,$destination . '/' . $file);
+              copy($source . DIRECTORY_SEPARATOR . $file,$destination . DIRECTORY_SEPARATOR . $file);
             }
         }
     }
@@ -1033,11 +1097,761 @@ class H5PCore {
    *
    * @param array $library
    *  With keys machineName, majorVersion and minorVersion
+   * @param boolean $folderName
+   *  Use hyphen instead of space in returned string.
    * @return string
    *  On the form {machineName} {majorVersion}.{minorVersion}
    */
   public function libraryToString($library, $folderName = FALSE) {
     return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
+
+  /**
+   * Parses library data from a string on the form {machineName} {majorVersion}.{minorVersion}
+   *
+   * @param string $libraryString
+   *  On the form {machineName} {majorVersion}.{minorVersion}
+   * @return array|FALSE
+   *  With keys machineName, majorVersion and minorVersion.
+   *  Returns FALSE only if string is not parsable in the normal library
+   *  string formats "Lib.Name-x.y" or "Lib.Name x.y"
+   */
+  public function libraryFromString($libraryString) {
+    $re = '/^([\w0-9\-\.]{1,255})[\-\ ]([0-9]{1,5})\.([0-9]{1,5})$/i';
+    $matches = array();
+    $res = preg_match($re, $libraryString, $matches);
+    if ($res) {
+      return array(
+        'machineName' => $matches[1],
+        'majorVersion' => $matches[2],
+        'minorVersion' => $matches[3]
+      );
+    }
+    return FALSE;
+  }
+}
+
+/**
+ * Functions for validating basic types from H5P library semantics.
+ */
+class H5PContentValidator {
+  public $h5pF;
+  public $h5pC;
+  private $typeMap;
+  private $semanticsCache;
+
+  /**
+   * Constructor for the H5PContentValidator
+   *
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
+   * @param object $H5PCore
+   *  The main H5PCore instance
+   */
+  public function __construct($H5PFramework, $H5PCore) {
+    $this->h5pF = $H5PFramework;
+    $this->h5pC = $H5PCore;
+    $this->typeMap = array(
+      'text' => 'validateText',
+      'number' => 'validateNumber',
+      'boolean' => 'validateBoolean',
+      'list' => 'validateList',
+      'group' => 'validateGroup',
+      'file' => 'validateFile',
+      'image' => 'validateImage',
+      'video' => 'validateVideo',
+      'audio' => 'validateAudio',
+      'select' => 'validateSelect',
+      'library' => 'validateLibrary',
+    );
+    // Cache for semantics used within this validation to avoid unneccessary
+    // json_decodes if a library is used multiple times.
+    $this->semanticsCache = array();
+  }
+
+  /**
+   * Validate the given value from content with the matching semantics
+   * object from semantics
+   *
+   * Function will recurse via external functions for container objects like
+   * 'list', 'group' and 'library'.
+   *
+   * @param object $value
+   *   Object to be verified. May be a string or an array. (normal or keyed)
+   * @param object $semantics
+   *   Semantics object from semantics.json for main library. Further
+   *   semantics will be loaded from H5PFramework if any libraries are
+   *   found within the value data.
+   */
+  public function validateBySemantics(&$value, $semantics) {
+    $fakebaseobject = (object) array(
+      'type' => 'group',
+      'fields' => $semantics,
+    );
+    $this->validateGroup($value, $fakebaseobject, FALSE);
+  }
+
+  /**
+   * Validate given text value against text semantics.
+   */
+  public function validateText(&$text, $semantics) {
+    if (isset($semantics->tags)) {
+      // Not testing for empty array allows us to use the 4 defaults without
+      // specifying them in semantics.
+      $tags = array_merge(array('div', 'span', 'p', 'br'), $semantics->tags);
+
+      // Add related tags for table etc.
+      if (in_array('table', $tags)) {
+        $tags = array_merge($tags, array('tr', 'td', 'th', 'colgroup', 'thead', 'tbody', 'tfoot'));
+      }
+      if (in_array('b', $tags) && ! in_array('strong', $tags)) {
+        $tags[] = 'strong';
+      }
+      if (in_array('i', $tags) && ! in_array('em', $tags)) {
+        $tags[] = 'em';
+      }
+      if (in_array('ul', $tags) || in_array('ol', $tags) && ! in_array('li', $tags)) {
+        $tags[] = 'li';
+      }
+      // Strip invalid HTML tags.
+      $text = $this->filter_xss($text, $tags);
+    }
+    else {
+      // Filter text to plain text.
+      $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8', FALSE);
+    }
+
+    // Check if string is within allowed length
+    if (isset($semantics->maxLength)) {
+      $text = mb_substr($text, 0, $semantics->maxLength);
+    }
+
+    // Check if string is according to optional regexp in semantics
+    if (isset($semantics->regexp)) {
+      $pattern = '|' . $semantics->regexp->pattern . '|';
+      $pattern .= isset($semantics->regexp->modifiers) ? $semantics->regexp->modifiers : '';
+      if (preg_match($pattern, $text) === 0) {
+        // Note: explicitly ignore return value FALSE, to avoid removing text
+        // if regexp is invalid...
+        $this->h5pF->setErrorMessage($this->h5pF->t('Provided string is not valid according to regexp in semantics.'));
+        $text = '';
+      }
+    }
+  }
+
+  /**
+   * Validates content files
+   *
+   * @param string $contentPath
+   *  The path containg content files to validate.
+   * @return boolean
+   *  TRUE if all files are valid
+   *  FALSE if one or more files fail validation. Error message should be set accordingly by validator.
+   */
+  public function validateContentFiles($contentPath, $isLibrary = FALSE) {
+    // Scan content directory for files, recurse into sub directories.
+    $files = array_diff(scandir($contentPath), array('.','..'));
+    $valid = TRUE;
+    $whitelist = $this->h5pF->getWhitelist($isLibrary, H5PCore::$defaultContentWhitelist, H5PCore::$defaultLibraryWhitelistExtras);
+
+    $wl_regex = '/\.(' . preg_replace('/ +/i', '|', preg_quote($whitelist)) . ')$/i';
+
+    foreach ($files as $file) {
+      $filePath = $contentPath . DIRECTORY_SEPARATOR . $file;
+      if (is_dir($filePath)) {
+        $valid = $this->validateContentFiles($filePath, $isLibrary) && $valid;
+      }
+      else {
+        // Snipped from drupal 6 "file_validate_extensions".  Using own code
+        // to avoid 1. creating a file-like object just to test for the known
+        // file name, 2. testing against a returned error array that could
+        // never be more than 1 element long anyway, 3. recreating the regex
+        // for every file.
+        if (!preg_match($wl_regex, mb_strtolower($file))) {
+          $this->h5pF->setErrorMessage($this->h5pF->t('File "%filename" not allowed. Only files with the following extensions are allowed: %files-allowed.', array('%filename' => $file, '%files-allowed' => $whitelist)), 'error');
+          $valid = FALSE;
+        }
+      }
+    }
+    return $valid;
+  }
+
+  private function bracketTags($tag) {
+    return '<'.$tag.'>';
+  }
+
+  /**
+   * Validate given value against number semantics
+   */
+  public function validateNumber(&$number, $semantics) {
+    // Validate that $number is indeed a number
+    if (!is_numeric($number)) {
+      $number = 0;
+    }
+    // Check if number is within valid bounds. Move within bounds if not.
+    if (isset($semantics->min) && $number < $semantics->min) {
+      $number = $semantics->min;
+    }
+    if (isset($semantics->max) && $number > $semantics->max) {
+      $number = $semantics->max;
+    }
+    // Check if number is within allowed bounds even if step value is set.
+    if (isset($semantics->step)) {
+      $testnumber = $number - (isset($semantics->min) ? $semantics->min : 0);
+      $rest = $testnumber % $semantics->step;
+      if ($rest !== 0) {
+        $number -= $rest;
+      }
+    }
+    // Check if number has proper number of decimals.
+    if (isset($semantics->decimals)) {
+      $number = round($number, $semantics->decimals);
+    }
+  }
+
+  /**
+   * Validate given value against boolean semantics
+   */
+  public function validateBoolean(&$bool, $semantics) {
+    if (!is_bool($bool)) {
+      $bool = FALSE;
+    }
+  }
+
+   /**
+   * Validate select values
+   */
+  public function validateSelect(&$select, $semantics) {
+    $strict = FALSE;
+    if (isset($semantics->options) && !empty($semantics->options)) {
+      // We have a strict set of options to choose from.
+      $strict = TRUE;
+      $options = array();
+      foreach ($semantics->options as $option) {
+        $options[$option->value] = TRUE;
+      }
+    }
+
+    if (isset($semantics->multiple) && $semantics->multiple) {
+      // Multichoice generates array of values. Test each one against valid
+      // options, if we are strict.  First make sure we are working on an
+      // array.
+      if (!is_array($select)) {
+        $select = array($select);
+      }
+
+      foreach ($select as $key => &$value) {
+        if ($strict && !isset($options[$value])) {
+          $this->h5pF->setErrorMessage($this->h5pF->t('Invalid selected option in multiselect.'));
+          unset($select[$key]);
+        }
+        else {
+          $select[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8', FALSE);
+        }
+      }
+    }
+    else {
+      // Single mode.  If we get an array in here, we chop off the first
+      // element and use that instead.
+      if (is_array($select)) {
+        $select = $select[0];
+      }
+
+      if ($strict && !isset($options[$select])) {
+        $this->h5pF->setErrorMessage($this->h5pF->t('Invalid selected option in select.'));
+        $select = $semantics->options[0]->value;
+      }
+      $select = htmlspecialchars($select, ENT_QUOTES, 'UTF-8', FALSE);
+    }
+  }
+
+  /**
+   * Validate given list value agains list semantics.
+   * Will recurse into validating each item in the list according to the type.
+   */
+  public function validateList(&$list, $semantics) {
+    $field = $semantics->field;
+    $function = $this->typeMap[$field->type];
+
+    // Check that list is not longer than allowed length. We do this before
+    // iterating to avoid unneccessary work.
+    if (isset($semantics->max)) {
+      array_splice($list, $semantics->max);
+    }
+
+    if (!is_array($list)) {
+      $list = array();
+    }
+
+    // Validate each element in list.
+    foreach ($list as $key => &$value) {
+      if (!is_int($key)) {
+        unset($list[$key]);
+        continue;
+      }
+      $this->$function($value, $field);
+    }
+  }
+
+  // Validate a filelike object, such as video, image, audio and file.
+  private function _validateFilelike(&$file, $semantics, $typevalidkeys = array()) {
+    // Make sure path and mime does not have any special chars
+    $file->path = htmlspecialchars($file->path, ENT_QUOTES, 'UTF-8', FALSE);
+    if (isset($file->mime)) {
+      $file->mime = htmlspecialchars($file->mime, ENT_QUOTES, 'UTF-8', FALSE);
+    }
+
+    // Remove attributes that should not exist, they may contain JSON escape
+    // code.
+    $validkeys = array_merge(array('path', 'mime'), $typevalidkeys);
+    if (isset($semantics->extraAttributes)) {
+      $validkeys = array_merge($validkeys, $semantics->extraAttributes);
+    }
+    $this->filterParams($file, $validkeys);
+  }
+
+  /**
+   * Validate given file data
+   */
+  public function validateFile(&$file, $semantics) {
+    $this->_validateFilelike($file, $semantics);
+  }
+
+  /**
+   * Validate given image data
+   */
+  public function validateImage(&$image, $semantics) {
+    $this->_validateFilelike($image, $semantics, array('width', 'height'));
+  }
+
+  /**
+   * Validate given video data
+   */
+  public function validateVideo(&$video, $semantics) {
+    foreach ($video as &$variant) {
+      $this->_validateFilelike($variant, $semantics, array('width', 'height'));
+    }
+  }
+
+  /**
+   * Validate given audio data
+   */
+  public function validateAudio(&$audio, $semantics) {
+    foreach ($audio as &$variant) {
+      $this->_validateFilelike($variant, $semantics);
+    }
+  }
+
+  /**
+   * Validate given group value against group semantics.
+   * Will recurse into validating each group member.
+   */
+  public function validateGroup(&$group, $semantics, $flatten = TRUE) {
+    // Groups with just one field are compressed in the editor to only output
+    // the child content. (Exemption for fake groups created by
+    // "validateBySemantics" above)
+    if (count($semantics->fields) == 1 && $flatten) {
+      $field = $semantics->fields[0];
+      $function = $this->typeMap[$field->type];
+      $this->$function($group, $field);
+    }
+    else {
+      foreach ($group as $key => &$value) {
+        // Find semantics for name=$key
+        $found = FALSE;
+        foreach ($semantics->fields as $field) {
+          if ($field->name == $key) {
+            $function = $this->typeMap[$field->type];
+            $found = TRUE;
+            break;
+          }
+        }
+        if ($found) {
+          if ($function) {
+            $this->$function($value, $field);
+          }
+          else {
+            // We have a field type in semantics for which we don't have a
+            // known validator.
+            $this->h5pF->setErrorMessage($this->h5pF->t('H5P internal error: unknown content type "@type" in semantics. Removing content!', array('@type' => $field->type)));
+            unset($group->$key);
+          }
+        }
+        else {
+          // If validator is not found, something exists in content that does
+          // not have a corresponding semantics field. Remove it.
+          $this->h5pF->setErrorMessage($this->h5pF->t('H5P internal error: no validator exists for @key', array('@key' => $key)));
+          unset($group->$key);
+        }
+      }
+    }
+    foreach ($semantics->fields as $field) {
+      if (!(isset($field->optional) && $field->optional)) {
+        // Check if field is in group.
+        if (! property_exists($group, $field->name)) {
+          $this->h5pF->setErrorMessage($this->h5pF->t('No value given for mandatory field ' . $field->name));
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate given library value against library semantics.
+   *
+   * Will recurse into validating the library's semantics too.
+   */
+  public function validateLibrary(&$value, $semantics) {
+    // Check if provided library is within allowed options
+    if (in_array($value->library, $semantics->options)) {
+      if (isset($this->semanticsCache[$value->library])) {
+        $librarySemantics = $this->semanticsCache[$value->library];
+      }
+      else {
+        $libspec = $this->h5pC->libraryFromString($value->library);
+        $librarySemantics = $this->h5pF->getLibrarySemantics($libspec['machineName'], $libspec['majorVersion'], $libspec['minorVersion']);
+        $this->semanticsCache[$value->library] = $librarySemantics;
+      }
+      $this->validateBySemantics($value->params, $librarySemantics);
+      $this->filterParams($value, array('library', 'params'));
+    }
+    else {
+      $this->h5pF->setErrorMessage($this->h5pF->t('Library used in content is not a valid library according to semantics'));
+      $value = new stdClass();
+    }
+  }
+
+  /**
+   * Check params for a whitelist of allowed properties
+   *
+   * @param array/object $params
+   * @param array $whitelist
+   */
+  public function filterParams(&$params, $whitelist) {
+    foreach ($params as $key => $value) {
+      if (!in_array($key, $whitelist)) {
+        unset($params->{$key});
+      }
+    }
+  }
+
+  // XSS filters copied from drupal 7 common.inc. Some modifications done to
+  // replace Drupal one-liner functions with corresponding flat PHP.
+
+  /**
+   * Filters HTML to prevent cross-site-scripting (XSS) vulnerabilities.
+   *
+   * Based on kses by Ulf Harnhammar, see http://sourceforge.net/projects/kses.
+   * For examples of various XSS attacks, see: http://ha.ckers.org/xss.html.
+   *
+   * This code does four things:
+   * - Removes characters and constructs that can trick browsers.
+   * - Makes sure all HTML entities are well-formed.
+   * - Makes sure all HTML tags and attributes are well-formed.
+   * - Makes sure no HTML tags contain URLs with a disallowed protocol (e.g.
+   *   javascript:).
+   *
+   * @param $string
+   *   The string with raw HTML in it. It will be stripped of everything that can
+   *   cause an XSS attack.
+   * @param $allowed_tags
+   *   An array of allowed tags.
+   *
+   * @return
+   *   An XSS safe version of $string, or an empty string if $string is not
+   *   valid UTF-8.
+   *
+   * @ingroup sanitization
+   */
+  private function filter_xss($string, $allowed_tags = array('a', 'em', 'strong', 'cite', 'blockquote', 'code', 'ul', 'ol', 'li', 'dl', 'dt', 'dd')) {
+    if (strlen($string) == 0) {
+      return $string;
+    }
+    // Only operate on valid UTF-8 strings. This is necessary to prevent cross
+    // site scripting issues on Internet Explorer 6. (Line copied from
+    // drupal_validate_utf8)
+    if (preg_match('/^./us', $string) != 1) {
+      return '';
+    }
+
+    // Store the text format.
+    $this->_filter_xss_split($allowed_tags, TRUE);
+    // Remove NULL characters (ignored by some browsers).
+    $string = str_replace(chr(0), '', $string);
+    // Remove Netscape 4 JS entities.
+    $string = preg_replace('%&\s*\{[^}]*(\}\s*;?|$)%', '', $string);
+
+    // Defuse all HTML entities.
+    $string = str_replace('&', '&amp;', $string);
+    // Change back only well-formed entities in our whitelist:
+    // Decimal numeric entities.
+    $string = preg_replace('/&amp;#([0-9]+;)/', '&#\1', $string);
+    // Hexadecimal numeric entities.
+    $string = preg_replace('/&amp;#[Xx]0*((?:[0-9A-Fa-f]{2})+;)/', '&#x\1', $string);
+    // Named entities.
+    $string = preg_replace('/&amp;([A-Za-z][A-Za-z0-9]*;)/', '&\1', $string);
+    return preg_replace_callback('%
+      (
+      <(?=[^a-zA-Z!/])  # a lone <
+      |                 # or
+      <!--.*?-->        # a comment
+      |                 # or
+      <[^>]*(>|$)       # a string that starts with a <, up until the > or the end of the string
+      |                 # or
+      >                 # just a >
+      )%x', array($this, '_filter_xss_split'), $string);
+  }
+
+  /**
+   * Processes an HTML tag.
+   *
+   * @param $m
+   *   An array with various meaning depending on the value of $store.
+   *   If $store is TRUE then the array contains the allowed tags.
+   *   If $store is FALSE then the array has one element, the HTML tag to process.
+   * @param $store
+   *   Whether to store $m.
+   *
+   * @return
+   *   If the element isn't allowed, an empty string. Otherwise, the cleaned up
+   *   version of the HTML element.
+   */
+  private function _filter_xss_split($m, $store = FALSE) {
+    static $allowed_html;
+
+    if ($store) {
+      $allowed_html = array_flip($m);
+      return;
+    }
+
+    $string = $m[1];
+
+    if (substr($string, 0, 1) != '<') {
+      // We matched a lone ">" character.
+      return '&gt;';
+    }
+    elseif (strlen($string) == 1) {
+      // We matched a lone "<" character.
+      return '&lt;';
+    }
+
+    if (!preg_match('%^<\s*(/\s*)?([a-zA-Z0-9]+)([^>]*)>?|(<!--.*?-->)$%', $string, $matches)) {
+      // Seriously malformed.
+      return '';
+    }
+
+    $slash = trim($matches[1]);
+    $elem = &$matches[2];
+    $attrlist = &$matches[3];
+    $comment = &$matches[4];
+
+    if ($comment) {
+      $elem = '!--';
+    }
+
+    if (!isset($allowed_html[strtolower($elem)])) {
+      // Disallowed HTML element.
+      return '';
+    }
+
+    if ($comment) {
+      return $comment;
+    }
+
+    if ($slash != '') {
+      return "</$elem>";
+    }
+
+    // Is there a closing XHTML slash at the end of the attributes?
+    $attrlist = preg_replace('%(\s?)/\s*$%', '\1', $attrlist, -1, $count);
+    $xhtml_slash = $count ? ' /' : '';
+
+    // Clean up attributes.
+    $attr2 = implode(' ', $this->_filter_xss_attributes($attrlist));
+    $attr2 = preg_replace('/[<>]/', '', $attr2);
+    $attr2 = strlen($attr2) ? ' ' . $attr2 : '';
+
+    return "<$elem$attr2$xhtml_slash>";
+  }
+
+  /**
+   * Processes a string of HTML attributes.
+   *
+   * @return
+   *   Cleaned up version of the HTML attributes.
+   */
+  private function _filter_xss_attributes($attr) {
+    $attrarr = array();
+    $mode = 0;
+    $attrname = '';
+
+    while (strlen($attr) != 0) {
+      // Was the last operation successful?
+      $working = 0;
+
+      switch ($mode) {
+        case 0:
+          // Attribute name, href for instance.
+          if (preg_match('/^([-a-zA-Z]+)/', $attr, $match)) {
+            $attrname = strtolower($match[1]);
+            $skip = ($attrname == 'style' || substr($attrname, 0, 2) == 'on');
+            $working = $mode = 1;
+            $attr = preg_replace('/^[-a-zA-Z]+/', '', $attr);
+          }
+          break;
+
+        case 1:
+          // Equals sign or valueless ("selected").
+          if (preg_match('/^\s*=\s*/', $attr)) {
+            $working = 1; $mode = 2;
+            $attr = preg_replace('/^\s*=\s*/', '', $attr);
+            break;
+          }
+
+          if (preg_match('/^\s+/', $attr)) {
+            $working = 1; $mode = 0;
+            if (!$skip) {
+              $attrarr[] = $attrname;
+            }
+            $attr = preg_replace('/^\s+/', '', $attr);
+          }
+          break;
+
+        case 2:
+          // Attribute value, a URL after href= for instance.
+          if (preg_match('/^"([^"]*)"(\s+|$)/', $attr, $match)) {
+            $thisval = $this->filter_xss_bad_protocol($match[1]);
+
+            if (!$skip) {
+              $attrarr[] = "$attrname=\"$thisval\"";
+            }
+            $working = 1;
+            $mode = 0;
+            $attr = preg_replace('/^"[^"]*"(\s+|$)/', '', $attr);
+            break;
+          }
+
+          if (preg_match("/^'([^']*)'(\s+|$)/", $attr, $match)) {
+            $thisval = $this->filter_xss_bad_protocol($match[1]);
+
+            if (!$skip) {
+              $attrarr[] = "$attrname='$thisval'";
+            }
+            $working = 1; $mode = 0;
+            $attr = preg_replace("/^'[^']*'(\s+|$)/", '', $attr);
+            break;
+          }
+
+          if (preg_match("%^([^\s\"']+)(\s+|$)%", $attr, $match)) {
+            $thisval = $this->filter_xss_bad_protocol($match[1]);
+
+            if (!$skip) {
+              $attrarr[] = "$attrname=\"$thisval\"";
+            }
+            $working = 1; $mode = 0;
+            $attr = preg_replace("%^[^\s\"']+(\s+|$)%", '', $attr);
+          }
+          break;
+      }
+
+      if ($working == 0) {
+        // Not well formed; remove and try again.
+        $attr = preg_replace('/
+          ^
+          (
+          "[^"]*("|$)     # - a string that starts with a double quote, up until the next double quote or the end of the string
+          |               # or
+          \'[^\']*(\'|$)| # - a string that starts with a quote, up until the next quote or the end of the string
+          |               # or
+          \S              # - a non-whitespace character
+          )*              # any number of the above three
+          \s*             # any number of whitespaces
+          /x', '', $attr);
+        $mode = 0;
+      }
+    }
+
+    // The attribute list ends with a valueless attribute like "selected".
+    if ($mode == 1 && !$skip) {
+      $attrarr[] = $attrname;
+    }
+    return $attrarr;
+  }
+
+  /**
+   * Processes an HTML attribute value and strips dangerous protocols from URLs.
+   *
+   * @param $string
+   *   The string with the attribute value.
+   * @param $decode
+   *   (deprecated) Whether to decode entities in the $string. Set to FALSE if the
+   *   $string is in plain text, TRUE otherwise. Defaults to TRUE. This parameter
+   *   is deprecated and will be removed in Drupal 8. To process a plain-text URI,
+   *   call _strip_dangerous_protocols() or check_url() instead.
+   *
+   * @return
+   *   Cleaned up and HTML-escaped version of $string.
+   */
+  private function filter_xss_bad_protocol($string, $decode = TRUE) {
+    // Get the plain text representation of the attribute value (i.e. its meaning).
+    // @todo Remove the $decode parameter in Drupal 8, and always assume an HTML
+    //   string that needs decoding.
+    if ($decode) {
+      $string = html_entity_decode($string, ENT_QUOTES, 'UTF-8');
+    }
+    return htmlspecialchars($this->_strip_dangerous_protocols($string), ENT_QUOTES, 'UTF-8', FALSE);
+  }
+
+  /**
+   * Strips dangerous protocols (e.g. 'javascript:') from a URI.
+   *
+   * This function must be called for all URIs within user-entered input prior
+   * to being output to an HTML attribute value. It is often called as part of
+   * check_url() or filter_xss(), but those functions return an HTML-encoded
+   * string, so this function can be called independently when the output needs to
+   * be a plain-text string for passing to t(), l(), drupal_attributes(), or
+   * another function that will call check_plain() separately.
+   *
+   * @param $uri
+   *   A plain-text URI that might contain dangerous protocols.
+   *
+   * @return
+   *   A plain-text URI stripped of dangerous protocols. As with all plain-text
+   *   strings, this return value must not be output to an HTML page without
+   *   check_plain() being called on it. However, it can be passed to functions
+   *   expecting plain-text strings.
+   *
+   * @see check_url()
+   */
+  private function _strip_dangerous_protocols($uri) {
+    static $allowed_protocols;
+
+    if (!isset($allowed_protocols)) {
+      $allowed_protocols = array_flip(array('ftp', 'http', 'https', 'mailto'));
+    }
+
+    // Iteratively remove any invalid protocol found.
+    do {
+      $before = $uri;
+      $colonpos = strpos($uri, ':');
+      if ($colonpos > 0) {
+        // We found a colon, possibly a protocol. Verify.
+        $protocol = substr($uri, 0, $colonpos);
+        // If a colon is preceded by a slash, question mark or hash, it cannot
+        // possibly be part of the URL scheme. This must be a relative URL, which
+        // inherits the (safe) protocol of the base document.
+        if (preg_match('![/?#]!', $protocol)) {
+          break;
+        }
+        // Check if this is a disallowed protocol. Per RFC2616, section 3.2.3
+        // (URI Comparison) scheme comparison must be case-insensitive.
+        if (!isset($allowed_protocols[strtolower($protocol)])) {
+          $uri = substr($uri, $colonpos + 1);
+        }
+      }
+    } while ($before != $uri);
+
+    return $uri;
+  }
+
 }
 ?>

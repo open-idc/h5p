@@ -12,7 +12,6 @@ ns.init = function () {
   ns.$ = H5P.jQuery;
   ns.basePath = Drupal.settings.basePath +  Drupal.settings.h5peditor.modulePath + '/h5peditor/';
   ns.contentId = Drupal.settings.h5peditor.nodeVersionId;
-  ns.filesPath = H5P.getContentPath(ns.contentId);
   ns.fileIcon = Drupal.settings.h5peditor.fileIcon;
   ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
 

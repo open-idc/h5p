@@ -16,7 +16,18 @@ H5P.init = function () {
       H5P.fullScreenBrowserPrefix = '';
     }
     else if (document.documentElement.webkitRequestFullScreen && navigator.userAgent.indexOf('Android') === -1) { // Skip Android
-      H5P.fullScreenBrowserPrefix = 'webkit';
+      // Safari has stopped working as of v6.0.3.  (Specifying keyboard input
+      // makes webkitRequestFullScreen silently fail.)  The following code
+      // assumes that the Safari developers figure out how to properly handle
+      // their own extension before reaching version 6.0.10.  Until then, we
+      // treat Safari as an old IE.  (Please note: Just looking for Safari in
+      // the UA string will also match Chrome.)
+      if (navigator.userAgent.match(/Version\/6\.0\.[3-9].*Safari/)) {
+        H5P.fullScreenBrowserPrefix = undefined;
+      }
+      else {
+        H5P.fullScreenBrowserPrefix = 'webkit';
+      }
     }
     else if (document.documentElement.mozRequestFullScreen) {
       H5P.fullScreenBrowserPrefix = 'moz';
@@ -102,12 +113,35 @@ H5P.fullScreen = function ($el, obj) {
 };
 
 /**
- * Find the path to the content files base on the id of the content.
+ * Find the path to the content files based on the id of the content
+ *
+ * Also identifies and returns absolute paths
+ *
+ * @param string path
+ *  Absolute path to a file, or relative path to a file in the content folder
+ * @param contentId
+ *  Id of the content requesting a path
  */
-H5P.getContentPath = function(contentId) {
-  // TODO: Rewrite or remove... H5P.getContentPath = H5PIntegration.getContentPath would probably work f.i.
+H5P.getPath = function (path, contentId) {
+  if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
+    return path;
+  }
+
+  return H5PIntegration.getContentPath(contentId) + path;
+};
+
+/**
+ * THIS FUNCTION IS DEPRECATED, USE getPath INSTEAD
+ *
+ *  Find the path to the content files folder based on the id of the content
+ *
+ *  @param contentId
+ *  Id of the content requesting a path
+ */
+H5P.getContentPath = function (contentId) {
   return H5PIntegration.getContentPath(contentId);
 };
+
 
 //
 // Used from libraries to construct instances of other libraries' objects by
@@ -170,6 +204,16 @@ H5P.libraryFromString = function (library) {
   else {
     return false;
   }
+};
+
+/**
+ * Get the path to the library
+ *
+ * @param {string} machineName The machine name of the library
+ * @returns {string} The full path to the library
+ */
+H5P.getLibraryPath = function(machineName) {
+  return H5PIntegration.getLibraryPath(machineName);
 };
 
 /**
@@ -262,6 +306,14 @@ if(!Array.prototype.indexOf) {
       }
     }
     return -1;
+  };
+}
+
+// Need to define trim() since this is not available on older IEs,
+// and trim is used in several libs
+if(String.prototype.trim === undefined) {
+  String.prototype.trim = function () {
+    return H5P.trim(this);
   };
 }
 
