@@ -1,14 +1,34 @@
 var H5P = H5P || {};
 
+if (H5P.getPath === undefined) {
+  /**
+   * Find the path to the content files based on the id of the content
+   *
+   * Also identifies and returns absolute paths
+   *
+   * @param {String} path Absolute path to a file, or relative path to a file in the content folder
+   * @param {Number} contentId Identifier of the content requesting the path
+   * @returns {String} The path to use.
+   */
+  H5P.getPath = function (path, contentId) {
+    if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
+      return path;
+    }
+
+    return H5PIntegration.getContentPath(contentId) + path;
+  };
+}
+
 /**
  * Constructor.
  *
- * @param {object} params Options for this library.
- * @param {string} contentPath The path to our content folder.
+ * @param {Object} params Options for this library.
+ * @param {Number} id Content identifier
+ * @returns {undefined}
  */
-H5P.Audio = function (params, contentPath) {
+H5P.Audio = function (params, id) {
   this.params = params;
-  this.contentPath = contentPath;
+  this.contentId = id;
 };
 
 /**
@@ -26,13 +46,13 @@ H5P.Audio.prototype.attach = function ($wrapper) {
   }
 
   // Add supported source files.
-  if (this.params.files !== undefined) {
+  if (this.params.files !== undefined && this.params.files instanceof Object) {
     for (var i = 0; i < this.params.files.length; i++) {
       var file = this.params.files[i];
 
       if (audio.canPlayType(file.mime)) {
         var source = document.createElement('source');
-        source.src = this.contentPath + file.path;
+        source.src = H5P.getPath(file.path, this.contentId);
         source.type = file.mime;
         audio.appendChild(source);
       }
@@ -69,11 +89,11 @@ H5P.Audio.prototype.attach = function ($wrapper) {
  * @param {jQuery} $wrapper Our dear container.
  */
 H5P.Audio.prototype.attachFlash = function ($wrapper) {
-  if (this.params.files !== undefined) {
+  if (this.params.files !== undefined && this.params.files instanceof Object) {
     for (var i = 0; i < this.params.files.length; i++) {
       var file = this.params.files[i];
       if (file.mime === 'audio/mpeg' || file.mime === 'audio/mp3') {
-        var audioSource = this.contentPath + file.path;
+        var audioSource = H5P.getPath(file.path, this.contentId);
         break;
       }
     }

@@ -1,5 +1,24 @@
 var H5P = H5P || {};
 
+if (H5P.getPath === undefined) {
+  /**
+   * Find the path to the content files based on the id of the content
+   *
+   * Also identifies and returns absolute paths
+   *
+   * @param {String} path Absolute path to a file, or relative path to a file in the content folder
+   * @param {Number} contentId Identifier of the content requesting the path
+   * @returns {String} The path to use.
+   */
+  H5P.getPath = function (path, contentId) {
+    if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
+      return path;
+    }
+
+    return H5PIntegration.getContentPath(contentId) + path;
+  };
+}
+
 H5P.Flashcards = function (options, contentId) {
   var $panel;
   var $target;
@@ -17,8 +36,6 @@ H5P.Flashcards = function (options, contentId) {
   if ( !(this instanceof H5P.Flashcards) ){
     return new H5P.Flashcards(options, contentId);
   }
-
-  var cp = H5P.getContentPath(contentId);
 
   var getScore = function(){
     var score = 0;
@@ -167,7 +184,7 @@ H5P.Flashcards = function (options, contentId) {
            that.options.cards[i].image.height = question.innerWidth() / (that.options.cards[i].image.width / that.options.cards[i].image.height);
         }
 
-        images[i] = addElement(question, null, 'flashcard-image', { text: '<img '+width+'src="'+cp+that.options.cards[i].image.path+'"/>' });
+        images[i] = addElement(question, null, 'flashcard-image', { text: '<img '+width+'src="'+H5P.getPath(that.options.cards[i].image.path, contentId)+'"/>' });
         if(that.options.cards[i].image.height > max_height) {
           max_height = that.options.cards[i].image.height;
         }
@@ -193,9 +210,9 @@ H5P.Flashcards = function (options, contentId) {
         addElement(input_container, null, 'flashcard-input', { text: '<input id="'+$panel.attr('id')+'-input-'+i+'" class="h5p-input" type="text"/>' });
       }
     }
-    
+
     for(var i=0; i < that.options.cards.length; i++) {
-      if(images[i]) {  
+      if(images[i]) {
         images[i].css('height', max_height);
         var imageh = max_height - that.options.cards[i].image.height;
         if(imageh) {

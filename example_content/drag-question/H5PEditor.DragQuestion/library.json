@@ -2,7 +2,7 @@
   "title": "Drag Question Editor",
   "majorVersion": 1,
   "minorVersion": 0,
-  "patchVersion": 0,
+  "patchVersion": 3,
   "runnable": 0,
   "author": "Amendor AS",
   "machineName": "H5PEditor.DragQuestion",
@@ -20,6 +20,11 @@
     }
   ],
   "preloadedDependencies": [
+    {
+      "machineName": "H5P.API",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
     {
       "machineName": "H5PEditor.Wizard",
       "majorVersion": 1,

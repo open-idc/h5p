@@ -1,175 +1,108 @@
 {
   "interactiveVideo": {
     "video": {
+      "copyright": "<p>Tony Shawcross explains Creative Commons licensing</p><p>This movie is part of the collection: <a href=\"http://archive.org/details/denveropenmedia\">Denver Open Media</a></p><p>Creative Commons license: <a href=\"http://creativecommons.org/licenses/by-nc-sa/3.0/us/\">Attribution-Noncommercial-Share Alike 3.0 United States</a></p>",
       "files": [
         {
-          "path": "http://vjs.zencdn.net/v/oceans.mp4",
-          "mime": "video/mp4"
+          "path": "video.webm",
+          "mime": "video/webm"
         },
         {
-          "path": "http://vjs.zencdn.net/v/oceans.webm",
-          "mime": "video/webm"
+          "path": "video.mp4",
+          "mime": "video/mp4"
         }
-      ],
-      "copyright": "<p>No copyright information available.</p>"
+      ]
     },
     "interactions": [
       {
         "action": {
           "library": "H5P.Text 1.0",
           "params": {
-            "text": "<div>This is a MÅSE!\n<hr>\n<ul>\n\t<li>Måses like fish</li>\n\t<li>and bones!</li>\n</ul>\n</div>\n"
+            "text": "<div>A \"non commercial outlet\" may be loosely described as a place that distributes something without charging money.</div>\n"
           }
         },
-        "x": 41.18115062444983,
-        "y": 22.03050696331522,
-        "ctc": false,
+        "x": 91.91468253968254,
+        "y": 83.31349236624582,
+        "duration": {
+          "from": 7,
+          "to": 15
+        },
+        "label": "\"Non commercial outlet\"",
+        "pause": false
+      },
+      {
+        "action": {
+          "library": "H5P.Text 1.0",
+          "params": {
+            "text": "<div>Creative Commons may be used for any intellectual property like images, texts, animations etc.</div>\n"
+          }
+        },
+        "x": 93.99801587301587,
+        "y": 91.05158760434105,
+        "duration": {
+          "from": 25,
+          "to": 33
+        },
+        "label": "Only videos?",
+        "pause": false
+      },
+      {
+        "action": {
+          "library": "H5P.MultiChoice 1.0",
+          "params": {
+            "singleAnswer": false,
+            "singlePoint": false,
+            "randomAnswers": true,
+            "answers": [
+              {
+                "text": "Share alike\n",
+                "correct": true
+              },
+              {
+                "text": "Price\n",
+                "correct": false
+              },
+              {
+                "correct": true,
+                "text": "Attribution\n"
+              }
+            ],
+            "UI": {
+              "showSolutionButton": "Show solution",
+              "correctText": "Correct!",
+              "almostText": "Almost!",
+              "wrongText": "Wrong!"
+            },
+            "question": "<div>Which of these are typical Creative Commons terms?</div>\n"
+          }
+        },
+        "x": 33.9781746031746,
+        "y": 47.74801617576963,
+        "duration": {
+          "from": 57,
+          "to": 57
+        },
         "pause": true,
-        "duration": {
-          "from": 2,
-          "to": 2
-        }
-      },
-      {
-        "action": {
-          "library": "H5P.Image 1.0",
-          "params": {
-            "file": {
-              "path": "cm.gif",
-              "mime": "image/gif"
-            },
-            "alt": "Thinking...",
-            "title": "MONSTER!!!"
-          }
-        },
-        "x": 90.46655420806087,
-        "y": 82.96045865413647,
-        "ctc": false,
-        "pause": false,
-        "duration": {
-          "from": 0,
-          "to": 10
-        }
-      },
-      {
-        "action": {
-          "library": "H5P.MultiChoice 1.0",
-          "params": {
-            "singleAnswer": true,
-            "singlePoint": true,
-            "answers": [
-              {
-                "text": "0,75cm"
-              },
-              {
-                "correct": true,
-                "text": "2cm"
-              },
-              {
-                "text": "5cm"
-              }
-            ],
-            "UI": {
-              "showSolutionButton": "Show solution",
-              "correctText": "Correct!",
-              "almostText": "Almost!",
-              "wrongText": "Wrong!"
-            },
-            "question": "<div>Hvor tykk bør en biff som skal grilles være</div>\n"
-          }
-        },
-        "x": 18.470196177062377,
-        "y": 11.794999716938406,
-        "ctc": true,
-        "pause": false,
-        "duration": {
-          "from": 10,
-          "to": 30
-        }
-      },
-      {
-        "action": {
-          "library": "H5P.Text 1.0",
-          "params": {
-            "text": "<div>Måsestup!</div>\n"
-          }
-        },
-        "x": 47.83702213279678,
-        "y": 45.036986714975846,
-        "duration": {
-          "from": 9,
-          "to": 9
-        }
-      },
-      {
-        "action": {
-          "library": "H5P.Text 1.0",
-          "params": {
-            "text": "<div>Hai!</div>\n"
-          }
-        },
-        "x": 52.96780684104628,
-        "y": 52.76645531400967,
-        "duration": {
-          "from": 35,
-          "to": 35
-        },
-        "pause": true
-      },
-      {
-        "action": {
-          "library": "H5P.Text 1.0",
-          "params": {
-            "text": "<div>Haimat:)</div>\n\n<div>NOMNOM</div>\n"
-          }
-        },
-        "x": 88.38028169014085,
-        "y": 36.82442632850242,
-        "duration": {
-          "from": 37,
-          "to": 37
-        },
-        "pause": true
-      },
-      {
-        "action": {
-          "library": "H5P.MultiChoice 1.0",
-          "params": {
-            "singleAnswer": true,
-            "singlePoint": true,
-            "answers": [
-              {
-                "text": "ca. 2000\n"
-              },
-              {
-                "text": "500\n"
-              },
-              {
-                "correct": true,
-                "text": "ca. 1000\n"
-              }
-            ],
-            "UI": {
-              "showSolutionButton": "Show solution",
-              "correctText": "Correct!",
-              "almostText": "Almost!",
-              "wrongText": "Wrong!"
-            },
-            "question": "<div>Hvor mange fisker så du?</div>\n"
-          }
-        },
-        "x": 86.16700201207244,
-        "y": 14.360658212560388,
-        "duration": {
-          "from": 45,
-          "to": 46
-        }
+        "label": "Test: Creative Commons terms"
       }
     ],
     "summary": {
       "library": "H5P.Summary 1.0",
       "params": {
-        "summaries": [],
+        "summaries": [
+          [
+            "Traditional copyright restrict the sharing of your content",
+            "Traditional copyright allow others to share your content as long as they don't get paid."
+          ],
+          [
+            "You still have the copyright after releasing content under Creative Commons license",
+            "If you release content under a Creative Commons license you may no longer release the same content under a different license."
+          ],
+          [
+            "Creative commons allow others to use your video as long as they follow the stipulations you set forward",
+            "Creative Commons allow others to use your videos as long as the don't use them for commercial purposes"
+          ]
+        ],
         "response": {
           "scorePerfect": {
             "title": "PERFECT!",
@@ -188,7 +121,8 @@
             "message": "You need to work more on this"
           }
         },
-        "summary": "You got @score of @total statements (@percent %) correct."
+        "summary": "You got @score of @total statements (@percent %) correct.",
+        "intro": "Choose the correct statement."
       }
     }
   }

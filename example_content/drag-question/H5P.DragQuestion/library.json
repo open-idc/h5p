@@ -3,7 +3,7 @@
   "description": "Question type",
   "majorVersion": 1,
   "minorVersion": 0,
-  "patchVersion": 3,
+  "patchVersion": 8,
   "runnable": 1,
   "author": "Amendor AS",
   "license": "cc-by-sa",
@@ -14,6 +14,11 @@
     }
   ],
   "preloadedDependencies": [
+    {
+      "machineName": "H5P.API",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
     {
       "machineName": "H5P.Text",
       "majorVersion": 1,

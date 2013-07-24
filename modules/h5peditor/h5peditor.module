@@ -88,9 +88,17 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
     '#default_value' => isset($node->main_library) ? h5peditor_main_library_to_string($node, TRUE) : (isset($node->h5p_library) ? $node->h5p_library : 0),
   );
 
+  // Get validated JSON for editor too.
+  if (isset($node->json_content)) {
+    $h5p_params = h5p_get_filtered_json_content($node);
+  }
+  else {
+    $h5p_params = '{}';
+  }
+
   $form['h5p_params'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($node->json_content) ? $node->json_content : '{}',
+    '#default_value' => $h5p_params,
   );
 
   $form['#submit'][] = 'h5peditor_h5p_content_node_form_submit';
@@ -138,11 +146,8 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   }
   drupal_add_js($language_file);
 
-  $content_id = isset($node->json_content) ? h5p_get_content_id($node) : 0;
-
-  drupal_add_js(array(
+  $settings = array(
     'h5peditor' => array(
-      'nodeVersionId' => $content_id,
       'filesPath' => base_path() . file_directory_path(),
       'fileIcon' => array(
         'path' => base_path() . $h5peditor_module_path . '/h5peditor/images/binary-file.png',
@@ -152,7 +157,13 @@ function h5peditor_h5p_content_node_form_after_build($form) {
       'ajaxPath' => url('h5peditor/'),
       'modulePath' => $h5peditor_module_path,
     ),
-  ), 'setting');
+  );
+
+  if (isset($node->json_content)) {
+    $settings['h5peditor']['nodeVersionId'] = h5p_get_content_id($node);
+  }
+
+  drupal_add_js($settings, 'setting');
 
   return $form;
 }
@@ -264,7 +275,7 @@ function h5peditor_files_callback() {
     $storage->addFile($file);
   }
 
-  header('Content-type: application/json');
+  header('Content-type: text/html');
   print $file->getResult();
 }
 

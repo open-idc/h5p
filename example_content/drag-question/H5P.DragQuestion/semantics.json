@@ -2,8 +2,8 @@
   {
     "name": "scoreShow",
     "type": "text",
-    "label": "Score show button",
-    "default": "Score show",
+    "label": "Show score button",
+    "default": "Show score",
     "common": true
   },
   {
@@ -24,11 +24,6 @@
         "label": "Settings",
         "fields": [
           {
-            "name": "title",
-            "type": "text",
-            "label": "Title"
-          },
-          {
             "name": "background",
             "type": "image",
             "label": "Background image",
@@ -40,7 +35,7 @@
             "type": "group",
             "widget": "dimensions",
             "label": "Task size",
-            "description": "Specifiy how large (in px) the play area should be.",
+            "description": "Specify how large (in px) the play area should be.",
             "default": {
               "width": 640,
               "height": 320,
@@ -48,11 +43,11 @@
             },
             "fields": [
               {
-                "name": "x",
+                "name": "width",
                 "type": "number"
               },
               {
-                "name": "y",
+                "name": "height",
                 "type": "number"
               }
             ]
@@ -108,7 +103,8 @@
                   "name": "dropZones",
                   "type": "select",
                   "widget": "dynamicCheckboxes",
-                  "label": "Select drop zones"
+                  "label": "Select drop zones",
+                  "multiple": true
                 }
               ]
             }
@@ -156,7 +152,8 @@
                   "name": "correctElements",
                   "type": "select",
                   "widget": "dynamicCheckboxes",
-                  "label": "Select correct elements"
+                  "label": "Select correct elements",
+                  "multiple": false
                 }
               ]
             }

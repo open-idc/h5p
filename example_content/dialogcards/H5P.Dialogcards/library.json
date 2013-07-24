@@ -3,7 +3,7 @@
   "description": "void",
   "majorVersion": 1,
   "minorVersion": 0,
-  "patchVersion": 15,
+  "patchVersion": 16,
   "runnable": 1,
   "author": "Amendor AS",
   "license": "cc-by-sa",
@@ -13,5 +13,12 @@
   ],
   "preloadedJs": [
     {"path": "js/dialogcards.js"}
+  ],
+  "editorDependencies": [
+    {
+      "machineName": "H5PEditor.VerticalTabs",
+      "majorVersion": 1,
+      "minorVersion": 0
+    }
   ]
 }

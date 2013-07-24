@@ -12,9 +12,9 @@
   {
     "name": "cards",
     "type": "list",
+    "widget": "verticalTabs",
     "label": "Cards",
     "entity": "card",
-    "max": 50,
     "field": {
       "name": "card",
       "type": "group",

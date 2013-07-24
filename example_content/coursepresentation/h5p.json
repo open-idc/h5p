@@ -38,6 +38,31 @@
       "machineName": "H5P.ContinuousText",
       "majorVersion": 1,
       "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.ExportableTextArea",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "downloadify",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "blob",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "filesaver",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "swfobject",
+      "majorVersion": 1,
+      "minorVersion": 0
     }
   ],
   "mainLibrary": "H5P.CoursePresentation",

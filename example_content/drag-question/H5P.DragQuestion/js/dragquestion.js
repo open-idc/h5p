@@ -1,21 +1,51 @@
 var H5P = H5P || {};
 
+if (H5P.getPath === undefined) {
+  /**
+   * Find the path to the content files based on the id of the content
+   *
+   * Also identifies and returns absolute paths
+   *
+   * @param {String} path Absolute path to a file, or relative path to a file in the content folder
+   * @param {Number} contentId Identifier of the content requesting the path
+   * @returns {String} The path to use.
+   */
+  H5P.getPath = function (path, contentId) {
+    if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
+      return path;
+    }
+
+    return H5PIntegration.getContentPath(contentId) + path;
+  };
+}
+
 H5P.DragQuestion = function (options, contentId) {
 
   var target;
   var $ = H5P.jQuery;
   var score = 0;
+  var $container;
 
   if ( !(this instanceof H5P.DragQuestion) ){
     return new H5P.DragQuestion(options, contentId);
   }
 
-  options = $.extend({}, {
-    scoreShow: 'Score show',
-    correct: 'Solution'
+  options = $.extend(true, {}, {
+    scoreShow: 'Show score',
+    correct: 'Solution',
+    question: {
+      settings: {
+        size: {
+          width: 640,
+          height: 320
+        }
+      },
+      task: {
+        elements: [],
+        dropZones: []
+      }
+    }
   }, options);
-
-  var cp = H5P.getContentPath(contentId);
 
   var allAnswered = function() {
     var dropzones = 0;
@@ -41,8 +71,8 @@ H5P.DragQuestion = function (options, contentId) {
     target.find('.dropzone').each(function (idx, el) {
       var $dropzone = $(el),
         dragIndex = $dropzone.data('content'),
-        corrects = $dropzone.data('correctElements');
-      if (dragIndex && (corrects.contains('' + (dragIndex - 1)))) {
+        correctElement = $dropzone.data('correctElements');
+      if (dragIndex && (correctElement === '' + (dragIndex - 1))) {
         score++;
       }
     });
@@ -55,7 +85,7 @@ H5P.DragQuestion = function (options, contentId) {
     target.find('.dropzone').each(function (idx, el) {
       count++;
       var $dropzone = $(el),
-        corrects = $dropzone.data('correctElements');
+        correctElement = $dropzone.data('correctElements');
       var dz = options.question.task.dropZones[idx];
       // If labels are hidden, show them now.
       if (dz.showLabel === undefined || dz.showLabel === false) {
@@ -64,9 +94,10 @@ H5P.DragQuestion = function (options, contentId) {
       }
 
       // Show correct/wrong style for dropzone.
-      var draggableId = $(el).data('content'),
+      var draggableId = $dropzone.data('content'),
         $currentDraggable = $('.draggable-' + draggableId);
-      if ($dropzone.data('content') && corrects.contains('' + (draggableId - 1))) {
+      if ((draggableId && (correctElement === '' + (draggableId - 1)))
+        || (correctElement === '' && !draggableId)) {
         $dropzone.addClass('dropzone-correct-answer').removeClass('dropzone-wrong-answer');
         $currentDraggable.addClass('draggable-correct').removeClass('draggable-wrong');
         score++;
@@ -75,9 +106,9 @@ H5P.DragQuestion = function (options, contentId) {
         $dropzone.addClass('dropzone-wrong-answer').removeClass('dropzone-correct-answer');
         $currentDraggable.addClass('draggable-wrong').removeClass('draggable-correct');
         // Show correct answer below. Only use first listed correct answer.
-        if (corrects.length) {
+        if (correctElement !== '') {
           var text,
-          correct = options.question.task.elements[corrects[0]];
+            correct = options.question.task.elements[correctElement];
           if (correct.type.library.lastIndexOf('H5P.Text', 0) === 0) {
             text = correct.type.params.text;
           } else if (correct.type.library.lastIndexOf('H5P.Image', 0) === 0) {
@@ -90,29 +121,43 @@ H5P.DragQuestion = function (options, contentId) {
     //target.find('.score').html(options.scoreText.replace('@score', score).replace('@total', count));
   };
 
+  var resize = function () {
+    var width = $container.width();
+    $container.find('.dragndrop').css({
+      height: width * (options.question.settings.size.height / options.question.settings.size.width),
+      fontSize: parseInt($container.css('fontSize')) * (width / options.question.settings.size.width)
+    });
+  };
+
   var attach = function(board) {
     score = 0;
     var $ = H5P.jQuery;
     var dropzones = options.question.task.dropZones;
     var elements = options.question.task.elements;
 
-    target = typeof(board) === "string" ? $("#" + board) : $(board);
-    target.addClass('h5p-dragquestion');
+    $container = target = (typeof(board) === "string" ? $("#" + board) : $(board));
+    $container.addClass('h5p-dragquestion');
 
-    var width = target.width();
-    var height = width * (options.question.settings.size.height / options.question.settings.size.width);
-    var fontSize = parseInt(target.css('fontSize')) * (width / options.question.settings.size.width);
-    var $dragndrop = $('<div class="dragndrop" style="height:' +  height + 'px;font-size:' + fontSize + 'px"></div>');
+    var styles = (options.question.settings.background !== undefined ? 'style="background-image:url(\'' + H5P.getPath(options.question.settings.background.path, contentId) + '\')"' : '');
+    var $dragndrop = $('<div class="dragndrop"'+ styles + '></div>');
 
-    if (options.question.settings.title) {
-      target.html('<div class="dragndrop-title">' + options.question.settings.title + '</div>');
+    $container.append($dragndrop);
+
+    // Convert element position data to percentage of the main dragndrop
+    // container.  Draggable and animate only create pixel positioned data.
+    function percentagePosition($el) {
+      var $dnd = $container.find('.dragndrop');
+      var positioning = {
+        top: (parseInt($el.css('top')) * 100 / $dnd.innerHeight()) + '%',
+        left: (parseInt($el.css('left')) * 100 / $dnd.innerWidth()) + '%'
+      };
+      $el.css(positioning);
     }
-    target.append($dragndrop);
 
     function addElement(id, className, el, z) {
       var $el = $('<div class="'+className+'">' + (el.text !== undefined ? el.text : '') + '</div>');
       if (el.type !== undefined) {
-        var elementInstance = new (H5P.classFromName(el.type.library.split(' ')[0]))(el.type.params, cp);
+        var elementInstance = new (H5P.classFromName(el.type.library.split(' ')[0]))(el.type.params, contentId);
         elementInstance.attach($el);
       }
       $dragndrop.append($el);
@@ -158,13 +203,15 @@ H5P.DragQuestion = function (options, contentId) {
 
     var buttons = Array();
 
-    if($('.qs-footer').length) {
+    // If not in QuestionSet, BoardGame or Course Presentation, add button.
+    if (-1 === $.inArray($container.parents('.h5p-content').data('class'),
+                         ['H5P.QuestionSet', 'H5P.BoardGame', 'H5P.CoursePresentation'])) {
+      buttons.push({
+        text: options.scoreShow,
+        click: showSolutions,
+        className: 'button h5p-show-solution'
+      });
     }
-    else {
-      // Add show score button when not boardgame
-      var buttons = Array( { text: options.scoreShow, click: showSolutions, className: 'button show-score' });
-    }
-
 
     // Add buttons
     for (var i = 0; i < buttons.length; i++) {
@@ -202,12 +249,11 @@ H5P.DragQuestion = function (options, contentId) {
         $draggable.data('content', dropzoneId).css('z-index', '1');
 
         // Move drag to center of drop
-        // Since we're using percent we need to account for css problems with margins and paddings...
-        var cssErrorRate = $draggable.parent().parent().width() / $draggable.parent().width();
         $draggable.css({
           top: Math.round(($dropzone.outerHeight() - $draggable.outerHeight()) / 2) + parseInt($dropzone.css('top'), 10),
-          left: Math.round(($dropzone.outerWidth() - $draggable.outerWidth()) / 2) + parseInt($dropzone.css('left'), 10) * cssErrorRate
+          left: Math.round(($dropzone.outerWidth() - $draggable.outerWidth()) / 2) + parseInt($dropzone.css('left'), 10)
         });
+        percentagePosition($draggable);
       }
     }
 
@@ -217,6 +263,10 @@ H5P.DragQuestion = function (options, contentId) {
         activeClass: 'dropzone-active',
         fit: 'intersect',
         accept: function (draggable) {
+          if (target.find(draggable).length === 0) {
+            return false;
+          }
+
           var dropZones = $(draggable).data('dropzones');
           var id = $(el).data('id') - 1;
 
@@ -228,48 +278,57 @@ H5P.DragQuestion = function (options, contentId) {
 
           return false;
         },
-        out: function(event, ui) {
+        out: function (event, ui) {
           // TODO: somthing
         },
-        drop: function(event, ui) {
-          $(this).removeClass('dropzone-wrong-answer');
+        drop: function (event, ui) {
+          var $dropzone = $(this),
+            currentDraggableId = $dropzone.data('content'),
+            newDraggableId = ui.draggable.data('id');
+
+          $dropzone.removeClass('dropzone-wrong-answer');
 
           // If this drag was in a drop area and this drag is not the same
-          if($(this).data('content') && ui.draggable.data('id') !== $(this).data('content')) {
+          if (currentDraggableId && newDraggableId !== currentDraggableId) {
             // Remove underlaying drag (move to initial position)
-            var id = $(this).data('content');
-            var $currentDraggable = target.find('.draggable-' + id);
+            var $currentDraggable = target.find('.draggable-' + currentDraggableId);
             $currentDraggable.data('content', null)
             .animate({
               left: $currentDraggable.data('x') + '%',
               top:  $currentDraggable.data('y') + '%'
-            });
+            })
+            .removeClass('h5p-connected');
           }
 
-//          // Was object in another drop?
-//          if(ui.draggable.data('content')) {
-//            // Remove object from previous drop
-//            $('.'+ui.draggable.data('content')) = null;
-//          }
+         // Was object in another drop?
+         if (ui.draggable.data('content')) {
+           // Remove object from previous drop
+           $('.dropzone-'+ui.draggable.data('content')).data('content', null);
+         }
 
           // Set attributes
-          $(this).data('content', ui.draggable.data('id'));
-          ui.draggable.data('content', $(this).data('id'));
+          $dropzone.data('content', newDraggableId);
+          ui.draggable.data('content', $dropzone.data('id'));
           ui.draggable.css('z-index', '1');
 
           // Move drag to center of drop
           ui.draggable.animate({
-            top: Math.round(($(this).outerHeight() - ui.draggable.outerHeight()) / 2) + parseInt($(this).css('top')),
-            left: Math.round(($(this).outerWidth() - ui.draggable.outerWidth()) / 2) + parseInt($(this).css('left'))
+            top: Math.round(($dropzone.outerHeight() - ui.draggable.outerHeight()) / 2) + parseInt($dropzone.css('top')),
+            left: Math.round(($dropzone.outerWidth() - ui.draggable.outerWidth()) / 2) + parseInt($dropzone.css('left'))
+          }, {
+            complete: function() {
+              H5P.jQuery(this).addClass('h5p-connected');
+              percentagePosition(H5P.jQuery(this));
+            }
           });
 
           // Store this answer
           if (options.userAnswers === undefined) {
             options.userAnswers = {};
           }
-          options.userAnswers[$(this).data('id')] = ui.draggable.data('id');
+          options.userAnswers[$dropzone.data('id')] = newDraggableId;
 
-          if(allAnswered()){
+          if (allAnswered()){
             $(returnObject).trigger('h5pQuestionAnswered');
           }
           // Store the new score
@@ -284,12 +343,23 @@ H5P.DragQuestion = function (options, contentId) {
         revert: 'invalid',
         start: function(event, ui) {
           ui.helper.css('z-index', '2');
+          H5P.jQuery(this).removeClass('h5p-connected');
         },
         stop: function(event, ui) {
-          // Todo something
+          var $this = H5P.jQuery(this)
+          percentagePosition($this);
+
+          if ($this.data('content') !== undefined) {
+            $this.addClass('h5p-connected');
+          }
         }
       });
     });
+
+    if (returnObject.preventResize === false) {
+      H5P.$window.bind('resize', resize);
+    }
+    resize();
 
     return this;
   };
@@ -306,7 +376,9 @@ H5P.DragQuestion = function (options, contentId) {
     getMaxScore: function() {
       return getMaxScore();
     },
-    showSolutions: showSolutions
+    showSolutions: showSolutions,
+    resize: resize,
+    preventResize: false
   };
 
   return returnObject;

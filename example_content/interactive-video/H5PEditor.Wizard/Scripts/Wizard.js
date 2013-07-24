@@ -42,7 +42,7 @@ H5PEditor.widgets.wizard = H5PEditor.Wizard = (function ($) {
     var that = this;
 
     this.$item = $(this.createHtml()).appendTo($wrapper);
-    this.$errors = this.$item.children('.errors');
+    this.$errors = this.$item.children('.h5p-errors');
     var $panesWrapper = $('<div class="h5peditor-panes"></div>').insertBefore(this.$errors);
 
     if (this.params === undefined) {

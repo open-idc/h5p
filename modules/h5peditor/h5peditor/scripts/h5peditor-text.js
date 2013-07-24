@@ -28,7 +28,7 @@ ns.Text.prototype.appendTo = function ($wrapper) {
 
   this.$item = ns.$(this.createHtml()).appendTo($wrapper);
   this.$input = this.$item.children('label').children('input');
-  this.$errors = this.$item.children('.errors');
+  this.$errors = this.$item.children('.h5p-errors');
 
   this.$input.change(function () {
     // Validate
@@ -37,7 +37,7 @@ ns.Text.prototype.appendTo = function ($wrapper) {
     if (value !== false) {
       // Set param
       that.value = value;
-      that.setValue(that.field, value);
+      that.setValue(that.field, ns.htmlspecialchars(value));
 
       for (var i = 0; i < that.changeCallbacks.length; i++) {
         that.changeCallbacks[i](value);

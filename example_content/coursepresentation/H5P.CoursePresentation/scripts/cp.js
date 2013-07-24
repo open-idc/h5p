@@ -1,5 +1,24 @@
 var H5P = H5P || {};
 
+if (H5P.getPath === undefined) {
+  /**
+   * Find the path to the content files based on the id of the content
+   *
+   * Also identifies and returns absolute paths
+   *
+   * @param {String} path Absolute path to a file, or relative path to a file in the content folder
+   * @param {Number} contentId Identifier of the content requesting the path
+   * @returns {String} The path to use.
+   */
+  H5P.getPath = function (path, contentId) {
+    if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
+      return path;
+    }
+
+    return H5PIntegration.getContentPath(contentId) + path;
+  };
+}
+
 /**
  * Constructor.
  *
@@ -11,10 +30,15 @@ var H5P = H5P || {};
  */
 H5P.CoursePresentation = function (params, id, editor) {
   this.slides = params.slides;
+  this.contentId = id;
+  // elementInstances holds the element instances
+  this.elementInstances = [];
   this.slidesWithSolutions = [];
+  this.hasAnswerElements = false;
   this.editor = editor;
 
   this.l10n = H5P.jQuery.extend({}, {
+    goHome: 'Go to first slide',
     scrollLeft: 'Hold to scroll left',
     jumpToSlide: 'Jump to slide',
     scrollRight: 'Hold to scroll right',
@@ -26,14 +50,15 @@ H5P.CoursePresentation = function (params, id, editor) {
     badScore: 'You need to work more on this. You only got @percent correct...',
     total: 'TOTAL',
     showSolutions: 'Show solutions',
+    exportAnswers: 'Export text',
     close: 'Close',
     title: 'Title',
     author: 'Author',
-    lisence: 'Lisence',
+    source: 'Source',
+    license: 'License',
     infoButtonTitle: 'View metadata',
     solutionsButtonTitle: 'View solution'
   }, params.l10n !== undefined ? params.l10n : {});
-  this.contentPath = H5P.getContentPath(id);
 };
 
 /**
@@ -47,15 +72,22 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
 
   var html =
           '<div class="h5p-wrapper" tabindex="0">' +
-          '  <div class="h5p-presentation-wrapper">' +
-          '    <div class="h5p-slides-wrapper h5p-keyword-slides"></div>' +
-          '    <div class="h5p-keywords-wrapper"></div>' +
+          '  <div class="h5p-box-wrapper">' +
+          '    <div class="h5p-presentation-wrapper">' +
+          '      <div class="h5p-keywords-wrapper"></div>' +
+          '      <div class="h5p-slides-wrapper h5p-keyword-slides"></div>' +
+          '    </div>' +
+          '    <div class="h5p-progressbar"><div class="h5p-completed"></div></div>' +
           '  </div>' +
-          '    <a href="#" class="h5p-show-solutions" style="display: none;">' + this.l10n.showSolutions + '</a>' +
+          '  <div class="h5p-action-bar">' +
+          ((typeof that.editor === 'undefined' && typeof H5P.ExportableTextArea !== 'undefined') ? H5P.ExportableTextArea.Exporter.createExportButton(this.l10n.exportAnswers) : '') +
+          '    <a href="#" class="h5p-show-solutions">' + this.l10n.showSolutions + '</a>' +
+          '  </div>' +
           '  <div class="h5p-slideination">' +
-          '    <a href="#" class="h5p-scroll-left" title="' + this.l10n.scrollLeft + '">&lt;</a>' +
+          '    <a href="#" class="h5p-go-home" title="' + this.l10n.goHome + '"></a>' +
+          '    <a href="#" class="h5p-scroll-left" title="' + this.l10n.scrollLeft + '"></a>' +
           '    <ol></ol>' +
-          '    <a href="#" class="h5p-scroll-right" title="' + this.l10n.scrollRight + '">&gt;</a>' +
+          '    <a href="#" class="h5p-scroll-right" title="' + this.l10n.scrollRight + '"></a>' +
           '  </div>' +
           '</div>';
 
@@ -75,16 +107,21 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
     }
   });
 
+  // Get intended base width from CSS.
   this.width = parseInt(this.$wrapper.css('width'));
   this.height = parseInt(this.$wrapper.css('height'));
   this.ratio = this.width / this.height;
-  this.fontSize = parseInt(this.$wrapper.css('fontSize'));
+  // Intended base font size cannot be read from CSS, as it might be modified
+  // by mobile browsers already. (The Android native browser does this.)
+  this.fontSize = 16;
 
-  this.$presentationWrapper = this.$wrapper.children('.h5p-presentation-wrapper');
-  this.$slidesWrapper = this.$presentationWrapper.children('.h5p-slides-wrapper');
-  this.$keywordsWrapper = this.$presentationWrapper.children('.h5p-keywords-wrapper');
+  this.$boxWrapper = this.$wrapper.children('.h5p-box-wrapper');
+  var $presentationWrapper = this.$boxWrapper.children('.h5p-presentation-wrapper');
+  this.$slidesWrapper = $presentationWrapper.children('.h5p-slides-wrapper');
+  this.$keywordsWrapper = $presentationWrapper.children('.h5p-keywords-wrapper');
   this.$slideination = this.$wrapper.children('.h5p-slideination');
-  var $solutionsButton = this.$wrapper.children('.h5p-show-solutions');
+  var $solutionsButton = $('.h5p-show-solutions', this.$wrapper);
+  var $exportAnswerButton = $('.h5p-eta-export', this.$wrapper);
 
   // Detemine if there are any keywords.
   for (var i = 0; i < this.slides.length; i++) {
@@ -99,10 +136,29 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
     this.$keywordsWrapper.remove();
     this.$slidesWrapper.removeClass('h5p-keyword-slides');
   }
+
+  /* TODO: Remove this once we're able to update excisting data.
+   * TODO: Recalculate x values for all elements in the database where keyword list is enabled
+   *
+   * Explanation:
+   *
+   * In the beginning each slide had empty space below the keywords list. Because of this
+   * the origin of the slide wasn't the upper left corner of the slide, but the upper left
+   * corner of the keywords list.
+   *
+   * We decided not to fix this because we didn't have the time to test an altered solution.
+   * Instead we tried to make sure that the data we saved was recalculated so that we could
+   * move the origin later without changing the data. Our recalculation of the width was done
+   * correctly, but not the recalculation of x.
+   *
+   * Now the origin is in the right place, but we still need to recalculate our data because of
+   * our previous mistake in recalculating x. All excisting data for content with the keywords list
+   * enabled has x-values that are incorrect.
+   */
   this.slideWidthRatio = (100 - this.keywordsWidth) / 100; // Since the slides have empty space under the keywords list.
 
   // Needed for images etc. to get correct aspect ratio.
-  this.slideRatio = (this.$presentationWrapper.width() / this.$presentationWrapper.height());
+  this.slideRatio = ($presentationWrapper.width() / $presentationWrapper.height());
 
   var keywords = '';
   var slideinationSlides = '';
@@ -128,6 +184,8 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
     slideinationSlides += H5P.CoursePresentation.createSlideinationSlide(i + 1, this.l10n.jumpToSlide, first);
   }
 
+  this.$progressbar = this.$boxWrapper.children('.h5p-progressbar').children().css('width', ((1 / i) * 100) + '%');
+
   // Initialize keywords
   if (keywords) {
     this.$keywords = this.$keywordsWrapper.html('<ol class="h5p-keywords-ol">' + keywords + '</ol>').children('ol');
@@ -148,38 +206,65 @@ H5P.CoursePresentation.prototype.attach = function ($container) {
     that.showSolutions();
     event.preventDefault();
   });
-  if (this.slides.length === 1 && this.editor === undefined && this.slidesWithSolutions.length) {
-    $solutionsButton.show();
+  $exportAnswerButton.click(function(event) {
+    H5P.ExportableTextArea.Exporter.run();
+    event.preventDefault();
+  });
+  if (this.slides.length === 1 && this.editor === undefined) {
+    if(this.slidesWithSolutions.length) {
+      $solutionsButton.show();
+    }
+    if(this.hasAnswerElements) {
+      $exportAnswerButton.show();
+    }
   }
 
   H5P.$window.resize(function() {
     that.resize(false);
   });
   this.resize(false);
-
-  // In view mode, make continuous text smaller if it
-  // does not fit inside container
-  if (this.editor === undefined) {
-    H5P.jQuery('.h5p-ct > .ct', $container).each(function (){
-      var percent = 100;
-      var $ct = $(this);
-      var parentHeight = $ct.parent().height();
-
-      while ($ct.height() > parentHeight) {
-        percent = percent - 2;
-        $ct.css({
-          fontSize: percent + '%',
-          lineHeight: (percent + 65) + '%'
-        });
-
-        if (percent < 50) {
-          break; // Just in case. Makes no sense going further.
-        }
-      }
-    });
-  }
 };
 
+/**
+ * Makes continuous text smaller if it does not fit inside its container.
+ * Only works in view mode.
+ *
+ * @returns {undefined}
+ */
+H5P.CoursePresentation.prototype.fitCT = function () {
+  if (this.editor !== undefined) {
+    return;
+  }
+
+  this.$current.find('.h5p-ct').each(function () {
+    var percent = 100;
+    var $parent = $(this);
+    var $ct = $parent.children('.ct').css({
+      fontSize: '',
+      lineHeight: ''
+    });
+    var parentHeight = $parent.height();
+
+    while ($ct.height() > parentHeight) {
+      percent--;
+      $ct.css({
+        fontSize: percent + '%',
+        lineHeight: (percent + 65) + '%'
+      });
+
+      if (percent < 0) {
+        break; // Just in case.
+      }
+    }
+  });
+};
+
+/**
+ * Resize handling.
+ *
+ * @param {Boolean} fullscreen
+ * @returns {undefined}
+ */
 H5P.CoursePresentation.prototype.resize = function (fullscreen) {
   var fullscreenOn = H5P.$body.hasClass('h5p-fullscreen') || H5P.$body.hasClass('h5p-semi-fullscreen');
   if (!fullscreenOn) {
@@ -187,8 +272,8 @@ H5P.CoursePresentation.prototype.resize = function (fullscreen) {
     this.$container.css('height', '99999px');
   }
 
-  var width = this.$container.width();
-  var height = this.$container.height();
+  var width = this.$container.innerWidth();
+  var height = this.$container.innerHeight();
 
   if (width / height >= this.ratio) {
     // Wider
@@ -206,7 +291,7 @@ H5P.CoursePresentation.prototype.resize = function (fullscreen) {
     fontSize: (this.fontSize * (width / this.width)) + 'px'
   });
 
-  this.swipeThreshold = (width / this.width) * 100; // Default swipe threshold is 100px.
+  this.swipeThreshold = (width / this.width) * 50; // Default swipe threshold is 50px.
 
   if (fullscreen) {
     this.$wrapper.focus();
@@ -214,6 +299,18 @@ H5P.CoursePresentation.prototype.resize = function (fullscreen) {
   if (!fullscreenOn) {
     this.$container.css('height', '');
   }
+
+  // Resize elements
+  var elementInstances = this.elementInstances[this.$current.index()];
+  if (elementInstances !== undefined) {
+    for (var i = 0; i < elementInstances.length; i++) {
+      if (elementInstances[i].resize !== undefined) {
+        elementInstances[i].resize();
+      }
+    }
+  }
+
+  this.fitCT();
 };
 
 /**
@@ -245,23 +342,35 @@ H5P.CoursePresentation.prototype.addElement = function (element, $slide, index) 
     index = $slide.index();
   }
 
-  var elementInstance = new (H5P.classFromName(element.action.library.split(' ')[0]))(element.action.params, this.contentPath);
+  var elementInstance = new (H5P.classFromName(element.action.library.split(' ')[0]))(element.action.params, this.contentId);
+  if (elementInstance.preventResize !== undefined) {
+    elementInstance.preventResize = true;
+  }
 
-  var $elementContainer = H5P.jQuery('<div class="h5p-element" style="left: ' + (element.x + this.keywordsWidth) + '%; top: ' + element.y + '%; width: ' + (element.width * this.slideWidthRatio) + '%; height: ' + element.height + '%;"></div>').appendTo($slide);
+  var $elementContainer = H5P.jQuery('<div class="h5p-element" style="left: ' + element.x / this.slideWidthRatio + '%; top: ' + element.y + '%; width: ' + element.width + '%; height: ' + element.height + '%;"></div>').appendTo($slide);
   elementInstance.attach($elementContainer);
 
+  if (this.elementInstances[index] === undefined) {
+    this.elementInstances[index] = [];
+  }
+  this.elementInstances[index].push(elementInstance);
+
   if (this.editor !== undefined) {
-    // If we're in the H5P editor, allow it to manipulate the elements
-    this.editor.processElement(element, $elementContainer, index);
+    // If we're in the H5P editor, allow it to manipulate the elementInstances
+    this.editor.processElement(element, $elementContainer, index, elementInstance);
   }
   else {
     if (element.solution) {
       this.addElementSolutionButton(element, elementInstance, $elementContainer);
     }
-    var info = this.getElementInfo(element);
+    var info = this.getElementInfo(element.action.params);
     if (info) {
       this.addElementInfoButton(info, $elementContainer);
     }
+
+    /* When in view mode, we need to know if there are any answer elements,
+     * so that we can display the export answers button on the last slide */
+    this.hasAnswerElements = this.hasAnswerElements || elementInstance.exportAnswers !== undefined;
   }
 
   if (this.checkForSolutions(elementInstance)) {
@@ -300,12 +409,12 @@ H5P.CoursePresentation.prototype.addElementInfoButton = function (info, $element
  *  info as html string if info is found
  */
 H5P.CoursePresentation.prototype.getElementInfo = function (elementParams) {
-  var infoKeys = ['title', 'author', 'lisence'];
+  var infoKeys = ['title', 'author', 'source', 'license'];
   var listContent = '';
-  if (elementParams.metadata !== undefined) {
+  if (elementParams.copyright !== undefined) {
     for (var i = 0; i < infoKeys.length; i++) {
-      var info = elementParams.metadata[infoKeys[i]];
-      if (info !== undefined && info.length > 0) {
+      var info = elementParams.copyright[infoKeys[i]];
+      if (info !== undefined && info.length !== 0 && !(infoKeys[i] === 'license' && info === 'U')) {
         listContent += '<dt>' + this.l10n[infoKeys[i]] + ':</dt><dd>' + info + '</dd>';
       }
     }
@@ -448,13 +557,31 @@ H5P.CoursePresentation.prototype.initKeyEvents = function () {
 H5P.CoursePresentation.prototype.initTouchEvents = function () {
   var that = this;
   var startX, startY, lastX, prevX, nextX, scroll;
+  var transform = function (value) {
+    return {
+      '-webkit-transform': value,
+      '-moz-transform': value,
+      '-ms-transform': value,
+      'transform': value
+    };
+  };
+  var reset = transform('');
+  var getTranslateX = function ($element) {
+    var prefixes = ['', '-webkit-', '-moz-', '-ms-'];
+    for (var i = 0; i < prefixes.length; i++) {
+      var matrix = $element.css(prefixes[i] + 'transform');
+      if (matrix !== undefined) {
+        return parseInt(matrix.match(/\d+/g)[4]);
+      }
+    }
+  };
 
   this.$slidesWrapper.bind('touchstart', function (event) {
     // Set start positions
     lastX = startX = event.originalEvent.touches[0].pageX;
     startY = event.originalEvent.touches[0].pageY;
-    prevX = parseInt(that.$current.addClass('h5p-touch-move').prev().addClass('h5p-touch-move').css('left'));
-    nextX = parseInt(that.$current.next().addClass('h5p-touch-move').css('left'));
+    prevX = getTranslateX(that.$current.addClass('h5p-touch-move').prev().addClass('h5p-touch-move'));
+    nextX = getTranslateX(that.$current.next().addClass('h5p-touch-move'));
 
     scroll = null;
 
@@ -479,17 +606,17 @@ H5P.CoursePresentation.prototype.initTouchEvents = function () {
 
     if (movedX < 0) {
       // Move previous slide
-      that.$current.next().css('left', '');
-      that.$current.prev().css('left', prevX - movedX);
+      that.$current.next().css(reset);
+      that.$current.prev().css(transform('translateX(' + (prevX - movedX) + 'px'));
     }
     else {
       // Move next slide
-      that.$current.prev().css('left', '');
-      that.$current.next().css('left', nextX - movedX);
+      that.$current.prev().css(reset);
+      that.$current.next().css(transform('translateX(' + (nextX - movedX) + 'px)'));
     }
 
     // Move current slide
-    that.$current.css('left', -movedX);
+    that.$current.css(transform('translateX(' + (-movedX) + 'px)'));
 
   }).bind('touchend', function () {
     if (!scroll) {
@@ -500,7 +627,7 @@ H5P.CoursePresentation.prototype.initTouchEvents = function () {
       }
     }
     // Reset.
-    that.$slidesWrapper.children().css('left', '').removeClass('h5p-touch-move');
+    that.$slidesWrapper.children().css(reset).removeClass('h5p-touch-move');
   });
 };
 
@@ -514,6 +641,7 @@ H5P.CoursePresentation.prototype.initTouchEvents = function () {
 H5P.CoursePresentation.prototype.initSlideination = function ($slideination, slideinationSlides) {
   var that = this;
   var $ol = $slideination.children('ol');
+  var $home = $slideination.children('.h5p-go-home');
   var $left = $slideination.children('.h5p-scroll-left');
   var $right = $slideination.children('.h5p-scroll-right');
   var timer;
@@ -568,6 +696,11 @@ H5P.CoursePresentation.prototype.initSlideination = function ($slideination, sli
     }, 1);
   };
 
+  var goHome = function (event) {
+    event.preventDefault();
+    that.jumpToSlide(0);
+  };
+
   var stopScroll = function () {
     clearInterval(timer);
     H5P.$body.unbind('mouseup', stopScroll).unbind('mouseleave', stopScroll).unbind('touchend', stopScroll);
@@ -579,6 +712,9 @@ H5P.CoursePresentation.prototype.initSlideination = function ($slideination, sli
 
   // Scroll slide selector to the right
   $right.click(disableClick).mousedown(scrollRight).bind('touchstart', scrollRight);
+
+  // Goto first slide
+  $home.click(disableClick).mousedown(goHome).bind('touchstart', goHome);
 
   toggleScroll();
 };
@@ -636,7 +772,12 @@ H5P.CoursePresentation.prototype.jumpToSlide = function (slideNumber, noScroll) 
   setTimeout(function () {
     // Play animations
     $old.removeClass('h5p-current');
-    $slides.css('left', '').removeClass('h5p-touch-move').removeClass('h5p-previous');
+    $slides.css({
+      '-webkit-transform': '',
+      '-moz-transform': '',
+      '-ms-transform': '',
+      'transform': ''
+    }).removeClass('h5p-touch-move').removeClass('h5p-previous');
     $prevs.addClass('h5p-previous');
     that.$current.addClass('h5p-current');
   }, 1);
@@ -656,11 +797,19 @@ H5P.CoursePresentation.prototype.jumpToSlide = function (slideNumber, noScroll) 
     }
   }
 
+  // Update progress.
+  this.$progressbar.css('width', (((slideNumber + 1) / $slides.length) * 100) + '%');
+
   this.jumpSlideination(slideNumber, noScroll);
 
-  // Show show solutions button on last slide
-  if (slideNumber === this.slides.length - 1 && this.editor === undefined && this.slidesWithSolutions.length) {
-    H5P.jQuery('.h5p-show-solutions', this.$container).show();
+  // Show show solutions button and export answers on last slide
+  if (slideNumber === this.slides.length - 1 && this.editor === undefined) {
+    if(this.slidesWithSolutions.length) {
+      H5P.jQuery('.h5p-show-solutions', this.$container).show();
+    }
+    if(this.hasAnswerElements) {
+      H5P.jQuery('.h5p-eta-export', this.$container).show();
+    }
   }
 
   if (this.editor !== undefined) {
@@ -671,6 +820,8 @@ H5P.CoursePresentation.prototype.jumpToSlide = function (slideNumber, noScroll) 
     }
   }
 
+  this.resize(false);
+  this.fitCT();
   return true;
 };
 

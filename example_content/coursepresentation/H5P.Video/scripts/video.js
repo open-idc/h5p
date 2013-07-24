@@ -1,14 +1,34 @@
 var H5P = H5P || {};
 
+if (H5P.getPath === undefined) {
+  /**
+   * Find the path to the content files based on the id of the content
+   *
+   * Also identifies and returns absolute paths
+   *
+   * @param {String} path Absolute path to a file, or relative path to a file in the content folder
+   * @param {Number} contentId Identifier of the content requesting the path
+   * @returns {String} The path to use.
+   */
+  H5P.getPath = function (path, contentId) {
+    if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
+      return path;
+    }
+
+    return H5PIntegration.getContentPath(contentId) + path;
+  };
+}
+
 /**
  * Constructor.
  *
- * @param {object} params Options for this library.
- * @param {string} contentPath The path to our content folder.
+ * @param {Object} params Options for this library.
+ * @param {Number} id Content identifier
+ * @returns {undefined}
  */
-H5P.Video = function (params, contentPath) {
+H5P.Video = function (params, id) {
   this.params = params;
-  this.contentPath = contentPath;
+  this.contentId = id;
 };
 
 // For android specific stuff.
@@ -20,7 +40,6 @@ H5P.Video.android = navigator.userAgent.indexOf('Android') !== -1;
  * @param {jQuery} $wrapper Our poor container.
  */
 H5P.Video.prototype.attach = function ($wrapper) {
-//  this.attachFlash($wrapper);return;
   var that = this;
 
   // Check if browser supports video.
@@ -32,13 +51,13 @@ H5P.Video.prototype.attach = function ($wrapper) {
   }
 
   // Add supported source files.
-  if (this.params.files !== undefined) {
+  if (this.params.files !== undefined && this.params.files instanceof Object) {
     for (var i = 0; i < this.params.files.length; i++) {
       var file = this.params.files[i];
 
       if (video.canPlayType(file.mime)) {
         var source = document.createElement('source');
-        source.src = (file.path.substr(0, 7) === 'http://' ? '' : this.contentPath) + file.path;
+        source.src = H5P.getPath(file.path, this.contentId);
         source.type = file.mime;
         video.appendChild(source);
       }
@@ -71,6 +90,10 @@ H5P.Video.prototype.attach = function ($wrapper) {
     }
   }
 
+  video.addEventListener('play', function () {
+    H5P.jQuery('.h5p-video-start-overlay', $wrapper).hide();
+  }, false);
+
   if (this.errorCallback !== undefined) {
     video.addEventListener('error', this.errorCallback, false);
   }
@@ -85,6 +108,14 @@ H5P.Video.prototype.attach = function ($wrapper) {
   }
 
   $wrapper.html(video);
+
+  if (!this.params.controls) {
+  H5P.jQuery('<div class="h5p-video-start-overlay"></div>')
+    .click(function () {
+      video.play();
+    })
+    .appendTo($wrapper);
+  }
   this.video = video;
 };
 
@@ -97,11 +128,11 @@ H5P.Video.prototype.attach = function ($wrapper) {
 H5P.Video.prototype.attachFlash = function ($wrapper) {
   $wrapper = H5P.jQuery('<div class="h5p-video-flash" style="width:100%;height:100%"></div>').appendTo($wrapper);
 
-  if (this.params.files !== undefined) {
+  if (this.params.files !== undefined && this.params.files instanceof Object) {
     for (var i = 0; i < this.params.files.length; i++) {
       var file = this.params.files[i];
       if (file.mime === 'video/mp4') {
-        var videoSource = (file.path.substr(0, 7) === 'http://' ? '' : window.location.protocol + '//' + window.location.host + this.contentPath) + file.path;
+        var videoSource = (file.path.substr(0, 7) === 'http://' ? file.path : window.location.protocol + '//' + window.location.host + H5P.getPath(file.path, this.contentId));
         break;
       }
     }
@@ -285,8 +316,8 @@ H5P.Video.prototype.resize = function () {
 
     $object.css('height', $object.width() * (clip.metaData.height / clip.metaData.width));
   }
-  else {
+  else if (this.video !== undefined) {
     var $video = H5P.jQuery(this.video);
-    $video.css('height', $video.width() * (this.video.videoHeight / this.video.videoWidth));
+    $video.parent().css('height', $video.width() * (this.video.videoHeight / this.video.videoWidth));
   }
 };

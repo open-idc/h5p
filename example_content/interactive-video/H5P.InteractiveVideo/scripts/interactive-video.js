@@ -16,7 +16,7 @@ H5P.InteractiveVideo = (function ($) {
    */
   function C(params, id) {
     this.params = params.interactiveVideo;
-    this.contentPath = H5P.getContentPath(id);
+    this.contentId = id;
     this.visibleInteractions = [];
 
     this.l10n = {
@@ -63,7 +63,11 @@ H5P.InteractiveVideo = (function ($) {
 
     $container.addClass('h5p-interactive-video').html('<div class="h5p-video-wrapper"></div><div class="h5p-controls"></div><div class="h5p-dialog-wrapper h5p-ie-transparent-background h5p-hidden"><div class="h5p-dialog"><div class="h5p-dialog-inner"></div><a href="#" class="h5p-dialog-hide">&#xf00d;</a></div></div>');
 
-    this.fontSize = parseInt($container.css('fontSize')); // How large the interactions should be in px.
+    // Font size is now hardcoded, since some browsers (At least Android
+    // native browser) will have scaled down the original CSS font size by the
+    // time this is run. (It turned out to have become 13px) Hard coding it
+    // makes it be consistent with the intended size set in CSS.
+    this.fontSize = 16;
     this.width = parseInt($container.css('width'));
     $container.css('width', '100%');
 
@@ -109,7 +113,7 @@ H5P.InteractiveVideo = (function ($) {
       controls: this.justVideo,
       autoplay: false,
       fitToWrapper: false
-    }, this.contentPath);
+    }, this.contentId);
 
     if (this.justVideo) {
       this.video.attach($wrapper);
@@ -181,12 +185,6 @@ H5P.InteractiveVideo = (function ($) {
   C.prototype.loaded = function () {
     var that = this;
 
-    this.resizeEvent = function() {
-      that.resize();
-    };
-    H5P.$window.resize(this.resizeEvent);
-    this.resize();
-
     if (this.video.flowplayer !== undefined) {
       this.video.flowplayer.getPlugin('play').hide();
     }
@@ -203,6 +201,12 @@ H5P.InteractiveVideo = (function ($) {
       marginRight: this.$controls.children('.h5p-controls-right').width()
     });
     this.controls.$currentTime.html(C.humanizeTime(0));
+
+    this.resizeEvent = function() {
+      that.resize();
+    };
+    H5P.$window.resize(this.resizeEvent);
+    this.resize();
 
     duration = Math.floor(duration);
 
@@ -396,7 +400,8 @@ H5P.InteractiveVideo = (function ($) {
       width = this.$container.width();
     }
 
-    this.$container.css('fontSize', (this.fontSize * (width / this.width)) + 'px');
+    // Set base font size. Don't allow it to fall below original size.
+    this.$container.css('fontSize', (width > this.width) ? (this.fontSize * (width / this.width)) : this.fontSize + 'px');
   };
 
   /**
@@ -662,6 +667,7 @@ H5P.InteractiveVideo = (function ($) {
    */
   C.prototype.showDialog = function (interaction, $button) {
     var that = this;
+    var interactionInstance;
 
     if (this.playing) {
       this.pause(true);
@@ -671,7 +677,7 @@ H5P.InteractiveVideo = (function ($) {
       var $dialog = this.$dialog.children('.h5p-dialog-inner').html('<div class="h5p-dialog-interaction"></div>').children();
 
       var lib = interaction.action.library.split(' ')[0];
-      var interactionInstance = new (H5P.classFromName(lib))(interaction.action.params, this.contentPath);
+      interactionInstance = new (H5P.classFromName(lib))(interaction.action.params, this.contentId);
       interactionInstance.attach($dialog);
 
       if (lib === 'H5P.Summary') {
@@ -680,7 +686,7 @@ H5P.InteractiveVideo = (function ($) {
     }
 
     this.$dialogWrapper.show();
-    this.positionDialog(interaction, $button);
+    this.positionDialog(interaction, $button, interactionInstance);
 
     setTimeout(function () {
       that.$dialogWrapper.removeClass('h5p-hidden');
@@ -694,7 +700,7 @@ H5P.InteractiveVideo = (function ($) {
    * @param {jQuery} $button
    * @returns {undefined}
    */
-  C.prototype.positionDialog = function (interaction, $button) {
+  C.prototype.positionDialog = function (interaction, $button, interactionInstance) {
     // Reset dialog styles
     this.$dialog.removeClass('h5p-big').css({
       left: '',
@@ -708,6 +714,13 @@ H5P.InteractiveVideo = (function ($) {
       this.$dialog.addClass('h5p-big');
     }
     else {
+      if (interactionInstance.resize !== undefined) {
+        interactionInstance.resize();
+      }
+
+      // TODO: Just let image implement resize or something? If so make sure
+      // in image class that it only runs once.
+
       // How much of the player should the interaction cover?
       var interactionMaxFillRatio = 0.8;
       var buttonWidth = $button.outerWidth(true);
@@ -715,11 +728,9 @@ H5P.InteractiveVideo = (function ($) {
       var containerWidth = this.$container.width();
       var containerHeight = this.$container.height();
       var that = this;
-      // Determine size
-      var height = this.$dialog.height();
 
       // Special case for images
-      if (interaction.action.library.split(' ')[0] === 'H5P.Image' && height > 1) {
+      if (interaction.action.library.split(' ')[0] === 'H5P.Image') {
         var $img = this.$dialog.find('img');
         var imgHeight, imgWidth, maxWidth;
         if (buttonPosition.left > (containerWidth / 2) - (buttonWidth / 2)) {
@@ -739,11 +750,9 @@ H5P.InteractiveVideo = (function ($) {
         }
         // Image size info is missing. We must find image size
         else {
-          // TODO: Where are these vars used?
-          var img = $img[0]; // Get my img elem
-          var realWidth, realHeight;
-
-          // TODO: Note that we allready have an img with the approperiate source attached to the DOM, wouldn't attaching another cause double loading?
+          // TODO: Note that we allready have an img with the approperiate
+          // source attached to the DOM, wouldn't attaching another cause
+          // double loading?
           $("<img/>") // Make in memory copy of image to avoid css issues
             .attr("src", $img.attr("src")) // TODO: Check img.complete ? The image might be in cache.
             .load(function() { // TODO: Is load needed multiple times or would one('load') suffice?
@@ -776,19 +785,40 @@ H5P.InteractiveVideo = (function ($) {
         }
       }
 
-      // TODO: This function is HUGE, could some of it maybe be moved to H5P.Image? Content sizing shouldn't be a part of positioning the dialog, it should happen before. If we're waiting for something to load show a dialog with a throbber or something...
+      // TODO: This function is HUGE, could some of it maybe be moved to
+      // H5P.Image? Content sizing shouldn't be a part of positioning the
+      // dialog, it should happen before. If we're waiting for something to
+      // load show a dialog with a throbber or something...
 
       // Position dialog horizontally
       var left = buttonPosition.left;
 
+      var dialogWidth = this.$dialog.outerWidth(true);
+
+      // If dialog is too big to fit within the container, display as h5p-big instead.
+      if (dialogWidth > containerWidth) {
+        this.$dialog.addClass('h5p-big');
+        return;
+      }
+
       if (buttonPosition.left > (containerWidth / 2) - (buttonWidth / 2)) {
         // Show on left
-        left -= this.$dialog.outerWidth(true) - buttonWidth;
+        left -= dialogWidth - buttonWidth;
+      }
+
+      // Make sure the dialog is within the video on the right.
+      if ((left + dialogWidth) > containerWidth) {
+        left = containerWidth - dialogWidth;
       }
 
       var marginLeft = parseInt(this.$videoWrapper.css('marginLeft'));
-      if (!isNaN(marginLeft)) {
-        left += marginLeft;
+      if (isNaN(marginLeft)) {
+        marginLeft = 0;
+      }
+
+      // And finally, make sure we're within bounds on the left hand side too...
+      if (left < marginLeft) {
+        left = marginLeft;
       }
 
       // Position dialog vertically
@@ -798,7 +828,6 @@ H5P.InteractiveVideo = (function ($) {
       }
 
       var top = buttonPosition.top + marginTop;
-      var containerHeight = this.$container.height();
       var totalHeight = top + this.$dialog.outerHeight(true);
 
       if (totalHeight > containerHeight) {

@@ -1,3 +1,4 @@
+// DEPRECATED: This widget will be removed and replaced with the HTML widget
 var H5PEditor = H5PEditor || {};
 var ns = H5PEditor;
 
@@ -27,7 +28,7 @@ ns.Textarea.prototype.appendTo = function ($wrapper) {
 
   this.$item = ns.$(this.createHtml()).appendTo($wrapper);
   this.$input = this.$item.children('label').children('textarea');
-  this.$errors = this.$item.children('.errors');
+  this.$errors = this.$item.children('.h5p-errors');
 
   this.$input.change(function () {
     // Validate
@@ -35,7 +36,7 @@ ns.Textarea.prototype.appendTo = function ($wrapper) {
 
     if (value !== false) {
       // Set param
-      that.setValue(that.field, value);
+      that.setValue(that.field, ns.htmlspecialchars(value));
     }
   });
 };

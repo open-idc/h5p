@@ -20,12 +20,14 @@
                 "options": [
                   "H5P.Text 1.0",
                   "H5P.ContinuousText 1.0",
+                  "H5P.ExportableTextArea 1.0",
                   "H5P.Table 1.0",
                   "H5P.Image 1.0",
                   "H5P.Video 1.0",
                   "H5P.Audio 1.0",
                   "H5P.Blanks 1.0",
                   "H5P.MultiChoice 1.0",
+                  "H5P.DragQuestion 1.0",
                   "H5P.Summary 1.0"
                 ]
               },
@@ -48,11 +50,12 @@
                 "name": "height",
                 "type": "number",
                 "widget": "none"
-              },              
+              },
               {
                 "name": "metadata",
                 "type": "group",
                 "label": "Metadata",
+                "optional": true,
                 "deprecated": true,
                 "fields": [
                   {
@@ -82,6 +85,12 @@
                 "optional": true,
                 "label": "Comments",
                 "description": "The comments are shown when the user displays the suggested answers for all slides."
+              },
+              {
+                "name": "index",
+                "type": "number",
+                "widget": "none",
+                "optional": true
               }
             ]
           }
@@ -89,17 +98,21 @@
         {
           "name": "keywords",
           "type": "list",
+          "optional": true,
           "field": {
             "name": "keyword",
             "type": "group",
+            "optional": true,
             "fields": [
               {
                 "name": "main",
-                "type": "text"
+                "type": "text",
+                "optional": true
               },
               {
                 "name": "subs",
                 "type": "list",
+                "optional": true,
                 "field": {
                   "name": "keyword",
                   "type": "text"
@@ -111,7 +124,18 @@
         {
           "name": "ct",
           "type": "text",
-          "widget": "none"
+          "widget": "none",
+          "optional": true,
+          "tags": [
+            "strong",
+            "em",
+            "del",
+            "br",
+            "p",
+            "a",
+            "h2",
+            "h3"
+          ]
         }
       ]
     }
@@ -122,6 +146,12 @@
     "label": "Localize",
     "common": true,
     "fields": [
+      {
+        "name": "goHome",
+        "type": "text",
+        "label": "Go home button title",
+        "default": "Go to first slide"
+      },
       {
         "name": "scrollLeft",
         "type": "text",
@@ -208,6 +238,12 @@
         "type": "text",
         "label": "Translation for \"Lisence\"",
         "default": "Lisence"
+      },
+      {
+        "name": "exportAnswers",
+        "type": "text",
+        "label": "Text for the export text button",
+        "default": "Export text"
       }
     ]
   }

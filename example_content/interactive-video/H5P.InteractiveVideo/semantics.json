@@ -14,7 +14,7 @@
             "name": "files",
             "type": "video",
             "label": "Video files",
-            "description": "Select the video files you wish to use in your interactive video."
+            "description": "Select the video files you wish to use in your interactive video. To ensure maximum support in browsers at least add a version of the video in webm and mp4 formats."
           },
           {
             "name": "copyright",
@@ -91,6 +91,7 @@
                 "H5P.Image 1.0",
                 "H5P.MultiChoice 1.0",
                 "H5P.Blanks 1.0",
+                "H5P.DragQuestion 1.0",
                 "H5P.Summary 1.0"
               ]
             }
