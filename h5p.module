@@ -61,7 +61,7 @@ function h5p_node_info() {
  * Implementation of hook_perm().
  */
 function h5p_perm() {
-  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p');
+  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries');
 }
 
 /**
@@ -182,7 +182,10 @@ function h5p_insert($node) {
   // @todo: Make sure node_load -> node_save works by implementing presave
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
+    $library_updated = $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
+    if($library_updated) {
+      _h5p_clear_js_and_css_cache();
+    }
   }
   else {
     db_query(
@@ -203,7 +206,10 @@ function h5p_update($node) {
     }
     else {
       $h5p_core = _h5p_get_instance('storage');
-      $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
+      $library_updated = $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
+      if($library_updated) {
+        _h5p_clear_js_and_css_cache();
+      }
     }
   }
   elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
@@ -218,6 +224,7 @@ function h5p_update($node) {
       WHERE content_id = %d", $node->json_content, $node->embed_type, $node->main_library_id, h5p_get_content_id($node)
     );
   }
+  cache_clear_all('validated_json_'.$node->vid, 'cache');
 }
 
 /**
@@ -327,12 +334,14 @@ function h5p_add_files_and_settings($node) {
 
   if (isset($node->json_content)) {
     $content_id = h5p_get_content_id($node);
+    $h5p_params = h5p_get_filtered_json_content($node);
+
     $settings = array(
       'h5p' => array(
         'content' => array(
           $content_id => array(
             'mainLibrary' => $node->main_library['machineName'], // TODO: Is this needed at all?
-            'jsonContent' => $node->json_content,
+            'jsonContent' => $h5p_params,
             'fullScreen' => db_result(db_query('SELECT fullscreen FROM {h5p_libraries} WHERE library_id = %d', $node->main_library['libraryId']))
           ),
         ),
@@ -350,8 +359,48 @@ function h5p_add_files_and_settings($node) {
       $settings['h5p']['loadedCss'][] = $css_path;
     }
 
+    // Set libraryPath:
+    $settings['h5p']['libraryPath'] = _h5p_get_h5p_path() . '/libraries/';
+
     drupal_add_js($settings, 'setting');
   }
+}
+
+/**
+ * Get filtered json content for node.
+ *
+ * @param $node
+ *  Node object to filter json
+ * @return string
+ *  Returns the filtered JSON string.
+ */
+function h5p_get_filtered_json_content($node) {
+  $cid = 'validated_json_' . $node->vid;
+  $cache = cache_get($cid);
+
+  if (isset($cache->data)) {
+    $h5p_params = $cache->data;
+  }
+  else {
+    // Get H5P params as object
+    $params = json_decode($node->json_content);
+
+    // Validate and filter against main library semantics.  This is done
+    // after the hook above, to prevent modules that might inject invalid
+    // data in the content.
+    $h5p_drupal = _h5p_get_instance('interface');
+    $semantics = $h5p_drupal->getLibrarySemantics($node->main_library['machineName'],
+                                                  $node->main_library['majorVersion'],
+                                                  $node->main_library['minorVersion']);
+    $validator = _h5p_get_instance('contentvalidator');
+    $validator->validatebySemantics($params, $semantics);
+
+    $h5p_params = json_encode($params);
+
+    // Store encoded data in cache.
+    cache_set($cid, $h5p_params);
+  }
+  return $h5p_params;
 }
 
 /**
@@ -427,6 +476,8 @@ function _h5p_get_instance($type) {
       return new H5PValidator($interface, $core);
     case 'storage':
       return new H5PStorage($interface, $core);
+    case 'contentvalidator':
+      return new H5PContentValidator($interface, $core);
     case 'interface':
       return $interface;
     case 'core':
@@ -442,6 +493,22 @@ function _h5p_get_instance($type) {
  */
 function _h5p_get_h5p_path() {
   return file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p');
+}
+
+/**
+ * Clears the js and css cache. Needed when updating and
+ * adding libraries
+ */
+function _h5p_clear_js_and_css_cache() {
+  // Clear caches to make sure new versions are used.
+  _drupal_flush_css_js();
+  drupal_clear_js_cache();
+  drupal_clear_css_cache();
+
+  // Need to clear JSON content cache too.
+  cache_clear_all('validated_json_', 'cache', TRUE);
+
+  drupal_set_message('JS and CSS cache was cleared');
 }
 
 /**

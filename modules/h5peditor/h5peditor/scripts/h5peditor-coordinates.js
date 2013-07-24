@@ -114,7 +114,7 @@ ns.Coordinates.prototype.appendTo = function ($wrapper) {
 
   this.$item = ns.$(this.createHtml()).appendTo($wrapper);
   this.$inputs = this.$item.find('input');
-  this.$errors = this.$item.children('.errors');
+  this.$errors = this.$item.children('.h5p-errors');
 
   this.$inputs.change(function () {
     // Validate
@@ -125,6 +125,8 @@ ns.Coordinates.prototype.appendTo = function ($wrapper) {
       that.params = value;
       that.setValue(that.field, value);
     }
+  }).click(function () {
+    return false;
   }).click(function () {
     return false;
   });
@@ -152,11 +154,16 @@ ns.Coordinates.prototype.validate = function () {
     var value = H5P.trim($input.val());
     var property = i ? 'y' : 'x';
 
+    if (that.field.optional && !value.length) {
+      return true;
+    }
+
     if ((that.field.optional === undefined || !that.field.optional) && !value.length) {
       that.$errors.append(ns.createError(ns.t('core', 'requiredProperty', {':property': property})));
       return false;
     }
-    else if (!value.match(new RegExp('^[0-9]+$'))) {
+
+    if (value.length && !value.match(new RegExp('^[0-9]+$'))) {
       that.$errors.append(ns.createError(ns.t('core', 'onlyNumbers', {':property': property})));
       return false;
     }

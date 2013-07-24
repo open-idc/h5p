@@ -26,14 +26,19 @@ ns.Dimensions = function (parent, field, params, setValue) {
 
   // Find image field to get default size from.
   H5PEditor.followField(parent, field['default'], function (file, index) {
-    // Make sure we don't set size if we have one in params.
-    if (index === undefined || params === undefined) {
+    // Make sure we don't set size if we have one in the default params.
+    if (params.width === undefined) {
       that.setSize(file);
     }
   });
 
   this.params = params;
   this.setValue = setValue;
+
+  // Remove default field from params to avoid saving it.
+  if (this.params.field) {
+    this.params.field = undefined;
+  }
 };
 
 /**
@@ -89,7 +94,7 @@ ns.Dimensions.prototype.appendTo = function ($wrapper) {
 
   this.$item = ns.$(this.createHtml()).appendTo($wrapper);
   this.$inputs = this.$item.find('input');
-  this.$errors = this.$item.children('.errors');
+  this.$errors = this.$item.children('.h5p-errors');
 
   this.$inputs.change(function () {
     // Validate

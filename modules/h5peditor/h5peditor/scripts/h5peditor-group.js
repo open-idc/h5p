@@ -95,7 +95,16 @@ ns.Group.prototype.expand = function () {
   var expandedClass = 'expanded';
 
   if (this.$group.hasClass(expandedClass)) {
-    this.$group.removeClass(expandedClass);
+    // Do not collapse before valid!
+    var valid = true;
+    for (var i = 0; i < this.children.length; i++) {
+      if (this.children[i].validate() === false) {
+        valid = false;
+      }
+    }
+    if (valid) {
+      this.$group.removeClass(expandedClass);
+    }
   }
   else {
     this.$group.addClass(expandedClass);
@@ -113,14 +122,14 @@ ns.Group.prototype.findSummary = function () {
     var child = this.children[j];
     var params = this.field.fields.length === 1 ? this.params : this.params[child.field.name];
 
-    if (child.field.widget === 'text') {
+    if (child.field.type === 'text') {
       if (params !== undefined && params !== '') {
-        summary = params;
+        summary = params.replace(/(<([^>]+)>)/ig, "");
       }
       child.$input.change(function () {
         var params = that.field.fields.length === 1 ? that.params : that.params[child.field.name];
         if (params !== undefined && params !== '') {
-          that.setSummary(params);
+          that.setSummary(params.replace(/(<([^>]+)>)/ig, ""));
         }
       });
       break;
@@ -129,8 +138,8 @@ ns.Group.prototype.findSummary = function () {
       if (params !== undefined) {
         summary = child.$select.children(':selected').text();
       }
-      child.$select.change(function () {
-        that.setSummary(child.$select.children(':selected').text());
+      child.change(function (library) {
+        that.setSummary(library.title);
       });
       break;
     }

@@ -1,11 +1,9 @@
 @import "compass/css3/border-radius";
 @import "compass/css3/box-shadow";
-@import "compass/css3/transition";
 @import "compass/css3/opacity";
 
 .h5peditor {
   font-size: 16px;
-  @include transition(all 0.2s ease-in);
 
   .h5p-more-libraries {
     font-size: 0.875em;
@@ -28,7 +26,7 @@
   textarea {
     resize: vertical;
   }
-  textarea, input[type="text"], .ckeditor {
+  textarea, .h5peditor-text, .ckeditor {
     width: 90%;
     padding: 4px 8px;
     font-size: 16px;
@@ -45,7 +43,7 @@
     outline: none;
     @include box-shadow(0 0 8px 2px #7fb8ff);
   }
-  textarea:focus, input[type="text"]:focus {
+  textarea:focus, .h5peditor-text:focus {
     outline: none;
     background: #fff;
     border-color: #53a0ff;
@@ -56,6 +54,9 @@
     height: 0;
     border: 0;
     overflow: hidden;
+    &.cke_wysiwyg_frame {
+      overflow: auto;
+    }
   }
   .h5p-ul {
     padding: 0;
@@ -129,7 +130,6 @@
         margin: 3px 0 0;
         background: inline-image("expand.png") no-repeat;
         opacity: 0.8;
-        @include transition(all 0.2s ease-in);
 
         &:hover {
           opacity: 1;
@@ -185,6 +185,7 @@
     width: auto;
     margin: 0;
     padding: 4px 8px;
+    font-size: 0.8em;
   }
   .dimensions input, .coordinates input, .number input {
     width: 75px;

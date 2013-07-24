@@ -1,39 +1,35 @@
-/* line 6, ../scss/application.scss */
+/* line 5, ../scss/application.scss */
 .h5peditor {
   font-size: 16px;
-  -webkit-transition: all 0.2s ease-in;
-  -moz-transition: all 0.2s ease-in;
-  -o-transition: all 0.2s ease-in;
-  transition: all 0.2s ease-in;
 }
-/* line 10, ../scss/application.scss */
+/* line 8, ../scss/application.scss */
 .h5peditor .h5p-more-libraries {
   font-size: 0.875em;
 }
-/* line 14, ../scss/application.scss */
+/* line 12, ../scss/application.scss */
 .h5peditor .field {
   margin: 16px 0;
   padding: 0;
 }
-/* line 17, ../scss/application.scss */
+/* line 15, ../scss/application.scss */
 .h5peditor .field:first-child {
   margin-top: 0;
 }
-/* line 20, ../scss/application.scss */
+/* line 18, ../scss/application.scss */
 .h5peditor .field:last-child {
   margin-bottom: 0;
 }
-/* line 24, ../scss/application.scss */
+/* line 22, ../scss/application.scss */
 .h5peditor .errors p {
   margin: 0 0 4px 0;
   color: #f00;
 }
-/* line 28, ../scss/application.scss */
+/* line 26, ../scss/application.scss */
 .h5peditor textarea {
   resize: vertical;
 }
-/* line 31, ../scss/application.scss */
-.h5peditor textarea, .h5peditor input[type="text"], .h5peditor .ckeditor {
+/* line 29, ../scss/application.scss */
+.h5peditor textarea, .h5peditor .h5peditor-text, .h5peditor .ckeditor {
   width: 90%;
   padding: 4px 8px;
   font-size: 16px;
@@ -41,63 +37,71 @@
   background: #f9f9f9;
   outline: none;
   min-height: 20px;
-  -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
-  -ms-border-radius: 8px;
+  -webkit-border-radius: 8px;
   -o-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -khtml-border-radius: 8px;
   border-radius: 8px;
 }
-/* line 41, ../scss/application.scss */
+/* line 39, ../scss/application.scss */
 .h5peditor select {
   padding: 2px;
 }
-/* line 44, ../scss/application.scss */
+/* line 42, ../scss/application.scss */
 .h5peditor a:focus {
   outline: none;
-  -webkit-box-shadow: 0 0 8px 2px #7fb8ff;
   -moz-box-shadow: 0 0 8px 2px #7fb8ff;
+  -webkit-box-shadow: 0 0 8px 2px #7fb8ff;
+  -o-box-shadow: 0 0 8px 2px #7fb8ff;
   box-shadow: 0 0 8px 2px #7fb8ff;
 }
-/* line 48, ../scss/application.scss */
-.h5peditor textarea:focus, .h5peditor input[type="text"]:focus {
+/* line 46, ../scss/application.scss */
+.h5peditor textarea:focus, .h5peditor .h5peditor-text:focus {
   outline: none;
   background: #fff;
   border-color: #53a0ff;
-  -webkit-box-shadow: 0 0 8px 0 #7fb8ff;
   -moz-box-shadow: 0 0 8px 0 #7fb8ff;
+  -webkit-box-shadow: 0 0 8px 0 #7fb8ff;
+  -o-box-shadow: 0 0 8px 0 #7fb8ff;
   box-shadow: 0 0 8px 0 #7fb8ff;
 }
-/* line 54, ../scss/application.scss */
+/* line 52, ../scss/application.scss */
 .h5peditor iframe {
   width: 100%;
   height: 0;
   border: 0;
   overflow: hidden;
 }
-/* line 60, ../scss/application.scss */
+/* line 57, ../scss/application.scss */
+.h5peditor iframe.cke_wysiwyg_frame {
+  overflow: auto;
+}
+/* line 61, ../scss/application.scss */
 .h5peditor .h5p-ul {
   padding: 0;
   margin: 0;
   list-style: none;
 }
-/* line 65, ../scss/application.scss */
+/* line 66, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li {
   padding: 0 8px;
   margin: 8px 0;
   list-style: none;
   background: #d5e9ff;
   overflow: hidden;
-  -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
-  -ms-border-radius: 8px;
+  -webkit-border-radius: 8px;
   -o-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -khtml-border-radius: 8px;
   border-radius: 8px;
 }
-/* line 73, ../scss/application.scss */
+/* line 74, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li > .content {
   margin: 0 24px;
 }
-/* line 76, ../scss/application.scss */
+/* line 77, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li > .remove, .h5peditor .h5p-ul .h5p-li > .order {
   cursor: pointer;
   width: 14px;
@@ -109,59 +113,63 @@
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
   opacity: 0.8;
 }
-/* line 86, ../scss/application.scss */
+/* line 87, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li > .remove:hover, .h5peditor .h5p-ul .h5p-li > .order:hover {
   opacity: 1;
 }
-/* line 89, ../scss/application.scss */
+/* line 90, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li > .remove:focus, .h5peditor .h5p-ul .h5p-li > .order:focus {
-  -webkit-box-shadow: 0 0 8px 2px #cb3535;
   -moz-box-shadow: 0 0 8px 2px #cb3535;
+  -webkit-box-shadow: 0 0 8px 2px #cb3535;
+  -o-box-shadow: 0 0 8px 2px #cb3535;
   box-shadow: 0 0 8px 2px #cb3535;
 }
-/* line 93, ../scss/application.scss */
+/* line 94, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li > .order {
   float: left;
   background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABmJLR0QAfACoAN5zYUW6AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QIUDRE0vXpyDwAAAV1JREFUKM9tkr1KA0EUhb8LW0ar5AEUfyrbkIClEBsbIRBbBQsRwd5X0MYgKNinUsQfgliKghAMYqMx8QFMtWtjsrPXYnY3s9HTzDB37jnnnhnZa/RUAAX+W1FQwUJBxNa80NjNCGkLAMWZCQCeOkFKIID3Y+JrAqqKOHql2RyrxTwAJlIeO98ppTc0iTV1dITyXI5qqZCeVEsFwgge3gNArFVQVARBUYXF+Ry1cp5x1Mp5TCTcvwXI+nFXR3GMTyicbk4BsHHy6fhSvEEEom6TSzKKbWA0porXWr2r6mg2tqcBWKv3/mTtwhuGSaLZwsC4A/yFrOx/aGVhkq2lPCKSVVHl6K5P8zVIP0Mygjc0cNX2MRHsVAqZxsPbPjcvPiKCppYseRyOcNH2MQq7y7b5oPnFdTvIZOwYtYqgiMJ5yyeMbOnyObDvKiBK+gyJXxuOg7OWH9eEbDzqCvILrrugS5z4GEIAAAAASUVORK5CYII=') no-repeat;
 }
-/* line 97, ../scss/application.scss */
+/* line 98, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li > .order:focus {
-  -webkit-box-shadow: 0 0 8px 2px #7ca8de;
   -moz-box-shadow: 0 0 8px 2px #7ca8de;
+  -webkit-box-shadow: 0 0 8px 2px #7ca8de;
+  -o-box-shadow: 0 0 8px 2px #7ca8de;
   box-shadow: 0 0 8px 2px #7ca8de;
 }
-/* line 101, ../scss/application.scss */
+/* line 102, ../scss/application.scss */
 .h5peditor .h5p-ul .h5p-li:hover {
   background: #c0deff;
 }
-/* line 106, ../scss/application.scss */
+/* line 107, ../scss/application.scss */
 .h5peditor .content > .field {
   margin: 8px 0;
 }
-/* line 109, ../scss/application.scss */
+/* line 110, ../scss/application.scss */
 .h5peditor .group {
   margin: 16px 0;
   border: 1px solid #676767;
   background: #d5e9ff;
-  -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
-  -ms-border-radius: 8px;
+  -webkit-border-radius: 8px;
   -o-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -khtml-border-radius: 8px;
   border-radius: 8px;
-  -webkit-box-shadow: 0 0 4px #a7a7a7;
   -moz-box-shadow: 0 0 4px #a7a7a7;
+  -webkit-box-shadow: 0 0 4px #a7a7a7;
+  -o-box-shadow: 0 0 4px #a7a7a7;
   box-shadow: 0 0 4px #a7a7a7;
 }
-/* line 117, ../scss/application.scss */
+/* line 118, ../scss/application.scss */
 .h5peditor .group > .title {
   padding: 4px 8px;
   overflow: hidden;
 }
-/* line 121, ../scss/application.scss */
+/* line 122, ../scss/application.scss */
 .h5peditor .group > .title:first-letter {
   text-transform: uppercase;
 }
-/* line 124, ../scss/application.scss */
+/* line 125, ../scss/application.scss */
 .h5peditor .group > .title .expand {
   cursor: pointer;
   float: left;
@@ -170,10 +178,6 @@
   margin: 3px 0 0;
   background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QIGDAQOtxG4igAAAFZJREFUKM+d0kEOADEEBdBfhy1H0rmsWY8WNRKbnzwRMcwM3SIfiMhsIwCrghTkKaRkYAipWP8I6eJYG7xBrKpPB22gQkeQoRAAAMzs08w8feZ7/Pm9F6gcQ10PZX8SAAAAAElFTkSuQmCC') no-repeat;
   opacity: 0.8;
-  -webkit-transition: all 0.2s ease-in;
-  -moz-transition: all 0.2s ease-in;
-  -o-transition: all 0.2s ease-in;
-  transition: all 0.2s ease-in;
 }
 /* line 134, ../scss/application.scss */
 .h5peditor .group > .title .expand:hover {
@@ -238,6 +242,7 @@
   width: auto;
   margin: 0;
   padding: 4px 8px;
+  font-size: 0.8em;
 }
 /* line 189, ../scss/application.scss */
 .h5peditor .dimensions input, .h5peditor .coordinates input, .h5peditor .number input {
@@ -257,16 +262,18 @@
 .h5peditor .file .thumbnail {
   display: inline-block;
   margin: 10px;
-  -webkit-box-shadow: 0 0 16px 0 #666666;
   -moz-box-shadow: 0 0 16px 0 #666666;
+  -webkit-box-shadow: 0 0 16px 0 #666666;
+  -o-box-shadow: 0 0 16px 0 #666666;
   box-shadow: 0 0 16px 0 #666666;
   border: 1px solid #fff;
   cursor: pointer;
 }
 /* line 207, ../scss/application.scss */
 .h5peditor .file .thumbnail:focus {
-  -webkit-box-shadow: 0 0 16px 2px #7fb8ff;
   -moz-box-shadow: 0 0 16px 2px #7fb8ff;
+  -webkit-box-shadow: 0 0 16px 2px #7fb8ff;
+  -o-box-shadow: 0 0 16px 2px #7fb8ff;
   box-shadow: 0 0 16px 2px #7fb8ff;
 }
 /* line 211, ../scss/application.scss */
@@ -291,8 +298,9 @@
 }
 /* line 229, ../scss/application.scss */
 .h5peditor .file .remove:focus {
-  -webkit-box-shadow: 0 0 8px 2px #cb3535;
   -moz-box-shadow: 0 0 8px 2px #cb3535;
+  -webkit-box-shadow: 0 0 8px 2px #cb3535;
+  -o-box-shadow: 0 0 8px 2px #cb3535;
   box-shadow: 0 0 8px 2px #cb3535;
 }
 /* line 233, ../scss/application.scss */
@@ -348,10 +356,11 @@
   background: #fae5ff;
   padding-bottom: 0.25em;
   min-height: 2em;
-  -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
-  -ms-border-radius: 8px;
+  -webkit-border-radius: 8px;
   -o-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -khtml-border-radius: 8px;
   border-radius: 8px;
 }
 /* line 278, ../scss/application.scss */
@@ -360,10 +369,11 @@
   font-weight: normal;
   padding: 0.5em 1em 0.4em;
   background: #efdbf4;
-  -webkit-border-radius: 8px 8px 0 0;
   -moz-border-radius: 8px 8px 0 0;
-  -ms-border-radius: 8px 8px 0 0;
+  -webkit-border-radius: 8px 8px 0 0;
   -o-border-radius: 8px 8px 0 0;
+  -ms-border-radius: 8px 8px 0 0;
+  -khtml-border-radius: 8px 8px 0 0;
   border-radius: 8px 8px 0 0;
 }
 /* line 285, ../scss/application.scss */
@@ -402,10 +412,11 @@
   margin: 0.5em 0 1em;
   background: #e5f1ff;
   padding: 8px;
-  -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
-  -ms-border-radius: 8px;
+  -webkit-border-radius: 8px;
   -o-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -khtml-border-radius: 8px;
   border-radius: 8px;
 }
 

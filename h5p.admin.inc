@@ -28,6 +28,24 @@ function h5p_admin_settings() {
     '#default_value' => variable_get('h5p_export', '1'),
     '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files."),
   );
+  
+  // make sure core is loaded
+  _h5p_get_instance('core');
+  $form['h5p_whitelist'] = array(
+    '#type' => 'textfield',
+    '#maxlength' => 8192,
+    '#title' => t('White list of accepted files.'),
+    '#default_value' => variable_get('h5p_whitelist', H5PCore::$defaultContentWhitelist),
+    '#description' => t("List accepted content file extensions for uploaded H5Ps. List extensions separated by space, eg. 'png jpg jpeg gif webm mp4 ogg mp3'. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
+  );
+
+  $form['h5p_library_whitelist_extras'] = array(
+    '#type' => 'textfield',
+    '#maxlength' => 8192,
+    '#title' => t('White list of extra accepted files in libraries.'),
+    '#default_value' => variable_get('h5p_library_whitelist_extras', H5PCore::$defaultLibraryWhitelistExtras),
+    '#description' => t("Libraries might need to accept more files that should be allowed in normal contents. Add extra files here. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
+  );
 
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().
@@ -42,8 +60,8 @@ function h5p_admin_settings() {
 function h5p_admin_settings_validate($form, &$form_state) {
   // Try to create directories and warn the user of errors.
   $h5p_default_path = $form_state['values']['h5p_default_path'];
-  $path = file_create_path(file_directory_path() . '/' . $h5p_default_path);
-  $temp_path = $path . '/temp';
+  $path = file_create_path(file_directory_path() . DIRECTORY_SEPARATOR . $h5p_default_path);
+  $temp_path = $path . DIRECTORY_SEPARATOR . 'temp';
 
   if (!file_check_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
     form_set_error('h5p_default_path', t('You have specified an invalid directory.'));
@@ -58,5 +76,7 @@ function h5p_admin_settings_validate($form, &$form_state) {
  */
 function h5p_admin_settings_submit($form, &$form_state) {
   // Ensure that 'h5p_default_path' variable contains no trailing slash.
-  $form_state['values']['h5p_default_path'] = rtrim($form_state['values']['h5p_default_path'], '/');
+  $form_state['values']['h5p_default_path'] = rtrim($form_state['values']['h5p_default_path'], '/\\');
+  // Ensure that the h5p white list is always stored in lower case.
+  $form_state['values']['h5p_whitelist'] = mb_strtolower($form_state['values']['h5p_whitelist']);
 }

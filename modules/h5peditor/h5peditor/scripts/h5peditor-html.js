@@ -118,8 +118,6 @@ ns.Html.prototype.createToolbar = function () {
   if (formats.length > 0 || this.inTags('p') || this.inTags('div')) {
     formats.push("p");   // If the formats are shown, always have a paragraph..
     this.tags.push("p");
-    formats.push("div"); // ..and a plain old div.
-    this.tags.push("div");
     toolbar.push({
       name: "styles",
       items: ['Format']
@@ -135,7 +133,7 @@ ns.Html.prototype.createToolbar = function () {
   }
 
   // Enable selection of enterMode in module semantics.
-  if (this.field.enterMode === 'p') {
+  if (this.field.enterMode === 'p' || formats.length > 0) {
     this.tags.push('p');
     ret.enterMode = CKEDITOR.ENTER_P;
   } else {
@@ -158,11 +156,12 @@ ns.Html.prototype.appendTo = function ($wrapper) {
 
   this.$item = ns.$(ns.createItem(this.field.type, this.createHtml(), this.field.description)).appendTo($wrapper);
   this.$input = this.$item.children('.ckeditor');
-  this.$errors = this.$item.children('.errors');
+  this.$errors = this.$item.children('.h5p-errors');
 
   var ckConfig = {
     extraPlugins: "",
     forcePasteAsPlainText: true,
+    startupFocus: true,
     enterMode: CKEDITOR.ENTER_DIV,
     allowedContent: true, // Disables the ckeditor content filter, might consider using it later... Must make sure it doesn't remove math...
     protectedSource: []
@@ -188,16 +187,13 @@ ns.Html.prototype.appendTo = function ($wrapper) {
     if (ns.Html.current === that) {
       return;
     }
-    else if (ns.Html.current !== undefined) {
-      ns.Html.current.ckeditor.destroy();
-      delete ns.Html.current.ckeditor;
-    }
+    // Remove existing CK instance.
+    ns.Html.removeWysiwyg();
 
-    H5P.jQuery(this).trigger('blur');
+    H5P.jQuery(this).trigger('blur'); // Why do we do this? - FRL, 20120723.
+
     ns.Html.current = that;
-
-    ckConfig.startupFocus = true;
-    that.ckeditor = CKEDITOR.inline(this, ckConfig);
+    that.ckeditor = CKEDITOR.replace(this, ckConfig);
 
     that.ckeditor.on('blur', function () {
       // Do not validate if the field has been hidden.
@@ -206,7 +202,9 @@ ns.Html.prototype.appendTo = function ($wrapper) {
       }
     });
 
-    // Add events to ckeditor. It is beeing done here since we know it exists at this point...
+    // Add events to ckeditor. It is beeing done here since we know it exists
+    // at this point... Use case from commit message: "Make the default
+    // linkTargetType blank for ckeditor" - STGW
     if (ns.Html.first) {
       CKEDITOR.on('dialogDefinition', function(e) {
         // Take the dialog name and its definition from the event data.
@@ -292,6 +290,16 @@ ns.Html.prototype.validate = function () {
   this.$input.change(); // Trigger change event.
 
   return value;
+};
+
+/**
+ * Destroy H5PEditor existing CK instance. If it exists.
+ */
+ns.Html.removeWysiwyg = function () {
+  if (ns.Html.current !== undefined) {
+    ns.Html.current.ckeditor.destroy();
+    ns.Html.current = undefined;
+  }
 };
 
 /**
