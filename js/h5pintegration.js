@@ -8,7 +8,7 @@ $(document).ready(function () {
 });
 
 H5PIntegration.getJsonContent = function (contentId) {
-  return Drupal.settings.h5p.content[contentId].jsonContent;
+  return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
 };
 
 H5PIntegration.getContentPath = function (contentId) {
@@ -22,16 +22,22 @@ H5PIntegration.getContentPath = function (contentId) {
 
 /**
  * Get the path to the library
- * 
- * @param {string} machineName The machine name of the library
+ *
+ * TODO: Make this use machineName instead of machineName-majorVersion-minorVersion
+ *
+ * @param {string} library
+ *  The library identifier as string, for instance 'downloadify-1.0'
  * @returns {string} The full path to the library
  */
-H5PIntegration.getLibraryPath = function (machineName) {
-  return Drupal.settings.basePath + Drupal.settings.h5p.libraryPath + '/' + machineName;
+H5PIntegration.getLibraryPath = function (library) {
+  // TODO: This is silly and needs to be changed, why does the h5peditor have its own namespace for these things?
+  var libraryPath = Drupal.settings.h5p !== undefined ? Drupal.settings.h5p.libraryPath : Drupal.settings.h5peditor.libraryPath
+
+  return Drupal.settings.basePath + libraryPath + library;
 };
 
 H5PIntegration.getFullscreen = function (contentId) {
-  return Drupal.settings.h5p.content[contentId].fullScreen === '1';
+  return Drupal.settings.h5p.content['cid-' + contentId].fullScreen === '1';
 };
 
 H5PIntegration.fullscreenText = Drupal.t('Fullscreen');

@@ -332,14 +332,14 @@ function h5p_add_files_and_settings($node) {
   }
   drupal_add_js($module_path . '/js/h5pintegration.js');
 
-  if (isset($node->json_content)) {
+  if (isset($node->json_content) && isset($node->nid)) {
     $content_id = h5p_get_content_id($node);
     $h5p_params = h5p_get_filtered_json_content($node);
 
     $settings = array(
       'h5p' => array(
         'content' => array(
-          $content_id => array(
+          "cid-$content_id" => array(
             'mainLibrary' => $node->main_library['machineName'], // TODO: Is this needed at all?
             'jsonContent' => $h5p_params,
             'fullScreen' => db_result(db_query('SELECT fullscreen FROM {h5p_libraries} WHERE library_id = %d', $node->main_library['libraryId']))
@@ -375,29 +375,30 @@ function h5p_add_files_and_settings($node) {
  *  Returns the filtered JSON string.
  */
 function h5p_get_filtered_json_content($node) {
-  $cid = 'validated_json_' . $node->vid;
-  $cache = cache_get($cid);
-
-  if (isset($cache->data)) {
-    $h5p_params = $cache->data;
+  if (isset($node->vid)) {
+    $cid = 'validated_json_' . $node->vid;
+    $cache = cache_get($cid);
+    if (isset($cache->data)) {
+      return $cache->data;
+    }
   }
-  else {
-    // Get H5P params as object
-    $params = json_decode($node->json_content);
+  // Get H5P params as object
+  $params = json_decode($node->json_content);
 
-    // Validate and filter against main library semantics.  This is done
-    // after the hook above, to prevent modules that might inject invalid
-    // data in the content.
-    $h5p_drupal = _h5p_get_instance('interface');
-    $semantics = $h5p_drupal->getLibrarySemantics($node->main_library['machineName'],
-                                                  $node->main_library['majorVersion'],
-                                                  $node->main_library['minorVersion']);
-    $validator = _h5p_get_instance('contentvalidator');
-    $validator->validatebySemantics($params, $semantics);
+  // Validate and filter against main library semantics.  This is done
+  // after the hook above, to prevent modules that might inject invalid
+  // data in the content.
+  $h5p_drupal = _h5p_get_instance('interface');
+  $semantics = $h5p_drupal->getLibrarySemantics($node->main_library['machineName'],
+                                                $node->main_library['majorVersion'],
+                                                $node->main_library['minorVersion']);
+  $validator = _h5p_get_instance('contentvalidator');
+  $validator->validatebySemantics($params, $semantics);
 
-    $h5p_params = json_encode($params);
+  $h5p_params = json_encode($params);
 
-    // Store encoded data in cache.
+  // Store encoded data in cache.
+  if (isset($cid)) {
     cache_set($cid, $h5p_params);
   }
   return $h5p_params;

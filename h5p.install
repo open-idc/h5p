@@ -214,6 +214,7 @@ function h5p_schema() {
         'description' => 'The content in json format',
         'type' => 'text',
         'not null' => TRUE,
+        'size' => 'big',
       ),
       'embed_type' => array(
         'description' => 'The embed type for this content',
@@ -370,5 +371,19 @@ function h5p_update_6102() {
     'type' => 'text',
   ));
   
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function h5p_update_6103() {
+  $ret = array();
+  db_change_field($ret, 'h5p_nodes', 'json_content', 'json_content', array(
+    'description' => 'The content in json format',
+    'type' => 'text',
+    'not null' => TRUE,
+    'size' => 'big',
+  ));
   return $ret;
 }

@@ -10,12 +10,6 @@
   font-weight: bold;
 }
 
-/* Shadows Into Light Two font by Kimberly Geswein licensed under SIL Open Font License, 1.1 - See ShadowsIntoLightTwo/OFL.txt */
-@font-face {
-  font-family: 'H5PShadowsIntoLightTwo';
-  src: url('ShadowsIntoLightTwo/ShadowsIntoLightTwo-Regular.ttf') format('truetype');
-}
-
 .h5p-course-presentation {
   color: #323232;
   font-family: H5PDroidSans, sans-serif;
@@ -46,6 +40,9 @@
   background: #666666;
   box-shadow: 0 0 0.5em 0 rgba(105, 105, 105, 0.4);
 }
+.h5p-course-presentation.h5p-fullscreen .h5p-box-wrapper {
+  margin: 0.1em 0;
+}
 .h5p-course-presentation .h5p-presentation-wrapper {
   z-index: 1;
   text-align: left;
@@ -62,9 +59,7 @@
   border: 1px solid #a9a9a9\9; /* IE8 */
 }
 .h5p-course-presentation .h5p-keywords-wrapper {
-  font-family: H5PShadowsIntoLightTwo, sans-serif;
   font-weight: bold;
-  letter-spacing: 0.0625em;
   position: absolute;
   z-index: 3;
   top: 0;
@@ -92,6 +87,7 @@
 .h5p-course-presentation .h5p-sub-keyword {
   margin-left: 1.25em;
   margin-top: 0.5em;
+  line-height: 105%;
   padding: 0;
   font-size: 0.875em;
 }
@@ -478,14 +474,19 @@
   padding-right: 0.2em;
 }
 
-.h5p-content .h5p-text, .h5p-content .ct {
+.h5p-course-presentation .h5p-text, .h5p-course-presentation .ct {
   font-size: 0.75em;
 }
-.h5p-content .h5p-text > h2, .h5p-content .ct > h2 {
+
+.h5p-course-presentation .dragndrop .h5p-text {
+  font-size: 1em;
+}
+
+.h5p-course-presentation .h5p-text > h2, .h5p-course-presentation .ct > h2 {
   font-size: 1.667em;
   font-weight: bold;
 }
-.h5p-content .h5p-text > h3, .h5p-content .ct > h3 {
+.h5p-course-presentation .h5p-text > h3, .h5p-course-presentation .ct > h3 {
   font-size: 1.333em;
   font-weight: bold;
 }
