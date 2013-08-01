@@ -55,15 +55,21 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     return $file_paths;
   }
   
-  public function addFile($file) {
+  public function addTempFile($file) {
     global $user;
     
     db_query("INSERT INTO {files} (uid, filename, filepath, filemime, filesize, status, timestamp) VALUES (%d, '%s', '%s', '%s', %d, %d, %d)", $user->uid, $file->name, $file->path, $file->mime, $file->size, FILE_STATUS_TEMPORARY, time());
   }
-  
+
+  public function keepFile($oldPath, $newPath) {
+    db_query("UPDATE {files} SET filepath = '%s', status = %d WHERE filepath = '%s'", $newPath, FILE_STATUS_PERMANENT, $oldPath);
+  }
+
+
   public function removeFile($path) {
     db_query("DELETE FROM {files} WHERE filepath = '%s'", $path);
   }
+
   
   public function getLibraries() {
     $libraries = array();
