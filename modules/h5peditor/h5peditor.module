@@ -60,7 +60,7 @@ function h5peditor_menu() {
  * Implements hook_form_FORM_ID_alter().
  */
 function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
-  $node = isset($form['#node']->translation_source) ? $form['#node']->translation_source : $form['#node'];
+  $node = h5peditor_get_source_node($form['#node']);
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),
@@ -121,7 +121,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   }
   $done = TRUE;
 
-  $node = isset($form['#node']->translation_source) ? $form['#node']->translation_source : $form['#node'];
+  $node = h5peditor_get_source_node($form['#node']);
   h5p_add_files_and_settings($node);
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
@@ -156,6 +156,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
       ),
       'ajaxPath' => url('h5peditor/'),
       'modulePath' => $h5peditor_module_path,
+      'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
     ),
   );
 
@@ -212,9 +213,10 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         return;
       }
 
-      if (isset($node->translation_source)) {
+      if (isset($node->translation_source) || isset($node->clone_from_original_nid)) {
         $storage = _h5p_get_instance('storage');
-        $storage->copyPackage(h5p_get_content_id($node), h5p_get_content_id($node->translation_source), $node->nid);
+        $source_node = h5peditor_get_source_node($node);
+        $storage->copyPackage(h5p_get_content_id($node), h5p_get_content_id($source_node), $node->nid);
       }
 
       // Move files.
@@ -272,7 +274,7 @@ function h5peditor_files_callback() {
     $storage = h5peditor_get_storage_instance();
 
     // Add file to DB so Drupal can clean it up.
-    $storage->addFile($file);
+    $storage->addTempFile($file);
   }
 
   header('Content-type: text/html');
@@ -331,4 +333,20 @@ function h5peditor_get_library_property($library, $property = 'all') {
   else {
     return FALSE;
   }
+}
+
+/**
+ * If a node is translated or copied this function finds the source
+ *
+ * @param stdClass $node
+ *  The node object we're working with
+ * @return stdClass $node
+ *  The node itself, or its copy or translation source
+ */
+function h5peditor_get_source_node($node) {
+  $node = isset($node->translation_source) ? $node->translation_source : $node;
+  if (isset($node->clone_from_original_nid)) {
+    $node = node_load($node->clone_from_original_nid);
+  }
+  return $node;
 }
