@@ -66,15 +66,23 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements isPatchedLibrary
    */
   public function isPatchedLibrary($library) {
+    $operator = $this->isInDevMode() ? '<=' : '<';
     $result = db_result(db_query(
       "SELECT 1
       FROM {h5p_libraries}
       WHERE machine_name = '%s'
       AND major_version = %d
       AND minor_version = %d
-      AND patch_version < %d",
+      AND patch_version $operator %d",
       $library['machineName'], $library['majorVersion'], $library['minorVersion'], $library['patchVersion']));
     return $result === '1';
+  }
+  
+  /**
+   * Implements isInDevMode
+   */
+  public function isInDevMode() {
+    return (bool) variable_get('h5p_dev_mode', '0');
   }
 
   /**
@@ -292,6 +300,12 @@ class H5PDrupal implements H5PFrameworkInterface {
         'minorVersion' => $dependency['minorVersion'],
       );
     }
+    if ($this->isInDevMode()) {
+      $semantics = $this->getSemanticsFromFile($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      if ($semantics) {
+        $library['semantics'] = $semantics;
+      }
+    }
     return $library;
   }
 
@@ -301,18 +315,34 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Calls modules implementing hook_alter_h5p_semantics().
    */
   public function getLibrarySemantics($machineName, $majorVersion, $minorVersion) {
-    $library = db_fetch_array(db_query(
-      "SELECT semantics
+    if ($this->isInDevMode()) {
+      $semantics = $this->getSemanticsFromFile($machineName, $majorVersion, $minorVersion);
+    }
+    else {
+      $semantics = db_result(db_query(
+        "SELECT semantics
         FROM {h5p_libraries}
         WHERE machine_name = '%s'
         AND major_version = %d
         AND minor_version = %d",
-      $machineName, $majorVersion, $minorVersion));
-    $semantics = json_decode($library['semantics']);
-
+        $machineName, $majorVersion, $minorVersion));
+    }
+    $semantics = json_decode($semantics);
     drupal_alter('h5p_semantics', $semantics);
 
     return $semantics;
+  }
+  
+  private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
+    $semanticsPath = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
+    if (file_exists($semanticsPath)) {
+      $semantics = file_get_contents($semanticsPath);
+      if (!json_decode($semantics, TRUE)) {
+        drupal_set_message(t('Invalid json in semantics for %library', array('%library' => $machineName)), 'warning');
+      }
+      return $semantics;
+    }
+    return FALSE;
   }
 }
 
