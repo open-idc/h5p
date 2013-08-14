@@ -1,17 +1,14 @@
 <?php
 
 class H5peditorDrupalStorage implements H5peditorStorage {
-  
+
   function __construct() { }
-  
+
   public function getSemantics($machineName, $majorVersion, $minorVersion) {
-    return db_result(db_query(
-      "SELECT semantics
-      FROM {h5p_libraries}
-      WHERE machine_name = '%s'
-      AND major_version = %d
-      AND minor_version = %d",
-      $machineName, $majorVersion, $minorVersion));
+    $h5p_drupal = _h5p_get_instance('interface');
+    $semantics = $h5p_drupal->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
+    // TODO: Could this rather return the proper object?
+    return json_encode($semantics);
   }
 
   public function getLanguage($machineName, $majorVersion, $minorVersion) {
@@ -54,10 +51,10 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     }
     return $file_paths;
   }
-  
+
   public function addTempFile($file) {
     global $user;
-    
+
     db_query("INSERT INTO {files} (uid, filename, filepath, filemime, filesize, status, timestamp) VALUES (%d, '%s', '%s', '%s', %d, %d, %d)", $user->uid, $file->name, $file->path, $file->mime, $file->size, FILE_STATUS_TEMPORARY, time());
   }
 
@@ -70,7 +67,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     db_query("DELETE FROM {files} WHERE filepath = '%s'", $path);
   }
 
-  
+
   public function getLibraries() {
     $libraries = array();
 
@@ -112,29 +109,29 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       AND hl.minor_version = %d
       AND hll.dependency_type = 'editor'
     ", $machineName, $majorVersion, $minorVersion);
-    
+
     $jsonData = array('preloadedDependencies' => array());
     while ($editorLibrary = db_fetch_object($result)) {
       $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
-      
+
       $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
         'machineName' => $editorLibrary->machineName,
         'majorVersion' => $editorLibrary->majorVersion,
         'minorVersion' => $editorLibrary->minorVersion
       );
     }
-    
+
     $libraries = array();
     // TODO: Fix, using private function since no API is available!
     $storage = _h5p_get_instance('storage');
     $storage->getLibraryUsage($libraries, $jsonData);
-    
+
     foreach ($libraries as $library) {
       if ($library['preloaded']) {
         $editorLibraries[$library['library']['libraryId']] = $library['library'];
       }
     }
-    
+
     return $editorLibraries;
   }
 }
