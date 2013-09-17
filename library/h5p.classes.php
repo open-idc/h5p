@@ -1515,7 +1515,11 @@ class H5PContentValidator {
         $this->semanticsCache[$value->library] = $librarySemantics;
       }
       $this->validateBySemantics($value->params, $librarySemantics);
-      $this->filterParams($value, array('library', 'params'));
+      $validkeys = array('library', 'params');
+      if (isset($semantics->extraAttributes)) {
+        $validkeys = array_merge($validkeys, $semantics->extraAttributes);
+      }
+      $this->filterParams($value, $validkeys);
     }
     else {
       $this->h5pF->setErrorMessage($this->h5pF->t('Library used in content is not a valid library according to semantics'));

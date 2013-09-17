@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 interface H5peditorStorage {
   public function getSemantics($machine_name, $major_version, $minor_version);
