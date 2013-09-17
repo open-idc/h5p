@@ -74,7 +74,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         $matches = array();
         preg_match_all('/(.+)\s(\d)+\.(\d)$/', $libraryName, $matches);
         if ($matches) {
-          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
+          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion, runnable FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
           if ($library) {
             $library->uberName = $libraryName;
             $libraries[] = $library;
