@@ -5,10 +5,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   function __construct() { }
 
   public function getSemantics($machineName, $majorVersion, $minorVersion) {
-    $h5p_drupal = _h5p_get_instance('interface');
-    $semantics = $h5p_drupal->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
-    // TODO: Could this rather return the proper object?
-    return json_encode($semantics);
+    $coreInterface = _h5p_get_instance('interface');
+    return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
   }
 
   public function getLanguage($machineName, $majorVersion, $minorVersion) {
