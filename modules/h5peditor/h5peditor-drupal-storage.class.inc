@@ -62,7 +62,6 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     db_query("UPDATE {files} SET filepath = '%s', status = %d WHERE filepath = '%s'", $newPath, FILE_STATUS_PERMANENT, $oldPath);
   }
 
-
   public function removeFile($path) {
     db_query("DELETE FROM {files} WHERE filepath = '%s'", $path);
   }
