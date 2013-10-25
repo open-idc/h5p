@@ -47,8 +47,8 @@ ns.init = function () {
       }
 
       if (params !== undefined) {
-        $('#edit-h5p-library').val(h5peditor.getLibrary());
-        $('#edit-h5p-params').val(JSON.stringify(params));
+        ns.$('#edit-h5p-library').val(h5peditor.getLibrary());
+        ns.$('#edit-h5p-params').val(JSON.stringify(params));
       }
     }
   });
