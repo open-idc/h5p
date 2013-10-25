@@ -122,7 +122,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   $done = TRUE;
 
   $node = h5peditor_get_source_node($form['#node']);
-  h5p_add_files_and_settings($node);
+  h5p_add_files_and_settings($node, 'div');
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
 
