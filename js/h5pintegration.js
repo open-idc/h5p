@@ -53,15 +53,16 @@ H5PIntegration.getFullscreen = function (contentId) {
 };
 
 /**
- *
+ * TODO: explain
  */
 H5PIntegration.addFilesToIframe = function ($iframe, contentId) {
   var styles = Array().concat(Drupal.settings.h5p.core.styles, Drupal.settings.h5p['cid-'+contentId].styles),
     scripts = Array().concat(Drupal.settings.h5p.core.scripts, Drupal.settings.h5p['cid-'+contentId].scripts),
-    basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath;
+    basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath,
+    $head = $iframe.contents().find('head');
+
   H5P.jQuery.each(styles, function (idx, style) {
-    $iframe.contents().find('head') // TODO: Stop abusing jQuery selectors...
-      .append('<link type="text/css" rel="Stylesheet" href="' + basePath + style + '"/>');
+    $head.append('<link type="text/css" rel="Stylesheet" href="' + basePath + style + '"/>');
   });
   var doc = $iframe[0].contentDocument;
   var scriptCounter = 0;
@@ -72,17 +73,22 @@ H5PIntegration.addFilesToIframe = function ($iframe, contentId) {
     var script = doc.createElement('script');
     script.type = 'text/javascript';
 
-    if (scriptCounter == scripts.length) {
-      script.textContent = "H5P.init()";
+    if (scriptCounter === scripts.length) {
+      script.text = 'H5P.init()';
     }
     else { // Add next script
-      script.src = basePath + scripts[scriptCounter];
       script.onload = addScriptAndWait;
+      script.onreadystatechange = function () {
+        if (this.readyState === 'loaded') {
+          addScriptAndWait();
+        }
+      };
+      script.src = basePath + scripts[scriptCounter];
       scriptCounter++;
     }
     doc.body.appendChild(script);
   }
   addScriptAndWait();
-}
+};
 
 H5PIntegration.fullscreenText = Drupal.t('Fullscreen');
