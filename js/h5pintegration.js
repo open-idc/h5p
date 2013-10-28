@@ -53,42 +53,35 @@ H5PIntegration.getFullscreen = function (contentId) {
 };
 
 /**
- * TODO: explain
+ * Loop trough styles and create a set of tags for head.
+ * TODO: Cache base tags or something to improve performance.
+ *
+ * @param {Array} styles List of stylesheets
+ * @returns {String} HTML
  */
-H5PIntegration.addFilesToIframe = function ($iframe, contentId) {
-  var styles = Array().concat(Drupal.settings.h5p.core.styles, Drupal.settings.h5p['cid-'+contentId].styles),
-    scripts = Array().concat(Drupal.settings.h5p.core.scripts, Drupal.settings.h5p['cid-'+contentId].scripts),
-    basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath,
-    $head = $iframe.contents().find('head');
+H5PIntegration.getHeadTags = function (contentId) {
+  var basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath;
 
-  H5P.jQuery.each(styles, function (idx, style) {
-    $head.append('<link type="text/css" rel="Stylesheet" href="' + basePath + style + '"/>');
-  });
-  var doc = $iframe[0].contentDocument;
-  var scriptCounter = 0;
-  function addScriptAndWait() {
-    // Cannot use jQuery append/prepend here. It does magic with scripts
-    // that mess stuff up. (Basically, ends up staying in main window
-    // context, re-initing H5P, etc.
-    var script = doc.createElement('script');
-    script.type = 'text/javascript';
+  var createStyleTags = function (styles) {
+    var tags = '';
+    for (var i = 0; i < styles.length; i++) {
+      tags += '<link rel="stylesheet" href="' + basePath + styles[i] + '">';
+    }
+    return tags;
+  };
 
-    if (scriptCounter === scripts.length) {
-      script.text = 'H5P.init()';
+  var createScriptTags = function (scripts) {
+    var tags = '';
+    for (var i = 0; i < scripts.length; i++) {
+      tags += '<script src="' + basePath + scripts[i] + '"></script>';
     }
-    else { // Add next script
-      script.onload = addScriptAndWait;
-      script.onreadystatechange = function () {
-        if (this.readyState === 'loaded') {
-          addScriptAndWait();
-        }
-      };
-      script.src = basePath + scripts[scriptCounter];
-      scriptCounter++;
-    }
-    doc.body.appendChild(script);
-  }
-  addScriptAndWait();
+    return tags;
+  };
+
+  return createStyleTags(Drupal.settings.h5p.core.styles)
+       + createStyleTags(Drupal.settings.h5p['cid-' + contentId].styles)
+       + createScriptTags(Drupal.settings.h5p.core.scripts)
+       + createScriptTags(Drupal.settings.h5p['cid-' + contentId].scripts);
 };
 
 H5PIntegration.fullscreenText = Drupal.t('Fullscreen');
