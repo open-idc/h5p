@@ -92,6 +92,15 @@ interface H5PFrameworkInterface {
   public function isPatchedLibrary($library);
 
   /**
+   * Is H5P in development mode?
+   *
+   * @return boolean
+   *  TRUE if H5P development mode is active
+   *  FALSE otherwise
+   */
+  public function isInDevMode();
+
+  /**
    * Is the current user allowed to update libraries?
    *
    * @return boolean
@@ -259,7 +268,7 @@ class H5PValidator {
 
   private $libraryOptional  = array(
     'author' => '/^.{1,255}$/',
-    'license' => '/^(cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT)$/',
+    'license' => '/^(cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT|GPL1|GPL2|GPL3)$/',
     'description' => '/^.{1,}$/',
     'dynamicDependencies' => array(
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
@@ -775,12 +784,12 @@ class H5PValidator {
    */
   private function getJsonData($filePath, $return_as_string = FALSE) {
     $json = file_get_contents($filePath);
-    if (!$json) {
-      return FALSE;
+    if ($json === FALSE) {
+      return FALSE; // Cannot read from file.
     }
     $jsonData = json_decode($json, TRUE);
-    if (!$jsonData) {
-      return FALSE;
+    if ($jsonData === NULL) {
+      return FALSE; // JSON cannot be decoded or the recursion limit has been reached.
     }
     return $return_as_string ? $json : $jsonData;
   }
@@ -1515,7 +1524,11 @@ class H5PContentValidator {
         $this->semanticsCache[$value->library] = $librarySemantics;
       }
       $this->validateBySemantics($value->params, $librarySemantics);
-      $this->filterParams($value, array('library', 'params'));
+      $validkeys = array('library', 'params');
+      if (isset($semantics->extraAttributes)) {
+        $validkeys = array_merge($validkeys, $semantics->extraAttributes);
+      }
+      $this->filterParams($value, $validkeys);
     }
     else {
       $this->h5pF->setErrorMessage($this->h5pF->t('Library used in content is not a valid library according to semantics'));

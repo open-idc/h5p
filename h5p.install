@@ -370,7 +370,7 @@ function h5p_update_6102() {
     'description' => 'Meta description as defined in h5p.json',
     'type' => 'text',
   ));
-  
+
   return $ret;
 }
 
@@ -385,5 +385,14 @@ function h5p_update_6103() {
     'not null' => TRUE,
     'size' => 'big',
   ));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function h5p_update_6104() {
+  $ret = array();
+  db_add_index($ret, 'files', 'filepath', array('filepath'));
   return $ret;
 }
