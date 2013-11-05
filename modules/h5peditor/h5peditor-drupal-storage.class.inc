@@ -5,10 +5,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   function __construct() { }
 
   public function getSemantics($machineName, $majorVersion, $minorVersion) {
-    $h5p_drupal = _h5p_get_instance('interface');
-    $semantics = $h5p_drupal->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
-    // TODO: Could this rather return the proper object?
-    return json_encode($semantics);
+    $coreInterface = _h5p_get_instance('interface');
+    return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
   }
 
   public function getLanguage($machineName, $majorVersion, $minorVersion) {
@@ -62,7 +60,6 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     db_query("UPDATE {files} SET filepath = '%s', status = %d WHERE filepath = '%s'", $newPath, FILE_STATUS_PERMANENT, $oldPath);
   }
 
-
   public function removeFile($path) {
     db_query("DELETE FROM {files} WHERE filepath = '%s'", $path);
   }
@@ -77,7 +74,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         $matches = array();
         preg_match_all('/(.+)\s(\d)+\.(\d)$/', $libraryName, $matches);
         if ($matches) {
-          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
+          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion, runnable FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
           if ($library) {
             $library->uberName = $libraryName;
             $libraries[] = $library;
