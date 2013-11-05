@@ -46,6 +46,20 @@ function h5p_admin_settings() {
     '#default_value' => variable_get('h5p_library_whitelist_extras', H5PCore::$defaultLibraryWhitelistExtras),
     '#description' => t("Libraries might need to accept more files that should be allowed in normal contents. Add extra files here. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
   );
+  
+  $form['h5p_dev_mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable H5P development mode'),
+    '#default_value' => variable_get('h5p_dev_mode', '0'),
+    '#description' => t("With this feature enabled libraries with the same patch version will overwrite existing libraries in the database, and semantics.json will be read from file."),
+  );
+  
+  $form['h5p_content_dev_mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable H5P content development mode'),
+    '#default_value' => variable_get('h5p_content_dev_mode', '0'),
+    '#description' => t("With this feature enabled content.json will be read from file. Changes to the content made using the editor won't be visible when this mode is actice."),
+  );
 
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().
