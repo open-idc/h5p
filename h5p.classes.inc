@@ -77,7 +77,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       $library['machineName'], $library['majorVersion'], $library['minorVersion'], $library['patchVersion']));
     return $result === '1';
   }
-  
+
   /**
    * Implements isInDevMode
    */
@@ -212,7 +212,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     );
     // @todo: Add support for allowing the user to select embed type
   }
-  
+
   /**
    * Implement getWhitelist
    */
@@ -332,7 +332,7 @@ class H5PDrupal implements H5PFrameworkInterface {
 
     return $semantics;
   }
-  
+
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
     $semanticsPath = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
     if (file_exists($semanticsPath)) {
@@ -343,6 +343,66 @@ class H5PDrupal implements H5PFrameworkInterface {
       return $semantics;
     }
     return FALSE;
+  }
+  /**
+   * @param int $contentId
+   * ContentID of the node we are going to export
+   * @param string $title
+   * Title of the node to export
+   * @param string $language
+   * Language of the node to export
+   * @return array
+   * An array with all the data needed to export the h5p.
+   **/
+  public function getExportData($contentId, $title, $language) {
+    $content = db_fetch_array(db_query(
+        "SELECT main_library_id, embed_type
+          FROM h5p_nodes
+          WHERE content_id = %d",
+        $contentId));
+
+    $mainLibraryId = $content['main_library_id'];
+
+    // Use library ids to get library info.
+    $machineNameQuery = db_query(
+    "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, hnl.preloaded as preloaded, hl.library_id as library_id
+      FROM {h5p_libraries} hl
+      JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
+      WHERE hnl.content_id = %d", $contentId);
+
+    while($libs = db_fetch_array($machineNameQuery)) {
+      $librariesInfo[] = array(
+        'machine_name' => $libs['machine_name'],
+        'major_version' => $libs['major_version'],
+        'minor_version' => $libs['minor_version'],
+        'preloaded' => $libs['preloaded'],
+      );
+      // Save the main libary machine name.
+      if ($libs['library_id'] == $mainLibraryId) {
+        $mainLibrary = $libs['machine_name'];
+      }
+    }
+    // Set language to drupals node language, or 'und' if not set.
+    $exportLanguage = $language === TRUE ? $language : 'und';
+
+    $export = array(
+      'title' => $title,
+      'contentId' => $contentId,
+      'mainLibrary' => $mainLibrary,
+      'embed_type' => $content['embed_type'],
+      'libraries' => $librariesInfo,
+      'language' => $exportLanguage,
+    );
+
+    return $export;
+  }
+  /**
+   * Check if h5p export is enabled.
+   *
+   * @return bool
+   */
+  public function exportEnabled() {
+    return (bool) variable_get('h5p_export', 1);
   }
 }
 
