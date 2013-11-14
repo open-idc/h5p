@@ -356,16 +356,16 @@ class H5PDrupal implements H5PFrameworkInterface {
    **/
   public function getExportData($contentId, $title, $language) {
     $content = db_fetch_array(db_query(
-        "SELECT main_library_id, embed_type
-          FROM {h5p_nodes}
-          WHERE content_id = %d",
-        $contentId));
+      "SELECT main_library_id, embed_type
+      FROM {h5p_nodes}
+      WHERE content_id = %d",
+      $contentId));
 
     $mainLibraryId = $content['main_library_id'];
 
     // Use library ids to get library info.
     $machineNameQuery = db_query(
-    "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, hnl.preloaded as preloaded, hl.library_id as library_id
+      "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, hnl.preloaded as preloaded, hl.library_id as library_id
       FROM {h5p_libraries} hl
       JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
       WHERE hnl.content_id = %d", $contentId);
