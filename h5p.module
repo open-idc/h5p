@@ -383,7 +383,7 @@ function h5p_add_files_and_settings($node, $mode) {
           ),
         ),
         'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
-        'export' => _h5p_get_instance('interface')->exportEnabled(),
+        'exportEnabled' => _h5p_get_instance('interface')->isExportEnabled(),
       )
     );
 

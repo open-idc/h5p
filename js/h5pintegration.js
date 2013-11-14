@@ -28,8 +28,8 @@ H5PIntegration.getContentPath = function (contentId) {
   }
 };
 
-H5PIntegration.getExport = function() {
-    return Drupal.settings.h5p.export;
+H5PIntegration.isExportEnabled = function() {
+    return Drupal.settings.h5p.exportEnabled;
 }
 
 /**
