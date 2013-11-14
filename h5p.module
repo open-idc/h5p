@@ -40,17 +40,14 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
-  //Check if export is enabled and toggle menu callback.
-  if(_h5p_get_instance('interface')->exportEnabled()) {
-    $items['node/%node/h5p-export'] = array(
-      'title' => 'h5p-export',
-      'page callback' => 'h5p_export_callback',
-      'access callback' => 'variable_get',
-      'access arguments' => array('h5p_export',1),
-      'page arguments' => array(1),
-      'type' => MENU_CALLBACK,
-    );
-  }
+  $items['node/%node/h5p-export'] = array(
+    'title' => 'h5p-export',
+    'page callback' => 'h5p_export_callback',
+    'access callback' => 'variable_get',
+    'access arguments' => array('h5p_export',1),
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
 
   return $items;
 }
