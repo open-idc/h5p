@@ -375,9 +375,9 @@ class H5PDrupal implements H5PFrameworkInterface {
 
     while($libs = db_fetch_array($machineNameQuery)) {
       $librariesInfo[] = array(
-        'machine_name' => $libs['machine_name'],
-        'major_version' => $libs['major_version'],
-        'minor_version' => $libs['minor_version'],
+        'machineName' => $libs['machine_name'],
+        'majorVersion' => $libs['major_version'],
+        'minorVersion' => $libs['minor_version'],
         'preloaded' => $libs['preloaded'],
       );
       // Save the main libary machine name.
@@ -392,7 +392,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       'title' => $title,
       'contentId' => $contentId,
       'mainLibrary' => $mainLibrary,
-      'embed_type' => $content['embed_type'],
+      'embedType' => $content['embed_type'],
       'libraries' => $librariesInfo,
       'language' => $exportLanguage,
     );
