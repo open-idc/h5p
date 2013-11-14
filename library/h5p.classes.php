@@ -246,7 +246,7 @@ interface H5PFrameworkInterface {
   /**
    * Check if export is enabled.
    */
-  public function exportEnabled();
+  public function isExportEnabled();
 }
 
 /**

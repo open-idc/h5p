@@ -404,7 +404,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    *
    * @return bool
    */
-  public function exportEnabled() {
+  public function isExportEnabled() {
     return (bool) variable_get('h5p_export', 1);
   }
 }
