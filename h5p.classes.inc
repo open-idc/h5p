@@ -344,7 +344,10 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     return FALSE;
   }
+
   /**
+   * Implements getExportData
+   *
    * @param int $contentId
    * ContentID of the node we are going to export
    * @param string $title
