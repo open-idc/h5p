@@ -269,6 +269,7 @@ function h5p_requirements($phase) {
     // File paths
     $h5p_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p'));
     $temp_path = $h5p_path . '/temp';
+    $export_path = $h5p_path . '/exports';
     if (!file_check_directory($h5p_path, FILE_CREATE_DIRECTORY)) {
       $requirements['h5p_dirs'] = array(
         'value' => t('Missing directory.'),
@@ -281,6 +282,13 @@ function h5p_requirements($phase) {
         'value' => t('Missing temp directory.'),
         'severity' => REQUIREMENT_ERROR,
         'description' => t("The h5p module's temp directory %temp_path is missing.", array('%temp_path' => $temp_path)),
+      );
+    }
+    else if (!file_check_directory($export_path, FILE_CREATE_DIRECTORY)) {
+      $requirements['h5p_dirs'] = array(
+        'value' => t('Missing export directory.'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t("The h5p module's export directory %export_path is missing.", array('%export_path' => $export_path)),
       );
     }
     else {

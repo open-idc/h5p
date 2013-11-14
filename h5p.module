@@ -40,6 +40,17 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  //Check if export is enabled and toggle menu callback.
+  if(_h5p_get_instance('interface')->exportEnabled()) {
+    $items['node/%node/h5p-export'] = array(
+      'title' => 'h5p-export',
+      'page callback' => 'h5p_export_callback',
+      'access callback' => 'variable_get',
+      'access arguments' => array('h5p_export',1),
+      'page arguments' => array(1),
+      'type' => MENU_CALLBACK,
+    );
+  }
 
   return $items;
 }
@@ -224,6 +235,11 @@ function h5p_update($node) {
       WHERE content_id = %d", $node->json_content, $node->embed_type, $node->main_library_id, h5p_get_content_id($node)
     );
   }
+
+  $export_path = _h5p_get_h5p_path() . '/exports/' . $node->nid . '.h5p';
+  if (file_exists($export_path)) {
+    file_delete($export_path);
+  }
   cache_clear_all('validated_json_'.$node->vid, 'cache');
 }
 
@@ -370,6 +386,7 @@ function h5p_add_files_and_settings($node, $mode) {
           ),
         ),
         'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
+        'export' => _h5p_get_instance('interface')->exportEnabled(),
       )
     );
 
@@ -458,6 +475,7 @@ function _h5p_check_settings() {
   $temp_path = $path . '/temp';
   $libraries_path = $path . '/libraries';
   $content_path = $path . '/content';
+  $export_path = $path . '/exports';
 
   if (!file_check_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
     return FALSE;
@@ -469,6 +487,9 @@ function _h5p_check_settings() {
     return FALSE;
   }
   if (!file_check_directory($content_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    return FALSE;
+  }
+  if (!file_check_directory($export_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
     return FALSE;
   }
   return TRUE;
@@ -519,6 +540,8 @@ function _h5p_get_instance($type) {
       return new H5PStorage($interface, $core);
     case 'contentvalidator':
       return new H5PContentValidator($interface, $core);
+    case 'export':
+      return new H5PExport($interface, $core);
     case 'interface':
       return $interface;
     case 'core':
@@ -568,4 +591,17 @@ function _h5p_clear_js_and_css_cache() {
  */
 function h5p_get_content_id($node) {
   return variable_get('h5p_revisioning', 1) ? $node->vid : $node->nid;
+}
+
+/**
+ * Callback requesting h5p package.
+ *
+ * @param object $node
+ * The node we will extract the contet id from
+ * @return h5p-package
+ * The h5p package.
+ **/
+function h5p_export_callback($node) {
+  $content_id = h5p_get_content_id($node);
+  return _h5p_get_instance('export')->exportToZip(_h5p_get_instance('interface')->getExportData($content_id, $node->title, $node->language));
 }
