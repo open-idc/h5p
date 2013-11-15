@@ -28,10 +28,6 @@ H5PIntegration.getContentPath = function (contentId) {
   }
 };
 
-H5PIntegration.isExportEnabled = function() {
-    return Drupal.settings.h5p.exportEnabled;
-}
-
 /**
  * Get the path to the library
  *
