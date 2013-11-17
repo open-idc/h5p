@@ -1124,7 +1124,7 @@ Class H5PExport {
       }
       // Close zip and remove temp dir
       $zip->close();
-      @rmdir($tempPath);
+      $this->h5pC->delTree($tempPath);
     }
 
     // Set headers for automagic download!!
