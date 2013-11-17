@@ -337,7 +337,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
         $html .= '</div>';
         $html = str_replace(array('##h5pId##', '##mainLibrary##'), array($content_id, $main_library), $html);
       }
-      if (variable_get('h5p_export', 1)) {
+      if (variable_get('h5p_export', 1) && FALSE) {
         $content_id = h5p_get_content_id($node);
         $h5p_path = _h5p_get_instance('export')->getExportPath(_h5p_get_instance('interface')->getExportData($content_id, $node->title, $node->language));
 
