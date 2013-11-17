@@ -359,7 +359,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    **/
   public function getExportData($contentId, $title, $language) {
     $content = db_fetch_array(db_query(
-      "SELECT main_library_id, embed_type
+      "SELECT main_library_id, embed_type, json_content
       FROM {h5p_nodes}
       WHERE content_id = %d",
       $contentId));
@@ -395,6 +395,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       'embedType' => $content['embed_type'],
       'libraries' => $librariesInfo,
       'language' => $exportLanguage,
+      'jsonContent' => $content['json_content'],
     );
 
     return $export;
