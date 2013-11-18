@@ -40,14 +40,6 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
-  $items['node/%node/h5p-export'] = array(
-    'title' => 'h5p-export',
-    'page callback' => 'h5p_export_callback',
-    'access callback' => 'variable_get',
-    'access arguments' => array('h5p_export',1),
-    'page arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
 
   return $items;
 }
@@ -345,6 +337,12 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
         $html .= '</div>';
         $html = str_replace(array('##h5pId##', '##mainLibrary##'), array($content_id, $main_library), $html);
       }
+      if (variable_get('h5p_export', 1) && FALSE) {
+        $content_id = h5p_get_content_id($node);
+        $h5p_path = _h5p_get_instance('export')->getExportPath(_h5p_get_instance('interface')->getExportData($content_id, $node->title, $node->language));
+
+        $html .= theme('h5p_export_button', $h5p_path);
+      }
     }
     else {
       $html = '<div>' . t('Sorry, preview of H5P content is not yet available.') . '</div>';
@@ -357,6 +355,17 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
   }
 
   return $node;
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function h5p_theme() { // &$cache, $type, $theme, $path
+  return array(
+    'h5p_export_button' => array(
+        'arguments' => array('nid' => NULL)
+    ),
+  );
 }
 
 function h5p_add_files_and_settings($node, $mode) {
@@ -383,7 +392,7 @@ function h5p_add_files_and_settings($node, $mode) {
           ),
         ),
         'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
-        'exportEnabled' => _h5p_get_instance('interface')->exportEnabled(),
+        'exportEnabled' => _h5p_get_instance('interface')->isExportEnabled(),
       )
     );
 
@@ -590,15 +599,6 @@ function h5p_get_content_id($node) {
   return variable_get('h5p_revisioning', 1) ? $node->vid : $node->nid;
 }
 
-/**
- * Callback requesting h5p package.
- *
- * @param object $node
- * The node we will extract the contet id from
- * @return h5p-package
- * The h5p package.
- **/
-function h5p_export_callback($node) {
-  $content_id = h5p_get_content_id($node);
-  return _h5p_get_instance('export')->exportToZip(_h5p_get_instance('interface')->getExportData($content_id, $node->title, $node->language));
+function theme_h5p_export_button($path) {
+  return '<div class="h5p-export">' . l(t('Download as H5P'), $path) . '</div>';
 }
