@@ -225,10 +225,8 @@ function h5p_update($node) {
     );
   }
 
-  $export_path = _h5p_get_h5p_path() . '/exports/' . $node->nid . '.h5p';
-  if (file_exists($export_path)) {
-    file_delete($export_path);
-  }
+  _h5p_get_instance('export')->deleteExport($node->nid);
+
   cache_clear_all('validated_json_'.$node->vid, 'cache');
 }
 
@@ -242,6 +240,7 @@ function h5p_delete($node) {
   while ($content_id = db_result($res)) {
     $h5p_core->deletePackage($content_id);
   }
+  _h5p_get_instance('export')->deleteExport($node->nid);
 }
 
 /**
@@ -338,8 +337,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
         $html = str_replace(array('##h5pId##', '##mainLibrary##'), array($content_id, $main_library), $html);
       }
       if (variable_get('h5p_export', 1)) {
-        $content_id = h5p_get_content_id($node);
-        $h5p_path = _h5p_get_instance('export')->getExportPath($content_id, $node->title, $node->language);
+        $h5p_path = _h5p_get_instance('export')->getExportPath($node->nid, $node->title, $node->language);
 
         $html .= theme('h5p_export_button', $h5p_path);
       }
