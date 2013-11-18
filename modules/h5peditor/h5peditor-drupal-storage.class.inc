@@ -92,7 +92,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
     return json_encode($libraries);
   }
-  public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
+  public function getEditorLibraries($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
     $editorLibraries = array();
 
     // TODO: Add support for fetching additional libraries this library depends on
@@ -121,7 +121,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     $libraries = array();
     // TODO: Fix, using private function since no API is available!
     $storage = _h5p_get_instance('storage');
-    $storage->getLibraryUsage($libraries, $jsonData);
+    $storage->getLibraryUsage($libraries, $jsonData, FALSE, $complete);
 
     foreach ($libraries as $library) {
       if ($library['preloaded']) {
