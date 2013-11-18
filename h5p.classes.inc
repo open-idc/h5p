@@ -350,12 +350,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    *
    * @param int $contentId
    * ContentID of the node we are going to export
-   * @param string $title
-   * Title of the node to export
-   * @param string $language
-   * Language of the node to export
-   * @return array
-   * An array with all the data needed to export the h5p.
    **/
   public function getExportData($contentId) {
     $content = db_fetch_array(db_query(
