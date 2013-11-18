@@ -359,7 +359,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    **/
   public function getExportData($contentId, $title, $language) {
     $content = db_fetch_array(db_query(
-      "SELECT main_library_id, embed_type
+      "SELECT main_library_id, embed_type, json_content
       FROM {h5p_nodes}
       WHERE content_id = %d",
       $contentId));
@@ -367,19 +367,31 @@ class H5PDrupal implements H5PFrameworkInterface {
     $mainLibraryId = $content['main_library_id'];
 
     // Use library ids to get library info.
-    $machineNameQuery = db_query(
-      "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, hnl.preloaded as preloaded, hl.library_id as library_id
+    $res = db_query(
+      "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, 
+      hnl.preloaded as preloaded, hl.library_id as library_id, hl2.machine_name as editor_library_machine_name,
+      hl2.major_version as editor_library_major_version, hl2.minor_version as editor_library_minor_version
       FROM {h5p_libraries} hl
       JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
+      LEFT OUTER JOIN {h5p_libraries_libraries} hll ON hll.library_id = hl.library_id AND hll.dependency_type = 'editor'
+      LEFT OUTER JOIN {h5p_libraries} hl2 ON hl2.library_id = hll.required_library_id
       WHERE hnl.content_id = %d", $contentId);
 
-    while($libs = db_fetch_array($machineNameQuery)) {
-      $librariesInfo[] = array(
+    while($libs = db_fetch_array($res)) {
+      $librariesInfo[$libs['machine_name']] = array(
         'machineName' => $libs['machine_name'],
         'majorVersion' => $libs['major_version'],
         'minorVersion' => $libs['minor_version'],
         'preloaded' => $libs['preloaded'],
       );
+
+      if ($libs['editor_library_machine_name']) {
+        $librariesInfo[$libs['machine_name']]['editorLibraries'][$libs['editor_library_machine_name']] = array(
+          'machineName' => $libs['editor_library_machine_name'],
+          'majorVersion' => $libs['editor_library_major_version'],
+          'minorVersion' => $libs['editor_library_minor_version'],
+        );
+      }
       // Save the main libary machine name.
       if ($libs['library_id'] == $mainLibraryId) {
         $mainLibrary = $libs['machine_name'];
@@ -395,6 +407,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       'embedType' => $content['embed_type'],
       'libraries' => $librariesInfo,
       'language' => $exportLanguage,
+      'jsonContent' => $content['json_content'],
     );
 
     return $export;
@@ -404,7 +417,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    *
    * @return bool
    */
-  public function exportEnabled() {
+  public function isExportEnabled() {
     return (bool) variable_get('h5p_export', 1);
   }
 }
