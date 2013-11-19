@@ -598,5 +598,7 @@ function h5p_get_content_id($node) {
 }
 
 function theme_h5p_export_button($path) {
-  return '<div class="h5p-export">' . l(t('Download as H5P'), $path) . '</div>';
+  $module_path = drupal_get_path('module', 'h5p');
+  drupal_add_css($module_path . '/styles/h5p.css');
+  return '<div class="h5p-export">' . l(t('Download'), $path) . '</div>';
 }
