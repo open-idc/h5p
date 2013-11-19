@@ -62,7 +62,7 @@ H5P.init = function () {
         H5P.fullScreen($el, obj);
         return false;
       });
-    }
+    };
   });
 
   // H5Ps living in iframes. Note: Fullscreen button will be added
