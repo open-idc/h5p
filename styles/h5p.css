@@ -1,0 +1,43 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Nov 19, 2013, 10:16:58 AM
+    Author     : Magnus Vik Magnussen
+*/
+
+.h5p-export a {
+  margin-top: 6px;
+  float: right;
+  border-radius: 4px;
+  padding: 4px 58px 3px 12px;
+  font-weight: 900; 
+  font-family: "Arial Black", Arial, sans-serif;
+  text-transform: uppercase;
+  color: white !important;
+  background-color: #ccc;
+  background-image: url(../images/h5p_logo.png);
+  background-image: url(../images/h5p_logo.svg), none;
+  background-repeat: no-repeat;
+  background-size: 36px 36px;
+  background-position: 98px -5px;  
+  box-shadow: 0px 0px 4px #666;
+}
+
+.h5p-export a:hover {
+  text-decoration: none;
+  color: white;
+  box-shadow: 0px 0px 6px #333;
+  background-color: #0092bf;
+  /* Firefox */
+  -moz-transition: all 0.4s ease-in;
+  /* WebKit */
+  -webkit-transition: all 0.4s ease-in;
+  /* Opera */
+  -o-transition: all 0.4s ease-in;
+  /* Standard */
+  transition: all 0.4s ease-in;
+}
+
