@@ -219,6 +219,33 @@ interface H5PFrameworkInterface {
    *  Library Id
    */
   public function deleteLibraryDependencies($libraryId);
+
+  /**
+   * Get all the data we need to export H5P
+   *
+   * @param int $contentId
+   * ContentID of the node we are going to export
+   * @return array
+   * An array with all the data needed to export the h5p in the following format:
+   *  'contentId' => string/int,
+   *  'mainLibrary' => string (machine name for main library),
+   *  'embedType' => string,
+   *  'libraries' => array(
+   *    'machineName' => string,
+   *    'majorVersion' => int,
+   *    'minorVersion' => int,
+   *    'preloaded' => int(0|1),
+   * 'editorLibraries' => array(
+   *    'machineName' => string,
+   *    'majorVersion' => int,
+   *    'minorVersion' => int,
+   *    'preloaded' => int(0|1),
+   */
+  public function getExportData($contentId);
+  /**
+   * Check if export is enabled.
+   */
+  public function isExportEnabled();
 }
 
 /**
@@ -977,7 +1004,7 @@ class H5PStorage {
    * @param boolean $dynamic
    *  Whether or not the current library is a dynamic dependency
    */
-  public function getLibraryUsage(&$librariesInUse, $jsonData, $dynamic = FALSE) {
+  public function getLibraryUsage(&$librariesInUse, $jsonData, $dynamic = FALSE, $editor = FALSE) {
     if (isset($jsonData['preloadedDependencies'])) {
       foreach ($jsonData['preloadedDependencies'] as $preloadedDependency) {
         $library = $this->h5pF->loadLibrary($preloadedDependency['machineName'], $preloadedDependency['majorVersion'], $preloadedDependency['minorVersion']);
@@ -985,7 +1012,7 @@ class H5PStorage {
           'library' => $library,
           'preloaded' => $dynamic ? 0 : 1,
         );
-        $this->getLibraryUsage($librariesInUse, $library, $dynamic);
+        $this->getLibraryUsage($librariesInUse, $library, $dynamic, $editor);
       }
     }
     if (isset($jsonData['dynamicDependencies'])) {
@@ -997,9 +1024,176 @@ class H5PStorage {
             'preloaded' => 0,
           );
         }
-        $this->getLibraryUsage($librariesInUse, $library, TRUE);
+        $this->getLibraryUsage($librariesInUse, $library, TRUE, $editor);
       }
     }
+    if (isset($jsonData['editorDependencies']) && $editor) {
+      foreach ($jsonData['editorDependencies'] as $editorDependency) {
+        if (!isset($librariesInUse[$editorDependency['machineName']])) {
+          $library = $this->h5pF->loadLibrary($editorDependency['machineName'], $editorDependency['majorVersion'], $editorDependency['minorVersion']);
+          $librariesInUse[$editorDependency['machineName']] = array(
+            'library' => $library,
+            'preloaded' => $dynamic ? 0 : 1,
+          );
+        }
+        $this->getLibraryUsage($librariesInUse, $library, $dynamic, TRUE);
+      }
+    }
+  }
+}
+
+/**
+* This class is used for exporting zips
+*/
+Class H5PExport {
+  public $h5pF;
+  public $h5pC;
+
+  /**
+   * Constructor for the H5PExport
+   *
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
+   * @param H5PCore
+   *  Reference to an insance of H5PCore
+   */
+  public function __construct($H5PFramework, $H5PCore) {
+    $this->h5pF = $H5PFramework;
+    $this->h5pC = $H5PCore;
+  }
+
+  /**
+   * Return path to h5p package.
+   *
+   * Creates package if not already created
+   *
+   * @param int/string $contentId
+   *  Identifier for this H5P
+   * @param String $title
+   *  Title of H5P
+   * @param string $language
+   *  Language code for H5P
+   * @return string
+   *  Path to .h5p file
+   */
+  public function getExportPath($contentId, $title, $language) {
+    $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
+    $tempPath = $h5pDir . 'temp' . DIRECTORY_SEPARATOR . $contentId;
+    $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $contentId . '.h5p';
+    // Check if h5p-package already exists.
+    if (!file_exists($zipPath)) {
+      // Temp dir to put the h5p files in
+      @mkdir($tempPath);
+      $exportData = $this->h5pF->getExportData($contentId);
+      // Create content folder
+      $this->h5pC->copyTree($h5pDir . 'content' . DIRECTORY_SEPARATOR . $contentId, $tempPath . DIRECTORY_SEPARATOR . 'content');
+      file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . 'content.json', $exportData['jsonContent']);
+      
+      // Make embedTypes into an array
+      $embedTypes = explode(', ', $exportData['embedType']);
+
+
+      // Build h5p.json
+      $h5pJson = array (
+        'title' => $title,
+        'language' => $exportData['language'] ? $exportData['language'] : 'und',
+        'mainLibrary' => $exportData['mainLibrary'],
+        'embedTypes' => $embedTypes,
+      );
+      
+      // Copies libraries to temp dir and create mention in h5p.json
+      foreach($exportData['libraries'] as $library) {
+        // Set preloaded and dynamic dependencies
+        if ($library['preloaded']) {
+          $preloadedDependencies[] = array(
+            'machineName' => $library['machineName'],
+            'majorVersion' => $library['majorVersion'],
+            'minorVersion' => $library['minorVersion'],
+          );
+        } else {
+          $dynamicDependencies[] = array(
+            'machineName' => $library['machineName'],
+            'majorVersion' => $library['majorVersion'],
+            'minorVersion' => $library['minorVersion'],
+          );
+        }
+      }
+      
+      // Add preloaded and dynamic dependencies if they exist
+      if ($preloadedDependencies) { $h5pJson['preloadedDependencies'] = $preloadedDependencies; }
+      if ($dynamicDependencies) { $h5pJson['dynamicDependencies'] = $dynamicDependencies; }
+
+      // Save h5p.json
+      $results = print_r(json_encode($h5pJson), true);
+      file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'h5p.json', $results);
+      
+      // Add the editor libraries to the list of libraries
+      // TODO: Add support for dependencies or editor libraries
+      $exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
+      
+      // Copies libraries to temp dir and create mention in h5p.json
+      foreach($exportData['libraries'] as $library) {
+        $source = $h5pDir . 'libraries' . DIRECTORY_SEPARATOR . $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
+        $destination = $tempPath . DIRECTORY_SEPARATOR . $library['machineName'];
+        $this->h5pC->copyTree($source, $destination);
+      }
+
+      // Create new zip instance.
+      $zip = new ZipArchive();
+      $zip->open($zipPath, ZIPARCHIVE::CREATE);
+
+      // Get all files and folders in $tempPath
+      $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempPath . DIRECTORY_SEPARATOR));
+      // Add files to zip
+      foreach ($iterator as $key=>$value) {
+        $test = '.';
+        // Do not add the folders '.' and '..' to the zip. This will make zip invalid.
+        if (substr_compare($key, $test, -strlen($test), strlen($test)) !== 0) {
+          // Get files path in $tempPath
+          $filePath = explode($tempPath . DIRECTORY_SEPARATOR, $key);
+          // Add files to the zip with the intended file-structure
+          $zip->addFile($key, $filePath[1]);
+        }
+      }
+      // Close zip and remove temp dir
+      $zip->close();
+      $this->h5pC->delTree($tempPath);
+    }
+
+    return str_replace(DIRECTORY_SEPARATOR, '/', $zipPath);
+  }
+
+  /**
+   * Delete .h5p file
+   *
+   * @param int/string $contentId
+   *  Identifier for the H5P
+   */
+  public function deleteExport($contentId) {
+    $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
+    $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $contentId . '.h5p';
+    if (file_exists($zipPath)) {
+      file_delete($zipPath);
+    }
+  }
+
+  /**
+   * Add editor libraries to the list of libraries
+   *
+   * These aren't supposed to go into h5p.json, but must be included with the rest
+   * of the libraries
+   *
+   * @param array $libraries
+   *  List of libraries keyed by machineName
+   * @param array $editorLibraries
+   *  List of libraries keyed by machineName
+   * @return List of libraries keyed by machineName
+   */
+  private function addEditorLibraries($libraries, $editorLibraries) {
+    foreach ($editorLibraries as $editorLibrary) {
+      $libraries[$editorLibrary['machineName']] = $editorLibrary;      
+    }
+    return $libraries;
   }
 }
 
