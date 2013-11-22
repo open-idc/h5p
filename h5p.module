@@ -337,7 +337,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
         $html = str_replace(array('##h5pId##', '##mainLibrary##'), array($content_id, $main_library), $html);
       }
       if (variable_get('h5p_export', 1)) {
-        $h5p_path = _h5p_get_instance('export')->getExportPath($node->nid, $node->title, $node->language);
+        $h5p_path = base_path() . _h5p_get_instance('export')->getExportPath($node->nid, $node->title, $node->language);
 
         $html .= theme('h5p_export_button', $h5p_path);
       }
@@ -600,5 +600,5 @@ function h5p_get_content_id($node) {
 function theme_h5p_export_button($path) {
   $module_path = drupal_get_path('module', 'h5p');
   drupal_add_css($module_path . '/styles/h5p.css');
-  return '<div class="h5p-export">' . l(t('Download'), $path) . '</div>';
+  return '<a class="h5p-export" href="' . $path . '">' . t('Download') . '</a>';
 }
