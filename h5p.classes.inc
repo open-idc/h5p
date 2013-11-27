@@ -328,7 +328,9 @@ class H5PDrupal implements H5PFrameworkInterface {
         $machineName, $majorVersion, $minorVersion));
     }
     $semantics = json_decode($semantics);
-    drupal_alter('h5p_semantics', $semantics);
+    if (!empty($semantics)) {
+      drupal_alter('h5p_semantics', $semantics);
+    }
 
     return $semantics;
   }
