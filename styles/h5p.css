@@ -8,9 +8,10 @@ and open the template in the editor.
     Author     : Magnus Vik Magnussen
 */
 
-.h5p-export a {
+.h5p-export {
   margin-top: 6px;
-  float: right;
+  display: block;
+  float: left;
   border-radius: 4px;
   padding: 4px 58px 3px 12px;
   font-weight: 900; 
@@ -26,7 +27,7 @@ and open the template in the editor.
   box-shadow: 0px 0px 4px #666;
 }
 
-.h5p-export a:hover {
+.h5p-export:hover {
   text-decoration: none;
   color: white;
   box-shadow: 0px 0px 6px #333;
