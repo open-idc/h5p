@@ -391,6 +391,7 @@ function h5p_add_files_and_settings($node, $mode) {
         ),
         'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
         'exportEnabled' => _h5p_get_instance('interface')->isExportEnabled(),
+        'cacheBuster' => variable_get('css_js_query_string', ''),
       )
     );
 
