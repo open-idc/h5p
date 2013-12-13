@@ -3,3 +3,4 @@ nbproject/project.properties
 nbproject/project.xml
 library/.gitignore
 modules/h5peditor/h5peditor/.gitignore
+*~

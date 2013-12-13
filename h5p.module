@@ -116,6 +116,7 @@ function h5p_form(&$node, $form_state) {
     '#type' => 'file',
     '#title' => t('HTML 5 Package'),
     '#description' => t('Select a .h5p file to upload and create interactive content from.'),
+    '#weight' => 2,
   );
 
   $form['json_content'] = array(
@@ -602,4 +603,19 @@ function theme_h5p_export_button($path) {
   $module_path = drupal_get_path('module', 'h5p');
   drupal_add_css($module_path . '/styles/h5p.css');
   return '<a class="h5p-export" href="' . $path . '">' . t('Download') . '</a>';
+}
+
+/**
+ * Implementation of hook_content_extra_fields().
+ */
+function h5p_content_extra_fields($type_name) {
+  $extra = array();
+  if ($type_name == 'h5p_content') {
+    $extra['h5p'] = array(
+      'label' => t('H5P Upload'),
+      'description' => t('Upload interactive content.'),
+      'weight' => 0,
+    );
+  }
+  return $extra;
 }
