@@ -357,12 +357,12 @@ function h5peditor_content_extra_fields($type_name) {
     $extra['h5p_type'] = array(
       'label' => t('H5P Action'),
       'description' => t('Choose whether to upload or create/edit content.'),
-      'weight' => 0,
+      'weight' => 1,
     );
     $extra['h5p_editor'] = array(
       'label' => t('H5P Editor'),
       'description' => t('Create or edit interactive content.'),
-      'weight' => 0,
+      'weight' => 2,
     );
   }
   return $extra;
