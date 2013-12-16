@@ -614,7 +614,7 @@ function h5p_content_extra_fields($type_name) {
     $extra['h5p'] = array(
       'label' => t('H5P Upload'),
       'description' => t('Upload interactive content.'),
-      'weight' => 0,
+      'weight' => 2,
     );
   }
   return $extra;
