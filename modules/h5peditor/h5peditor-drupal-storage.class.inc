@@ -11,15 +11,15 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
   public function getLanguage($machineName, $majorVersion, $minorVersion) {
     global $language;
-    $lang = db_result(db_query(
+    $lang = db_query(
       "SELECT language_json
       FROM {h5p_libraries_languages} hlt
       JOIN {h5p_libraries} hl ON hl.library_id = hlt.library_id
-      WHERE hl.machine_name = '%s'
-      AND hl.major_version = %d
-      AND hl.minor_version = %d
-      AND hlt.language_code = '%s'",
-      $machineName, $majorVersion, $minorVersion, $language->language));
+      WHERE hl.machine_name = :hl_machine_name
+      AND hl.major_version = :hl_major_version
+      AND hl.minor_version = :hl_minor_version
+      AND hlt.language_code = :hlt_language_code",
+      array(':hl_machine_name' => $machineName, ':hl_major_version' => $majorVersion, ':hl_minor_version' => $minorVersion, ':hlt_language_code' => $language->language))->fetchField();
     return $lang;
   }
 
@@ -27,15 +27,14 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     $result = db_query(
       "SELECT hl.preloaded_css, hl.preloaded_js, hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion
       FROM {h5p_libraries} hl
-      WHERE hl.library_id = %d", $libraryId
-    );
+      WHERE hl.library_id = :hl_library_id", array(':hl_library_id' => $libraryId));
     $file_paths = array(
       'js' => array(),
       'css' => array(),
     );
     $h5p_path = _h5p_get_h5p_path();
     $h5p_core = _h5p_get_instance('core');
-    while ($paths = db_fetch_array($result)) {
+    while ($paths = $result->fetchAssoc()) {
       if (!empty($paths['preloaded_js'])) {
         foreach (explode(',', $paths['preloaded_js']) as $js_path) {
           $file_paths['js'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($js_path);
@@ -53,15 +52,33 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   public function addTempFile($file) {
     global $user;
 
-    db_query("INSERT INTO {files} (uid, filename, filepath, filemime, filesize, status, timestamp) VALUES (%d, '%s', '%s', '%s', %d, %d, %d)", $user->uid, $file->name, $file->path, $file->mime, $file->size, FILE_STATUS_TEMPORARY, time());
+    $id = db_insert('file_managed')
+    ->fields(array(
+      'uid' => $user->uid,
+      'filename' => $file->name,
+      'uri' => $file->path,
+      'filemime' => $file->type,
+      'filesize' => $file->size,
+      'status' => ~ FILE_STATUS_PERMANENT,
+      'timestamp' => REQUEST_TIME,
+    ))
+    ->execute();
   }
 
   public function keepFile($oldPath, $newPath) {
-    db_query("UPDATE {files} SET filepath = '%s', status = %d WHERE filepath = '%s'", $newPath, FILE_STATUS_PERMANENT, $oldPath);
+    db_update('file_managed')
+    ->fields(array(
+      'uri' => $newPath,
+      'status' => FILE_STATUS_PERMANENT,
+    ))
+    ->condition('uri', $oldPath)
+    ->execute();
   }
 
   public function removeFile($path) {
-    db_query("DELETE FROM {files} WHERE filepath = '%s'", $path);
+    db_delete('file_managed')
+    ->condition('uri', $path)
+    ->execute();
   }
 
 
@@ -74,7 +91,15 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         $matches = array();
         preg_match_all('/(.+)\s(\d)+\.(\d)$/', $libraryName, $matches);
         if ($matches) {
-          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion, runnable FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
+          $library = db_query(
+            "SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion, runnable
+            FROM {h5p_libraries}
+            WHERE machine_name = :machine_name
+            AND major_version = :major_version
+            AND minor_version = :minor_version
+            AND semantics IS NOT NULL",
+            array(':machine_name' => $matches[1][0], ':major_version' => $matches[2][0], ':minor_version' => $matches[3][0]))
+            ->fetch();
           if ($library) {
             $library->uberName = $libraryName;
             $libraries[] = $library;
@@ -84,8 +109,12 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     }
     else {
       // Get some books from the library.
-      $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
-      while ($library = db_fetch_object($libraries_result)) {
+      $libraries_result = db_query(
+        "SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion
+        FROM {h5p_libraries}
+        WHERE runnable = :runnable AND semantics IS NOT NULL",
+        array(':runnable' => 1));
+      foreach ($libraries_result as $library) {
         $libraries[] = $library;
       }
     }
@@ -95,31 +124,29 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   public function getEditorLibraries($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
     $editorLibraries = array();
 
-    // TODO: Add support for fetching additional libraries this library depends on
-    $result = db_query(
-      "SELECT hll.required_library_id AS libraryId, hl2.machine_name AS machineName, hl2.major_version AS majorVersion, hl2.minor_version AS minorVersion
+    $result = db_query("
+      SELECT hll.required_library_id AS libraryId, hl2.machine_name AS machineName, hl2.major_version AS majorVersion, hl2.minor_version AS minorVersion
       FROM {h5p_libraries} hl
       JOIN {h5p_libraries_libraries} hll ON hll.library_id = hl.library_id
       JOIN {h5p_libraries} hl2 ON hl2.library_id = hll.required_library_id
-      WHERE hl.machine_name = '%s'
-      AND hl.major_version = %d
-      AND hl.minor_version = %d
-      AND hll.dependency_type = 'editor'
-    ", $machineName, $majorVersion, $minorVersion);
+      WHERE hl.machine_name = :hl_machine_name
+      AND hl.major_version = :hl_major_version
+      AND hl.minor_version = :hl_minor_version
+      AND hll.dependency_type = :hll_dependency_type
+    ", array(':hl_machine_name' => $machineName, ':hl_major_version' => $majorVersion, ':hl_minor_version' => $minorVersion, ':hll_dependency_type' => 'editor'));
 
     $jsonData = array('preloadedDependencies' => array());
-    while ($editorLibrary = db_fetch_object($result)) {
+    foreach ($result as $editorLibrary) {
       $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
 
       $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
         'machineName' => $editorLibrary->machineName,
         'majorVersion' => $editorLibrary->majorVersion,
-        'minorVersion' => $editorLibrary->minorVersion
+        'minorVersion' => $editorLibrary->minorVersion,
       );
     }
 
     $libraries = array();
-    // TODO: Fix, using private function since no API is available!
     $storage = _h5p_get_instance('storage');
     $storage->getLibraryUsage($libraries, $jsonData, FALSE, $complete);
 

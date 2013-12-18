@@ -1173,7 +1173,7 @@ Class H5PExport {
     $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
     $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $contentId . '.h5p';
     if (file_exists($zipPath)) {
-      file_delete($zipPath);
+      unlink($zipPath);
     }
   }
 

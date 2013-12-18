@@ -8,7 +8,7 @@ if (window.parent !== window) {
   $ = window.parent.$;
 }
 
-$(document).ready(function () {
+jQuery(document).ready(function () {
   H5P.loadedJs = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.loadedJs !== undefined ? Drupal.settings.h5p.loadedJs : [];
   H5P.loadedCss = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.loadedCss !== undefined ? Drupal.settings.h5p.loadedCss : [];
 });
