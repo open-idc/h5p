@@ -3,7 +3,10 @@
 ;  Contains general information about the h5peditor Drupal module.
 name = h5peditor
 description = "Enables users to create and modify HTML5 packages."
-core = 6.x
+core = 7.x
 
-dependencies[] = autoload
 dependencies[] = h5p
+files[] = h5peditor-drupal-storage.class.inc
+files[] = h5peditor/h5peditor-file.class.php
+files[] = h5peditor/h5peditor-storage.interface.php
+files[] = h5peditor/h5peditor.class.php
