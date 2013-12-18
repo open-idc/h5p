@@ -1119,7 +1119,7 @@ Class H5PExport {
       // Build h5p.json
       $h5pJson = array (
         'title' => $title,
-        'language' => $exportData['language'] ? $exportData['language'] : 'und',
+        'language' => $language ? $language : 'und',
         'mainLibrary' => $exportData['mainLibrary'],
         'embedTypes' => $embedTypes,
       );
