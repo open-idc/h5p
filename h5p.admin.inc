@@ -2,17 +2,15 @@
 /**
  * Menu callback - Form builder function for settings.
  */
-function h5p_admin_settings() {
+function h5p_admin_settings($form, &$form_state) {
   $form['h5p_default_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Default h5p package path'),
     '#default_value' => variable_get('h5p_default_path', 'h5p'),
-    '#description' => t('Subdirectory in the directory %dir where files will be stored. Do not include trailing slash.', array('%dir' => file_directory_path())),
+    '#description' => t('Subdirectory in the directory %dir where files will be stored. Do not include trailing slash.', array('%dir' => file_stream_wrapper_get_instance_by_uri('public://')->realpath())),
   );
 
-  $h5p_nodes_exists = db_result(db_query(
-    "SELECT 1 FROM {node} WHERE type = 'h5p_content'"
-  ));
+  $h5p_nodes_exists = db_query("SELECT 1 FROM {node} WHERE type = :type", array(':type' => 'h5p_content'))->fetchField();
 
   $form['h5p_revisioning'] = array(
     '#type' => 'checkbox',
@@ -21,14 +19,14 @@ function h5p_admin_settings() {
     '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
     '#disabled' => $h5p_nodes_exists,
   );
-  
+
   $form['h5p_export'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable export of all H5P content'),
     '#default_value' => variable_get('h5p_export', '1'),
     '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files."),
   );
-  
+
   // make sure core is loaded
   _h5p_get_instance('core');
   $form['h5p_whitelist'] = array(
@@ -46,14 +44,14 @@ function h5p_admin_settings() {
     '#default_value' => variable_get('h5p_library_whitelist_extras', H5PCore::$defaultLibraryWhitelistExtras),
     '#description' => t("Libraries might need to accept more files that should be allowed in normal contents. Add extra files here. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
   );
-  
+
   $form['h5p_dev_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable H5P development mode'),
     '#default_value' => variable_get('h5p_dev_mode', '0'),
     '#description' => t("With this feature enabled libraries with the same patch version will overwrite existing libraries in the database, and semantics.json will be read from file."),
   );
-  
+
   $form['h5p_content_dev_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable H5P content development mode'),
@@ -74,13 +72,13 @@ function h5p_admin_settings() {
 function h5p_admin_settings_validate($form, &$form_state) {
   // Try to create directories and warn the user of errors.
   $h5p_default_path = $form_state['values']['h5p_default_path'];
-  $path = file_create_path(file_directory_path() . DIRECTORY_SEPARATOR . $h5p_default_path);
+  $path = file_create_path(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . DIRECTORY_SEPARATOR . $h5p_default_path);
   $temp_path = $path . DIRECTORY_SEPARATOR . 'temp';
 
-  if (!file_check_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
+  if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
     form_set_error('h5p_default_path', t('You have specified an invalid directory.'));
   }
-  if (!file_check_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
+  if (!file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
     form_set_error('h5p_default_path', t('You have specified an invalid directory.'));
   }
 }

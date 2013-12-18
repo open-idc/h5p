@@ -3,6 +3,7 @@
 ;  Contains general information about the h5p Drupal module.
 name = h5p manager
 description = "Enables privileged users to share HTML5 packages."
-core = 6.x
+core = 7.x
 
-dependencies[] = autoload
+files[] = h5p.classes.inc
+files[] = library/h5p.classes.php

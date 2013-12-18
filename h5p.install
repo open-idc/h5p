@@ -7,23 +7,15 @@
  */
 
 /**
- * Implementation of hook_install().
- */
-function h5p_install() {
-  drupal_install_schema('h5p');
-}
-
-/**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function h5p_uninstall() {
-  drupal_uninstall_schema('h5p');
   variable_del('h5p_export');
   variable_del('h5p_revisioning');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function h5p_schema() {
   $schema['h5p_nodes_libraries'] = array(
@@ -259,7 +251,7 @@ function h5p_schema() {
 }
 
 /**
- * Implementation of hook_requirements().
+ * Implements hook_requirements().
  */
 function h5p_requirements($phase) {
   $requirements = array();
@@ -267,24 +259,24 @@ function h5p_requirements($phase) {
   if ($phase == 'runtime') {
     // TODO: Add check for zip library
     // File paths
-    $h5p_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p'));
+    $h5p_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/' . variable_get('h5p_default_path', 'h5p');
     $temp_path = $h5p_path . '/temp';
     $export_path = $h5p_path . '/exports';
-    if (!file_check_directory($h5p_path, FILE_CREATE_DIRECTORY)) {
+    if (!file_prepare_directory($h5p_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       $requirements['h5p_dirs'] = array(
         'value' => t('Missing directory.'),
         'severity' => REQUIREMENT_ERROR,
         'description' => t("The h5p module's package directory %h5p_path is missing.", array('%h5p_path' => $h5p_path)),
       );
     }
-    else if (!file_check_directory($temp_path, FILE_CREATE_DIRECTORY)) {
+    else if (!file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       $requirements['h5p_dirs'] = array(
         'value' => t('Missing temp directory.'),
         'severity' => REQUIREMENT_ERROR,
         'description' => t("The h5p module's temp directory %temp_path is missing.", array('%temp_path' => $temp_path)),
       );
     }
-    else if (!file_check_directory($export_path, FILE_CREATE_DIRECTORY)) {
+    else if (!file_prepare_directory($export_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       $requirements['h5p_dirs'] = array(
         'value' => t('Missing export directory.'),
         'severity' => REQUIREMENT_ERROR,
@@ -304,11 +296,10 @@ function h5p_requirements($phase) {
 }
 
 /**
- * Implementation of hook_update_N().
+ * Implements hook_update_N().
  */
 function h5p_update_6100() {
-  $ret = array();
-  db_add_field($ret, 'h5p_libraries', 'fullscreen', array(
+  db_add_field('h5p_libraries', 'fullscreen', array(
     'description' => 'Indicates if this library can be opened in fullscreen.',
     'type' => 'int',
     'size' => 'tiny',
@@ -316,15 +307,14 @@ function h5p_update_6100() {
     'not null' => TRUE,
     'default' => 0,
   ));
-  return $ret;
+  return t('Fullscreen field added to h5p_libraries');
 }
 
 /**
- * Implementation of hook_update_N().
+ * Implements hook_update_N().
  */
 function h5p_update_6101() {
-  $ret = array();
-  db_create_table($ret, 'h5p_libraries_languages', array(
+  db_create_table('h5p_libraries_languages', array(
     'description' => 'Stores translations for the languages.',
     'fields' => array(
       'library_id' => array(
@@ -347,60 +337,58 @@ function h5p_update_6101() {
     ),
     'primary key' => array('library_id', 'language_code'),
   ));
-  return $ret;
+  return t('Table for storing language information created');
 }
 
 /**
- * Implementation of hook_update_N().
+ * Implements hook_update_N().
  */
 function h5p_update_6102() {
-  $ret = array();
-  db_add_field($ret, 'h5p_nodes', 'content_type', array(
+  db_add_field('h5p_nodes', 'content_type', array(
     'description' => 'Content type as defined in h5p.json',
     'type' => 'varchar',
     'length' => 127,
   ));
-  db_add_field($ret, 'h5p_nodes', 'author', array(
+  db_add_field('h5p_nodes', 'author', array(
     'description' => 'Author as defined in h5p.json',
     'type' => 'varchar',
     'length' => 127,
   ));
-  db_add_field($ret, 'h5p_nodes', 'license', array(
+  db_add_field('h5p_nodes', 'license', array(
     'description' => 'License as defined in h5p.json',
     'type' => 'varchar',
     'length' => 7,
   ));
-  db_add_field($ret, 'h5p_nodes', 'meta_keywords', array(
+  db_add_field('h5p_nodes', 'meta_keywords', array(
     'description' => 'Keywords as defined in h5p.json',
     'type' => 'text',
   ));
-  db_add_field($ret, 'h5p_nodes', 'meta_description', array(
+  db_add_field('h5p_nodes', 'meta_description', array(
     'description' => 'Meta description as defined in h5p.json',
     'type' => 'text',
   ));
-
-  return $ret;
+  return t('Fields for storing metadata about the H5P content added');
 }
 
 /**
- * Implementation of hook_update_N().
+ * Implements hook_update_N().
  */
 function h5p_update_6103() {
-  $ret = array();
-  db_change_field($ret, 'h5p_nodes', 'json_content', 'json_content', array(
+  db_change_field('h5p_nodes', 'json_content', 'json_content', array(
     'description' => 'The content in json format',
     'type' => 'text',
     'not null' => TRUE,
     'size' => 'big',
   ));
-  return $ret;
+
+  return t("Support for H5P's with lots of data added.");
 }
 
 /**
- * Implementation of hook_update_N().
+ * Implements hook_update_N().
  */
 function h5p_update_6104() {
   $ret = array();
-  db_add_index($ret, 'files', 'filepath', array('filepath'));
-  return $ret;
+  db_add_index('files', 'filepath', array('filepath'));
+  return t('Add index to filepath in the files table');
 }
