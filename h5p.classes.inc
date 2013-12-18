@@ -437,16 +437,12 @@ class H5PDrupal implements H5PFrameworkInterface {
     $editorStorage = new H5peditorDrupalStorage();
     $editorLibraries = $editorStorage->getEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion'], TRUE);
 
-    // Set language to drupals node language, or 'und' if not set.
-    $exportLanguage = $language == TRUE ? $language : 'und';
-
     $export = array(
       'contentId' => $contentId,
       'mainLibrary' => $mainLibraryMachineName,
       'embedType' => $content['embed_type'],
       'libraries' => $librariesInfo,
       'editorLibraries' => $editorLibraries,
-      'language' => $exportLanguage,
       'jsonContent' => $content['json_content'],
     );
 
