@@ -90,6 +90,7 @@ function h5p_form(&$node, $form_state) {
     '#type' => 'file',
     '#title' => t('HTML 5 Package'),
     '#description' => t('Select a .h5p file to upload and create interactive content from.'),
+    '#weight' => 2,
   );
 
   $form['json_content'] = array(
@@ -319,8 +320,8 @@ function h5p_view($node, $view_mode = 'full') {
       }
       else {
         h5p_add_files_and_settings($node, 'iframe');
-        $html = '<div class="h5p-iframe-wrapper" id="iframe-wrapper-##h5pId##">';
-        $html .= '<iframe id="iframe-##h5pId##" class="h5p-iframe" data-class="##mainLibrary##" data-content-id="##h5pId##" style="width: 100%; height: 400px; border: none;" src="about:blank" frameBorder="0"></iframe>';
+        $html = '<div class="h5p-iframe-wrapper" id="h5p-iframe-##h5pId##-wrapper">';
+        $html .= '<iframe id="h5p-iframe-##h5pId##" class="h5p-iframe" data-class="##mainLibrary##" data-content-id="##h5pId##" style="width: 100%; height: 400px; border: none;" src="about:blank" frameBorder="0"></iframe>';
         $html .= '</div>';
         $html = str_replace(array('##h5pId##', '##mainLibrary##'), array($content_id, $main_library), $html);
       }
@@ -382,7 +383,8 @@ function h5p_add_files_and_settings($node, $mode) {
         ),
         'jsonContentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
         'exportEnabled' => _h5p_get_instance('interface')->isExportEnabled(),
-      ),
+        'cacheBuster' => variable_get('css_js_query_string', ''),
+      )
     );
 
     $file_paths = h5p_get_file_paths($node);
@@ -598,4 +600,19 @@ function theme_h5p_export_button($variables) {
   $module_path = drupal_get_path('module', 'h5p');
   drupal_add_css($module_path . '/styles/h5p.css');
   return '<a class="h5p-export" href="' . $path . '">' . t('Download') . '</a>';
+}
+
+/**
+ * Implementation of hook_content_extra_fields().
+ */
+function h5p_content_extra_fields($type_name) {
+  $extra = array();
+  if ($type_name == 'h5p_content') {
+    $extra['h5p'] = array(
+      'label' => t('H5P Upload'),
+      'description' => t('Upload interactive content.'),
+      'weight' => 2,
+    );
+  }
+  return $extra;
 }
