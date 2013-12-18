@@ -50,17 +50,14 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
       'create' => isset($node->nid) ? t('Edit') : t('Create'),
     ),
     '#default_value' => 'upload',
-    '#weight' => 10,
+    '#weight' => $form['h5p']['#weight'] - 1,
   );
-
-  $form['h5p']['#title'] = t('HTML5 Package Upload');
-  $form['h5p']['#weight'] = 11;
-
+  
   $form['h5p_editor'] = array(
     '#type' => 'item',
     '#title' => t('Content type'),
     '#markup' => '<div class="h5p-editor">' . t('Waiting for javascript...') . '</div>',
-    '#weight' => 12,
+    '#weight' => $form['h5p']['#weight'],
   );
   $form['#after_build'][] = 'h5peditor_h5p_content_node_form_after_build';
 
@@ -372,4 +369,24 @@ function h5peditor_get_source_node($node) {
     $node = node_load($node->clone_from_original_nid);
   }
   return $node;
+}
+
+/**
+ * Implementation of hook_content_extra_fields().
+ */
+function h5peditor_content_extra_fields($type_name) {
+  $extra = array();
+  if ($type_name == 'h5p_content') {
+    $extra['h5p_type'] = array(
+      'label' => t('H5P Action'),
+      'description' => t('Choose whether to upload or create/edit content.'),
+      'weight' => 1,
+    );
+    $extra['h5p_editor'] = array(
+      'label' => t('H5P Editor'),
+      'description' => t('Create or edit interactive content.'),
+      'weight' => 2,
+    );
+  }
+  return $extra;
 }
