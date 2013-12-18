@@ -65,7 +65,7 @@ H5PIntegration.getHeadTags = function (contentId) {
   var createStyleTags = function (styles) {
     var tags = '';
     for (var i = 0; i < styles.length; i++) {
-      tags += '<link rel="stylesheet" href="' + basePath + styles[i] + '">';
+      tags += '<link rel="stylesheet" href="' + basePath + styles[i] + '?' + Drupal.settings.h5p.cacheBuster + '">';
     }
     return tags;
   };
@@ -73,7 +73,7 @@ H5PIntegration.getHeadTags = function (contentId) {
   var createScriptTags = function (scripts) {
     var tags = '';
     for (var i = 0; i < scripts.length; i++) {
-      tags += '<script src="' + basePath + scripts[i] + '"></script>';
+      tags += '<script src="' + basePath + scripts[i] + '?' + Drupal.settings.h5p.cacheBuster + '"></script>';
     }
     return tags;
   };

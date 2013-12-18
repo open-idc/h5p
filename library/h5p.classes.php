@@ -325,6 +325,10 @@ class H5PValidator {
     'h' => '/^[0-9]{1,4}$/',
     'embedTypes' => array('iframe', 'div'),
     'fullscreen' => '/^(0|1)$/',
+    'coreApi' => array(
+      'majorVersion' => '/^[0-9]{1,5}$/',
+      'minorVersion' => '/^[0-9]{1,5}$/',
+    ),
   );
 
   /**
@@ -648,6 +652,25 @@ class H5PValidator {
   private function isValidH5pData($h5pData, $library_name, $required, $optional) {
     $valid = $this->isValidRequiredH5pData($h5pData, $required, $library_name);
     $valid = $this->isValidOptionalH5pData($h5pData, $optional, $library_name) && $valid;
+
+    // Test library core version requirement.  If no requirement is set,
+    // this implicitly means 1.0, which shall work on newer versions
+    // too.
+    if (isset($h5pData['coreApi']) && !empty($h5pData['coreApi'])) {
+      if (($h5pData['coreApi']['majorVersion'] > H5PCore::$coreApi['majorVersion']) ||
+          (($h5pData['coreApi']['majorVersion'] == H5PCore::$coreApi['majorVersion']) &&
+            ($h5pData['coreApi']['minorVersion'] > H5PCore::$coreApi['minorVersion'])))
+      {
+        $this->h5pF->setErrorMessage(
+          $this->h5pF->t('The library "%library_name" requires H5P %requiredVersion, but only H5P %coreApi is installed.',
+          array(
+            '%library_name' => $library_name,
+            '%requiredVersion' => $h5pData['coreApi']['majorVersion'] . '.' . $h5pData['coreApi']['minorVersion'],
+            '%coreApi' => H5PCore::$coreApi['majorVersion'] . '.' . H5PCore::$coreApi['minorVersion']
+          )));
+        $valid = false;
+      }
+    }
     return $valid;
   }
 
@@ -682,7 +705,7 @@ class H5PValidator {
   }
 
   /**
-   * Va(lidate a requirement given as regexp or an array of requirements
+   * Validate a requirement given as regexp or an array of requirements
    *
    * @param mixed $h5pData
    *  The data to be validated
@@ -1201,7 +1224,10 @@ Class H5PExport {
  * Functions and storage shared by the other H5P classes
  */
 class H5PCore {
-
+  public static $coreApi = array(
+    'majorVersion' => 1,
+    'minorVersion' => 0
+  );
   public static $styles = array(
     'styles/h5p.css',
   );
@@ -1437,9 +1463,8 @@ class H5PContentValidator {
 
     // Check if string is according to optional regexp in semantics
     if (isset($semantics->regexp)) {
-      // Note: '|' used as regexp fence, to allow / in actual patterns.
-      // But also escaping '|' found in patterns, so that is valid too.
-      $pattern = '|' . str_replace('|', '\\|', $semantics->regexp->pattern) . '|';
+      // Escaping '/' found in patterns, so that it does not break regexp fencing.
+      $pattern = '/' . str_replace('/', '\\/', $semantics->regexp->pattern) . '/';
       $pattern .= isset($semantics->regexp->modifiers) ? $semantics->regexp->modifiers : '';
       if (preg_match($pattern, $text) === 0) {
         // Note: explicitly ignore return value FALSE, to avoid removing text
@@ -1616,9 +1641,32 @@ class H5PContentValidator {
     // code.
     $validkeys = array_merge(array('path', 'mime'), $typevalidkeys);
     if (isset($semantics->extraAttributes)) {
-      $validkeys = array_merge($validkeys, $semantics->extraAttributes);
+      $validkeys = array_merge($validkeys, $semantics->extraAttributes); // TODO: Validate extraAttributes
     }
     $this->filterParams($file, $validkeys);
+    
+    if (isset($file->width)) {
+      $file->width = intval($file->width);
+    }
+    
+    if (isset($file->height)) {
+      $file->height = intval($file->height);
+    }
+    
+    if (isset($file->codecs)) {
+      $file->codecs = htmlspecialchars($file->codecs, ENT_QUOTES, 'UTF-8', FALSE);
+    }
+    
+    if (isset($file->quality)) {
+      if (!is_object($file->quality) || !isset($file->quality->level) || !isset($file->quality->label)) {
+        unset($file->quality);
+      }
+      else {
+        $this->filterParams($file->quality, array('level', 'label'));
+        $file->quality->level = intval($file->quality->level);
+        $file->quality->label = htmlspecialchars($file->quality->label, ENT_QUOTES, 'UTF-8', FALSE);
+      }
+    }
   }
 
   /**
@@ -1640,7 +1688,7 @@ class H5PContentValidator {
    */
   public function validateVideo(&$video, $semantics) {
     foreach ($video as &$variant) {
-      $this->_validateFilelike($variant, $semantics, array('width', 'height'));
+      $this->_validateFilelike($variant, $semantics, array('width', 'height', 'codecs', 'quality'));
     }
   }
 

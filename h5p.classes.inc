@@ -377,7 +377,9 @@ class H5PDrupal implements H5PFrameworkInterface {
         AND minor_version = :minor_version", array(':machine_name' => $machineName, ':major_version' => $majorVersion, ':minor_version' => $minorVersion))->fetchField();
     }
     $semantics = json_decode($semantics);
-    drupal_alter('h5p_semantics', $semantics);
+    if (!empty($semantics)) {
+      drupal_alter('h5p_semantics', $semantics);
+    }
 
     return $semantics;
   }
