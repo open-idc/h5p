@@ -2,8 +2,7 @@
 
 /*
  * TODO: Test permissions
- * TODO: Don't use real paths in the file_managed table
- * TODO: Check that temp files gets deleted
+ * TODO: Test that temp files gets deleted
  * TODO: Test development mode
  * TODO: Test content development mode
  * TODO: Test translation
