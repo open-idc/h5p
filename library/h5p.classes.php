@@ -1143,8 +1143,8 @@ Class H5PExport {
       }
       
       // Add preloaded and dynamic dependencies if they exist
-      if ($preloadedDependencies) { $h5pJson['preloadedDependencies'] = $preloadedDependencies; }
-      if ($dynamicDependencies) { $h5pJson['dynamicDependencies'] = $dynamicDependencies; }
+      if (isset($preloadedDependencies)) { $h5pJson['preloadedDependencies'] = $preloadedDependencies; }
+      if (isset($dynamicDependencies)) { $h5pJson['dynamicDependencies'] = $dynamicDependencies; }
 
       // Save h5p.json
       $results = print_r(json_encode($h5pJson), true);
