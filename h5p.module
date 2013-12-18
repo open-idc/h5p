@@ -1,7 +1,6 @@
 <?php
 
 /*
- * TODO: Merge in changes from D6 branch
  * TODO: Test permissions
  * TODO: Don't use real paths in the file_managed table
  * TODO: Check that temp files gets deleted
@@ -11,7 +10,6 @@
  * TODO: Test cloning
  * TODO: Test with revisioning disabled
  * TODO: Test with all existing content types
- * TODO: Fix notices
  * 
  * TODO: Embed types should be retrieved from the main library and removed from h5p.json
  */
