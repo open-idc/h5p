@@ -385,7 +385,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
-    $semanticsPath = file_create_path(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
+    $semanticsPath = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json';
     if (file_exists($semanticsPath)) {
       $semantics = file_get_contents($semanticsPath);
       if (!json_decode($semantics, TRUE)) {

@@ -72,13 +72,13 @@ function h5p_admin_settings($form, &$form_state) {
 function h5p_admin_settings_validate($form, &$form_state) {
   // Try to create directories and warn the user of errors.
   $h5p_default_path = $form_state['values']['h5p_default_path'];
-  $path = file_create_path(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . DIRECTORY_SEPARATOR . $h5p_default_path);
-  $temp_path = $path . DIRECTORY_SEPARATOR . 'temp';
+  $path = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . $h5p_default_path;
+  $temp_path = $path . '/' . 'temp';
 
-  if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
+  if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
     form_set_error('h5p_default_path', t('You have specified an invalid directory.'));
   }
-  if (!file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, 'h5p_default_path')) {
+  if (!file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
     form_set_error('h5p_default_path', t('You have specified an invalid directory.'));
   }
 }
