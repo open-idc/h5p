@@ -302,7 +302,6 @@ function h5p_get_file_paths($node) {
 function h5p_view($node, $view_mode = 'full') {
   node_object_prepare($node);
   if ($view_mode == 'full') {
-    dpm($node);
     if (isset($node->main_library)) {
       // if DIV in embed_types, use that, if not, iFrame this.
       $content_id = h5p_get_content_id($node);
