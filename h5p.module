@@ -242,7 +242,7 @@ function h5p_load($nodes) {
       
       unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version);
       if (variable_get('h5p_content_dev_mode', 0)) {
-        $json_content_path = file_create_path(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . h5p_get_content_id($node) . '/content.json');
+        $json_content_path = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . h5p_get_content_id($node) . '/content.json';
         if (file_exists($json_content_path)) {
           $json_content = file_get_contents($json_content_path);
           if (!json_decode($json_content, TRUE)) {
