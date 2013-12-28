@@ -51,12 +51,12 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
   public function addTempFile($file) {
     global $user;
-
+    $path = str_replace(file_stream_wrapper_get_instance_by_uri('public://')->realpath(), 'public://', $file->path);
     $id = db_insert('file_managed')
     ->fields(array(
       'uid' => $user->uid,
       'filename' => $file->name,
-      'uri' => $file->path,
+      'uri' => $path,
       'filemime' => $file->type,
       'filesize' => $file->size,
       'status' => ~ FILE_STATUS_PERMANENT,
@@ -68,10 +68,10 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   public function keepFile($oldPath, $newPath) {
     db_update('file_managed')
     ->fields(array(
-      'uri' => $newPath,
+      'uri' => str_replace(file_stream_wrapper_get_instance_by_uri('public://')->realpath(), 'public://', $newPath),
       'status' => FILE_STATUS_PERMANENT,
     ))
-    ->condition('uri', $oldPath)
+    ->condition('uri', str_replace(file_stream_wrapper_get_instance_by_uri('public://')->realpath(), 'public://', $oldPath))
     ->execute();
   }
 
