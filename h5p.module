@@ -1,7 +1,6 @@
 <?php
 
 /*
- * TODO: Test permissions
  * TODO: Test that temp files gets deleted
  * TODO: Test development mode
  * TODO: Test content development mode
