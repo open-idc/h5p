@@ -104,7 +104,7 @@ ns.File.prototype.uploadFile = function () {
   };
 
   ns.File.callback = function (json) {
-    //try {
+    try {
       var result = JSON.parse(json);
       if (result['error'] !== undefined) {
         throw(result['error']);
@@ -124,10 +124,10 @@ ns.File.prototype.uploadFile = function () {
       for (var i = 0; i < that.changes.length; i++) {
         that.changes[i](that.params);
       }
-    /*}
+    }
     catch (error) {
       that.$errors.append(ns.createError(error));
-    }*/
+    }
 
     that.addFile();
   };
