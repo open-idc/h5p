@@ -1,7 +1,6 @@
 <?php
 
 /*
- * TODO: Test with revisioning disabled
  * TODO: Test with all existing content types
  * 
  * TODO: Embed types should be retrieved from the main library and removed from h5p.json
