@@ -1,7 +1,6 @@
 <?php
 
 /*
- * TODO: Test cloning
  * TODO: Test with revisioning disabled
  * TODO: Test with all existing content types
  * 
