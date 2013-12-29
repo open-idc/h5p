@@ -267,14 +267,15 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements copyLibraryUsage
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
-    $query = db_select('h5p_nodes_libraries', 'hnl')
-      ->addExpression($contentId)
-      ->addField('library_id', 'hnl')
-      ->addField('preloaded', 'hnl')
-      ->addField('drop_css', 'hnl')
-      ->condition('content_id', $copyFromId);
+    $query = db_select('h5p_nodes_libraries', 'hnl');
+    $query->addField('hnl', 'library_id');
+    $query->addField('hnl', 'preloaded');
+    $query->addField('hnl', 'drop_css');
+    $query->addExpression($contentId);
+    $query->condition('content_id', $copyFromId);
     
-    db_insert('h5_nodes_libraries')
+    db_insert('h5p_nodes_libraries')
+      ->fields(array('library_id', 'preloaded', 'drop_css', 'content_id'))
       ->from($query)
       ->execute();
   }
