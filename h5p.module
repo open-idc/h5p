@@ -219,6 +219,7 @@ function h5p_update($node) {
     h5p_insert($node);
   }
   else {
+    // TODO: Consider insert and update on duplicate. This would make it possible to rescue broken nodes after reinstalling the module.
     db_query(
       "UPDATE {h5p_nodes}
       SET json_content = '%s', embed_type = '%s', main_library_id = '%d'
@@ -399,17 +400,18 @@ function h5p_add_files_and_settings($node, $mode) {
     );
 
     $file_paths = h5p_get_file_paths($node);
-    foreach ($file_paths['preloadedJs'] as $js_path) {
-      drupal_add_js($js_path);
-      $settings['h5p']['loadedJs'][] = $js_path;
-    }
-    if ($mode == 'div') {
+    
+    if ($mode === 'div') {
+      foreach ($file_paths['preloadedJs'] as $js_path) {
+        drupal_add_js($js_path);
+        $settings['h5p']['loadedJs'][] = $js_path;
+      }
       foreach ($file_paths['preloadedCss'] as $css_path) {
         drupal_add_css($css_path);
         $settings['h5p']['loadedCss'][] = $css_path;
       }
     }
-    elseif ($mode == 'iframe') {
+    elseif ($mode === 'iframe') {
       $settings['h5p']['core']['scripts'] = array();
       $settings['h5p']['core']['styles'] = array();
       foreach (H5PCore::$styles as $style) {
@@ -420,8 +422,45 @@ function h5p_add_files_and_settings($node, $mode) {
         $settings['h5p']['core']['scripts'][] = $module_path . '/library/' . $script;
       }
 
-      $settings['h5p']['cid-' . $content_id]['scripts'] = $file_paths['preloadedJs'];
-      $settings['h5p']['cid-' . $content_id]['styles'] = $file_paths['preloadedCss'];
+      $preprocess_css = (variable_get('preprocess_css', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
+      $preprocess_js = (variable_get('preprocess_js', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
+      $directory = file_directory_path();
+      $is_writable = is_dir($directory) && is_writable($directory) && (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC) == FILE_DOWNLOADS_PUBLIC);
+
+      // Aggregate library styles and scripts for faster loading when using iframe. 
+      // Core files are not included to leverage browser caching! See http://css-tricks.com/one-two-three
+
+      if ($is_writable && $preprocess_css) {
+        $filename = 'h5p-' . $content_id . '.css';
+        
+        // Refactor styles array to Drupal eatable format.
+        $styles = array('module' => array());
+        foreach ($file_paths['preloadedCss'] as $style) {
+          $styles['module'][$style] = TRUE;
+        }
+        
+        $settings['h5p']['cid-' . $content_id]['styles'] = array(drupal_build_css_cache($styles, $filename));
+      }
+      else {
+        $settings['h5p']['cid-' . $content_id]['styles'] = $file_paths['preloadedCss'];
+      }
+      
+      if ($is_writable && $preprocess_js) {
+        $filename = 'h5p-' . $content_id . '.js';
+        
+        // Refactor scripts array to Drupal eatable format.
+        $scripts = array();
+        foreach ($file_paths['preloadedJs'] as $script) {
+          $scripts[$script] = array(
+            'preprocess' => TRUE,
+          );
+        }
+      
+        $settings['h5p']['cid-' . $content_id]['scripts'] = array(drupal_build_js_cache($scripts, $filename));
+      }
+      else {
+        $settings['h5p']['cid-' . $content_id]['scripts'] = $file_paths['preloadedJs'];
+      }
     }
 
     // Set libraryPath:
