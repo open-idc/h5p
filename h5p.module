@@ -184,7 +184,7 @@ function h5p_insert($node) {
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
     $library_updated = $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
-    if($library_updated) {
+    if ($library_updated) {
       _h5p_clear_js_and_css_cache();
     }
   }
@@ -208,7 +208,7 @@ function h5p_update($node) {
     else {
       $h5p_core = _h5p_get_instance('storage');
       $library_updated = $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
-      if($library_updated) {
+      if ($library_updated) {
         _h5p_clear_js_and_css_cache();
       }
     }
@@ -219,17 +219,25 @@ function h5p_update($node) {
     h5p_insert($node);
   }
   else {
-    // TODO: Consider insert and update on duplicate. This would make it possible to rescue broken nodes after reinstalling the module.
-    db_query(
-      "UPDATE {h5p_nodes}
-      SET json_content = '%s', embed_type = '%s', main_library_id = '%d'
-      WHERE content_id = %d", $node->json_content, $node->embed_type, $node->main_library_id, h5p_get_content_id($node)
-    );
+    // Make sure a row exists before we try updating it.
+    $content_id = db_result(db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = %d", h5p_get_content_id($node)));
+    
+    if ($content_id) {
+      db_query(
+        "UPDATE {h5p_nodes}
+        SET json_content = '%s', embed_type = '%s', main_library_id = '%d'
+        WHERE content_id = %d", $node->json_content, $node->embed_type, $node->main_library_id, h5p_get_content_id($node)
+      );
+    }
+    else {
+      // No rows, insert new row. (this happens if the module is reinstalled)
+      h5p_insert($node);
+    }
   }
 
   _h5p_get_instance('export')->deleteExport($node->nid);
 
-  cache_clear_all('validated_json_'.$node->vid, 'cache');
+  cache_clear_all('validated_json_' . $node->vid, 'cache');
 }
 
 /**
