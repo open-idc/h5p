@@ -1,14 +1,27 @@
 <?php
 
+/**
+ * Handles all communication with the database.
+ */
 class H5peditorDrupalStorage implements H5peditorStorage {
 
+  /**
+   * Empty contructor.
+   */
   function __construct() { }
 
+  /**
+   * TODO
+   */
   public function getSemantics($machineName, $majorVersion, $minorVersion) {
+    // TODO: Stop using private functions...
     $coreInterface = _h5p_get_instance('interface');
     return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
   }
 
+  /**
+   * TODO
+   */
   public function getLanguage($machineName, $majorVersion, $minorVersion) {
     global $language;
     $lang = db_result(db_query(
@@ -23,48 +36,67 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     return $lang;
   }
 
-  public function getFilePaths($libraryId) {
+  /**
+   * TODO
+   */
+  public function getFilePaths($machineName, $majorVersion, $minorVersion) {
+    $file_paths = array(
+      'scripts' => array(),
+      'styles' => array()
+    );
+  
     $result = db_query(
       "SELECT hl.preloaded_css, hl.preloaded_js, hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion
-      FROM {h5p_libraries} hl
-      WHERE hl.library_id = %d", $libraryId
+      FROM {h5p_libraries} hl WHERE hl.machine_name = %d AND hl.major_version = %d AND hl.minor_version = %d", 
+      $machineName, $majorVersion, $minorVersion
     );
-    $file_paths = array(
-      'js' => array(),
-      'css' => array(),
-    );
+
+    // TODO: Stop using private functions.
     $h5p_path = _h5p_get_h5p_path();
     $h5p_core = _h5p_get_instance('core');
+    
     while ($paths = db_fetch_array($result)) {
       if (!empty($paths['preloaded_js'])) {
         foreach (explode(',', $paths['preloaded_js']) as $js_path) {
-          $file_paths['js'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($js_path);
+          $file_paths['scripts'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($js_path);
         }
       }
       if (!empty($paths['preloaded_css'])) {
         foreach (explode(',', $paths['preloaded_css']) as $css_path) {
-          $file_paths['css'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($css_path);
+          $file_paths['styles'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($css_path);
         }
       }
     }
+    
     return $file_paths;
   }
 
-  public function addTempFile($file) {
+  /**
+   * TODO
+   */
+  public function addTmpFile($file) {
     global $user;
 
     db_query("INSERT INTO {files} (uid, filename, filepath, filemime, filesize, status, timestamp) VALUES (%d, '%s', '%s', '%s', %d, %d, %d)", $user->uid, $file->name, $file->path, $file->mime, $file->size, FILE_STATUS_TEMPORARY, time());
   }
 
+  /**
+   * TODO
+   */
   public function keepFile($oldPath, $newPath) {
     db_query("UPDATE {files} SET filepath = '%s', status = %d WHERE filepath = '%s'", $newPath, FILE_STATUS_PERMANENT, $oldPath);
   }
 
+  /**
+   * TODO
+   */
   public function removeFile($path) {
     db_query("DELETE FROM {files} WHERE filepath = '%s'", $path);
   }
 
-
+  /**
+   * TODO
+   */
   public function getLibraries() {
     $libraries = array();
 
@@ -89,10 +121,14 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         $libraries[] = $library;
       }
     }
-
-    return json_encode($libraries);
+    
+    return $libraries;
   }
-  public function getEditorLibraries($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
+  
+  /**
+   * TODO
+   */
+  public function getLibraryEditors($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
     $editorLibraries = array();
 
     // TODO: Add support for fetching additional libraries this library depends on

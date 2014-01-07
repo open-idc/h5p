@@ -315,18 +315,28 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Calls modules implementing hook_alter_h5p_semantics().
    */
   public function getLibrarySemantics($machineName, $majorVersion, $minorVersion) {
-    if ($this->isInDevMode()) {
-      $semantics = $this->getSemanticsFromFile($machineName, $majorVersion, $minorVersion);
+    if (variable_get('h5p_library_development', 0) === 1) {
+      $development = _h5p_get_instance('development');
+      $semantics = $development->getSemantics($node->main_library['machineName'] . ' ' . 
+                                              $node->main_library['majorVersion'] . '.' .
+                                              $node->main_library['minorVersion']);
     }
-    else {
-      $semantics = db_result(db_query(
-        "SELECT semantics
-        FROM {h5p_libraries}
-        WHERE machine_name = '%s'
-        AND major_version = %d
-        AND minor_version = %d",
-        $machineName, $majorVersion, $minorVersion));
+
+    if (!isset($semantics)) {
+      if ($this->isInDevMode()) {
+        $semantics = $this->getSemanticsFromFile($machineName, $majorVersion, $minorVersion);
+      }
+      else {
+        $semantics = db_result(db_query(
+          "SELECT semantics
+          FROM {h5p_libraries}
+          WHERE machine_name = '%s'
+          AND major_version = %d
+          AND minor_version = %d",
+          $machineName, $majorVersion, $minorVersion));
+      }
     }
+    
     $semantics = json_decode($semantics);
     if (!empty($semantics)) {
       drupal_alter('h5p_semantics', $semantics);

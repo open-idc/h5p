@@ -1223,6 +1223,156 @@ Class H5PExport {
 }
 
 /**
+ * This class is used for storing variables and functions.
+ * This is a data layer which uses the file system, 
+ * so it isn't specific to any framework.
+ */
+Class H5PDevelopment {
+
+  private $libraries, $language;
+
+  /**
+   * Constructor.
+   *
+   * @param string Files path
+   * @param array $libraries Optional cache input.
+   */
+  public function __construct($filesPath, $language, $libraries = NULL) {
+    $this->language = $language;
+    if ($libraries !== NULL) {
+      $this->libraries = $libraries;
+    }
+    else {
+      $this->findLibraries($filesPath . '/development');
+    }
+  }
+  
+  /**
+   * Get contents of file.
+   *
+   * @param string File path.
+   * @return mixed String on success or NULL on failure.
+   */
+  private function getFileContents($file) {
+    if (file_exists($file) === FALSE) {
+      return NULL;
+    }
+    
+    $contents = file_get_contents($file);
+    if ($contents === FALSE) {
+      return NULL;
+    }
+    
+    return $contents;
+  }
+  
+  /**
+   * Scans development directory and find all libraries.
+   *
+   * @param string $path Libraries development folder
+   */
+  private function findLibraries($path) {
+    $this->libraries = array();
+    
+    if (is_dir($path) === FALSE) {
+      return; 
+    }
+    
+    $contents = scandir($path);
+    
+    for ($i = 0, $s = count($contents); $i < $s; $i++) {
+      if ($contents[$i]{0} === '.') {
+        continue; // Skip hidden stuff.
+      }
+      
+      $libraryPath = $path . '/' . $contents[$i];
+      $libraryJSON = $this->getFileContents($libraryPath . '/library.json');
+      if ($libraryJSON === NULL) {
+        continue; // No JSON file, skip.
+      }
+      
+      $library = json_decode($libraryJSON, TRUE);
+      if ($library === FALSE) {
+        continue; // Invalid JSON.
+      }
+      
+      // TODO: Validate
+      // TODO: Insert new libs in DB.
+      
+      $library['path'] = $libraryPath;
+      $this->libraries[$library['machineName'] . ' ' . $library['majorVersion'] . '.' . $library['minorVersion']] = $library;
+    }
+  }
+  
+  /**
+   * @return array Libraris in development folder.
+   */
+  public function getLibraries() {
+    return $this->libraries;
+  }
+  
+  /**
+   * @return string Semantics
+   */
+  public function getSemantics($name, $majorVersion, $minorVersion) {
+    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+    
+    if (isset($this->libraries[$library]) === FALSE) {
+      return NULL;
+    }
+    
+    return $this->getFileContents($this->libraries[$library]['path'] . '/semantics.json');
+  }
+  
+  /**
+   * @return string Translation
+   */
+  public function getLanguage($name, $majorVersion, $minorVersion) {
+    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+    
+    if (isset($this->libraries[$library]) === FALSE) {
+      return NULL;
+    }
+    
+    return $this->getFileContents($this->libraries[$library]['path'] . '/language/' . $this->language . '.json');
+  }
+  
+  /**
+   * 
+   */
+  public function getLibraryEditors($name, $majorVersion, $minorVersion) {
+    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+    
+    // TBD
+    
+    return NULL;
+  }
+  
+  /**
+   * 
+   */
+  public function getLibraryFiles($name, $majorVersion, $minorVersion) {
+    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+    
+    // TBD
+    
+    return NULL;
+  
+  /**
+   * Writes library as string on the form "name majorVersion.minorVersion"
+   * Really belongs as a toString on the library class...
+   *
+   * @param string $name Machine readable library name
+   * @param integer $majorVersion
+   * @param integer $majorVersion
+   * @return string Library identifier.
+   */
+  public static function libraryToString($name, $majorVersion, $minorVersion) {
+    return $name . ' ' . $majorVersion . '.' . $minorVersion;
+  }
+}
+
+/**
  * Functions and storage shared by the other H5P classes
  */
 class H5PCore {
