@@ -62,10 +62,18 @@ H5PIntegration.getFullscreen = function (contentId) {
 H5PIntegration.getHeadTags = function (contentId) {
   var basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath;
 
+  var createUrl = function (path) {
+    if (path.substring(0,7) !== 'http://') {
+      // Not external, add base path and cache buster.
+      path = basePath + path + '?' + Drupal.settings.h5p.cacheBuster;
+    }
+    return path;
+  }
+
   var createStyleTags = function (styles) {
     var tags = '';
     for (var i = 0; i < styles.length; i++) {
-      tags += '<link rel="stylesheet" href="' + basePath + styles[i] + '?' + Drupal.settings.h5p.cacheBuster + '">';
+      tags += '<link rel="stylesheet" href="' + createUrl(styles[i]) + '">';
     }
     return tags;
   };
@@ -73,7 +81,7 @@ H5PIntegration.getHeadTags = function (contentId) {
   var createScriptTags = function (scripts) {
     var tags = '';
     for (var i = 0; i < scripts.length; i++) {
-      tags += '<script src="' + basePath + scripts[i] + '?' + Drupal.settings.h5p.cacheBuster + '"></script>';
+      tags += '<script src="' + createUrl(scripts[i]) + '"></script>';
     }
     return tags;
   };
