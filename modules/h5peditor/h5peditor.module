@@ -200,9 +200,8 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       if (!isset($node->h5p_type) || $node->h5p_type == 'upload') {
         return;
       }
-      $storage = h5peditor_get_storage_instance();
-      $editor = new H5peditor($storage, file_directory_path(), base_path());
-
+      
+      $editor = h5peditor_get_instance();
       $content_id = h5p_get_content_id($node);
 
       if (!$editor->createDirectories($content_id)) {
@@ -225,11 +224,11 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  * Callback that lists all h5p libraries.
  */
 function h5peditor_libraries_callback() {
-  $storage = h5peditor_get_storage_instance();
+  $editor = h5peditor_get_instance();
 
   drupal_set_header("Cache-Control: no-cache");
   drupal_set_header('Content-type: application/json');
-  echo $storage->getLibraries();
+  print $editor->getLibraries();
 }
 
 /**
@@ -238,14 +237,14 @@ function h5peditor_libraries_callback() {
  * @param string $library
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
-  $storage = h5peditor_get_storage_instance();
-  $h5p_editor = new H5peditor($storage, file_directory_path(), base_path());
-
-  // TODO: CACHE!!!
+  $editor = h5peditor_get_instance();
+  
+  // TODO: Make Drupal cache result?
+  // TODO: Consider how smart it really is to do it this way? We are not leveraging browser caching at all, and each lib does not have that many files.
 
   drupal_set_header("Cache-Control: no-cache");
   drupal_set_header('Content-type: application/json');
-  echo $h5p_editor->getLibraryData($machine_name, $major_version, $minor_version);
+  print $editor->getLibraryData($machine_name, $major_version, $minor_version);
 }
 
 /**
@@ -268,10 +267,10 @@ function h5peditor_files_callback() {
   }
 
   if ($file->validate() && $file->copy()) {
-    $storage = h5peditor_get_storage_instance();
+    $editor = h5peditor_get_instance();
 
-    // Add file to DB so Drupal can clean it up.
-    $storage->addTempFile($file);
+    // Keep track of temporary files so they can be cleaned up later.
+    $editor->addTmpFile($file);
   }
 
   header('Content-type: text/html');
@@ -279,21 +278,32 @@ function h5peditor_files_callback() {
 }
 
 /**
- * Keeps track of our storage instance, saving valuable resources.
+ * Keeps track of our editor instance, saving valuable resources.
  *
- * @staticvar H5peditorDrupalStorage $storage_instance
- * @return \H5peditorDrupalStorage
+ * @staticvar H5peditor $instance
+ * @return \H5peditor
  */
-function h5peditor_get_storage_instance() {
-  static $storage_instance;
+function h5peditor_get_instance() {
+  static $instance;
 
-  if (!$storage_instance) {
-    $storage_instance = new H5peditorDrupalStorage();
+  if (!$instance) {
+    if (variable_get('h5p_library_development', 0) === 1) {
+      $development = _h5p_get_instance('development');
+    }
+    $instance = new H5peditor(
+      new H5peditorDrupalStorage(), 
+      file_directory_path(), 
+      base_path(),
+      isset($development) ? $development : NULL
+    );
   }
 
-  return $storage_instance;
+  return $instance;
 }
 
+/**
+ * TODO
+ */
 function h5peditor_main_library_to_string($node, $as_string = FALSE) {
   if (!isset($node->main_library)) {
     return FALSE;
@@ -301,6 +311,9 @@ function h5peditor_main_library_to_string($node, $as_string = FALSE) {
   return $node->main_library['machineName'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'];
 }
 
+/**
+ * TODO
+ */
 function h5peditor_get_library_property($library, $property = 'all') {
   $matches = array();
   preg_match_all('/(.+)\s(\d)+\.(\d)$/', $library, $matches);
