@@ -445,7 +445,11 @@ function h5p_add_files_and_settings($node, $mode) {
       foreach (H5PCore::$scripts as $script) {
         $settings['h5p']['core']['scripts'][] = $module_path . '/library/' . $script;
       }
-
+      
+      // TODO: Fix aggregation of scripts and styles.
+      $settings['h5p']['cid-' . $content_id]['styles'] = $file_paths['preloadedCss'];
+      $settings['h5p']['cid-' . $content_id]['scripts'] = $file_paths['preloadedJs'];
+/*
       $preprocess_css = (variable_get('preprocess_css', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
       $preprocess_js = (variable_get('preprocess_js', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
       $directory = file_directory_path();
@@ -484,6 +488,7 @@ function h5p_add_files_and_settings($node, $mode) {
       else {
         $settings['h5p']['cid-' . $content_id]['scripts'] = $file_paths['preloadedJs'];
       }
+      */
     }
 
     // Set libraryPath:
