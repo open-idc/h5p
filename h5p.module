@@ -680,16 +680,24 @@ function theme_h5p_export_button($variables) {
 }
 
 /**
- * Implementation of hook_content_extra_fields().
+ * Implements hook_field_extra_fields().
  */
-function h5p_content_extra_fields($type_name) {
-  $extra = array();
-  if ($type_name == 'h5p_content') {
-    $extra['h5p'] = array(
-      'label' => t('H5P Upload'),
-      'description' => t('Upload interactive content.'),
-      'weight' => 2,
-    );
-  }
+function h5p_field_extra_fields() {
+  $extra['node']['h5p_content'] = array(
+    'form' => array(
+      'h5p' => array(
+        'label' => t('H5P Upload'),
+        'description' => t('Upload interactive content.'),
+        'weight' => 2,
+      )
+    ),
+    'display' => array(
+      'h5p' => array(
+        'description' => t('Interactive content'),
+        'weight' => 2,
+      )
+    )
+  );
+  
   return $extra;
 }
