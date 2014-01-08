@@ -224,6 +224,14 @@ function h5p_delete($node) {
     $h5p_core->deletePackage($content_id);
   }
   _h5p_get_instance('export')->deleteExport($node->nid);
+  
+  // Remove aggregated files.
+  foreach (glob(file_directory_path() . '/js/h5p-' . $node->nid . '-*') as $script) {
+    unlink($script);
+  }
+  foreach (glob(file_directory_path() . '/css/h5p-' . $node->nid . '-*') as $style) {
+    unlink($style);
+  }
 }
 
 /**
@@ -246,7 +254,7 @@ function h5p_load($nodes) {
         'embedTypes' => $h5p->embed_type,
       );
       
-      unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version);
+      unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version, $h5p->embed_types);
       if (variable_get('h5p_content_dev_mode', 0)) {
         // TODO: It would be nice if this was in core so other systems could implement it.
         $json_content_path = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . h5p_get_content_id($node) . '/content.json';
@@ -311,8 +319,19 @@ function h5p_get_file_paths($node) {
  * @return string 'div' or 'iframe'.
  */
 function h5p_get_embed_type($node) {
-  $embed = isset($node->main_library['embedTypes']) && !empty($node->main_library['embedTypes']) ? $node->main_library['embedTypes'] : $node->embed_type;
-  return strpos(strtolower($embed), 'div') !== FALSE ? 'div' : 'iframe';
+  // Detect content embed type
+  $embed_type = strpos(strtolower($node->embed_type), 'div') !== FALSE ? 'div' : 'iframe';
+  
+  if (isset($node->main_library['embedTypes']) && !empty($node->main_library['embedTypes'])) {
+    // Check that embed type is available for library
+    $embed_types = strtolower($node->main_library['embedTypes']);
+    if (strpos($embed_types, $embed_type) === FALSE) {
+      // Not available, pick default.
+      $embed_type = strpos($embed_types, 'div') !== FALSE ? 'div' : 'iframe';
+    }  
+  }
+  
+  return $embed_type;
 }
 
 /**
@@ -320,7 +339,7 @@ function h5p_get_embed_type($node) {
  */
 function h5p_view($node, $view_mode = 'full') {
   node_object_prepare($node);
-  if ($view_mode == 'full') {
+  if ($view_mode === 'full') {
     if (isset($node->main_library)) {
       $content_id = h5p_get_content_id($node);
       $main_library = $node->main_library['machineName'];
@@ -436,7 +455,7 @@ function h5p_add_files_and_settings($node, $mode) {
       // Core files are not included to leverage browser caching! See http://css-tricks.com/one-two-three
 
       if ($is_writable && $preprocess_css) {
-        $filename = 'h5p-' . $content_id . '.css';
+        $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.css';
         
         // Refactor styles array to Drupal eatable format.
         $styles = array('module' => array());
@@ -451,7 +470,7 @@ function h5p_add_files_and_settings($node, $mode) {
       }
       
       if ($is_writable && $preprocess_js) {
-        $filename = 'h5p-' . $content_id . '.js';
+        $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.js';
         
         // Refactor scripts array to Drupal eatable format.
         $scripts = array();
