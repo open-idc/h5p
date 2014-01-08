@@ -229,7 +229,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         ->from($query)
         ->execute();
       
-      NULL;
+      NULL; // TODO: What's the meaning of this?
     }
   }
 
@@ -385,6 +385,9 @@ class H5PDrupal implements H5PFrameworkInterface {
     return $semantics;
   }
 
+  /**
+   * TODO
+   */
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
     $semanticsPath = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json';
     if (file_exists($semanticsPath)) {
@@ -449,6 +452,7 @@ class H5PDrupal implements H5PFrameworkInterface {
 
     return $export;
   }
+  
   /**
    * Check if h5p export is enabled.
    *
@@ -458,6 +462,3 @@ class H5PDrupal implements H5PFrameworkInterface {
     return (bool) variable_get('h5p_export', 1);
   }
 }
-
-?>
-
