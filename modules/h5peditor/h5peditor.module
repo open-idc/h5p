@@ -372,21 +372,23 @@ function h5peditor_get_source_node($node) {
 }
 
 /**
- * Implementation of hook_content_extra_fields().
+ * Implements of hook_field_extra_fields().
  */
-function h5peditor_content_extra_fields($type_name) {
-  $extra = array();
-  if ($type_name == 'h5p_content') {
-    $extra['h5p_type'] = array(
-      'label' => t('H5P Action'),
-      'description' => t('Choose whether to upload or create/edit content.'),
-      'weight' => 1,
-    );
-    $extra['h5p_editor'] = array(
-      'label' => t('H5P Editor'),
-      'description' => t('Create or edit interactive content.'),
-      'weight' => 2,
-    );
-  }
+function h5peditor_field_extra_fields() {
+  $extra['node']['h5p_content'] = array(
+    'form' => array(
+      'h5p_type' => array(
+        'label' => t('H5P Action'),
+        'description' => t('Choose whether to upload or create/edit content.'),
+        'weight' => 1,
+      ),
+      'h5p_editor' => array(
+        'label' => t('H5P Editor'),
+        'description' => t('Create or edit interactive content.'),
+        'weight' => 2,
+      )
+    )
+  );
+  
   return $extra;
 }
