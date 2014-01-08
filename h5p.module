@@ -251,6 +251,14 @@ function h5p_delete($node) {
     $h5p_core->deletePackage($content_id);
   }
   _h5p_get_instance('export')->deleteExport($node->nid);
+  
+  // Remove aggregated files.
+  foreach (glob(file_directory_path() . '/js/h5p-' . $node->nid . '-*') as $script) {
+    unlink($script);
+  }
+  foreach (glob(file_directory_path() . '/css/h5p-' . $node->nid . '-*') as $style) {
+    unlink($style);
+  }
 }
 
 /**
@@ -337,7 +345,7 @@ function h5p_get_embed_type($node) {
 /**
  * Implementation of hook_view().
  */
-function h5p_view($node, $teaser = FALSE, $page = FALSE) {
+function h5p_view($node, $teaser = FALSE, $page = FALSE) {  
   $node = node_prepare($node, $teaser);
   if (!$teaser) {
     if (isset($node->main_library)) {
@@ -448,7 +456,7 @@ function h5p_add_files_and_settings($node, $mode) {
       // Core files are not included to leverage browser caching! See http://css-tricks.com/one-two-three
 
       if ($is_writable && $preprocess_css) {
-        $filename = 'h5p-' . $content_id . '.css';
+        $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.css';
         
         // Refactor styles array to Drupal eatable format.
         $styles = array('module' => array());
@@ -463,7 +471,7 @@ function h5p_add_files_and_settings($node, $mode) {
       }
       
       if ($is_writable && $preprocess_js) {
-        $filename = 'h5p-' . $content_id . '.js';
+        $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.js';
         
         // Refactor scripts array to Drupal eatable format.
         $scripts = array();
