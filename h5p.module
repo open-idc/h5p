@@ -279,7 +279,7 @@ function h5p_load($node) {
       'minorVersion' => $h5p->minor_version,
       'embedTypes' => $h5p->embed_types
     );
-    unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version);
+    unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version, $h5p->embed_types);
   }
   if (variable_get('h5p_content_dev_mode', 0)) {
     $json_content_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . h5p_get_content_id($node) . '/content.json');
@@ -338,8 +338,19 @@ function h5p_get_file_paths($node) {
  * @return string 'div' or 'iframe'.
  */
 function h5p_get_embed_type($node) {
-  $embed = isset($node->main_library['embedTypes']) && !empty($node->main_library['embedTypes']) ? $node->main_library['embedTypes'] : $node->embed_type;
-  return strpos(strtolower($embed), 'div') !== FALSE ? 'div' : 'iframe';
+  // Detect content embed type
+  $embed_type = strpos(strtolower($node->embed_type), 'div') !== FALSE ? 'div' : 'iframe';
+  
+  if (isset($node->main_library['embedTypes']) && !empty($node->main_library['embedTypes'])) {
+    // Check that embed type is available for library
+    $embed_types = strtolower($node->main_library['embedTypes']);
+    if (strpos($embed_types, $embed_type) === FALSE) {
+      // Not available, pick default.
+      $embed_type = strpos($embed_types, 'div') !== FALSE ? 'div' : 'iframe';
+    }  
+  }
+  
+  return $embed_type;
 }
 
 /**
