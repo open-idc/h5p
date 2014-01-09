@@ -262,6 +262,29 @@ function h5p_delete($node) {
 }
 
 /**
+ * Implementation of hook_nodeapi().
+ */
+function h5p_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'delete revision':
+      if ($node->type === 'h5p_content') {
+        // Clean up aggregated styles
+        $css = file_directory_path() . '/css/h5p-' . $node->nid . '-' . $node->vid . '.css';
+        if (file_exists($css)) {
+          unlink($css);
+        }
+        
+        // Clean up aggregated scripts
+        $js = file_directory_path() . '/js/h5p-' . $node->nid . '-' . $node->vid . '.js';
+        if (file_exists($js)) {
+          unlink($js);
+        }
+      }
+      break;
+  }
+}
+
+/**
  * Implementation of hook_load().
  */
 function h5p_load($node) {
