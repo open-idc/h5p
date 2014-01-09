@@ -183,10 +183,7 @@ function h5p_insert($node) {
   // @todo: Make sure node_load -> node_save works by implementing presave
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $library_updated = $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
-    if ($library_updated) {
-      _h5p_clear_js_and_css_cache();
-    }
+    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
   }
   else {
     db_query(
@@ -207,10 +204,7 @@ function h5p_update($node) {
     }
     else {
       $h5p_core = _h5p_get_instance('storage');
-      $library_updated = $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
-      if ($library_updated) {
-        _h5p_clear_js_and_css_cache();
-      }
+      $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
     }
   }
   elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
@@ -236,8 +230,7 @@ function h5p_update($node) {
   }
 
   _h5p_get_instance('export')->deleteExport($node->nid);
-
-  cache_clear_all('validated_json_' . $node->vid, 'cache');
+  _h5p_clear_js_and_css_cache();
 }
 
 /**
@@ -251,37 +244,6 @@ function h5p_delete($node) {
     $h5p_core->deletePackage($content_id);
   }
   _h5p_get_instance('export')->deleteExport($node->nid);
-  
-  // Remove aggregated files.
-  foreach (glob(file_directory_path() . '/js/h5p-' . $node->nid . '-*') as $script) {
-    unlink($script);
-  }
-  foreach (glob(file_directory_path() . '/css/h5p-' . $node->nid . '-*') as $style) {
-    unlink($style);
-  }
-}
-
-/**
- * Implementation of hook_nodeapi().
- */
-function h5p_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  switch ($op) {
-    case 'delete revision':
-      if ($node->type === 'h5p_content') {
-        // Clean up aggregated styles
-        $css = file_directory_path() . '/css/h5p-' . $node->nid . '-' . $node->vid . '.css';
-        if (file_exists($css)) {
-          unlink($css);
-        }
-        
-        // Clean up aggregated scripts
-        $js = file_directory_path() . '/js/h5p-' . $node->nid . '-' . $node->vid . '.js';
-        if (file_exists($js)) {
-          unlink($js);
-        }
-      }
-      break;
-  }
 }
 
 /**
@@ -676,8 +638,6 @@ function _h5p_clear_js_and_css_cache() {
 
   // Need to clear JSON content cache too.
   cache_clear_all('validated_json_', 'cache', TRUE);
-
-  drupal_set_message('JS and CSS cache was cleared');
 }
 
 /**
