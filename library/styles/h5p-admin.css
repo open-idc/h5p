@@ -1,0 +1,7 @@
+.h5p-admin-table tbody tr {
+  cursor: pointer;  
+}
+
+.h5p-admin-table tbody tr:hover {
+  background-color: #EEE;
+} 

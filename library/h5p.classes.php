@@ -1237,6 +1237,10 @@ class H5PCore {
     'js/jquery.js',
     'js/h5p.js',
   );
+  public static $adminScripts = array(
+    'js/jquery.js',
+    'js/h5p-utils.js',
+  );
 
   public static $defaultContentWhitelist = 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf';
   public static $defaultLibraryWhitelistExtras = 'js css';
