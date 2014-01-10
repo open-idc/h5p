@@ -40,6 +40,26 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  
+  $items['admin/content/h5p'] = array(
+      'title' => 'H5P libraries',
+      'description' => 'List, delete and get detailed info on the installed H5P libraries',
+      'page callback' => 'h5p_library_list',
+      'access arguments' => array('administer content types'), // TODO - create own permission? 
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'h5p.admin.inc',
+  );
+  
+  $items['admin/content/h5p/%'] = array(
+      'title' => 'H5P libraries',
+      'description' => 'List, delete and get detailed info on the installed H5P libraries',
+      'page callback' => 'h5p_library_details',
+      'page arguments' => array(3),
+      //'access arguments' => array('administer content types'), // TODO - create own permission?
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'h5p.admin.inc',
+  );
+  
 
   return $items;
 }
