@@ -93,3 +93,30 @@ H5PIntegration.getHeadTags = function (contentId) {
 };
 
 H5PIntegration.fullscreenText = Drupal.t('Fullscreen');
+
+/**
+ *  Returns an object containing a library metadata
+ *  
+ *  @returns {object} { listData: object containing libraries, listHeaders: array containing table headers (translation done server-side) } 
+ */
+H5PIntegration.getLibraryList = function () {
+  return Drupal.settings.h5p.libraries;
+};
+
+/**
+ * Get the DOM element where the admin UI should be rendered
+ * 
+ * @returns {jQuery object} The jquery object where the admin UI should be rendered
+ */
+H5PIntegration.getAdminContainer = function () {
+  return H5P.jQuery('#h5p-admin-container'); 
+};
+
+/**
+ * Get info on which endpoints exists, e.g, the URL for getting library details 
+ * 
+ * @returns {object} TODO - will be defined when endpoints are defined
+ */
+H5PIntegration.getAdminEndpoints = function () {
+  return Drupal.settings.h5p.adminEndpoints;
+};
