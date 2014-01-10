@@ -94,3 +94,38 @@ function h5p_admin_settings_submit($form, &$form_state) {
   // Ensure that the h5p white list is always stored in lower case.
   $form_state['values']['h5p_whitelist'] = mb_strtolower($form_state['values']['h5p_whitelist']);
 }
+/**
+ * TODO
+ * @return string
+ */
+function h5p_library_list() {
+  $settings = array();
+  
+  // Get the libraries and usage from the database:
+  $res = db_query('SELECT COUNT(n.library_id) as content_count, l.* 
+                   FROM {h5p_libraries} l left JOIN {h5p_nodes_libraries} n ON l.library_id = n.library_id
+                   GROUP BY l.library_id');
+  
+  while ($library = db_fetch_object($res)) {
+    $settings['h5p']['libraries'][$library->machine_name] = array (
+      'libraryId' => $library->library_id,
+      'contentCount' => $library->content_count,
+      'title' => $library->title,
+      'majorVersion' => $library->major_version,
+      'minorVersion' => $library->minor_version,
+      'patchVersion' => $library->patch_version,
+    );
+  }
+    
+  drupal_add_js($settings, 'setting');
+  
+  // include JS
+  return 'H5P Library list ';
+}
+
+/**
+ * 
+ */
+function h5p_library_details($library_id) {
+  return 'H5P details view: ' . $library_id;
+}
