@@ -206,8 +206,7 @@ function h5p_update($node) {
       h5p_insert($node);
     }
   }
-
-  // TODO: If this went through core, it could delete the export it self, and clear any caches. (by interface of course) 
+  
   _h5p_get_instance('export')->deleteExport($node->nid);
 
   cache_clear_all('validated_json_' . $node->vid, 'cache');
@@ -256,7 +255,6 @@ function h5p_load($nodes) {
       
       unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version, $h5p->embed_types);
       if (variable_get('h5p_content_dev_mode', 0)) {
-        // TODO: It would be nice if this was in core so other systems could implement it.
         $json_content_path = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . h5p_get_content_id($node) . '/content.json';
         if (file_exists($json_content_path)) {
           $json_content = file_get_contents($json_content_path);
@@ -275,8 +273,6 @@ function h5p_load($nodes) {
 
 /**
  * Get the paths for all js and css files that should be preloaded for a given node
- *
- * TODO: Why not get this through core?
  *
  * @param object $node
  *  The node we want to fetch filepaths for
@@ -350,7 +346,7 @@ function h5p_view($node, $view_mode = 'full') {
       }
       else {
         h5p_add_files_and_settings($node, 'iframe');
-        // TODO: Use the theme system like other people.
+        // TODO: Use the theme system?
         $html = '<div class="h5p-iframe-wrapper" id="h5p-iframe-##h5pId##-wrapper">';
         $html .= '<iframe id="h5p-iframe-##h5pId##" class="h5p-iframe" data-class="##mainLibrary##" data-content-id="##h5pId##" style="width: 100%; height: 400px; border: none;" src="about:blank" frameBorder="0"></iframe>';
         $html .= '</div>';
@@ -537,11 +533,10 @@ function h5p_get_filtered_json_content($node) {
 }
 
 /**
- * Verify the h5p settings.
+ * Verify that the libraries H5P needs exists
  *
- * TODO: You can't tell from neither function name nor it's description what it really does.
- * Perhaps the intent was something different, but these properties should really reflect what the function does.
- *
+ * TODO: Rename this function?
+ * 
  * @return boolean
  *  TRUE if the settings validate, FALSE otherwise
  */
@@ -555,7 +550,7 @@ function _h5p_check_settings() {
   $content_path = $path . '/content';
   $export_path = $path . '/exports';
 
-  // TODO: Wouldn't a for-loop have made this job easier?
+  // TODO: Refactor this using a loop?
   if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
     return FALSE;
   }
@@ -579,8 +574,6 @@ function _h5p_check_settings() {
  *
  * We don't want to keep any session variables around if this
  * is a new form...
- *
- * TODO: Function naming, we aren't really maintaining anything, we're just removing/cleaning up.
  */
 function _h5p_maintain_session_variables() {
   if (!$_POST && !empty($_SESSION['h5p_upload'])) {
@@ -594,14 +587,7 @@ function _h5p_maintain_session_variables() {
  * This function stores the h5p core in a static variable so that the variables there will
  * be kept between validating and saving the node for instance
  *
- * TODO: Make function public so other modules can use the same instance.
- * Wouldn't it also be better if this function only held the core? And then the core
- * could decide which storage and etc. to use. It would certainly make it easier to
- * extend the core with new functionality, and you wouldn't have to beat around every 
- * cms's implementation as much.
- * It also seems a bit strange to implement static getters in the interface for settings. 
- * This would typically just be sent in to the core as parameters when created. This would
- * leverage the fact that the core is an instance and work just like a static cache.
+ * TODO: Remove the "_" infront of the function name to make it "public"
  *
  * @staticvar H5PDrupal $interface
  *  The interface between the H5P library and drupal
@@ -644,8 +630,7 @@ function _h5p_get_instance($type) {
 /**
  * Get the path to the h5p files folder
  *
- * TODO: Judging by the use of this function, it would probably make more sens if it was 
- * a part of core. Other modules might as well get use this function instead of creating duplicates.
+ * TODO: Remove the "_" infront of the function name to make it "public"
  *
  * @return string
  *  Path to the h5p files folder
@@ -658,9 +643,6 @@ function _h5p_get_h5p_path() {
 /**
  * Clears the js and css cache. Needed when updating and
  * adding libraries
- *
- * TODO: Consider adding to interface? I'm under the impression that it's just core using this
- * function, and also you would want to implement this on other systems.
  */
 function _h5p_clear_js_and_css_cache() {
   // Clear caches to make sure new versions are used.
@@ -698,8 +680,7 @@ function h5p_get_content_id($node) {
  */
 function theme_h5p_export_button($variables) {
   $module_path = drupal_get_path('module', 'h5p');
-  drupal_add_css($module_path . '/styles/h5p.css'); // TODO: Are these styles really Drupal specific?
-  // TODO: Would it be more generic if we let this button be generated just like the fullscreen button? (With javascript) Easier for others to implement.
+  drupal_add_css($module_path . '/styles/h5p.css'); // TODO: Move styles into the H5P php library
   return '<a class="h5p-export" href="' . $variables['path'] . '">' . t('Download') . '</a>';
 }
 
