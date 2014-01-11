@@ -1,6 +1,8 @@
 <?php
 
 /*
+ * TODO: Aggregation of css and js should be moved into core(we should use simplified Drupal code)
+ * 
  * TODO: Test with all existing content types
  * 
  * TODO: Embed types should be retrieved from the main library and removed from h5p.json
