@@ -228,8 +228,6 @@ class H5PDrupal implements H5PFrameworkInterface {
         ->fields(array('required_library_id', 'library_id', 'dependency_type'))
         ->from($query)
         ->execute();
-      
-      NULL; // TODO: What's the meaning of this?
     }
   }
 
@@ -386,7 +384,18 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
-   * TODO
+   * Reads semantics for a library from the library.json file instead of the database
+   * 
+   * @param string $machineName
+   *  Machine readable name of the library
+   * @param int $majorVersion
+   *  Major version for the library
+   * @param int $minorVersion
+   *  Minor version for the library
+   * @return sting|boolean
+   *  Semantics as string if successfull
+   *  FALSE as boolean if not successfull
+   *  
    */
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
     $semanticsPath = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json';
