@@ -225,10 +225,10 @@ function h5p_delete($node) {
   _h5p_get_instance('export')->deleteExport($node->nid);
   
   // Remove aggregated files.
-  foreach (glob(file_directory_path() . '/js/h5p-' . $node->nid . '-*') as $script) {
+  foreach (glob(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/js/h5p-' . $node->nid . '-*') as $script) {
     unlink($script);
   }
-  foreach (glob(file_directory_path() . '/css/h5p-' . $node->nid . '-*') as $style) {
+  foreach (glob(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/css/h5p-' . $node->nid . '-*') as $style) {
     unlink($style);
   }
 }
@@ -448,7 +448,7 @@ function h5p_add_files_and_settings($node, $mode) {
 /*
       $preprocess_css = (variable_get('preprocess_css', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
       $preprocess_js = (variable_get('preprocess_js', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
-      $directory = file_directory_path();
+      $directory = file_stream_wrapper_get_instance_by_uri('public://')->realpath();
       $is_writable = is_dir($directory) && is_writable($directory) && (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC) == FILE_DOWNLOADS_PUBLIC);
 
       // Aggregate library styles and scripts for faster loading when using iframe. 

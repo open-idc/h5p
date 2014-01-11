@@ -5,7 +5,7 @@ var H5P = H5P || {};
 // If run in an iframe, use parent version of globals.
 if (window.parent !== window) {
   Drupal = window.parent.Drupal;
-  $ = window.parent.$;
+  jQuery = window.parent.jQuery;
 }
 
 jQuery(document).ready(function () {
