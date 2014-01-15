@@ -122,10 +122,11 @@ H5PIntegration.getAdminContainer = function () {
 };
 
 /**
- * Get info on which endpoints exists, e.g, the URL for getting library details 
+ * Creates the URL to the detailed library page for a given library
  * 
- * @returns {object} TODO - will be defined when endpoints are defined
+ * @param {libraryId} The id of the library. This ID originates from the backend. 
+ * @returns {string} URL to library details page
  */
-H5PIntegration.getAdminEndpoints = function () {
-  return Drupal.settings.h5p.adminEndpoints;
-};
+H5PIntegration.getLibraryDetailsUrl = function (libraryId) {
+  return Drupal.settings.h5p.adminEndpoints.libraryDetails + libraryId;
+}
