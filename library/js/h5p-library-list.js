@@ -18,15 +18,16 @@ var H5PLibraryList= H5PLibraryList || {};
   H5PLibraryList.createLibraryList = function (libraries) {
     // Create table
     var $table = H5PUtils.createTable(libraries.listHeaders);
+    $table.addClass('libraries');
     
     // Add libraries
     $.each (libraries.listData, function (index, library) {
-      var $libraryRow = H5PUtils.createTableRow(library);
+      var $libraryRow = H5PUtils.createTableRow([library.name, library.machineName, library.contentCount]);
       
       // Open details view when clicked
       $libraryRow.on('click', function (){
         var endpoints = H5PIntegration.getAdminEndpoints();
-        window.location.href = endpoints.libraryDetails + library.machineName;
+        window.location.href = endpoints.libraryDetails + library.id;
       });
       
       $table.append($libraryRow);

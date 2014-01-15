@@ -104,6 +104,15 @@ H5PIntegration.getLibraryList = function () {
 };
 
 /**
+ *  Returns an object containing detailed info for a library
+ *  
+ *  @returns {object} { info: object containing libraryinfo, content: array containing content info, translations: an object containing key/value } 
+ */
+H5PIntegration.getLibraryInfo = function () {
+  return Drupal.settings.h5p.library;
+};
+
+/**
  * Get the DOM element where the admin UI should be rendered
  * 
  * @returns {jQuery object} The jquery object where the admin UI should be rendered
