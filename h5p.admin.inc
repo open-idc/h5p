@@ -110,18 +110,19 @@ function h5p_library_list() {
   
   while ($library = db_fetch_object($res)) {
     $title = $library->title . ' (' . $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version . ')';
-    $settings['h5p']['libraries']['listData'][] = array (
+    $settings['h5p']['libraries']['listData'][] = array(
       'name' => $title,
       'machineName' => $library->machine_name,
       'contentCount' => $library->content_count,
+      'id' => $library->library_id,
     );
   }
   
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array (t('Name'), t('Machine name'), t('Usage counter')); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter')); 
 
   // Add admin endpoints:
-  $settings['h5p']['adminEndpoints'] = array (
+  $settings['h5p']['adminEndpoints'] = array(
     'libraryDetails' => url('admin/content/h5p/libraries/')
   );
   
@@ -147,6 +148,41 @@ function h5p_library_list() {
  * @return {string} Html string
  */
 function h5p_library_details($library_id) {
+  $settings = array();
+  
+  $library = db_fetch_object(db_query('SELECT * FROM {h5p_libraries} where library_id = %d', $library_id));
+  
+  // Build library info
+  $settings['h5p']['library']['info'] = array(
+    t('Name') => $library->title,
+    t('Machine name') => $library->machine_name,
+    t('Version') => $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version,
+    t('Runnable') => $library->runnable ? t('Yes') : t('No'),
+    t('Fullscreen') => $library->fullscreen ? t('Yes') : t('No'),
+  );
+  
+  // Build the translations needed
+  $settings['h5p']['library']['translations'] = array(
+    'contentCount' => t('Content count'),
+    'noContent' => t('No content is using this library'),
+    'contentHeader' => t('Content using this library'),
+    'pageSizeSelectorLabel' => t('Elements per page'),
+    'filterPlaceholder' => t('Filter content'),
+    'pageXOfY' => t('Page $x of $y'),
+  ); 
+
+  // Build a list of the content using this library
+  $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l left join {h5p_nodes} hn on l.content_id = hn.content_id left join {node} n on hn.nid = n.nid  where library_id = %d order by n.title', $library_id);
+  while ($node = db_fetch_object($nodes_res)) {
+    $settings['h5p']['library']['content'][] = array(
+      'title' => $node->title, 
+      'url' => url('node/' . $node->nid),
+    );
+  }
+  
+  // Include all above in Drupal setting
+  drupal_add_js($settings, 'setting');
+  
   $module_path = drupal_get_path('module', 'h5p');
   _h5p_admin_add_generic_css_and_js($module_path);
   drupal_add_js($module_path . '/library/js/h5p-library-details.js');
@@ -154,7 +190,7 @@ function h5p_library_details($library_id) {
   // Create the container which all admin content
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content.
-  return '<div id="h5p-admin-container">H5P details view: ' . $library_id. '</div>';
+  return '<div id="h5p-admin-container"></div>';
 }
 
 /**

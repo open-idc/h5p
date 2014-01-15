@@ -50,6 +50,8 @@ function h5p_menu() {
   );
   $items['admin/content/h5p/libraries/%'] = array(
       'title' => 'H5P library details',
+      'title callback' => '_h5p_library_details_title',
+      'title arguments' => array(4),
       'description' => 'Get detailed info on a library',
       'page callback' => 'h5p_library_details',
       'page arguments' => array(4),
@@ -59,6 +61,15 @@ function h5p_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Creates the title for the library details page 
+ * 
+ * @param integer $library_id
+ */
+function _h5p_library_details_title($library_id) {
+  return db_result(db_query('SELECT title FROM {h5p_libraries} where library_id = %d', $library_id));
 }
 
 /**
