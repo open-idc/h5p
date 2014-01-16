@@ -103,29 +103,38 @@ function h5p_admin_settings_submit($form, &$form_state) {
 function h5p_library_list() {
   $settings = array();
   
-  // Get the libraries and usage from the database:
-  $res = db_query('SELECT COUNT(l.library_id) as content_count, l.*, n.content_id 
-                   FROM {h5p_libraries} l LEFT JOIN {h5p_nodes_libraries} n ON l.library_id = n.library_id
-                   GROUP BY l.library_id ORDER BY l.title ASC');
+  $libraries = array();
   
+  // Get the libraries
+  $res = db_query('SELECT * FROM {h5p_libraries} ORDER BY title ASC');
   while ($library = db_fetch_object($res)) {
+    $library->content_count = 0;
+    $libraries[$library->library_id] = $library;
+  }
+  
+  // Get usage of each library:
+  $res = db_query('SELECT COUNT(distinct n.nid) as content_count, l.library_id
+                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id  
+                   GROUP BY l.library_id');
+  
+  while ($counter = db_fetch_object($res)) {
+    $libraries[$counter->library_id]->content_count = $counter->content_count;
+  }
+  
+  // Build result
+  foreach ($libraries as $library) {
     $title = $library->title . ' (' . $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version . ')';
     $settings['h5p']['libraries']['listData'][] = array(
       'name' => $title,
       'machineName' => $library->machine_name,
-      'contentCount' => $library->content_id ? $library->content_count : 0,
-      'id' => $library->library_id,
+      'contentCount' => $library->content_count,
+      'url' => url('admin/content/h5p/libraries/' . $library->library_id),
     );
   }
   
   // All translations are made server side
   $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter')); 
 
-  // Add admin endpoints:
-  $settings['h5p']['adminEndpoints'] = array(
-    'libraryDetails' => url('admin/content/h5p/libraries/')
-  );
-  
   // Include libraries and more to Drupal setting
   drupal_add_js($settings, 'setting');
   
