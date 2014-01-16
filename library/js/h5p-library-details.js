@@ -19,7 +19,7 @@ var H5PLibraryDetails= H5PLibraryDetails || {};
     // The current filter
     H5PLibraryDetails.currentFilter = '';
     
-    // We cache the filtered results, so we don'r have to do unneccessary searches
+    // We cache the filtered results, so we don't have to do unneccessary searches
     H5PLibraryDetails.filterCache = [];
     
     // Append library info
