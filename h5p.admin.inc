@@ -104,8 +104,8 @@ function h5p_library_list() {
   $settings = array();
   
   // Get the libraries and usage from the database:
-  $res = db_query('SELECT COUNT(n.library_id) as content_count, l.* 
-                   FROM {h5p_libraries} l left JOIN {h5p_nodes_libraries} n ON l.library_id = n.library_id
+  $res = db_query('SELECT COUNT(l.library_id) as content_count, l.*, n.content_id 
+                   FROM {h5p_libraries} l LEFT JOIN {h5p_nodes_libraries} n ON l.library_id = n.library_id
                    GROUP BY l.library_id ORDER BY l.title ASC');
   
   while ($library = db_fetch_object($res)) {
@@ -113,7 +113,7 @@ function h5p_library_list() {
     $settings['h5p']['libraries']['listData'][] = array(
       'name' => $title,
       'machineName' => $library->machine_name,
-      'contentCount' => $library->content_count,
+      'contentCount' => $library->content_id ? $library->content_count : 0,
       'id' => $library->library_id,
     );
   }
@@ -172,7 +172,7 @@ function h5p_library_details($library_id) {
   ); 
 
   // Build a list of the content using this library
-  $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l left join {h5p_nodes} hn on l.content_id = hn.content_id left join {node} n on hn.nid = n.nid  where library_id = %d order by n.title', $library_id);
+  $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l join {h5p_nodes} hn on l.content_id = hn.content_id join {node} n on hn.nid = n.nid  where library_id = %d order by n.title', $library_id);
   while ($node = db_fetch_object($nodes_res)) {
     $settings['h5p']['library']['content'][] = array(
       'title' => $node->title, 
