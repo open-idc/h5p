@@ -26,7 +26,7 @@ var H5PLibraryList= H5PLibraryList || {};
       
       // Open details view when clicked
       $libraryRow.on('click', function (){
-        window.location.href = H5PIntegration.getLibraryDetailsUrl(library.id);
+        window.location.href = library.url;
       });
       
       $table.append($libraryRow);

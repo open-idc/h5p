@@ -120,13 +120,3 @@ H5PIntegration.getLibraryInfo = function () {
 H5PIntegration.getAdminContainer = function () {
   return H5P.jQuery('#h5p-admin-container'); 
 };
-
-/**
- * Creates the URL to the detailed library page for a given library
- * 
- * @param {libraryId} The id of the library. This ID originates from the backend. 
- * @returns {string} URL to library details page
- */
-H5PIntegration.getLibraryDetailsUrl = function (libraryId) {
-  return Drupal.settings.h5p.adminEndpoints.libraryDetails + libraryId;
-}
