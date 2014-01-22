@@ -24,7 +24,7 @@ function h5p_admin_settings($form, &$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Enable export of all H5P content'),
     '#default_value' => variable_get('h5p_export', '1'),
-    '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files."),
+    '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files. The H5P Editor module must be enabled for export to work."),
   );
 
   // make sure core is loaded

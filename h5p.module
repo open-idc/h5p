@@ -354,7 +354,7 @@ function h5p_view($node, $view_mode = 'full') {
         $html .= '</div>';
         $html = str_replace(array('##h5pId##', '##mainLibrary##'), array($content_id, $main_library), $html);
       }
-      if (variable_get('h5p_export', 1)) {
+      if (variable_get('h5p_export', 1) && module_exists('h5peditor')) {
         $h5p_path = base_path() . _h5p_get_instance('export')->getExportPath($content_id, $node->title, $node->language);
 
         if ($h5p_path !== FALSE) {
