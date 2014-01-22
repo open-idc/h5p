@@ -456,32 +456,34 @@ function h5p_add_files_and_settings($node, $mode) {
       // Aggregate library styles and scripts for faster loading when using iframe. 
       // Core files are not included to leverage browser caching! See http://css-tricks.com/one-two-three
 
-      if ($is_writable && $preprocess_css && FALSE) {
-        $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.css';
-        
+      if ($is_writable && $preprocess_css) {
         // Refactor styles array to Drupal eatable format.
-        $styles = array('module' => array());
+        $styles = array();
         foreach ($file_paths['preloadedCss'] as $style) {
-          $styles['module'][$style] = TRUE;
+          $styles[] = array(
+            'data' => $style,
+            'type' => 'file'
+          );
         }
-        
-        $settings['h5p']['cid-' . $content_id]['styles'] = array(drupal_build_css_cache($styles, $filename));
+        $css_url = file_create_url(drupal_build_css_cache($styles));
+        $settings['h5p']['cid-' . $content_id]['styles'] = array($css_url);
       }
       else {
         $settings['h5p']['cid-' . $content_id]['styles'] = $file_paths['preloadedCss'];
       }
       
-      if ($is_writable && $preprocess_js && FALSE) {
-        $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.js';
-        
+      if ($is_writable && $preprocess_js) {
         // Refactor scripts array to Drupal eatable format.
         $scripts = array();
         foreach ($file_paths['preloadedJs'] as $script) {
           $scripts[$script] = array(
+            'data' => $script,
+            'type' => 'file',
             'preprocess' => TRUE,
           );
         }
-        $settings['h5p']['cid-' . $content_id]['scripts'] = array(drupal_build_js_cache($scripts, $filename));
+        $js_url = file_create_url(drupal_build_js_cache($scripts));
+        $settings['h5p']['cid-' . $content_id]['scripts'] = array($js_url);
       }
       else {
         $settings['h5p']['cid-' . $content_id]['scripts'] = $file_paths['preloadedJs'];
