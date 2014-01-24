@@ -42,6 +42,13 @@ interface H5PFrameworkInterface {
    * @return string Path to the folder where the last uploaded h5p for this session is located.
    */
   public function getUploadedH5pFolderPath();
+  
+  /**
+   * Get the SkipContentValidation to the last uploaded h5p
+   *
+   * @return boolean Wether to skip validation of content for the last uploaded h5p for this session or not.
+   */
+  public function getUploadedH5pSkipContent();
 
   /**
    * @return string Path to the folder where all h5p files are stored
@@ -353,6 +360,7 @@ class H5PValidator {
     // Create a temporary dir to extract package in.
     $tmpDir = $this->h5pF->getUploadedH5pFolderPath();
     $tmp_path = $this->h5pF->getUploadedH5pPath();
+    $skipcontentvalidation = $this->h5pF->getUploadedH5pSkipContent();
 
     $valid = TRUE;
 
@@ -382,6 +390,10 @@ class H5PValidator {
       $filePath = $tmpDir . DIRECTORY_SEPARATOR . $file;
       // Check for h5p.json file.
       if (strtolower($file) == 'h5p.json') {
+        if ($skipcontentvalidation === TRUE) {
+          continue;
+        }
+      
         $mainH5pData = $this->getJsonData($filePath);
         if ($mainH5pData === FALSE) {
           $valid = FALSE;
@@ -404,6 +416,10 @@ class H5PValidator {
       }
       // Content directory holds content.
       elseif ($file == 'content') {
+        if ($skipcontentvalidation === TRUE) {
+          continue;
+        }
+        
         if (!is_dir($filePath)) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Invalid content folder'));
           $valid = FALSE;
@@ -443,20 +459,25 @@ class H5PValidator {
         }
       }
     }
-    if (!$contentExists) {
-      $this->h5pF->setErrorMessage($this->h5pF->t('A valid content folder is missing'));
-      $valid = FALSE;
-    }
-    if (!$mainH5pExists) {
-      $this->h5pF->setErrorMessage($this->h5pF->t('A valid main h5p.json file is missing'));
-      $valid = FALSE;
+    if ($skipcontentvalidation === FALSE) {
+      if (!$contentExists) {
+        $this->h5pF->setErrorMessage($this->h5pF->t('A valid content folder is missing'));
+        $valid = FALSE;
+      }
+      if (!$mainH5pExists) {
+        $this->h5pF->setErrorMessage($this->h5pF->t('A valid main h5p.json file is missing'));
+        $valid = FALSE;
+      }
     }
     if ($valid) {
       $this->h5pC->librariesJsonData = $libraries;
-      $this->h5pC->mainJsonData = $mainH5pData;
-      $this->h5pC->contentJsonData = $contentJsonData;
-
-      $libraries['mainH5pData'] = $mainH5pData; // Check for the dependencies in h5p.json as well as in the libraries
+      
+      if ($skipcontentvalidation === FALSE) {
+        $this->h5pC->mainJsonData = $mainH5pData;
+        $this->h5pC->contentJsonData = $contentJsonData;
+        $libraries['mainH5pData'] = $mainH5pData; // Check for the dependencies in h5p.json as well as in the libraries
+      }
+      
       $missingLibraries = $this->getMissingLibraries($libraries);
       foreach ($missingLibraries as $missing) {
         if ($this->h5pF->getLibraryId($missing['machineName'], $missing['majorVersion'], $missing['minorVersion'])) {
@@ -950,21 +971,24 @@ class H5PStorage {
         }
       }
     }
-    // Move the content folder
-    $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . 'content';
-    $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
-    rename($current_path, $destination_path);
+    
+    if ($this->h5pF->getUploadedH5pSkipContent === FALSE) {
+      // Move the content folder
+      $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . 'content';
+      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
+      rename($current_path, $destination_path);
 
-    // Save what libraries is beeing used by this package/content
-    $librariesInUse = array();
-    $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData);
-    $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
-    $this->h5pC->delTree($this->h5pF->getUploadedH5pFolderPath());
+      // Save what libraries is beeing used by this package/content
+      $librariesInUse = array();
+      $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData);
+      $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
+      $this->h5pC->delTree($this->h5pF->getUploadedH5pFolderPath());
 
-    // Save the data in content.json
-    $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
-    $mainLibraryId = $librariesInUse[$this->h5pC->mainJsonData['mainLibrary']]['library']['libraryId'];
-    $this->h5pF->saveContentData($contentId, $contentJson, $this->h5pC->mainJsonData, $mainLibraryId, $contentMainId);
+      // Save the data in content.json
+      $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
+      $mainLibraryId = $librariesInUse[$this->h5pC->mainJsonData['mainLibrary']]['library']['libraryId'];
+      $this->h5pF->saveContentData($contentId, $contentJson, $this->h5pC->mainJsonData, $mainLibraryId, $contentMainId);
+    }
 
     return $library_saved;
   }
