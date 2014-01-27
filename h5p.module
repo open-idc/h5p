@@ -319,6 +319,7 @@ function h5p_get_file_paths($node) {
       $library_data['preloadedJs'] = explode(',', $library_data['preloadedJs']);
       $library_data['preloadedCss'] = explode(',', $library_data['preloadedCss']);
     }
+
     if (!empty($library_data['preloadedJs'])) {
       foreach ($library_data['preloadedJs'] as $value) {
         $to_return['preloadedJs'][] = $library_data['path'] . '/' . trim(isset($value['path']) ? $value['path'] : $value);
@@ -635,7 +636,7 @@ function _h5p_get_instance($type) {
     case 'export':
       return new H5PExport($interface, $core);
     case 'development':
-      return new H5PDevelopment(_h5p_get_h5p_path(), $language->language);
+      return new H5PDevelopment($interface, _h5p_get_h5p_path(), $language->language);
     case 'interface':
       return $interface;
     case 'core':
