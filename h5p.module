@@ -183,10 +183,7 @@ function h5p_insert($node) {
   // @todo: Make sure node_load -> node_save works by implementing presave
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $library_updated = $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
-    if ($library_updated) {
-      _h5p_clear_js_and_css_cache();
-    }
+    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
   }
   else {
     db_query(
@@ -207,10 +204,7 @@ function h5p_update($node) {
     }
     else {
       $h5p_core = _h5p_get_instance('storage');
-      $library_updated = $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
-      if ($library_updated) {
-        _h5p_clear_js_and_css_cache();
-      }
+      $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
     }
   }
   elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
@@ -236,8 +230,7 @@ function h5p_update($node) {
   }
 
   _h5p_get_instance('export')->deleteExport($node->nid);
-
-  cache_clear_all('validated_json_' . $node->vid, 'cache');
+  _h5p_clear_js_and_css_cache();
 }
 
 /**
@@ -341,17 +334,37 @@ function h5p_get_file_paths($node) {
 }
 
 /**
+ * Detemine embed type of node.
+ *
+ * @return string 'div' or 'iframe'.
+ */
+function h5p_get_embed_type($node) {
+  // Detect content embed type
+  $embed_type = strpos(strtolower($node->embed_type), 'div') !== FALSE ? 'div' : 'iframe';
+  
+  if (isset($node->main_library['embedTypes']) && !empty($node->main_library['embedTypes'])) {
+    // Check that embed type is available for library
+    $embed_types = strtolower($node->main_library['embedTypes']);
+    if (strpos($embed_types, $embed_type) === FALSE) {
+      // Not available, pick default.
+      $embed_type = strpos($embed_types, 'div') !== FALSE ? 'div' : 'iframe';
+    }  
+  }
+  
+  return $embed_type;
+}
+
+/**
  * Implementation of hook_view().
  */
-function h5p_view($node, $teaser = FALSE, $page = FALSE) {
+function h5p_view($node, $teaser = FALSE, $page = FALSE) {  
   $node = node_prepare($node, $teaser);
   if (!$teaser) {
     if (isset($node->main_library)) {
-      // if DIV in embed_types, use that, if not, iFrame this.
       $content_id = h5p_get_content_id($node);
       $main_library = $node->main_library['machineName'];
-      $embed = isset($node->main_library['embedTypes']) && !empty($node->main_library['embedTypes']) ? $node->main_library['embedTypes'] : $node->embed_type;
-      if (strpos(strtolower($embed), 'div') !== FALSE) {
+      
+      if (h5p_get_embed_type($node) === 'div') {
         h5p_add_files_and_settings($node, 'div');
         $html = '<div class="h5p-content" data-class="' . $main_library . '" data-content-id="' .  $content_id . '"></div>';
       }
@@ -463,7 +476,7 @@ function h5p_add_files_and_settings($node, $mode) {
     // Core files are not included to leverage browser caching! See http://css-tricks.com/one-two-three
 
     if ($is_writable && $preprocess_css) {
-      $filename = 'h5p-' . $content_id . '.css';
+      $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.css';
       
       // Refactor styles array to Drupal eatable format.
       $styles = array('module' => array());
@@ -476,9 +489,9 @@ function h5p_add_files_and_settings($node, $mode) {
     else {
       $settings['h5p']['cid-' . $content_id]['styles'] = $file_paths['preloadedCss'];
     }
-    
+      
     if ($is_writable && $preprocess_js) {
-      $filename = 'h5p-' . $content_id . '.js';
+      $filename = 'h5p-' . $node->nid . '-' . $node->vid . '.js';
       
       // Refactor scripts array to Drupal eatable format.
       $scripts = array();
@@ -487,7 +500,6 @@ function h5p_add_files_and_settings($node, $mode) {
           'preprocess' => TRUE,
         );
       }
-    
       $settings['h5p']['cid-' . $content_id]['scripts'] = array(drupal_build_js_cache($scripts, $filename));
     }
     else {
@@ -653,8 +665,6 @@ function _h5p_clear_js_and_css_cache() {
 
   // Need to clear JSON content cache too.
   cache_clear_all('validated_json_', 'cache', TRUE);
-
-  drupal_set_message('JS and CSS cache was cleared');
 }
 
 /**
