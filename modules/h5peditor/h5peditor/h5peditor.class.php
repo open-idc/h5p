@@ -47,7 +47,24 @@ class H5peditor {
    * @return array
    */
   public function getLibraries() {
-    $libraries = $this->storage->getLibraries();
+    if (isset($_POST['libraries'])) {
+      // Get details for the specified libraries.
+      $libraries = array();
+      foreach ($_POST['libraries'] as $libraryName) {
+        $matches = array();
+        preg_match_all('/(.+)\s(\d)+\.(\d)$/', $libraryName, $matches);
+        if ($matches) {
+          $libraries[] = (object) array(
+            'uberName' => $libraryName,
+            'name' => $matches[1][0],
+            'majorVersion' => $matches[2][0],
+            'minorVersion' => $matches[3][0]        
+          );
+        }
+      }
+    }
+  
+    $libraries = $this->storage->getLibraries($libraries === NULL ? NULL : $libraries);
     
     if ($this->development !== NULL) {
       $devLibs = $this->development->getLibraries();
@@ -57,11 +74,12 @@ class H5peditor {
         $lid = $libraries[$i]->name . ' ' . $libraries[$i]->majorVersion . '.' . $libraries[$i]->minorVersion;
         if (isset($devLibs[$lid])) {
           $libraries[$i] = (object) array(
-            'name' => $devLibs[$lid]->machineName,
-            'title' => $devLibs[$lid]->title,
-            'majorVersion' => $devLibs[$lid]->majorVersion,
-            'minorVersion' => $devLibs[$lid]->minorVersion,
-            'runnable' => $devLibs[$lid]->runnable,
+            'uberName' => $lid,
+            'name' => $devLibs[$lid]['machineName'],
+            'title' => $devLibs[$lid]['title'],
+            'majorVersion' => $devLibs[$lid]['majorVersion'],
+            'minorVersion' => $devLibs[$lid]['minorVersion'],
+            'runnable' => $devLibs[$lid]['runnable'],
           );
         }
       }
@@ -262,13 +280,16 @@ class H5peditor {
    */
   public function getLibraryEditors($machineName, $majorVersion, $minorVersion) {
     if ($this->development !== NULL) {
-      // Try to get language development library first.
+      // Try to get development editor libraries first
       $editors = $this->development->getLibraryEditors($machineName, $majorVersion, $minorVersion);
     }
     
-    if (isset($editors) === FALSE) {
+    if ($editors === NULL) {
       $editors = $this->storage->getLibraryEditors($machineName, $majorVersion, $minorVersion);
     }
+
+    // Get dependencies for editor libraries. (this is some what of a hack due to the OO structure of H5P Manager)
+    $this->storage->findLibraryDependencies($editors);
     
     return $editors;
   }
@@ -282,7 +303,7 @@ class H5peditor {
       $files = $this->development->getLibraryFiles($machineName, $majorVersion, $minorVersion);
     }
     
-    if (isset($paths) === FALSE) {
+    if ($files === NULL) {
       $files = $this->storage->getLibraryFiles($machineName, $majorVersion, $minorVersion);
     }
     
@@ -299,6 +320,11 @@ class H5peditor {
     $libraryData = new stdClass();
     $libraryData->semantics = $this->storage->getSemantics($machineName, $majorVersion, $minorVersion);
     $libraryData->language = $this->getLibraryLanguage($machineName, $majorVersion, $minorVersion);
+    
+    if ($libraryData->language === NULL) {
+      unset($libraryData->language);
+    }
+    
     $editorLibraries = $this->getLibraryEditors($machineName, $majorVersion, $minorVersion);
 
     foreach ($editorLibraries as $editorLibraryId => $editorLibrary) {
@@ -322,8 +348,8 @@ class H5peditor {
         $libraryData->javascript[md5($lang)] = $lang;
       }
       
-      if (!empty($files['css'])) {
-        foreach ($files['css'] as $css) {
+      if (!empty($files['styles'])) {
+        foreach ($files['styles'] as $css) {
           H5peditor::buildCssPath(NULL, $this->basePath . dirname($css) . '/');
           $libraryData->css[$css] = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents($css));
         }
@@ -358,4 +384,4 @@ class H5peditor {
     }
     return 'url('. $path .')';
   }
-}
+} 

@@ -1229,7 +1229,7 @@ Class H5PExport {
  */
 Class H5PDevelopment {
 
-  private $libraries, $language;
+  private $implements, $libraries, $language;
 
   /**
    * Constructor.
@@ -1237,7 +1237,8 @@ Class H5PDevelopment {
    * @param string Files path
    * @param array $libraries Optional cache input.
    */
-  public function __construct($filesPath, $language, $libraries = NULL) {
+  public function __construct($outerface, $filesPath, $language, $libraries = NULL) {
+    $this->implements = $outerface;
     $this->language = $language;
     if ($libraries !== NULL) {
       $this->libraries = $libraries;
@@ -1296,12 +1297,29 @@ Class H5PDevelopment {
         continue; // Invalid JSON.
       }
       
-      // TODO: Validate
-      // TODO: Insert new libs in DB.
+      // TODO: Validate props? Not really needed, is it? this is a dev site.
+      
+      // Save/update library.
+      $library['libraryId'] = $this->implements->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      $this->implements->saveLibraryData($library, $library['libraryId'] === FALSE);
       
       $library['path'] = $libraryPath;
-      $this->libraries[$library['machineName'] . ' ' . $library['majorVersion'] . '.' . $library['minorVersion']] = $library;
+      $this->libraries[H5PDevelopment::libraryToString($library['machineName'], $library['majorVersion'], $library['minorVersion'])] = $library;
     }
+    
+    // TODO: Should we remove libraries without files? Not really needed, but must be cleaned up some time, right?
+
+    // Go trough libraries and insert dependencies. Missing deps. will just be ignored and not available. (I guess?!)
+    foreach ($this->libraries as $library) {
+      $this->implements->deleteLibraryDependencies($library['libraryId']); // This isn't very optimal, but it's the way of the core. Without it we would get duplicate warnings.
+      $types = array('preloaded', 'dynamic', 'editor');
+      foreach ($types as $type) {
+        if (isset($library[$type . 'Dependencies'])) {
+          $this->implements->saveLibraryDependencies($library['libraryId'], $library[$type . 'Dependencies'], $type);
+        }
+      }
+    }
+    // TODO: Apparently deps must be inserted into h5p_nodes_libraries as well... ? But only if they are used?!
   }
   
   /**
@@ -1312,6 +1330,11 @@ Class H5PDevelopment {
   }
   
   /**
+   * Get semantics for the given library.
+   * 
+   * @param string $name of the library.
+   * @param int $majorVersion of the library.
+   * @param int $minorVersion of the library.
    * @return string Semantics
    */
   public function getSemantics($name, $majorVersion, $minorVersion) {
@@ -1325,6 +1348,11 @@ Class H5PDevelopment {
   }
   
   /**
+   * Get translations for the given library.
+   * 
+   * @param string $name of the library.
+   * @param int $majorVersion of the library.
+   * @param int $minorVersion of the library.
    * @return string Translation
    */
   public function getLanguage($name, $majorVersion, $minorVersion) {
@@ -1338,25 +1366,76 @@ Class H5PDevelopment {
   }
   
   /**
-   * 
+   * Get editor library dependencies.
+   *
+   * @param string $name of the library.
+   * @param int $majorVersion of the library.
+   * @param int $minorVersion of the library.
+   * @return null NULL.
    */
   public function getLibraryEditors($name, $majorVersion, $minorVersion) {
     $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
     
-    // TBD
+    if (isset($this->libraries[$library]) === FALSE) {
+      return NULL;
+    }
+    $library = $this->libraries[$library];
     
-    return NULL;
+    if ($library->editorDependencies === NULL) {
+      return NULL;
+    }
+    
+    // Apparently all dependencies has to be in the database.
+    $editorlibraries = array();
+    for ($i = 0, $s = count($library->editorDependencies); $i < $s; $i++) {
+      $elid = $this->innerface->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      if ($elid === FALSE) {
+        continue; // This dependency does not exist. TODO: Call somebody?
+      }
+      
+      $editorlibraries[$elid] = $library->editorDependencies[$i];
+    }
+    
+    return $editorlibraries;
   }
   
   /**
-   * 
+   * Get file paths for proloaded scripts and styles for the library in question.
+   *
+   * @param string $name of the library.
+   * @param int $majorVersion of the library.
+   * @param int $minorVersion of the library.
+   * @return array with script and styles. NULL if not a dev lib.
    */
   public function getLibraryFiles($name, $majorVersion, $minorVersion) {
     $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+
+    if (isset($this->libraries[$library]) === FALSE) {
+      return NULL;
+    }
+    $library = $this->libraries[$library];
     
-    // TBD
+    $file_paths = array(
+      'scripts' => array(),
+      'styles' => array()
+    );
+  
+    // Add scripts
+    if (isset($library['preloadedJs']) === TRUE) {
+      for ($i = 0, $s = count($library['preloadedJs']); $i < $s; $i++) {
+        $file_paths['scripts'][] = $library['path'] . '/' . $library['preloadedJs'][$i]['path'];
+      }
+    }
     
-    return NULL;
+    // Add styles
+    if (isset($library['preloadedCss']) === TRUE) {
+      for ($i = 0, $s = count($library['preloadedCss']); $i < $s; $i++) {
+        $file_paths['styles'][] = $library['path'] . '/' . $library['preloadedCss'][$i]['path'];
+      }
+    }
+
+    return $file_paths;
+  }
   
   /**
    * Writes library as string on the form "name majorVersion.minorVersion"

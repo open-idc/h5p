@@ -14,7 +14,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    * TODO
    */
   public function getSemantics($machineName, $majorVersion, $minorVersion) {
-    // TODO: Stop using private functions...
+    // TODO: Stop using private functions.
     $coreInterface = _h5p_get_instance('interface');
     return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
   }
@@ -39,7 +39,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getFilePaths($machineName, $majorVersion, $minorVersion) {
+  public function getLibraryFiles($machineName, $majorVersion, $minorVersion) {
     $file_paths = array(
       'scripts' => array(),
       'styles' => array()
@@ -47,7 +47,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   
     $result = db_query(
       "SELECT hl.preloaded_css, hl.preloaded_js, hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion
-      FROM {h5p_libraries} hl WHERE hl.machine_name = %d AND hl.major_version = %d AND hl.minor_version = %d", 
+      FROM {h5p_libraries} hl WHERE hl.machine_name = '%s' AND hl.major_version = %d AND hl.minor_version = %d", 
       $machineName, $majorVersion, $minorVersion
     );
 
@@ -97,29 +97,26 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getLibraries() {
-    $libraries = array();
-
-    if (isset($_POST['libraries'])) {
-      // Get details for the specified libraries.
-      foreach ($_POST['libraries'] as $libraryName) {
-        $matches = array();
-        preg_match_all('/(.+)\s(\d)+\.(\d)$/', $libraryName, $matches);
-        if ($matches) {
-          $library = db_fetch_object(db_query("SELECT machine_name AS name, title, major_version as majorVersion, minor_version as minorVersion, runnable FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $matches[1][0], $matches[2][0], $matches[3][0]));
-          if ($library) {
-            $library->uberName = $libraryName;
-            $libraries[] = $library;
-          }
+  public function getLibraries($libraries = NULL) {
+    if ($libraries !== NULL) {
+      // Get details for the specified libraries only.
+      foreach ($libraries as $library) {
+        $details = db_fetch_object(db_query("SELECT title, runnable FROM {h5p_libraries} WHERE machine_name = '%s' AND major_version = %d AND minor_version = %d AND semantics IS NOT NULL", $library->name, $library->majorVersion, $library->minorVersion));
+        if ($details !== FALSE) {
+          $library->title = $details->title;
+          $library->runnable = $details->runnable;
         }
       }
+      
+      return $libraries;
     }
-    else {
-      // Get some books from the library.
-      $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
-      while ($library = db_fetch_object($libraries_result)) {
-        $libraries[] = $library;
-      }
+    
+    $libraries = array();
+
+    // Get some books from the library.
+    $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
+    while ($library = db_fetch_object($libraries_result)) {
+      $libraries[] = $library;
     }
     
     return $libraries;
@@ -128,7 +125,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getLibraryEditors($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
+  public function getLibraryEditors($machineName, $majorVersion, $minorVersion) {
     $editorLibraries = array();
 
     // TODO: Add support for fetching additional libraries this library depends on
@@ -143,28 +140,34 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       AND hll.dependency_type = 'editor'
     ", $machineName, $majorVersion, $minorVersion);
 
-    $jsonData = array('preloadedDependencies' => array());
     while ($editorLibrary = db_fetch_object($result)) {
       $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
-
-      $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
-        'machineName' => $editorLibrary->machineName,
-        'majorVersion' => $editorLibrary->majorVersion,
-        'minorVersion' => $editorLibrary->minorVersion
+    }
+    
+    return $editorLibraries;
+  }
+  
+  /**
+   * TODO
+   */
+  public function findLibraryDependencies(&$libraries) {    
+    $preloadedDependencies = array();
+    foreach ($libraries as $library) {
+      $preloadedDependencies[] = array(
+        'machineName' => $library->machineName,
+        'majorVersion' => $library->majorVersion,
+        'minorVersion' => $library->minorVersion
       );
     }
 
-    $libraries = array();
     // TODO: Fix, using private function since no API is available!
     $storage = _h5p_get_instance('storage');
-    $storage->getLibraryUsage($libraries, $jsonData, FALSE, $complete);
-
-    foreach ($libraries as $library) {
-      if ($library['preloaded']) {
-        $editorLibraries[$library['library']['libraryId']] = $library['library'];
+    $deps = array();
+    $storage->getLibraryUsage($deps, array('preloadedDependencies' => $preloadedDependencies));
+    foreach ($deps as $dep) {
+      if ($dep['preloaded']) {
+        $libraries[$dep['library']['libraryId']] = $dep['library'];
       }
     }
-
-    return $editorLibraries;
   }
 }
