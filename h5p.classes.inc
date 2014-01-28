@@ -178,7 +178,41 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function deleteLibraryDependencies($libraryId) {
     db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
   }
-
+  
+  /**
+   * Implements deleteLibrary. Will delete a library's data both in the database and file system
+   */
+  public function deleteLibrary($libraryId) {
+    
+    $library = db_fetch_object(db_query("select * from {h5p_libraries} where library_id = %d", $libraryId));
+    
+    // Delete files:
+    $this->recursiveRemoveDirectory(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
+    
+    // Delete data in database (won't delete content):
+    db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
+    db_query("DELETE FROM {h5p_libraries_languages} WHERE library_id = %d", $libraryId);
+    db_query("DELETE FROM {h5p_libraries} WHERE library_id = %d", $libraryId);
+  }
+  
+  /**
+   * Removes a directory with all its sub-files and folders
+   *
+   * @param string $dir Path to directory that will be removed
+   */
+  private function recursiveRemoveDirectory($dir) {
+    if (is_dir($dir)) {
+      $objects = scandir($dir);
+      foreach ($objects as $object) {
+        if ($object != "." && $object != "..") {
+          if (filetype($dir."/".$object) == "dir") $this->recursiveRemoveDirectory($dir."/".$object); else unlink($dir."/".$object);
+        }
+      }
+      reset($objects);
+      rmdir($dir);
+    }
+  }
+  
   /**
    * Implements saveLibraryDependencies
    */
@@ -228,9 +262,9 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements copyLibraryUsage
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
-    db_query(
-      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css)
-      SELECT %d, hnl.library_id, hnl.preloaded, hnl.drop_css
+    db_query(    
+      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css, editor_library)
+      SELECT %d, hnl.library_id, hnl.preloaded, hnl.drop_css, hnl.editor_library
       FROM {h5p_nodes_libraries} hnl
       WHERE hnl.content_id = %d", $contentId, $copyFromId
     );
@@ -258,18 +292,21 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
     $dropLibraryCssList = array();
+    
     foreach ($librariesInUse as $machineName => $library) {
       if (!empty($library['library']['dropLibraryCss'])) {
         $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $library['library']['dropLibraryCss']));
       }
     }
+    
     foreach ($librariesInUse as $machineName => $library) {
       $dropCss = in_array($machineName, $dropLibraryCssList) ? 1 : 0;
+      $editorLibrary = (isset($library['editor_library']) && $library['editor_library'] === TRUE) ? 1 : 0;
       db_query(
-        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css)
-        VALUES (%d, %d, %d, %d)
-        ON DUPLICATE KEY UPDATE preloaded = %d, drop_css = %d",
-        $contentId, $library['library']['libraryId'], $library['preloaded'], $dropCss, $library['preloaded'], $dropCss
+        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css, editor_library)
+        VALUES (%d, %d, %d, %d, %d)
+        ON DUPLICATE KEY UPDATE preloaded = %d, drop_css = %d, editor_library = %d",
+        $contentId, $library['library']['libraryId'], $library['preloaded'], $dropCss, $editorLibrary, $library['preloaded'], $dropCss, $editorLibrary 
       );
     }
   }
