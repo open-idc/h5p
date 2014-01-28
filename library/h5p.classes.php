@@ -1475,12 +1475,12 @@ class H5PContentValidator {
     // Check if string is according to optional regexp in semantics
     if (isset($semantics->regexp)) {
       // Escaping '/' found in patterns, so that it does not break regexp fencing.
-      $pattern = '/' . preg_quote($semantics->regexp->pattern, '/') . '/';
+      $pattern = '/' . str_replace('/', '\\/', $semantics->regexp->pattern) . '/';
       $pattern .= isset($semantics->regexp->modifiers) ? $semantics->regexp->modifiers : '';
       if (preg_match($pattern, $text) === 0) {
         // Note: explicitly ignore return value FALSE, to avoid removing text
         // if regexp is invalid...
-        $this->h5pF->setErrorMessage($this->h5pF->t('Provided string is not valid according to regexp in semantics.'));
+        $this->h5pF->setErrorMessage($this->h5pF->t('Provided string is not valid according to regexp in semantics. (value: "%value", regexp: "%regexp")', array('%value' => $text, '%regexp' => $pattern)));
         $text = '';
       }
     }
