@@ -57,6 +57,14 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'editor_library' => array(
+        'description' => '1 if this library is an editor dependency, 0 if not',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'primary key' => array('content_id', 'library_id'),
   );
@@ -402,5 +410,17 @@ function h5p_update_6103() {
 function h5p_update_6104() {
   $ret = array();
   db_add_index($ret, 'files', 'filepath', array('filepath'));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function h5p_update_6105() {
+  $ret = array();
+  
+  // TODO:
+  // Update existing data. I.e dependencies to editor libs must be created in database 
+  
   return $ret;
 }

@@ -128,12 +128,13 @@ function h5p_library_list() {
       'name' => $title,
       'machineName' => $library->machine_name,
       'contentCount' => $library->content_count,
-      'url' => url('admin/content/h5p/libraries/' . $library->library_id),
+      'detailsUrl' => url('admin/content/h5p/libraries/' . $library->library_id),
+      'deleteUrl' => url('admin/content/h5p/libraries/' . $library->library_id . '/delete')
     );
   }
   
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter')); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter'), ''); 
 
   // Include libraries and more to Drupal setting
   drupal_add_js($settings, 'setting');
@@ -203,6 +204,24 @@ function h5p_library_details($library_id) {
 }
 
 /**
+ * 
+ * @param string $library_id
+ */
+function h5p_library_delete($library_id) {
+  
+  // Is library deletable ?
+  $library_usage_counter = _h5p_get_library_usage($library_id);
+  if ($library_usage_counter == 0) {
+    // Create form:
+    return drupal_get_form('h5p_library_delete_form', $library_id, _h5p_library_details_title($library_id));
+  } 
+  else {
+    // May not delete this one
+    return t('Library is in use by content, and can therefore not be deleted');
+  }
+}
+
+/**
  * Helper function - adds h5p admin css and js
  * 
  * @param {string} $module_path The H5P path 
@@ -214,3 +233,10 @@ function _h5p_admin_add_generic_css_and_js($module_path) {
   }
   drupal_add_css($module_path . '/library/styles/h5p-admin.css');
 }
+
+function _h5p_get_library_usage($library_id) {
+  return db_result(db_query('SELECT COUNT(distinct n.nid) 
+                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
+                   WHERE l.library_id = %d', $library_id));
+}
+
