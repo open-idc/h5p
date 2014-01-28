@@ -147,7 +147,7 @@ function h5p_library_list() {
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content. 
-  return '<div id="h5p-admin-container"></div>';
+  return '<div id="h5p-admin-container"></div><h2>' . t('Add libraries') . '</h2>' . drupal_get_form('h5p_library_upload_form');
 }
 
 /**
@@ -238,5 +238,68 @@ function _h5p_get_library_usage($library_id) {
   return db_result(db_query('SELECT COUNT(distinct n.nid) 
                    FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
                    WHERE l.library_id = %d', $library_id));
+}
+
+/**
+ * Library upload form.
+ */
+function h5p_library_upload_form(&$form_state) {
+  $form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+  );
+
+  $form['h5p'] = array(
+    '#title' => t('H5P'),
+    '#type' => 'file',
+    '#description' => t('All the libraries from the selected package will be added.')
+  );
+  
+  $form['submit'] = array(
+    '#value' => t('Upload'),
+    '#type' => 'submit',
+  );
+
+  return $form;
+}
+
+/**
+ * Form validation.
+ */
+function h5p_library_upload_form_validate($form, &$form_state) {
+  $validators = array(
+    'file_validate_extensions' => array('h5p'),
+  );
+  $temporary_file_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-'));
+  $file = file_save_upload('h5p', $validators, $temporary_file_path);
+  if ($file === 0) {
+    form_set_error('h5p', t('You must select a H5P file to upload.'));
+  }
+  else {
+    // These has to be set instead of sending parameteres to the validation function.
+    $_SESSION['h5p_upload'] = $file->filepath;
+    $_SESSION['h5p_upload_folder'] = $temporary_file_path;
+    $_SESSION['h5p_upload_skip_content'] = TRUE;
+    
+    $validator = _h5p_get_instance('validator');
+    if ($validator->isValidPackage() === FALSE) {
+      form_set_error('h5p', t('The uploaded file was not a valid h5p package'));
+      // Maintain session variables.
+      unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder'], $_SESSION['h5p_upload_skip_content']);
+    }
+  }
+}
+
+/**
+ * Form submit handler.
+ */
+function h5p_library_upload_form_submit($form, &$form_state) {
+  // Save package
+  $h5p_core = _h5p_get_instance('storage');
+  if ($h5p_core->savePackage(-31337) === TRUE) {
+    _h5p_clear_js_and_css_cache();
+  }
+  
+  // Maintain session variables.
+  unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder'], $_SESSION['h5p_upload_skip_content']);
 }
 
