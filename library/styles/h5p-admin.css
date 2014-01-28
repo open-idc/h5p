@@ -17,6 +17,7 @@
 .h5p-admin-table > tbody {
   border: none;
 }
+
 .h5p-admin-table tr:nth-child(odd) {
   background-color: #F9F9F9;
 }
@@ -30,8 +31,41 @@
   font-weight: bold;
 }
 
-.h5p-admin-table.libraries tr {
+.h5p-admin-table.libraries tbody tr {
   cursor: pointer;
+}
+.h5p-admin-table.libraries th:last-child,
+.h5p-admin-table.libraries td:last-child {
+  text-align: right;
+}
+
+.h5p-admin-table.libraries button {
+  font-family: H5PFontAwesome4;
+  margin-right: 10px;
+  font-size: 1.6em;
+  cursor: pointer;
+  border: 1px solid #AAA;
+  border-radius: .2em;
+  line-height: 1.6em;
+  width: 1.6em;
+  background-color: #ddd;
+}
+.h5p-admin-table.libraries button:hover,
+.h5p-admin-table.libraries .h5p-admin-delete-library:hover {
+  background-color: #AAA;
+}
+
+.h5p-admin-table.libraries .h5p-admin-delete-library.disabled:hover {
+  background-color: #ddd;
+}
+
+.h5p-admin-delete-library {
+  color: red; 
+}
+
+.h5p-admin-delete-library.disabled {
+  cursor: auto;
+  color: #CCC;
 }
 
 .h5p-library-info {

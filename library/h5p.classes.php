@@ -219,6 +219,13 @@ interface H5PFrameworkInterface {
    *  Library Id
    */
   public function deleteLibraryDependencies($libraryId);
+  
+  /**
+   * Delete a library from database and file system
+   * 
+   * @param int $libraryId Library Id
+   */
+  public function deleteLibrary($libraryId);
 
   /**
    * Get all the data we need to export H5P
@@ -957,7 +964,7 @@ class H5PStorage {
 
     // Save what libraries is beeing used by this package/content
     $librariesInUse = array();
-    $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData);
+    $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData, FALSE, TRUE);
     $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
     $this->h5pC->delTree($this->h5pF->getUploadedH5pFolderPath());
 
@@ -1057,6 +1064,7 @@ class H5PStorage {
           $librariesInUse[$editorDependency['machineName']] = array(
             'library' => $library,
             'preloaded' => $dynamic ? 0 : 1,
+            'editor_library' => TRUE,
           );
         }
         $this->getLibraryUsage($librariesInUse, $library, $dynamic, TRUE);
