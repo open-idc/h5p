@@ -121,41 +121,10 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
     return json_encode($libraries);
   }
-  public function getEditorLibraries($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
-    $editorLibraries = array();
-
-    $result = db_query("
-      SELECT hll.required_library_id AS libraryId, hl2.machine_name AS machineName, hl2.major_version AS majorVersion, hl2.minor_version AS minorVersion
-      FROM {h5p_libraries} hl
-      JOIN {h5p_libraries_libraries} hll ON hll.library_id = hl.library_id
-      JOIN {h5p_libraries} hl2 ON hl2.library_id = hll.required_library_id
-      WHERE hl.machine_name = :hl_machine_name
-      AND hl.major_version = :hl_major_version
-      AND hl.minor_version = :hl_minor_version
-      AND hll.dependency_type = :hll_dependency_type
-    ", array(':hl_machine_name' => $machineName, ':hl_major_version' => $majorVersion, ':hl_minor_version' => $minorVersion, ':hll_dependency_type' => 'editor'));
-
-    $jsonData = array('preloadedDependencies' => array());
-    foreach ($result as $editorLibrary) {
-      $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
-
-      $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
-        'machineName' => $editorLibrary->machineName,
-        'majorVersion' => $editorLibrary->majorVersion,
-        'minorVersion' => $editorLibrary->minorVersion,
-      );
-    }
-
-    $libraries = array();
-    $storage = _h5p_get_instance('storage');
-    $storage->getLibraryUsage($libraries, $jsonData, FALSE, $complete);
-
-    foreach ($libraries as $library) {
-      if ($library['preloaded']) {
-        $editorLibraries[$library['library']['libraryId']] = $library['library'];
-      }
-    }
-
-    return $editorLibraries;
+  
+  public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
+    $i = _h5p_get_instance('interface');
+    // Just pipe trough. Tmp hack until H5PEditor class has an instance of H5P class.
+    return $i->getEditorLibraries($machineName, $majorVersion, $minorVersion);
   }
 }
