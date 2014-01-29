@@ -673,8 +673,6 @@ function h5p_get_content_id($node) {
  * @see http://drupal.org/node/1354
  */
 function theme_h5p_export_button($variables) {
-  $module_path = drupal_get_path('module', 'h5p');
-  drupal_add_css($module_path . '/styles/h5p.css'); // TODO: Move styles into the H5P php library
   return '<a class="h5p-export" href="' . $variables['path'] . '">' . t('Download') . '</a>';
 }
 
