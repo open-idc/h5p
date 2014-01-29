@@ -1,8 +1,8 @@
 ; @file
 ;  h5peditor.info ini file
 ;  Contains general information about the h5peditor Drupal module.
-name = h5peditor
-description = "Enables users to create and modify HTML5 packages."
+name = H5P Editor
+description = "Create and modify interactive HTML5 Packages on your Drupal site."
 core = 7.x
 
 dependencies[] = h5p
