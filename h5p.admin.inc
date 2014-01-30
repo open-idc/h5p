@@ -129,7 +129,7 @@ function h5p_library_list() {
       'machineName' => $library->machine_name,
       'contentCount' => $library->content_count,
       'detailsUrl' => url('admin/content/h5p/libraries/' . $library->library_id),
-      'deleteUrl' => url('admin/content/h5p/libraries/' . $library->library_id . '/delete')
+      'deleteUrl' => url('admin/content/h5p/libraries/' . $library->library_id . '/delete', array('query' => drupal_get_destination()))
     );
   }
   
@@ -147,7 +147,7 @@ function h5p_library_list() {
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content. 
-  return '<div class="h5p-admin-add-library"><div class="add-button">' . t('Add libraries') . '</div>' . drupal_get_form('h5p_library_upload_form') . '</div><div id="h5p-admin-container"></div>';
+  return '<div class="h5p-admin-add-library"><div class="add-button">' . t('Add H5P libraries') . '</div>' . drupal_get_form('h5p_library_upload_form') . '</div><div id="h5p-admin-container"></div>';
 }
 
 /**
