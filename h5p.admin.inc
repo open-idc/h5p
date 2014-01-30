@@ -147,7 +147,7 @@ function h5p_library_list() {
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content. 
-  return '<div id="h5p-admin-container"></div><h2>' . t('Add libraries') . '</h2>' . drupal_get_form('h5p_library_upload_form');
+  return '<div class="h5p-admin-add-library"><div class="add-button">' . t('Add libraries') . '</div>' . drupal_get_form('h5p_library_upload_form') . '</div><div id="h5p-admin-container"></div>';
 }
 
 /**
@@ -210,11 +210,12 @@ function h5p_library_details($library_id) {
 function h5p_library_delete($library_id) {
   
   // Is library deletable ?
-  $library_usage_counter = _h5p_get_library_usage($library_id);
+  $h5p_drupal = _h5p_get_instance('interface');
+  $library_usage_counter = $h5p_drupal->getLibraryUsage($library_id);
   if ($library_usage_counter == 0) {
     // Create form:
     return drupal_get_form('h5p_library_delete_form', $library_id, _h5p_library_details_title($library_id));
-  } 
+  }
   else {
     // May not delete this one
     return t('Library is in use by content, and can therefore not be deleted');
@@ -232,12 +233,6 @@ function _h5p_admin_add_generic_css_and_js($module_path) {
     drupal_add_js($module_path . '/library/' . $script);
   }
   drupal_add_css($module_path . '/library/styles/h5p-admin.css');
-}
-
-function _h5p_get_library_usage($library_id) {
-  return db_result(db_query('SELECT COUNT(distinct n.nid) 
-                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
-                   WHERE l.library_id = %d', $library_id));
 }
 
 /**

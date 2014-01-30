@@ -419,8 +419,18 @@ function h5p_update_6104() {
 function h5p_update_6105() {
   $ret = array();
   
-  // TODO:
-  // Update existing data. I.e dependencies to editor libs must be created in database 
+  // Add new field:
+  db_add_field($ret, 'h5p_nodes_libraries', 'editor_library', array(
+    'description' => '1 if this library is an editor dependency, 0 if not',
+    'type' => 'int',
+    'size' => 'tiny',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  
+  // Update existing data. I.e dependencies to all libs must be created in database
+  // TODO
   
   return $ret;
 }
