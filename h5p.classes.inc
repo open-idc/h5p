@@ -102,6 +102,16 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * 
+   * @param unknown $library_id
+   */
+  public function getLibraryUsage($libraryId) {
+    return db_result(db_query('SELECT COUNT(distinct n.nid)
+                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
+                   WHERE l.library_id = %d', $libraryId));
+  }
+  
+  /**
    * Implements saveLibraryData
    */
   public function saveLibraryData(&$libraryData, $new = TRUE) {
@@ -196,30 +206,12 @@ class H5PDrupal implements H5PFrameworkInterface {
     $library = db_fetch_object(db_query("select * from {h5p_libraries} where library_id = %d", $libraryId));
     
     // Delete files:
-    $this->recursiveRemoveDirectory(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
+    H5PCore::recursiveUnlink(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
     
     // Delete data in database (won't delete content):
     db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
     db_query("DELETE FROM {h5p_libraries_languages} WHERE library_id = %d", $libraryId);
     db_query("DELETE FROM {h5p_libraries} WHERE library_id = %d", $libraryId);
-  }
-  
-  /**
-   * Removes a directory with all its sub-files and folders
-   *
-   * @param string $dir Path to directory that will be removed
-   */
-  private function recursiveRemoveDirectory($dir) {
-    if (is_dir($dir)) {
-      $objects = scandir($dir);
-      foreach ($objects as $object) {
-        if ($object != "." && $object != "..") {
-          if (filetype($dir."/".$object) == "dir") $this->recursiveRemoveDirectory($dir."/".$object); else unlink($dir."/".$object);
-        }
-      }
-      reset($objects);
-      rmdir($dir);
-    }
   }
   
   /**

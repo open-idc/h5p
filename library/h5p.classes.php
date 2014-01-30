@@ -86,7 +86,7 @@ interface H5PFrameworkInterface {
    * @param string $defaultLibraryWhitelist
    */
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist);
-
+  
   /**
    * Is the library a patched version of an existing library?
    *
@@ -194,6 +194,12 @@ interface H5PFrameworkInterface {
    */
   public function saveLibraryUsage($contentId, $librariesInUse);
 
+  /**
+   * Get number of content/nodes using a library
+   * 
+   * @param unknown $library_id
+   */
+  public function getLibraryUsage($libraryId);
 
   /**
    * Loads a library
@@ -379,7 +385,7 @@ class H5PValidator {
     }
     else {
       $this->h5pF->setErrorMessage($this->h5pF->t('The file you uploaded is not a valid HTML5 Package.'));
-      $this->h5pC->delTree($tmpDir);
+      H5PCore::recursiveUnlink($tmpDir);
       return;
     }
     unlink($tmp_path);
@@ -502,7 +508,7 @@ class H5PValidator {
       $valid = empty($missingLibraries) && $valid;
     }
     if (!$valid) {
-      $this->h5pC->delTree($tmpDir);
+      H5PCore::recursiveUnlink($tmpDir);
     }
     return $valid;
   }
@@ -958,7 +964,7 @@ class H5PStorage {
 
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
       $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $this->h5pC->libraryToString($library, TRUE);
-      $this->h5pC->delTree($destination_path);
+      H5PCore::recursiveUnlink($destination_path);
       rename($current_path, $destination_path);
 
       $library_saved = TRUE;
@@ -979,7 +985,7 @@ class H5PStorage {
       }
     }
     
-    if ($this->h5pF->getUploadedH5pSkipContent === FALSE) {
+    if ($this->h5pF->getUploadedH5pSkipContent() === FALSE) {
       // Move the content folder
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . 'content';
       $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
@@ -989,7 +995,7 @@ class H5PStorage {
       $librariesInUse = array();
       $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData, FALSE, TRUE);
       $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
-      $this->h5pC->delTree($this->h5pF->getUploadedH5pFolderPath());
+      H5PCore::recursiveUnlink($this->h5pF->getUploadedH5pFolderPath());
 
       // Save the data in content.json
       $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
@@ -999,7 +1005,7 @@ class H5PStorage {
 
     return $library_saved;
   }
-
+  
   /**
    * Delete an H5P package
    *
@@ -1007,7 +1013,7 @@ class H5PStorage {
    *  The content id
    */
   public function deletePackage($contentId) {
-    $this->h5pC->delTree($this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
+    H5PCore::recursiveUnlink($this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
     $this->h5pF->deleteContentData($contentId);
   }
 
@@ -1214,7 +1220,7 @@ Class H5PExport {
       }
       // Close zip and remove temp dir
       $zip->close();
-      $this->h5pC->delTree($tempPath);
+      H5PCore::recursiveUnlink($tempPath);
     }
 
     return str_replace(DIRECTORY_SEPARATOR, '/', $zipPath);
@@ -1323,13 +1329,13 @@ class H5PCore {
    * @return boolean
    *  Indicates if the directory existed.
    */
-  public function delTree($dir) {
+  public static function recursiveUnlink($dir) {
     if (!is_dir($dir)) {
       return;
     }
     $files = array_diff(scandir($dir), array('.','..'));
     foreach ($files as $file) {
-      (is_dir("$dir/$file")) ? $this->delTree("$dir/$file") : unlink("$dir/$file");
+      (is_dir("$dir/$file")) ? self::recursiveUnlink("$dir/$file") : unlink("$dir/$file");
     }
     return rmdir($dir);
   }
