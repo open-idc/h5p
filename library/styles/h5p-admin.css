@@ -210,3 +210,52 @@ button.h5p-admin.disabled:hover {
   line-height: 130%;
   display: inline-block;
 }
+
+.h5p-admin-add-library {
+  margin: 20px 0;
+}
+
+.h5p-admin-add-library > .add-button {
+  display: inline;
+  padding: 5px 10px;
+  
+  border: 1px solid #AAA;
+  border-radius: 3px;
+  background: #DDD;
+  font-size: 1.2em;
+  
+  cursor: pointer;
+}
+
+.h5p-admin-add-library > .add-button:hover {
+  background-color: #AAA
+}
+
+.h5p-admin-add-library > .add-button:before {
+  font-family: H5PFontAwesome4;
+  margin-right: 10px;
+  content: "\f055";
+  font-size: 1.2em;
+  color: green;
+} 
+
+.h5p-admin-add-library .form-button, 
+.h5p-admin-add-library .form-submit {
+  margin: 0;
+}
+
+.h5p-admin-add-library form {
+  display: none;
+}
+
+.h5p-admin-add-library.expanded form {
+  display: block;
+  margin-bottom: 0 !important;
+}
+
+.h5p-admin-add-library.expanded {
+  display: inline-block;
+  padding: 10px;
+  border: 1px solid #AAA;
+  border-radius: 3px;
+}
