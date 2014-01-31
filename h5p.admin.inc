@@ -101,6 +101,7 @@ function h5p_admin_settings_submit($form, &$form_state) {
  * @return {string} Html string
  */
 function h5p_library_list() {
+  _h5p_check_settings();
   $settings = array();
   
   $libraries = array();
