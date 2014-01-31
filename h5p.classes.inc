@@ -301,8 +301,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       }
     }
     
-    foreach ($librariesInUse as $libraryName => $dependency) {
-      $dropCss = in_array($libraryName, $dropLibraryCssList) ? 1 : 0;
+    foreach ($librariesInUse as $dependency) {
+      $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
       db_query(
         "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
         VALUES (%d, %d, %d, %d)
