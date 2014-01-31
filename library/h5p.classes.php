@@ -1060,25 +1060,33 @@ class H5PStorage {
    * 
    * @param array $librariesUsed Flat list of all dependencies.
    * @param array $library To find all dependencies for.
+   * @param bool $editor Used interally to force all preloaded sub dependencies of an editor dependecy to be editor dependencies.
    */
-  public function findLibraryDependencies(&$dependencies, $library) {
+  public function findLibraryDependencies(&$dependencies, $library, $editor = FALSE) {
     foreach (array('dynamic', 'preloaded', 'editor') as $type) {
       $property = $type . 'Dependencies';
       if ($library[$property] === NULL) {
         continue; // Skip, no such dependencies.
       }
       
+      if ($type === 'preloaded' && $editor === TRUE) {
+        // All preloaded dependencies of an editor library is set to editor.
+        $type = 'editor';
+      }
+      
       foreach ($library[$property] as $dependency) {
-        if (isset($dependencies[$dependency['machineName']]) === TRUE) {
+        $dependencyKey = $type . '-' . $dependency['machineName'];
+        if (isset($dependencies[$dependencyKey]) === TRUE) {
           continue; // Skip, already have this.
         }
         
+        $dependencyType = H5PCore::dependencyStringToConstant($type);
         $dependencyLibrary = $this->h5pF->loadLibrary($dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']);
-        $dependencies[$dependency['machineName']] = array(
+        $dependencies[$dependencyKey] = array(
           'library' => $dependencyLibrary,
-          'type' => H5PCore::dependencyStringToConstant($type)
+          'type' => $dependencyType
         );
-        $this->findLibraryDependencies($dependencies, $dependencyLibrary);
+        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $dependencyType === H5PCore::DEPENDENCY_TYPE_EDITOR);
       }
     }
   }
