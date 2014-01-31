@@ -150,10 +150,7 @@ function h5p_validate($node, &$form) {
 function h5p_insert($node) {
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $library_updated = $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
-    if ($library_updated) {
-      _h5p_clear_js_and_css_cache();
-    }
+    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
   }
   else {
     $id = db_insert('h5p_nodes')
@@ -178,10 +175,7 @@ function h5p_update($node) {
     }
     else {
       $h5p_core = _h5p_get_instance('storage');
-      $library_updated = $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
-      if ($library_updated) {
-        _h5p_clear_js_and_css_cache();
-      }
+      $h5p_core->updatePackage(h5p_get_content_id($node), $node->nid);
     }
   }
   elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
@@ -210,8 +204,7 @@ function h5p_update($node) {
   }
   
   _h5p_get_instance('export')->deleteExport($node->nid);
-
-  cache_clear_all('validated_json_' . $node->vid, 'cache');
+  _h5p_clear_js_and_css_cache();
 }
 
 /**
@@ -655,8 +648,6 @@ function _h5p_clear_js_and_css_cache() {
 
   // Need to clear JSON content cache too.
   cache_clear_all('validated_json_', 'cache', TRUE);
-
-  drupal_set_message('JS and CSS cache was cleared');
 }
 
 /**
@@ -682,8 +673,6 @@ function h5p_get_content_id($node) {
  * @see http://drupal.org/node/1354
  */
 function theme_h5p_export_button($variables) {
-  $module_path = drupal_get_path('module', 'h5p');
-  drupal_add_css($module_path . '/styles/h5p.css'); // TODO: Move styles into the H5P php library
   return '<a class="h5p-export" href="' . $variables['path'] . '">' . t('Download') . '</a>';
 }
 
