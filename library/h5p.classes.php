@@ -499,7 +499,7 @@ class H5PValidator {
       }
       if (!empty($missingLibraries)) {
         foreach ($missingLibraries as $library) {
-          $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => $this->h5pC->libraryToString($library))));
+          $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => H5PCore::libraryToString($library))));
         }
         if (!$this->h5pF->mayUpdateLibraries()) {
            $this->h5pF->setInfoMessage($this->h5pF->t("Note that the libraries may exist in the file you uploaded, but you're not allowed to upload new libraries. Contact the site administrator about this."));
@@ -963,7 +963,7 @@ class H5PStorage {
       $this->h5pF->saveLibraryData($library, $new);
 
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
-      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $this->h5pC->libraryToString($library, TRUE);
+      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE);
       H5PCore::recursiveUnlink($destination_path);
       rename($current_path, $destination_path);
 
@@ -993,7 +993,7 @@ class H5PStorage {
 
       // Save what libraries is beeing used by this package/content
       $librariesInUse = array();
-      $this->getLibraryUsage($librariesInUse, $this->h5pC->mainJsonData, FALSE, TRUE);
+      $this->findLibraryDependencies($librariesInUse, $this->h5pC->mainJsonData);
       $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
       H5PCore::recursiveUnlink($this->h5pF->getUploadedH5pFolderPath());
 
@@ -1055,49 +1055,30 @@ class H5PStorage {
   }
 
   /**
-   * Identify what libraries are beeing used taking all dependencies into account
-   *
-   * @param array $librariesInUse
-   *  List of libraries in use, indexed by machineName
-   * @param array $jsonData
-   *  library.json og h5p.json data holding dependency information
-   * @param boolean $dynamic
-   *  Whether or not the current library is a dynamic dependency
+   * Recusive. Goes through the dependency tree for the given library and 
+   * adds all the dependencies to the given array in a flat format.
+   * 
+   * @param array $librariesUsed Flat list of all dependencies.
+   * @param array $library To find all dependencies for.
    */
-  public function getLibraryUsage(&$librariesInUse, $jsonData, $dynamic = FALSE, $editor = FALSE) {
-    if (isset($jsonData['preloadedDependencies'])) {
-      foreach ($jsonData['preloadedDependencies'] as $preloadedDependency) {
-        $library = $this->h5pF->loadLibrary($preloadedDependency['machineName'], $preloadedDependency['majorVersion'], $preloadedDependency['minorVersion']);
-        $librariesInUse[$preloadedDependency['machineName']] = array(
-          'library' => $library,
-          'preloaded' => $dynamic ? 0 : 1,
+  public function findLibraryDependencies(&$dependencies, $library) {
+    foreach (array('dynamic', 'preloaded', 'editor') as $type) {
+      $property = $type . 'Dependencies';
+      if ($library[$property] === NULL) {
+        continue; // Skip, no such dependencies.
+      }
+      
+      foreach ($library[$property] as $dependency) {
+        if (isset($dependencies[$dependency['machineName']]) === TRUE) {
+          continue; // Skip, already have this.
+        }
+        
+        $dependencyLibrary = $this->h5pF->loadLibrary($dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']);
+        $dependencies[$dependency['machineName']] = array(
+          'library' => $dependencyLibrary,
+          'type' => H5PCore::dependencyStringToConstant($type)
         );
-        $this->getLibraryUsage($librariesInUse, $library, $dynamic, $editor);
-      }
-    }
-    if (isset($jsonData['dynamicDependencies'])) {
-      foreach ($jsonData['dynamicDependencies'] as $dynamicDependency) {
-        if (!isset($librariesInUse[$dynamicDependency['machineName']])) {
-          $library = $this->h5pF->loadLibrary($dynamicDependency['machineName'], $dynamicDependency['majorVersion'], $dynamicDependency['minorVersion']);
-          $librariesInUse[$dynamicDependency['machineName']] = array(
-            'library' => $library,
-            'preloaded' => 0,
-          );
-        }
-        $this->getLibraryUsage($librariesInUse, $library, TRUE, $editor);
-      }
-    }
-    if (isset($jsonData['editorDependencies']) && $editor) {
-      foreach ($jsonData['editorDependencies'] as $editorDependency) {
-        if (!isset($librariesInUse[$editorDependency['machineName']])) {
-          $library = $this->h5pF->loadLibrary($editorDependency['machineName'], $editorDependency['majorVersion'], $editorDependency['minorVersion']);
-          $librariesInUse[$editorDependency['machineName']] = array(
-            'library' => $library,
-            'preloaded' => $dynamic ? 0 : 1,
-            'editor_library' => TRUE,
-          );
-        }
-        $this->getLibraryUsage($librariesInUse, $library, $dynamic, TRUE);
+        $this->findLibraryDependencies($dependencies, $dependencyLibrary);
       }
     }
   }
@@ -1264,6 +1245,12 @@ Class H5PExport {
  * Functions and storage shared by the other H5P classes
  */
 class H5PCore {
+
+  // These tree probably belongs on a library or dependency class.
+  const DEPENDENCY_TYPE_DYNAMIC = 0;
+  const DEPENDENCY_TYPE_PRELOADED = 1;
+  const DEPENDENCY_TYPE_EDITOR = 2;
+
   public static $coreApi = array(
     'majorVersion' => 1,
     'minorVersion' => 0
@@ -1380,7 +1367,7 @@ class H5PCore {
    * @return string
    *  On the form {machineName} {majorVersion}.{minorVersion}
    */
-  public function libraryToString($library, $folderName = FALSE) {
+  public static function libraryToString($library, $folderName = FALSE) {
     return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
 
@@ -1406,6 +1393,42 @@ class H5PCore {
       );
     }
     return FALSE;
+  }
+  
+  /**
+   * Convert dependency type string to constant.
+   *
+   * @param $dependencyType string
+   * @return int
+   */
+  public static function dependencyStringToConstant($dependencyType) {
+    switch ($dependencyType) {
+      case 'editor': 
+        return H5PCore::DEPENDENCY_TYPE_EDITOR;
+      case 'preloaded':
+        return H5PCore::DEPENDENCY_TYPE_PRELOADED;
+      case 'dynamic':
+        return H5PCore::DEPENDENCY_TYPE_DYNAMIC;
+    }
+    return $dependencyType;
+  }
+  
+  /**
+   * Convert dependency type constant to string.
+   *
+   * @param $dependencyType int
+   * @return string
+   */
+  public static function dependencyConstantToString($dependencyType) {
+    switch ($dependencyType) {
+      case H5PCore::DEPENDENCY_TYPE_EDITOR: 
+        return 'editor';
+      case H5PCore::DEPENDENCY_TYPE_PRELOADED:
+        return 'preloaded';
+      case H5PCore::DEPENDENCY_TYPE_DYNAMIC:
+        return 'dynamic';
+    }
+    return $dependencyType;
   }
 }
 

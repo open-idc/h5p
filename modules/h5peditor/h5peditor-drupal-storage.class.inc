@@ -4,9 +4,12 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
   function __construct() { }
 
-  public function getSemantics($machineName, $majorVersion, $minorVersion) {
-    $coreInterface = _h5p_get_instance('interface');
-    return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
+  public function getSemantics($library) {
+    $semantics = json_decode($library['semantics']);
+    if (empty($semantics) === FALSE) {
+      drupal_alter('h5p_semantics', $semantics);
+    }
+    return $semantics;
   }
 
   public function getLanguage($machineName, $majorVersion, $minorVersion) {
@@ -20,34 +23,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       AND hl.minor_version = %d
       AND hlt.language_code = '%s'",
       $machineName, $majorVersion, $minorVersion, $language->language));
-    return $lang;
-  }
-
-  public function getFilePaths($libraryId) {
-    $result = db_query(
-      "SELECT hl.preloaded_css, hl.preloaded_js, hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion
-      FROM {h5p_libraries} hl
-      WHERE hl.library_id = %d", $libraryId
-    );
-    $file_paths = array(
-      'js' => array(),
-      'css' => array(),
-    );
-    $h5p_path = _h5p_get_h5p_path();
-    $h5p_core = _h5p_get_instance('core');
-    while ($paths = db_fetch_array($result)) {
-      if (!empty($paths['preloaded_js'])) {
-        foreach (explode(',', $paths['preloaded_js']) as $js_path) {
-          $file_paths['js'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($js_path);
-        }
-      }
-      if (!empty($paths['preloaded_css'])) {
-        foreach (explode(',', $paths['preloaded_css']) as $css_path) {
-          $file_paths['css'][] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($paths, TRUE) . '/' . trim($css_path);
-        }
-      }
-    }
-    return $file_paths;
+    return ($lang === FALSE ? NULL : $lang);
   }
 
   public function addTempFile($file) {
@@ -92,43 +68,31 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
     return json_encode($libraries);
   }
-  public function getEditorLibraries($machineName, $majorVersion, $minorVersion, $complete = FALSE) {
-    $editorLibraries = array();
+  
+  /**
+   * Return all libraries used by the given editor library.
+   *
+   * @param string $machineName Library identfier part 1
+   * @param int $majorVersion Library identfier part 2
+   * @param int $minorVersion Library identfier part 3
+   */
+  public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
+    $i = _h5p_get_instance('interface');
+    $s = _h5p_get_instance('storage');
+    // TODO: Make this feel :)
 
-    // TODO: Add support for fetching additional libraries this library depends on
-    $result = db_query(
-      "SELECT hll.required_library_id AS libraryId, hl2.machine_name AS machineName, hl2.major_version AS majorVersion, hl2.minor_version AS minorVersion
-      FROM {h5p_libraries} hl
-      JOIN {h5p_libraries_libraries} hll ON hll.library_id = hl.library_id
-      JOIN {h5p_libraries} hl2 ON hl2.library_id = hll.required_library_id
-      WHERE hl.machine_name = '%s'
-      AND hl.major_version = %d
-      AND hl.minor_version = %d
-      AND hll.dependency_type = 'editor'
-    ", $machineName, $majorVersion, $minorVersion);
-
-    $jsonData = array('preloadedDependencies' => array());
-    while ($editorLibrary = db_fetch_object($result)) {
-      $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
-
-      $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
-        'machineName' => $editorLibrary->machineName,
-        'majorVersion' => $editorLibrary->majorVersion,
-        'minorVersion' => $editorLibrary->minorVersion
-      );
-    }
-
-    $libraries = array();
-    // TODO: Fix, using private function since no API is available!
-    $storage = _h5p_get_instance('storage');
-    $storage->getLibraryUsage($libraries, $jsonData, FALSE, $complete);
-
-    foreach ($libraries as $library) {
-      if ($library['preloaded']) {
-        $editorLibraries[$library['library']['libraryId']] = $library['library'];
+    $library = $i->loadLibrary($machineName, $majorVersion, $minorVersion);
+    $dependencies = array();
+    $s->findLibraryDependencies($dependencies, $library);
+    
+    $editorLibraries = array($library['libraryId'] => $library);
+    foreach ($dependencies as $dependency) {
+      if ($dependency['type'] === H5PCore::DEPENDENCY_TYPE_DYNAMIC) {
+        continue; // Skip dynamic dependencies.
       }
+      $editorLibraries[$dependency['library']['libraryId']] = $dependency['library'];
     }
-
+    
     return $editorLibraries;
   }
 }

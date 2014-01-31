@@ -47,7 +47,7 @@ class H5peditor {
    * @return boolean
    */
   public function createDirectories($id) {
-    $this->content_directory = $this->files_directory . '/h5p/content/' . $id . '/';
+    $this->content_directory = $this->files_directory . '/content/' . $id . '/';
 
     $sub_directories = array('', 'files', 'images', 'videos', 'audios');
     foreach ($sub_directories AS $sub_directory) {
@@ -84,8 +84,8 @@ class H5peditor {
     foreach ($newLibraries as $library) {
       $libraryFull = $h5pStorage->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $librariesUsed[$library['machineName']]['library'] = $libraryFull;
-      $librariesUsed[$library['machineName']]['preloaded'] = 1;
-      $h5pStorage->getLibraryUsage($librariesUsed, $libraryFull);
+      $librariesUsed[$library['machineName']]['type'] = H5PCore::DEPENDENCY_TYPE_PRELOADED;
+      $h5pStorage->findLibraryDependencies($librariesUsed, $libraryFull);
     }
 
     $h5pStorage->h5pF->deleteLibraryUsage($contentId);
@@ -137,7 +137,7 @@ class H5peditor {
   private function processField(&$field, &$params, &$files, &$libraries) {
     static $h5peditor_path;
     if (!$h5peditor_path) {
-      $h5peditor_path = $this->files_directory . '/h5peditor/';
+      $h5peditor_path = $this->files_directory . '/editor/';
     }
     switch ($field->type) {
       case 'file':
@@ -210,34 +210,43 @@ class H5peditor {
    */
   public function getLibraryData($machineName, $majorVersion, $minorVersion) {
     $libraryData = new stdClass();
-    $libraryData->semantics = $this->storage->getSemantics($machineName, $majorVersion, $minorVersion);
+    
+    $libraries = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
+    $library = reset($libraries);
+    
+    // TODO: Dev mode is probably broken since load library doesn't read from file.
+    $libraryData->semantics = $this->storage->getSemantics($library);
 
-    $language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
-    if ($language) {
-      $libraryData->language = $language;
-    }
+    // TODO: Get language from $library.
+    $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
+    // TODO: langauge gets added a second time for the same library in JS futher down in this function.
 
-    $editorLibraryIds = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
-
-    foreach ($editorLibraryIds as $editorLibraryId => $editorLibrary) {
-      $filePaths = $this->storage->getFilePaths($editorLibraryId);
-
-      if (!empty($filePaths['js'])) {
-        foreach ($filePaths['js'] as $jsFilePath) {
+    // TODO: Remember to check dropLibraryCss...
+    foreach ($libraries as $library) {
+      // Javascripts
+      if (empty($library['preloadedJs']) === FALSE) {
+        foreach (explode(',', $library['preloadedJs']) as $js_path) {
+          // TODO: Fix path
+          $jsFilePath = $this->files_directory . '/libraries/' . H5PCore::libraryToString($library, TRUE) . '/' . trim($js_path);
           if (!isset($libraryData->javascript[$jsFilePath])) {
             $libraryData->javascript[$jsFilePath] = '';
           }
           // TODO: rtrim and check substr(-1) === '}'? jsmin?
-          $libraryData->javascript[$jsFilePath] .= "\n" . file_get_contents($jsFilePath);
+          $libraryData->javascript[$jsFilePath] .= file_get_contents($jsFilePath) . "\n";
         }
       }
+    
+      // Languages
       $language = $this->storage->getLanguage($editorLibrary['machineName'], $editorLibrary['majorVersion'], $editorLibrary['minorVersion']);
-      if ($language) {
+      if ($language !== NULL) {
         $lang = '; H5PEditor.language["' . $editorLibrary['machineName'] . '"] = ' . $language . ';';
         $libraryData->javascript[md5($lang)] = $lang;
       }
-      if (!empty($filePaths['css'])) {
-        foreach ($filePaths['css'] as $cssFilePath) {
+      
+      // Stylesheets
+      if (!empty($library['preloadedCss'])) {
+        foreach (explode(',', $library['preloadedCss']) as $css_path) {
+          $cssFilePath = $this->files_directory . '/libraries/' . H5PCore::libraryToString($library, TRUE) . '/' . trim($css_path);
           H5peditor::buildCssPath(NULL, $this->basePath . dirname($cssFilePath) . '/');
           $css = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents($cssFilePath));
           $libraryData->css[$cssFilePath] = $css;
