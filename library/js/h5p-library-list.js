@@ -10,6 +10,10 @@ var H5PLibraryList= H5PLibraryList || {};
     
     // Create library list
     $adminContainer.append(H5PLibraryList.createLibraryList(H5PIntegration.getLibraryList()));
+    
+    $('.h5p-admin-add-library .add-button').on('click', function () {
+      $('.h5p-admin-add-library').toggleClass('expanded');
+    });
   };
   
   /**
@@ -18,6 +22,11 @@ var H5PLibraryList= H5PLibraryList || {};
    * @param {object} libraries List of libraries and headers
    */
   H5PLibraryList.createLibraryList = function (libraries) {
+    
+    if(libraries.listData === undefined || libraries.listData.length === 0) {
+      return;
+    }
+    
     // Create table
     var $table = H5PUtils.createTable(libraries.listHeaders);
     $table.addClass('libraries');
