@@ -264,8 +264,8 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
     db_query(    
-      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css, editor_library)
-      SELECT %d, hnl.library_id, hnl.preloaded, hnl.drop_css, hnl.editor_library
+      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
+      SELECT %d, hnl.library_id, hnl.dependency_type, hnl.drop_css
       FROM {h5p_nodes_libraries} hnl
       WHERE hnl.content_id = %d", $contentId, $copyFromId
     );
@@ -292,22 +292,22 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements saveLibraryUsage
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
+    // TODO: Rename since it's content dependencies we're saving.
     $dropLibraryCssList = array();
     
-    foreach ($librariesInUse as $machineName => $library) {
-      if (!empty($library['library']['dropLibraryCss'])) {
-        $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $library['library']['dropLibraryCss']));
+    foreach ($librariesInUse as $dependency) {
+      if (!empty($dependency['library']['dropLibraryCss'])) {
+        $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
       }
     }
     
-    foreach ($librariesInUse as $machineName => $library) {
-      $dropCss = in_array($machineName, $dropLibraryCssList) ? 1 : 0;
-      $editorLibrary = (isset($library['editor_library']) && $library['editor_library'] === TRUE) ? 1 : 0;
+    foreach ($librariesInUse as $libraryName => $dependency) {
+      $dropCss = in_array($libraryName, $dropLibraryCssList) ? 1 : 0;
       db_query(
-        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css, editor_library)
-        VALUES (%d, %d, %d, %d, %d)
-        ON DUPLICATE KEY UPDATE preloaded = %d, drop_css = %d, editor_library = %d",
-        $contentId, $library['library']['libraryId'], $library['preloaded'], $dropCss, $editorLibrary, $library['preloaded'], $dropCss, $editorLibrary 
+        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
+        VALUES (%d, %d, %d, %d)
+        ON DUPLICATE KEY UPDATE dependency_type = %d, drop_css = %d",
+        $contentId, $dependency['library']['libraryId'], $dependency['type'], $dropCss, $dependency['type'], $dropCss
       );
     }
   }
@@ -413,7 +413,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'machineName' => $libs['machine_name'],
         'majorVersion' => $libs['major_version'],
         'minorVersion' => $libs['minor_version'],
-        'preloaded' => $libs['preloaded'],
+        'preloaded' => H5PCore::dependencyConstantToString($libs['preloaded']),
       );
 
       // Save the main libary machine name.
