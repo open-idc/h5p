@@ -339,7 +339,6 @@ function h5p_get_file_paths($node) {
     'preloadedCss' => array(),
   );
   $h5p_path = _h5p_get_h5p_path();
-  $h5p_core = _h5p_get_instance('core');
   while ($library_data = db_fetch_array($result)) {
     if (!empty($library_data['preloaded_js'])) {
       foreach (explode(',', $library_data['preloaded_js']) as $value) {
