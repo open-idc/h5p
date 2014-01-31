@@ -36,13 +36,13 @@ function h5p_schema() {
         'not null' => TRUE,
       ),
       'library_id' => array(
-        'description' => 'The id of a h5p library this content uses',
+        'description' => 'The identifier of a h5p library this content uses.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'preloaded' => array(
-        'description' => '0 if this library is dynamic, 1 if this library is to be preloaded',
+      'dependency_type' => array(
+        'description' => "0 = dynamic, 1 = preloaded, 2 = editor",
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
@@ -50,15 +50,7 @@ function h5p_schema() {
         'default' => 1,
       ),
       'drop_css' => array(
-        'description' => '1 if this node does not want the library css included',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'editor_library' => array(
-        'description' => '1 if this library is an editor dependency, 0 if not',
+        'description' => '1 if the preloaded css from the dependency is to be excluded.',
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
@@ -141,7 +133,7 @@ function h5p_schema() {
         'description' => 'The preloaded css for this library as a comma separated list',
         'type' => 'text',
       ),
-      'drop_library_css' => array(
+      'drop_library_css' => array( // TODO: This really needs to be move to h5p_libraries_libraries.
         'description' => 'List of libraries that should not have CSS included if this library is used. Comma separated list.',
         'type' => 'text',
       ),
@@ -419,18 +411,16 @@ function h5p_update_6104() {
 function h5p_update_6105() {
   $ret = array();
   
-  // Add new field:
-  db_add_field($ret, 'h5p_nodes_libraries', 'editor_library', array(
-    'description' => '1 if this library is an editor dependency, 0 if not',
+  db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
+    'description' => "0 = dynamic, 1 = preloaded, 2 = editor",
     'type' => 'int',
     'size' => 'tiny',
     'unsigned' => TRUE,
     'not null' => TRUE,
-    'default' => 0,
+    'default' => 1,
   ));
   
-  // Update existing data. I.e dependencies to all libs must be created in database
-  // TODO
+  // TODO: Populate h5p_nodes_libraries with editor deps.
   
   return $ret;
 }

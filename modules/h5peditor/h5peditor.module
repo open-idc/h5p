@@ -239,7 +239,7 @@ function h5peditor_libraries_callback() {
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
   $storage = h5peditor_get_storage_instance();
-  $h5p_editor = new H5peditor($storage, file_directory_path(), base_path());
+  $h5p_editor = new H5peditor($storage, _h5p_get_h5p_path(), base_path());
 
   // TODO: CACHE!!!
 
