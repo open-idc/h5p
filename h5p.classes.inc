@@ -47,6 +47,15 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getUploadedH5pPath() {
     return $_SESSION['h5p_upload'];
   }
+  
+  /**
+   * Implements getUploadedH5PSkipContent
+   */
+  public function getUploadedH5pSkipContent() {
+    return ( isset($_SESSION['h5p_upload_skip_content']) === TRUE
+             && $_SESSION['h5p_upload_skip_content'] === TRUE
+             ? TRUE : FALSE );
+  }
 
   /**
    * Implements getLibraryId
@@ -92,6 +101,16 @@ class H5PDrupal implements H5PFrameworkInterface {
     return user_access('update h5p libraries');
   }
 
+  /**
+   * 
+   * @param unknown $library_id
+   */
+  public function getLibraryUsage($libraryId) {
+    return db_result(db_query('SELECT COUNT(distinct n.nid)
+                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
+                   WHERE l.library_id = %d', $libraryId));
+  }
+  
   /**
    * Implements saveLibraryData
    */
@@ -178,7 +197,23 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function deleteLibraryDependencies($libraryId) {
     db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
   }
-
+  
+  /**
+   * Implements deleteLibrary. Will delete a library's data both in the database and file system
+   */
+  public function deleteLibrary($libraryId) {
+    
+    $library = db_fetch_object(db_query("select * from {h5p_libraries} where library_id = %d", $libraryId));
+    
+    // Delete files:
+    H5PCore::recursiveUnlink(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
+    
+    // Delete data in database (won't delete content):
+    db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
+    db_query("DELETE FROM {h5p_libraries_languages} WHERE library_id = %d", $libraryId);
+    db_query("DELETE FROM {h5p_libraries} WHERE library_id = %d", $libraryId);
+  }
+  
   /**
    * Implements saveLibraryDependencies
    */
@@ -229,9 +264,9 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements copyLibraryUsage
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
-    db_query(
-      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css)
-      SELECT %d, hnl.library_id, hnl.preloaded, hnl.drop_css
+    db_query(    
+      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
+      SELECT %d, hnl.library_id, hnl.dependency_type, hnl.drop_css
       FROM {h5p_nodes_libraries} hnl
       WHERE hnl.content_id = %d", $contentId, $copyFromId
     );
@@ -258,19 +293,22 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements saveLibraryUsage
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
+    // TODO: Rename since it's content dependencies we're saving.
     $dropLibraryCssList = array();
-    foreach ($librariesInUse as $machineName => $library) {
-      if (!empty($library['library']['dropLibraryCss'])) {
-        $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $library['library']['dropLibraryCss']));
+    
+    foreach ($librariesInUse as $dependency) {
+      if (!empty($dependency['library']['dropLibraryCss'])) {
+        $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
       }
     }
-    foreach ($librariesInUse as $machineName => $library) {
-      $dropCss = in_array($machineName, $dropLibraryCssList) ? 1 : 0;
+    
+    foreach ($librariesInUse as $dependency) {
+      $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
       db_query(
-        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, preloaded, drop_css)
+        "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
         VALUES (%d, %d, %d, %d)
-        ON DUPLICATE KEY UPDATE preloaded = %d, drop_css = %d",
-        $contentId, $library['library']['libraryId'], $library['preloaded'], $dropCss, $library['preloaded'], $dropCss
+        ON DUPLICATE KEY UPDATE dependency_type = %d, drop_css = %d",
+        $contentId, $dependency['library']['libraryId'], $dependency['type'], $dropCss, $dependency['type'], $dropCss
       );
     }
   }
@@ -384,7 +422,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'machineName' => $libs['machine_name'],
         'majorVersion' => $libs['major_version'],
         'minorVersion' => $libs['minor_version'],
-        'preloaded' => $libs['preloaded'],
+        'preloaded' => H5PCore::dependencyConstantToString($libs['preloaded']),
       );
 
       // Save the main libary machine name.
@@ -395,7 +433,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     $editor = h5peditor_get_instance();
-    $editorLibraries = $editor->getLibraryEditors($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion']);
+    $editorLibraries = $editor->getEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion']);
 
     // Set language to drupals node language, or 'und' if not set.
     $exportLanguage = $language == TRUE ? $language : 'und';

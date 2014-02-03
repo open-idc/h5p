@@ -104,7 +104,7 @@ class H5peditor {
    * @return boolean
    */
   public function createDirectories($id) {
-    $this->content_directory = $this->files_directory . '/h5p/content/' . $id . '/';
+    $this->content_directory = $this->files_directory . '/content/' . $id . '/';
 
     $sub_directories = array('', 'files', 'images', 'videos', 'audios');
     foreach ($sub_directories AS $sub_directory) {
@@ -141,8 +141,8 @@ class H5peditor {
     foreach ($newLibraries as $library) {
       $libraryFull = $h5pStorage->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $librariesUsed[$library['machineName']]['library'] = $libraryFull;
-      $librariesUsed[$library['machineName']]['preloaded'] = 1;
-      $h5pStorage->getLibraryUsage($librariesUsed, $libraryFull);
+      $librariesUsed[$library['machineName']]['type'] = H5PCore::DEPENDENCY_TYPE_PRELOADED;
+      $h5pStorage->findLibraryDependencies($librariesUsed, $libraryFull);
     }
 
     $h5pStorage->h5pF->deleteLibraryUsage($contentId);
@@ -194,7 +194,7 @@ class H5peditor {
   private function processField(&$field, &$params, &$files, &$libraries) {
     static $h5peditor_path;
     if (!$h5peditor_path) {
-      $h5peditor_path = $this->files_directory . '/h5peditor/';
+      $h5peditor_path = $this->files_directory . '/editor/';
     }
     switch ($field->type) {
       case 'file':
@@ -278,19 +278,16 @@ class H5peditor {
   /**
    * This really belongs on a library class... which doesn't exist.
    */
-  public function getLibraryEditors($machineName, $majorVersion, $minorVersion) {
+  public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
     if ($this->development !== NULL) {
       // Try to get development editor libraries first
       $editors = $this->development->getLibraryEditors($machineName, $majorVersion, $minorVersion);
     }
     
     if ($editors === NULL) {
-      $editors = $this->storage->getLibraryEditors($machineName, $majorVersion, $minorVersion);
+      $editors = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
     }
 
-    // Get dependencies for editor libraries. (this is some what of a hack due to the OO structure of H5P Manager)
-    $this->storage->findLibraryDependencies($editors);
-    
     return $editors;
   }
   
@@ -318,18 +315,22 @@ class H5peditor {
    */
   public function getLibraryData($machineName, $majorVersion, $minorVersion) {
     $libraryData = new stdClass();
-    $libraryData->semantics = $this->storage->getSemantics($machineName, $majorVersion, $minorVersion);
-    $libraryData->language = $this->getLibraryLanguage($machineName, $majorVersion, $minorVersion);
     
-    if ($libraryData->language === NULL) {
-      unset($libraryData->language);
-    }
+    $libraries = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
+    $library = reset($libraries);
     
-    $editorLibraries = $this->getLibraryEditors($machineName, $majorVersion, $minorVersion);
+    // TODO: Dev mode is probably broken since load library doesn't read from file.
+    $libraryData->semantics = $this->storage->getSemantics($library);
 
-    foreach ($editorLibraries as $editorLibraryId => $editorLibrary) {
-      $files = $this->getLibraryFiles($editorLibrary['machineName'], $editorLibrary['majorVersion'], $editorLibrary['minorVersion']);
+    // TODO: Get language from $library.
+    $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
+    // TODO: langauge gets added a second time for the same library in JS futher down in this function.
 
+    // TODO: Remember to check dropLibraryCss...
+    foreach ($libraries as $library) {
+      $files = $this->getLibraryFiles($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      
+      // Javascripts
       if (!empty($files['scripts'])) {
         foreach ($files['scripts'] as $script) {
           if (!isset($libraryData->javascript[$script])) {
@@ -342,12 +343,17 @@ class H5peditor {
         }
       }
       
-      $language = $this->getLibraryLanguage($editorLibrary['machineName'], $editorLibrary['majorVersion'], $editorLibrary['minorVersion']);
+      $language = $this->getLibraryLanguage($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+    
+    
+      // Languages
+      $language = $this->storage->getLanguage($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       if ($language !== NULL) {
-        $lang = '; H5PEditor.language["' . $editorLibrary['machineName'] . '"] = ' . $language . ';';
+        $lang = '; H5PEditor.language["' . $library['machineName'] . '"] = ' . $language . ';';
         $libraryData->javascript[md5($lang)] = $lang;
       }
       
+      // Stylesheets
       if (!empty($files['styles'])) {
         foreach ($files['styles'] as $css) {
           H5peditor::buildCssPath(NULL, $this->basePath . dirname($css) . '/');
@@ -384,4 +390,4 @@ class H5peditor {
     }
     return 'url('. $path .')';
   }
-} 
+}
