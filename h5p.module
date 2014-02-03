@@ -32,7 +32,7 @@ function h5p_autoload_info() {
 function h5p_menu() {
   $items = array();
   $items['admin/settings/h5p'] = array(
-    'title' => 'h5p',
+    'title' => 'H5P',
     'description' => 'Configure the location of h5p files.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('h5p_admin_settings'),
@@ -40,8 +40,45 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  $items['admin/content/h5p/libraries'] = array(
+      'title' => 'H5P libraries',
+      'description' => 'List, delete and get detailed info on the installed H5P libraries',
+      'page callback' => 'h5p_library_list',
+      'access arguments' => array('administer site configuration'), 
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'h5p.admin.inc',
+  );
+  $items['admin/content/h5p/libraries/%'] = array(
+      'title' => 'H5P library details',
+      'title callback' => '_h5p_library_details_title',
+      'title arguments' => array(4),
+      'description' => 'Get detailed info on a library',
+      'page callback' => 'h5p_library_details',
+      'page arguments' => array(4),
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'h5p.admin.inc',
+  );
+  $items['admin/content/h5p/libraries/%/delete'] = array(
+      'title' => 'Delete H5P library',      
+      'description' => 'Delete an unused H5P library',
+      'page callback' => 'h5p_library_delete',
+      'page arguments' => array(4),
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'h5p.admin.inc',
+  );
 
   return $items;
+}
+
+/**
+ * Creates the title for the library details page 
+ * 
+ * @param integer $library_id
+ */
+function _h5p_library_details_title($library_id) {
+  return db_result(db_query('SELECT title FROM {h5p_libraries} where library_id = %d', $library_id));
 }
 
 /**
@@ -296,26 +333,26 @@ function h5p_get_file_paths($node) {
     $devlibsdatadata = $development->getLibraries();
   }
 
+  // TODO: Should this go through core? I belive there's a function doing something similar in the edtior library.
   $result = db_query(
     "SELECT hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion, preloaded_css AS preloadedCss, preloaded_js AS preloadedJs, hnl.drop_css AS dropCss
     FROM {h5p_nodes_libraries} hnl
     JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
     WHERE hnl.content_id = %d
-    AND hnl.preloaded = 1", h5p_get_content_id($node)
+    AND hnl.dependency_type = %d", h5p_get_content_id($node), H5PCore::DEPENDENCY_TYPE_PRELOADED
   );
   $to_return = array(
     'preloadedJs' => array(),
     'preloadedCss' => array(),
   );
   $h5p_path = _h5p_get_h5p_path();
-  $h5p_core = _h5p_get_instance('core');
   while ($library_data = db_fetch_array($result)) {
     $lid = $library_data['machineName'] . ' ' . $library_data['majorVersion'] . '.' . $library_data['minorVersion'];
     if (isset($devlibsdatadata[$lid])) {
       $library_data = $devlibsdatadata[$lid];
     }
     else {
-      $library_data['path'] = $h5p_path . '/libraries/' . $h5p_core->libraryToString($library_data, TRUE);
+      $library_data['path'] = $h5p_path . '/libraries/' . H5PCore::libraryToString($library_data, TRUE);
       $library_data['preloadedJs'] = explode(',', $library_data['preloadedJs']);
       $library_data['preloadedCss'] = explode(',', $library_data['preloadedCss']);
     }
@@ -708,4 +745,36 @@ function h5p_content_extra_fields($type_name) {
     );
   }
   return $extra;
+}
+
+
+/**
+ * 
+ */
+function h5p_library_delete_form(&$form_state, $library_id, $library_name) {
+  
+  $form['library_id'] = array(
+      '#type' => 'hidden',
+      '#value' => $library_id
+  );
+  
+  $form['info'] = array(
+    '#type' => 'markup',
+    '#value' => '<span>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</span>'
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete')
+  );
+  
+  return $form;
+}
+
+/**
+ * 
+ */
+function h5p_library_delete_form_submit($form, &$form_state) {
+  // Do the actual deletion:
+  _h5p_get_instance('interface')->deleteLibrary($form_state['values']['library_id']);
 }
