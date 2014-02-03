@@ -36,13 +36,13 @@ function h5p_schema() {
         'not null' => TRUE,
       ),
       'library_id' => array(
-        'description' => 'The id of a h5p library this content uses',
+        'description' => 'The identifier of a h5p library this content uses.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'preloaded' => array(
-        'description' => '0 if this library is dynamic, 1 if this library is to be preloaded',
+      'dependency_type' => array(
+        'description' => "0 = dynamic, 1 = preloaded, 2 = editor",
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
@@ -50,7 +50,7 @@ function h5p_schema() {
         'default' => 1,
       ),
       'drop_css' => array(
-        'description' => '1 if this node does not want the library css included',
+        'description' => '1 if the preloaded css from the dependency is to be excluded.',
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
@@ -133,7 +133,7 @@ function h5p_schema() {
         'description' => 'The preloaded css for this library as a comma separated list',
         'type' => 'text',
       ),
-      'drop_library_css' => array(
+      'drop_library_css' => array( // TODO: This really needs to be move to h5p_libraries_libraries.
         'description' => 'List of libraries that should not have CSS included if this library is used. Comma separated list.',
         'type' => 'text',
       ),
@@ -403,4 +403,68 @@ function h5p_update_6104() {
   $ret = array();
   db_add_index($ret, 'files', 'filepath', array('filepath'));
   return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function h5p_update_6105(&$sandbox) {
+  $ret = array();
+    
+  if (isset($sandbox['content']) === FALSE) {
+    db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
+      'description' => "0 = dynamic, 1 = preloaded, 2 = editor",
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 1,
+    ));
+  
+    // Update h5p_nodes_libraries to get all dependencies.
+    $result = db_query("
+      SELECT hn.content_id AS id, 
+             hl.machine_name AS libraryName, 
+             hl.major_version AS libraryMajorVersion, 
+             hl.minor_version AS libraryMinorVersion
+      FROM {h5p_nodes} hn
+      JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
+    ");
+
+    $sandbox['content'] = array();      
+    while ($content = db_fetch_object($result)) {
+      $sandbox['content'][] = $content;
+    }
+    
+    $sandbox['current'] = 0;
+    $sandbox['max'] = count($sandbox['content']);
+  }
+  
+  if ($sandbox['max'] === 0) {
+    $ret['#finished'] = 1;
+  }
+  else {
+    h5p_save_content_dependencies($sandbox['content'][$sandbox['current']]);
+    $sandbox['current']++;
+    $ret['#finished'] = ($sandbox['current'] / $sandbox['max']);
+  }
+  
+  return $ret;
+}
+
+/**
+ * (re)Save all dependencies for given content.
+ * This will given content nodes a relation to all libraries used by it's main library.
+ *
+ * @param object $content
+ */
+function h5p_save_content_dependencies($content) {
+  $i = _h5p_get_instance('interface');
+  $s = _h5p_get_instance('storage');
+  
+  $library = $i->loadLibrary($content->libraryName, $content->libraryMajorVersion, $content->libraryMinorVersion);
+  
+  $dependencies = array();
+  $s->findLibraryDependencies($dependencies, $library);
+  $i->saveLibraryUsage($content->id, $dependencies);
 }
