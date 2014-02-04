@@ -1,4 +1,5 @@
-// TODO: Why can't h5pintegration.js just hook into the H5P namespace instead of creating its own?
+// TODO: Would it be easier if h5pintegration.js just hooked into the H5P namespace instead 
+// of creating its own? This way we wouldn't have lots of "empty" wrapper functions.
 var H5PIntegration = H5PIntegration || {};
 var H5P = H5P || {};
 
@@ -21,7 +22,7 @@ H5PIntegration.getJsonContent = function (contentId) {
 var locationOrigin = window.parent.location.protocol + "//" + window.parent.location.host;
 H5PIntegration.getContentPath = function (contentId) {
   if (Drupal.settings.h5p !== undefined && contentId !== undefined) {
-    return locationOrigin + Drupal.settings.h5p.jsonContentPath + contentId + '/';
+    return locationOrigin + Drupal.settings.h5p.contentPath + contentId + '/';
   }
   else if (Drupal.settings.h5peditor !== undefined)  {
     return Drupal.settings.h5peditor.filesPath + '/h5peditor/';

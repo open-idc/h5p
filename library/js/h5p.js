@@ -71,7 +71,9 @@ H5P.init = function () {
       iframe.contentDocument.close();
     });
 
-    // TODO: This seems very hacky... why can't we just use the resize event? What happens if we ain't done before the next interval starts?
+    // TODO: This seems very hacky...
+    // What happens if we ain't done before the next interval starts?
+    // Perhaps it should be up to iframe content to dispatch resize events?
     setInterval(function () {
       $h5pIframes.each(function (idx, iframe) {
         var $iframe = H5P.jQuery(iframe);
