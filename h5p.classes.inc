@@ -349,50 +349,27 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
-   * Implements getLibrarySemantics
-   *
-   * Calls modules implementing hook_alter_h5p_semantics().
+   * Implements loadLibrarySemantics().
    */
-  public function getLibrarySemantics($machineName, $majorVersion, $minorVersion) {
-    if (variable_get('h5p_library_development', 0) === 1) {
-      $development = _h5p_get_instance('development');
-      $semantics = $development->getSemantics($machineName, $majorVersion, $minorVersion);
-    }
+  public function loadLibrarySemantics($name, $majorVersion, $minorVersion) {
+    $semantics = db_result(db_query(
+      "SELECT semantics
+       FROM {h5p_libraries}
+       WHERE machine_name = '%s'
+       AND major_version = %d
+       AND minor_version = %d",
+      $name, $majorVersion, $minorVersion));
 
-    if (!isset($semantics)) {
-      if ($this->isInDevMode()) {
-        $semantics = $this->getSemanticsFromFile($machineName, $majorVersion, $minorVersion);
-      }
-      else {
-        $semantics = db_result(db_query(
-          "SELECT semantics
-          FROM {h5p_libraries}
-          WHERE machine_name = '%s'
-          AND major_version = %d
-          AND minor_version = %d",
-          $machineName, $majorVersion, $minorVersion));
-      }
-    }
-    
-    $semantics = json_decode($semantics);
-    if (!empty($semantics)) {
-      drupal_alter('h5p_semantics', $semantics);
-    }
-
-    return $semantics;
+    return ($semantics === FALSE ? NULL : $semantics);
   }
-
-  private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
-    $semanticsPath = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
-    if (file_exists($semanticsPath)) {
-      $semantics = file_get_contents($semanticsPath);
-      if (!json_decode($semantics, TRUE)) {
-        drupal_set_message(t('Invalid json in semantics for %library', array('%library' => $machineName)), 'warning');
-      }
-      return $semantics;
-    }
-    return FALSE;
+  
+  /**
+   * Implements alterLibrarySemantics().
+   */
+  public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion) {
+    drupal_alter('h5p_semantics', $semantics);
   }
+  
 
   /**
    * Implements getExportData
@@ -458,6 +435,47 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function isExportEnabled() {
     return (bool) variable_get('h5p_export', 1);
   }
-}
+  
+  /**
+   * Implements loadContent().
+   */
+  public function loadContent($id) {
+    $content = db_fetch_object(db_query(
+      "SELECT hn.json_content AS params
+            , hn.embed_type AS embedType 
+            , hl.library_id AS libraryId 
+            , hl.machine_name AS libraryName
+            , hl.major_version AS libraryMajorVersion
+            , hl.minor_version AS libraryMinorVersion
+            , hl.embed_types AS libraryEmbedTypes
+            , hl.fullscreen AS libraryFullscreen
+       FROM {h5p_nodes} hn
+       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
+       WHERE content_id = %d", $id));
+       
+    return ($content === FALSE ? NULL : $content);
+  }
 
-?>
+  /**
+   * Implements loadContentDependencies().
+   */
+  public function loadContentDependencies($id) {
+    $result = db_query(
+      "SELECT hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion, preloaded_css AS preloadedCss, preloaded_js AS preloadedJs, hnl.drop_css AS dropCss
+       FROM {h5p_nodes_libraries} hnl
+       JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
+       WHERE hnl.content_id = %d
+       AND hnl.dependency_type = %d", 
+       $id, 
+       H5PCore::DEPENDENCY_TYPE_PRELOADED
+    );
+    
+    $dependencies = array();
+    while ($dependency = db_fetch_object($result)) {
+      $dependencies[] = $dependency;
+    }
+    
+    return $dependencies;
+  }  
+  
+}

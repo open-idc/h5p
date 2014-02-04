@@ -3,6 +3,7 @@
  * Interface defining functions the h5p library needs the framework to implement
  */
 interface H5PFrameworkInterface {
+
   /**
    * Show the user an error message
    *
@@ -214,16 +215,24 @@ interface H5PFrameworkInterface {
   public function loadLibrary($machineName, $majorVersion, $minorVersion);
 
   /**
-   * Loads and decodes library semantics.
+   * Loads library semantics.
    *
-   * @param string $machineName
-   * @param int $majorVersion
-   * @param int $minorVersion
-   * @return array|FALSE
-   *  Array representing the library with dependency descriptions
-   *  FALSE if the library doesn't exist
+   * @param string $name library identifier.
+   * @param int $majorVersion library identifier.
+   * @param int $minorVersion library identifier.
+   * @return string semantics.
    */
-  public function getLibrarySemantics($machineName, $majorVersion, $minorVersion);
+  public function loadLibrarySemantics($name, $majorVersion, $minorVersion);
+  
+  /**
+   * Makes it possible to alter the semantics, adding custom fields, etc.
+   *
+   * @param array $semantics
+   * @param string $name library identifier.
+   * @param int $majorVersion library identifier.
+   * @param int $minorVersion library identifier.
+   */
+  public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion);
 
   /**
    * Delete all dependencies belonging to given library
@@ -266,6 +275,15 @@ interface H5PFrameworkInterface {
    * Check if export is enabled.
    */
   public function isExportEnabled();
+  
+  /**
+   * Load content.
+   *
+   * @return object Content, null if not found.
+   */
+  public function loadContent($id);
+  
+  public function loadContentDependencies($id);
 }
 
 /**
@@ -1250,235 +1268,6 @@ Class H5PExport {
 }
 
 /**
- * This class is used for storing variables and functions.
- * This is a data layer which uses the file system, 
- * so it isn't specific to any framework.
- */
-Class H5PDevelopment {
-
-  private $implements, $libraries, $language;
-
-  /**
-   * Constructor.
-   *
-   * @param string Files path
-   * @param array $libraries Optional cache input.
-   */
-  public function __construct($outerface, $filesPath, $language, $libraries = NULL) {
-    $this->implements = $outerface;
-    $this->language = $language;
-    if ($libraries !== NULL) {
-      $this->libraries = $libraries;
-    }
-    else {
-      $this->findLibraries($filesPath . '/development');
-    }
-  }
-  
-  /**
-   * Get contents of file.
-   *
-   * @param string File path.
-   * @return mixed String on success or NULL on failure.
-   */
-  private function getFileContents($file) {
-    if (file_exists($file) === FALSE) {
-      return NULL;
-    }
-    
-    $contents = file_get_contents($file);
-    if ($contents === FALSE) {
-      return NULL;
-    }
-    
-    return $contents;
-  }
-  
-  /**
-   * Scans development directory and find all libraries.
-   *
-   * @param string $path Libraries development folder
-   */
-  private function findLibraries($path) {
-    $this->libraries = array();
-    
-    if (is_dir($path) === FALSE) {
-      return; 
-    }
-    
-    $contents = scandir($path);
-    
-    for ($i = 0, $s = count($contents); $i < $s; $i++) {
-      if ($contents[$i]{0} === '.') {
-        continue; // Skip hidden stuff.
-      }
-      
-      $libraryPath = $path . '/' . $contents[$i];
-      $libraryJSON = $this->getFileContents($libraryPath . '/library.json');
-      if ($libraryJSON === NULL) {
-        continue; // No JSON file, skip.
-      }
-      
-      $library = json_decode($libraryJSON, TRUE);
-      if ($library === FALSE) {
-        continue; // Invalid JSON.
-      }
-      
-      // TODO: Validate props? Not really needed, is it? this is a dev site.
-      
-      // Save/update library.
-      $library['libraryId'] = $this->implements->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      $this->implements->saveLibraryData($library, $library['libraryId'] === FALSE);
-      
-      $library['path'] = $libraryPath;
-      $this->libraries[H5PDevelopment::libraryToString($library['machineName'], $library['majorVersion'], $library['minorVersion'])] = $library;
-    }
-    
-    // TODO: Should we remove libraries without files? Not really needed, but must be cleaned up some time, right?
-
-    // Go trough libraries and insert dependencies. Missing deps. will just be ignored and not available. (I guess?!)
-    foreach ($this->libraries as $library) {
-      $this->implements->deleteLibraryDependencies($library['libraryId']); // This isn't very optimal, but it's the way of the core. Without it we would get duplicate warnings.
-      $types = array('preloaded', 'dynamic', 'editor');
-      foreach ($types as $type) {
-        if (isset($library[$type . 'Dependencies'])) {
-          $this->implements->saveLibraryDependencies($library['libraryId'], $library[$type . 'Dependencies'], $type);
-        }
-      }
-    }
-    // TODO: Apparently deps must be inserted into h5p_nodes_libraries as well... ? But only if they are used?!
-  }
-  
-  /**
-   * @return array Libraris in development folder.
-   */
-  public function getLibraries() {
-    return $this->libraries;
-  }
-  
-  /**
-   * Get semantics for the given library.
-   * 
-   * @param string $name of the library.
-   * @param int $majorVersion of the library.
-   * @param int $minorVersion of the library.
-   * @return string Semantics
-   */
-  public function getSemantics($name, $majorVersion, $minorVersion) {
-    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-    
-    if (isset($this->libraries[$library]) === FALSE) {
-      return NULL;
-    }
-    
-    return $this->getFileContents($this->libraries[$library]['path'] . '/semantics.json');
-  }
-  
-  /**
-   * Get translations for the given library.
-   * 
-   * @param string $name of the library.
-   * @param int $majorVersion of the library.
-   * @param int $minorVersion of the library.
-   * @return string Translation
-   */
-  public function getLanguage($name, $majorVersion, $minorVersion) {
-    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-    
-    if (isset($this->libraries[$library]) === FALSE) {
-      return NULL;
-    }
-    
-    return $this->getFileContents($this->libraries[$library]['path'] . '/language/' . $this->language . '.json');
-  }
-  
-  /**
-   * Get editor library dependencies.
-   *
-   * @param string $name of the library.
-   * @param int $majorVersion of the library.
-   * @param int $minorVersion of the library.
-   * @return null NULL.
-   */
-  public function getLibraryEditors($name, $majorVersion, $minorVersion) {
-    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-    
-    if (isset($this->libraries[$library]) === FALSE) {
-      return NULL;
-    }
-    $library = $this->libraries[$library];
-    
-    if ($library->editorDependencies === NULL) {
-      return NULL;
-    }
-    
-    // Apparently all dependencies has to be in the database.
-    $editorlibraries = array();
-    for ($i = 0, $s = count($library->editorDependencies); $i < $s; $i++) {
-      $elid = $this->innerface->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      if ($elid === FALSE) {
-        continue; // This dependency does not exist. TODO: Call somebody?
-      }
-      
-      $editorlibraries[$elid] = $library->editorDependencies[$i];
-    }
-    
-    return $editorlibraries;
-  }
-  
-  /**
-   * Get file paths for proloaded scripts and styles for the library in question.
-   *
-   * @param string $name of the library.
-   * @param int $majorVersion of the library.
-   * @param int $minorVersion of the library.
-   * @return array with script and styles. NULL if not a dev lib.
-   */
-  public function getLibraryFiles($name, $majorVersion, $minorVersion) {
-    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-
-    if (isset($this->libraries[$library]) === FALSE) {
-      return NULL;
-    }
-    $library = $this->libraries[$library];
-    
-    $file_paths = array(
-      'scripts' => array(),
-      'styles' => array()
-    );
-  
-    // Add scripts
-    if (isset($library['preloadedJs']) === TRUE) {
-      for ($i = 0, $s = count($library['preloadedJs']); $i < $s; $i++) {
-        $file_paths['scripts'][] = $library['path'] . '/' . $library['preloadedJs'][$i]['path'];
-      }
-    }
-    
-    // Add styles
-    if (isset($library['preloadedCss']) === TRUE) {
-      for ($i = 0, $s = count($library['preloadedCss']); $i < $s; $i++) {
-        $file_paths['styles'][] = $library['path'] . '/' . $library['preloadedCss'][$i]['path'];
-      }
-    }
-
-    return $file_paths;
-  }
-  
-  /**
-   * Writes library as string on the form "name majorVersion.minorVersion"
-   * Really belongs as a toString on the library class...
-   *
-   * @param string $name Machine readable library name
-   * @param integer $majorVersion
-   * @param integer $majorVersion
-   * @return string Library identifier.
-   */
-  public static function libraryToString($name, $majorVersion, $minorVersion) {
-    return $name . ' ' . $majorVersion . '.' . $minorVersion;
-  }
-}
-
-/**
  * Functions and storage shared by the other H5P classes
  */
 class H5PCore {
@@ -1511,15 +1300,156 @@ class H5PCore {
   public $librariesJsonData;
   public $contentJsonData;
   public $mainJsonData;
+  
+  private $db, $path, $development_mode, $development;
 
   /**
    * Constructor for the H5PCore
    *
    * @param object $H5PFramework
    *  The frameworks implementation of the H5PFrameworkInterface
+   * @param string $path H5P file storage directory.
+   * @param string $language code. Defaults to english.
+   * @param int $development_mode mode.
    */
-  public function __construct($H5PFramework) {
+  public function __construct($H5PFramework, $path, $language = 'en', $development_mode = H5PDevelopment::MODE_NONE) {
     $this->h5pF = $H5PFramework;
+    
+    $this->db = $H5PFramework;
+    $this->path = $path;
+    $this->development_mode = $development_mode;
+    
+    if ($development_mode & H5PDevelopment::MODE_LIBRARY) {
+      $this->development = new H5PDevelopment($this->db, $path, $language);
+    }
+  }
+
+  /**
+   * Load content.
+   *
+   * @param int $id for content.
+   * @return object
+   */
+  public function loadContent($id) {
+    $content = $this->db->loadContent($id);
+    
+    if ($content !== NULL) {
+      $content->library = (object) array(
+        'id' => $content->libraryId,
+        'name' => $content->libraryName,
+        'majorVersion' => $content->libraryMajorVersion,
+        'minorVersion' => $content->libraryMinorVersion,
+        'embedTypes' => $content->libraryEmbedTypes,
+        'fullscreen' => $content->libraryFullscreen,
+      );
+      unset($content->libraryId, $content->libraryName, $content->libraryEmbedTypes, $content->libraryFullscreen);
+      
+      if ($this->development_mode & H5PDevelopment::MODE_CONTENT) {
+        // TODO: Load JSON from file.
+        /*$json_content_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . $id . '/content.json');
+        if (file_exists($json_content_path) === TRUE) {
+          $json_content = file_get_contents($json_content_path);
+          if (json_decode($json_content, TRUE) !== FALSE) {
+            drupal_set_message(t('Invalid json in json content'), 'warning');
+          }
+          $content->params = $json_content;
+        }*/
+      }
+    }
+
+    return $content;
+  }
+  
+  /**
+   * Find the files required for this content to work.
+   *
+   * @param int $id for content.
+   * @return array
+   */
+  public function loadContentDependencies($id) {
+    $dependencies = $this->db->loadContentDependencies($id);
+  
+    if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
+      $developmentLibraries = $this->development->getLibraries();
+    }
+    
+    $files = array(
+      'scripts' => array(),
+      'styles' => array(),
+    );
+    
+    foreach ($dependencies as $dependency) {
+      $libraryId = H5PCore::libraryToString($dependency, TRUE);
+      
+      if (isset($developmentLibraries[$libraryId])) {
+        $dependency = $developmentLibraries[$libraryId];
+      }
+      else {
+        $dependency->path = $this->path . '/libraries/' . $libraryId;
+        $dependency->preloadedJs = explode(',', $dependency->preloadedJs);
+        $dependency->preloadedCss = explode(',', $dependency->preloadedCss);
+      }
+      
+      if (empty($dependency->preloadedJs) === FALSE) {
+        foreach ($dependency->preloadedJs as $file) {
+          $files['scripts'][] = $dependency->path . '/' . trim(isset($file->path) ? $file->path : $file);
+        }
+      }
+      if ($dependency->dropCss !== '1' && empty($dependency->preloadedCss) === FALSE) {
+        foreach ($dependency->preloadedCss as $file) {
+          $files['styles'][] = $dependency->path . '/' . trim(isset($file->path) ? $file->path : $file);
+        }
+      }
+    }
+    
+    return $files;
+  }
+  
+  /**
+   * Determine the correct embed type to use.
+   * TODO: Use constants.
+   *
+   * @return string 'div' or 'iframe'.
+   */
+  public function determineEmbedType($contentEmbedType, $libraryEmbedTypes) {
+    // Detect content embed type
+    $embedType = strpos(strtolower($contentEmbedType), 'div') !== FALSE ? 'div' : 'iframe';
+    
+    if ($libraryEmbedTypes !== NULL && $libraryEmbedTypes !== '') {
+      // Check that embed type is available for library
+      $embedTypes = strtolower($libraryEmbedTypes);
+      if (strpos($embedTypes, $embedType) === FALSE) {
+        // Not available, pick default.
+        $embedType = strpos($embedTypes, 'div') !== FALSE ? 'div' : 'iframe';
+      }  
+    }
+    
+    return $embedType;
+  }
+  
+  /**
+   * Load library semantics.
+   *
+   * @return string 'div' or 'iframe'.
+   */
+  public function loadLibrarySemantics($name, $majorVersion, $minorVersion) {
+    if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
+      // Try to load from dev lib
+      $semantics = $this->development->getSemantics($name, $majorVersion, $minorVersion);
+    }
+    
+    if ($semantics === NULL) {
+      // Try to load from DB.
+      $semantics = $this->db->loadLibrarySemantics($name, $majorVersion, $minorVersion);
+    }
+    
+    
+    if ($semantics !== NULL) {
+      $semantics = json_decode($semantics);
+      $this->db->alterLibrarySemantics($semantics, $name, $majorVersion, $minorVersion);
+    }
+    
+    return $semantics;
   }
 
   /**
@@ -1605,6 +1535,7 @@ class H5PCore {
    *  On the form {machineName} {majorVersion}.{minorVersion}
    */
   public static function libraryToString($library, $folderName = FALSE) {
+    
     return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
 
@@ -2076,7 +2007,7 @@ class H5PContentValidator {
       }
       else {
         $libspec = $this->h5pC->libraryFromString($value->library);
-        $librarySemantics = $this->h5pF->getLibrarySemantics($libspec['machineName'], $libspec['majorVersion'], $libspec['minorVersion']);
+        $librarySemantics = $this->h5pC->loadLibrarySemantics($libspec['machineName'], $libspec['majorVersion'], $libspec['minorVersion']);
         $this->semanticsCache[$value->library] = $librarySemantics;
       }
       $this->validateBySemantics($value->params, $librarySemantics);
