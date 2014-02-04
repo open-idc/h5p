@@ -201,7 +201,7 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         return;
       }
       $storage = h5peditor_get_storage_instance();
-      $editor = new H5peditor($storage, file_directory_path(), base_path());
+      $editor = new H5peditor($storage, _h5p_get_h5p_path(), base_path());
 
       $content_id = h5p_get_content_id($node);
 
