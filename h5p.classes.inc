@@ -403,7 +403,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     // Use library ids to get library info.
     $res = db_query(
       "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, 
-      hnl.preloaded as preloaded, hl.library_id as library_id
+      hnl.dependency_type as preloaded, hl.library_id as library_id
       FROM {h5p_libraries} hl
       JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
       WHERE hnl.content_id = %d", $contentId);
