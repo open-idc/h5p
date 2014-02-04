@@ -82,12 +82,12 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 
   $form['h5p_library'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($node->main_library) ? h5peditor_main_library_to_string($node, TRUE) : (isset($node->h5p_library) ? $node->h5p_library : 0),
+    '#default_value' => isset($node->library) ? H5PCore::libraryToString($node->library) : (isset($node->h5p_library) ? $node->h5p_library : 0),
   );
 
   // Get validated JSON for editor too.
   if (isset($node->json_content)) {
-    $h5p_params = h5p_get_filtered_json_content($node);
+    $h5p_params = h5p_filter_json_content($node);
   }
   else {
     $h5p_params = '{}';
@@ -112,14 +112,14 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 function h5peditor_h5p_content_node_form_after_build($form) {
   global $language;
   static $done;
-  if ($done) {
+  if ($done === TRUE) {
     // Make sure we only add the js once.
     return $form;
   }
   $done = TRUE;
 
   $node = h5peditor_get_source_node($form['#node']);
-  h5p_add_files_and_settings($node, 'div');
+  h5p_add_files_and_settings();
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
 
@@ -299,16 +299,6 @@ function h5peditor_get_instance() {
   }
 
   return $instance;
-}
-
-/**
- * TODO
- */
-function h5peditor_main_library_to_string($node, $as_string = FALSE) {
-  if (!isset($node->main_library)) {
-    return FALSE;
-  }
-  return $node->main_library['machineName'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'];
 }
 
 /**
