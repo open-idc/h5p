@@ -260,7 +260,7 @@ class H5peditor {
   }
 
   /**
-   * This really belongs on a library class... which doesn't exist.
+   * TODO: Consider moving to core.
    */
   public function getLibraryLanguage($machineName, $majorVersion, $minorVersion) {
     if ($this->development !== NULL) {
@@ -276,7 +276,7 @@ class H5peditor {
   }
   
   /**
-   * This really belongs on a library class... which doesn't exist.
+   * TODO: Consider moving to core.
    */
   public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
     if ($this->development !== NULL) {
@@ -292,7 +292,7 @@ class H5peditor {
   }
   
   /**
-   * This really belongs on a library class... which doesn't exist.
+   * TODO: Consider moving to core.
    */
   public function getLibraryFiles($machineName, $majorVersion, $minorVersion) {
     if ($this->development !== NULL) {
