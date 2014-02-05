@@ -91,7 +91,8 @@ class H5PDevelopment {
 
     // Go trough libraries and insert dependencies. Missing deps. will just be ignored and not available. (I guess?!)
     foreach ($this->libraries as $library) {
-      $this->implements->deleteLibraryDependencies($library['libraryId']); // This isn't very optimal, but it's the way of the core. Without it we would get duplicate warnings.
+      $this->implements->deleteLibraryDependencies($library['libraryId']); 
+      // This isn't optimal, but without it we would get duplicate warnings.
       $types = array('preloaded', 'dynamic', 'editor');
       foreach ($types as $type) {
         if (isset($library[$type . 'Dependencies'])) {
