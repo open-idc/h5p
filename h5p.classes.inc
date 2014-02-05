@@ -290,9 +290,10 @@ class H5PDrupal implements H5PFrameworkInterface {
 
   /**
    * Implements saveLibraryUsage
+   *
+   * TODO: Does the name saveContentDependencies() better describe what this function does?
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
-    // TODO: Rename since it's content dependencies we're saving.
     $dropLibraryCssList = array();
     
     foreach ($librariesInUse as $dependency) {
