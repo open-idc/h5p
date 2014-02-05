@@ -104,7 +104,7 @@ class H5peditor {
    * @return boolean
    */
   public function createDirectories($id) {
-    $this->content_directory = $this->files_directory . '/content/' . $id . '/';
+    $this->content_directory = $this->files_directory . '/h5p/content/' . $id . '/';
 
     $sub_directories = array('', 'files', 'images', 'videos', 'audios');
     foreach ($sub_directories AS $sub_directory) {
@@ -194,7 +194,7 @@ class H5peditor {
   private function processField(&$field, &$params, &$files, &$libraries) {
     static $h5peditor_path;
     if (!$h5peditor_path) {
-      $h5peditor_path = $this->files_directory . '/editor/';
+      $h5peditor_path = $this->files_directory . '/h5peditor/';
     }
     switch ($field->type) {
       case 'file':
