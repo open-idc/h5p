@@ -11,20 +11,17 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   function __construct() { }
 
   /**
-   * TODO: Create a loadLibrary function in core which always has the right semantics and remove this function.
+   * TODO: Use core in h5peditor, remove this.
    */
-  public function getSemantics($machineName, $majorVersion = NULL, $minorVersion = NULL) {
-    if (is_array($machineName) === TRUE) {
-      $semantics = json_decode($machineName['semantics']);
-      if (empty($semantics) === FALSE) {
-        drupal_alter('h5p_semantics', $semantics);
-      }
-      return $semantics;
+  public function getSemantics($name, $majorVersion = NULL, $minorVersion = NULL) {
+    if (is_array($name) === TRUE) {
+      $majorVersion = $name['majorVersion'];
+      $minorVersion = $name['minorVersion'];
+      $name = $name['machineName'];
     }
-  
-    // TODO: Prevent usage of private functions.
-    $coreInterface = _h5p_get_instance('interface');
-    return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
+    
+    $h5p = h5p_get_instance();
+    return $h5p->loadLibrarySemantics($name, $majorVersion, $minorVersion);
   }
 
   /**

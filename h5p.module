@@ -164,17 +164,17 @@ function h5p_form(&$node, $form_state) {
 
   $form['json_content'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($node->h5p) ? $node->h5p->params : ''
+    '#default_value' => isset($node->json_content) ? $node->json_content : ''
   );
 
   $form['main_library_id'] = array(
     '#type' => 'value',
-    '#default_value' => isset($node->h5p) ? $node->h5p->libraryId : ''
+    '#default_value' => isset($node->main_library_id) ? $node->main_library_id : ''
   );
 
   $form['embed_type'] = array(
     '#type' => 'value',
-    '#default_value' => isset($node->h5p) ? $node->h5p->embedType : 'div'
+    '#default_value' => isset($node->embed_type) ? $node->embed_type : 'div'
   );
 
   return $form;
@@ -305,12 +305,13 @@ function h5p_load($node) {
 
   $additions = new stdClass();  
   if ($content !== NULL) {
-    $additions->json_content = $content->params;
-    $additions->main_library_id = $content->library->id;
-    $additions->embed_type = $content->embedType;
-    $additions->library = $content->library;
+    $additions->json_content = $content['params'];
+    $additions->main_library_id = $content['library']['id'];
+    $additions->embed_type = $content['embedType'];
+    $additions->main_library = $content['library'];
   }
-  
+  // TODO: Gather h5p attrs under a h5p namespace.
+
   return $additions;
 }
 
@@ -329,7 +330,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
           'content' => array(
             'cid-' . $content_id => array(
               'jsonContent' => h5p_filter_json_content($node),
-              'fullScreen' => $node->library->fullscreen
+              'fullScreen' => $node->main_library['fullscreen']
               // TODO: Some content attributes are included here and some in the HTML.
               // It would be easier and more consistent if all attributes where inserted
               // the same way.
@@ -340,18 +341,17 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
       
       $h5p = h5p_get_instance();
       $files = $h5p->loadContentDependencies($content_id);
-      $embed = $h5p->determineEmbedType($node->embed_type, $node->library->embedTypes);
+      $embed = $h5p->determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
       if ($embed === 'div') {
         h5p_add_files_and_settings_div($settings, $files);
-        $html = '<div class="h5p-content" data-class="' . $node->library->name . '" data-content-id="' .  $content_id . '"></div>';
+        $html = '<div class="h5p-content" data-class="' . $node->main_library['name'] . '" data-content-id="' .  $content_id . '"></div>';
       }
       else {
         h5p_add_files_and_settings_iframe($settings, $files, $content_id, 'h5p-' . $node->nid . '-' . $node->vid);
-        $html = '<div class="h5p-iframe-wrapper" id="h5p-iframe-' . $content_id . '-wrapper"><iframe id="h5p-iframe-' . $content_id . '" class="h5p-iframe" data-class="' . $node->library->name . '" data-content-id="' . $content_id . '" style="width: 100%; height: 400px; border: none;" src="about:blank" frameBorder="0"></iframe></div>';
+        $html = '<div class="h5p-iframe-wrapper" id="h5p-iframe-' . $content_id . '-wrapper"><iframe id="h5p-iframe-' . $content_id . '" class="h5p-iframe" data-class="' . $node->main_library['name'] . '" data-content-id="' . $content_id . '" style="width: 100%; height: 400px; border: none;" src="about:blank" frameBorder="0"></iframe></div>';
       }
       
-      drupal_add_js($settings, 'setting');
-      
+      drupal_add_js($settings, 'setting');      
       
       if (variable_get('h5p_export', 1)) {
         $h5p_path = base_path() . _h5p_get_instance('export')->getExportPath($content_id, $node->title, $node->language);
@@ -506,7 +506,7 @@ function h5p_filter_json_content($node) {
 
   $h5p = h5p_get_instance();
   // Get semantics.
-  $semantics = $h5p->loadLibrarySemantics($node->library->name, $node->library->majorVersion, $node->library->minorVersion);
+  $semantics = $h5p->loadLibrarySemantics($node->main_library['name'], $node->main_library['majorVersion'], $node->main_library['minorVersion']);
   
   $validator = _h5p_get_instance('contentvalidator');
   // Validate and filter against main library semantics.
@@ -532,27 +532,13 @@ function _h5p_check_settings() {
   // File paths
   $path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p'));
 
-  // Save these as variables so that they may be passed as references
-  $temp_path = $path . '/temp';
-  $libraries_path = $path . '/libraries';
-  $content_path = $path . '/content';
-  $export_path = $path . '/exports';
-
-  if (!file_check_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-    return FALSE;
+  foreach (array('temp', 'libraries', 'content', 'exports', 'development') as $directory) {
+    $directory = $path . '/' . $directory;
+    if (file_check_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS) === FALSE) {
+      return FALSE;
+    }
   }
-  if (!file_check_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-    return FALSE;
-  }
-  if (!file_check_directory($libraries_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-    return FALSE;
-  }
-  if (!file_check_directory($content_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-    return FALSE;
-  }
-  if (!file_check_directory($export_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-    return FALSE;
-  }
+  
   return TRUE;
 }
 
