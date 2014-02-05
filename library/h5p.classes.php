@@ -1200,6 +1200,7 @@ Class H5PExport {
       
       // Add the editor libraries to the list of libraries
       // TODO: Add support for dependencies or editor libraries
+      // Note that since 6105 all dependencies should be in h5p_nodes_libraries.
       $exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
       
       // Copies libraries to temp dir and create mention in h5p.json
@@ -1536,7 +1537,6 @@ class H5PCore {
    *  On the form {machineName} {majorVersion}.{minorVersion}
    */
   public static function libraryToString($library, $folderName = FALSE) {
-    
     return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
 
@@ -2281,9 +2281,11 @@ class H5PContentValidator {
     return $attrarr;
   }
 
+// TODO: Remove Drupal related stuff in docs.
+
   /**
    * Processes an HTML attribute value and strips dangerous protocols from URLs.
-   *
+   *   
    * @param $string
    *   The string with the attribute value.
    * @param $decode

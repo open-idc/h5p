@@ -246,7 +246,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       VALUES (%d, %d, '%s', '%s', %d)",
       $contentId, $contentMainId, $contentJson, $embedTypes, $mainLibraryId
     );
-    // @todo: Add support for allowing the user to select embed type
+    // TODO: Add support for allowing the user to select embed type
   }
 
   /**
@@ -278,7 +278,6 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function deleteContentData($contentId) {
     db_query("DELETE FROM {h5p_nodes} WHERE content_id = %d", $contentId);
     $this->deleteLibraryUsage($contentId);
-    // @todo: Add page that lists unused libraries, allowing us to delete them
   }
 
   /**
@@ -286,7 +285,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function deleteLibraryUsage($contentId) {
     db_query("DELETE FROM {h5p_nodes_libraries} WHERE content_id = %d", $contentId);
-    // @todo: Add page that lists unused libraries, allowing us to delete them
   }
 
   /**

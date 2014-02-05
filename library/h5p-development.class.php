@@ -99,7 +99,7 @@ class H5PDevelopment {
         }
       }
     }
-    // TODO: Apparently deps must be inserted into h5p_nodes_libraries as well... ? But only if they are used?!
+    // TODO: Deps must be inserted into h5p_nodes_libraries as well... ? But only if they are used?!
   }
   
   /**
@@ -219,7 +219,6 @@ class H5PDevelopment {
   
   /**
    * Writes library as string on the form "name majorVersion.minorVersion"
-   * Really belongs as a toString on the library class...
    *
    * @param string $name Machine readable library name
    * @param integer $majorVersion
@@ -227,7 +226,7 @@ class H5PDevelopment {
    * @return string Library identifier.
    */
   public static function libraryToString($name, $majorVersion, $minorVersion) {
-    return $name . ' ' . $majorVersion . '.' . $minorVersion;
+    return $name . '-' . $majorVersion . '.' . $minorVersion;
   }
 }
 
