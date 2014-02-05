@@ -22,7 +22,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       return $semantics;
     }
   
-    // TODO: Stop using private functions.
+    // TODO: Prevent usage of private functions.
     $coreInterface = _h5p_get_instance('interface');
     return $coreInterface->getLibrarySemantics($machineName, $majorVersion, $minorVersion);
   }
@@ -60,7 +60,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       $machineName, $majorVersion, $minorVersion
     );
 
-    // TODO: Stop using private functions.
+    // TODO: Prevent usage of private functions.
     $h5p_path = _h5p_get_h5p_path();
     $h5p_core = _h5p_get_instance('core');
     
@@ -139,9 +139,9 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    * @param int $minorVersion Library identfier part 3
    */
   public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
+    // TODO: Prevent usage of private functions.
     $i = _h5p_get_instance('interface');
     $s = _h5p_get_instance('storage');
-    // TODO: Make this feel :)
 
     $library = $i->loadLibrary($machineName, $majorVersion, $minorVersion);
     $dependencies = array();

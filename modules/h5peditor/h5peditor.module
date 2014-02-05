@@ -292,7 +292,7 @@ function h5peditor_get_instance() {
     }
     $instance = new H5peditor(
       new H5peditorDrupalStorage(), 
-      file_directory_path(), 
+      file_directory_path(), // TODO: Refactor and use h5p_get_path().
       base_path(),
       isset($development) ? $development : NULL
     );

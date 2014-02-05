@@ -223,7 +223,7 @@ function h5p_validate($node, &$form) {
  * Implementation of hook_insert().
  */
 function h5p_insert($node) {
-  // @todo: Make sure node_load -> node_save works by implementing presave
+  // TODO: Make sure node_load -> node_save works by implementing presave
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
     $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
@@ -256,7 +256,8 @@ function h5p_update($node) {
     h5p_insert($node);
   }
   else {
-    // TODO: use $core->save_content, might write to json file ?
+    // TODO: Consider creating saveContent in core, where we might update json files and 
+    // create the .h5p for export.
     
     // Make sure a row exists before we try updating it.
     $content_id = db_result(db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = %d", h5p_get_content_id($node)));
@@ -274,14 +275,11 @@ function h5p_update($node) {
     }
   }
 
-  // TODO: Create new export here or use rewrite like image cacheing in Drupal 7.
-  // The way it is now links to .h5p files are broken until somebody views the node.
-  // Many people will most likely link directly to H5P files.
-  
-  // TODO: Also if we implement an $core->save_content this could handle the export
-  // stuff and it will automatically work for other systems as well, not just Drupal.
+  // TODO: Consider creating the .h5p for export here, or use rewrite like image cacheing 
+  // in Drupal 7. This way we can prevent broken links if somebody links directly to the .h5p file.
 
-  _h5p_get_instance('export')->deleteExport($node->nid); // Note that ()-> will not work prior to PHP 5.3.
+  // Note that ()-> will not work prior to PHP 5.3. This could be an issue since many use 5.2 for Drupal 6.
+  _h5p_get_instance('export')->deleteExport($node->nid);
   _h5p_clear_js_and_css_cache();
 }
 
@@ -332,9 +330,9 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
             'cid-' . $content_id => array(
               'jsonContent' => h5p_filter_json_content($node),
               'fullScreen' => $node->library->fullscreen
-              // TODO: mainLibraryMachineName is included in the content tag/wrapper. It would be 
-              // more consistent(and easier for new developers) if all content attributes where 
-              // stored in the same location.
+              // TODO: Some content attributes are included here and some in the HTML.
+              // It would be easier and more consistent if all attributes where inserted
+              // the same way.
             )
           )
         )
@@ -614,7 +612,8 @@ function _h5p_get_instance($type) {
       return new H5PExport($interface, $core);
     case 'interface':
       return $interface; 
-      // TODO: Don't talk directly to the interface, h5p core won't be able to override.
+      // TODO: Consider if we really should let Drupal talk directly to the interface,
+      // going through core makes it easier to add new stuff later.
     case 'core':
       return $core;
   }
