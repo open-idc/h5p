@@ -1012,12 +1012,13 @@ class H5PStorage {
       // Save what libraries is beeing used by this package/content
       $librariesInUse = array();
       $this->findLibraryDependencies($librariesInUse, $this->h5pC->mainJsonData);
+      
       $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
       H5PCore::recursiveUnlink($this->h5pF->getUploadedH5pFolderPath());
 
       // Save the data in content.json
       $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
-      $mainLibraryId = $librariesInUse[$this->h5pC->mainJsonData['mainLibrary']]['library']['libraryId'];
+      $mainLibraryId = $librariesInUse['preloaded-' . $this->h5pC->mainJsonData['mainLibrary']]['library']['libraryId'];
       $this->h5pF->saveContentData($contentId, $contentJson, $this->h5pC->mainJsonData, $mainLibraryId, $contentMainId);
     }
 
