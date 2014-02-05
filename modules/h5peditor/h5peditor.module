@@ -82,7 +82,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 
   $form['h5p_library'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($node->library) ? H5PCore::libraryToString($node->library) : (isset($node->h5p_library) ? $node->h5p_library : 0),
+    '#default_value' => isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0),
   );
 
   // Get validated JSON for editor too.

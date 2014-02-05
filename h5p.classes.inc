@@ -439,7 +439,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadContent().
    */
   public function loadContent($id) {
-    $content = db_fetch_object(db_query(
+    $content = db_fetch_array(db_query(
       "SELECT hn.json_content AS params
             , hn.embed_type AS embedType 
             , hl.library_id AS libraryId 
@@ -470,7 +470,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     );
     
     $dependencies = array();
-    while ($dependency = db_fetch_object($result)) {
+    while ($dependency = db_fetch_array($result)) {
       $dependencies[] = $dependency;
     }
     

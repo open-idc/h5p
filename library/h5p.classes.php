@@ -1336,26 +1336,26 @@ class H5PCore {
     $content = $this->db->loadContent($id);
     
     if ($content !== NULL) {
-      $content->library = (object) array(
-        'id' => $content->libraryId,
-        'name' => $content->libraryName,
-        'majorVersion' => $content->libraryMajorVersion,
-        'minorVersion' => $content->libraryMinorVersion,
-        'embedTypes' => $content->libraryEmbedTypes,
-        'fullscreen' => $content->libraryFullscreen,
+      $content['library'] = array(
+        'id' => $content['libraryId'],
+        'name' => $content['libraryName'],
+        'majorVersion' => $content['libraryMajorVersion'],
+        'minorVersion' => $content['libraryMinorVersion'],
+        'embedTypes' => $content['libraryEmbedTypes'],
+        'fullscreen' => $content['libraryFullscreen'],
       );
-      unset($content->libraryId, $content->libraryName, $content->libraryEmbedTypes, $content->libraryFullscreen);
+      unset($content['libraryId'], $content['libraryName'], $content['libraryEmbedTypes'], $content['libraryFullscreen']);
       
       if ($this->development_mode & H5PDevelopment::MODE_CONTENT) {
-        // TODO: Load JSON from file.
-        /*$json_content_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . $id . '/content.json');
+        // TODO: Remove Drupal specific stuff
+        $json_content_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . $id . '/content.json');
         if (file_exists($json_content_path) === TRUE) {
           $json_content = file_get_contents($json_content_path);
           if (json_decode($json_content, TRUE) !== FALSE) {
             drupal_set_message(t('Invalid json in json content'), 'warning');
           }
-          $content->params = $json_content;
-        }*/
+          $content['params'] = $json_content;
+        }
       }
     }
 
@@ -1387,19 +1387,19 @@ class H5PCore {
         $dependency = $developmentLibraries[$libraryId];
       }
       else {
-        $dependency->path = $this->path . '/libraries/' . $libraryId;
-        $dependency->preloadedJs = explode(',', $dependency->preloadedJs);
-        $dependency->preloadedCss = explode(',', $dependency->preloadedCss);
+        $dependency['path'] = $this->path . '/libraries/' . $libraryId;
+        $dependency['preloadedJs'] = explode(',', $dependency['preloadedJs']);
+        $dependency['preloadedCss'] = explode(',', $dependency['preloadedCss']);
       }
       
-      if (empty($dependency->preloadedJs) === FALSE) {
-        foreach ($dependency->preloadedJs as $file) {
-          $files['scripts'][] = $dependency->path . '/' . trim(isset($file->path) ? $file->path : $file);
+      if (empty($dependency['preloadedJs']) === FALSE) {
+        foreach ($dependency['preloadedJs'] as $file) {
+          $files['scripts'][] = $dependency['path'] . '/' . trim(isset($file['path']) ? $file['path'] : $file);
         }
       }
-      if ($dependency->dropCss !== '1' && empty($dependency->preloadedCss) === FALSE) {
-        foreach ($dependency->preloadedCss as $file) {
-          $files['styles'][] = $dependency->path . '/' . trim(isset($file->path) ? $file->path : $file);
+      if ($dependency['dropCss'] !== '1' && empty($dependency['preloadedCss']) === FALSE) {
+        foreach ($dependency['preloadedCss'] as $file) {
+          $files['styles'][] = $dependency['path'] . '/' . trim(isset($file['path']) ? $file['path'] : $file);
         }
       }
     }
@@ -1444,7 +1444,6 @@ class H5PCore {
       // Try to load from DB.
       $semantics = $this->db->loadLibrarySemantics($name, $majorVersion, $minorVersion);
     }
-    
     
     if ($semantics !== NULL) {
       $semantics = json_decode($semantics);
@@ -1537,7 +1536,7 @@ class H5PCore {
    *  On the form {machineName} {majorVersion}.{minorVersion}
    */
   public static function libraryToString($library, $folderName = FALSE) {
-    return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
+    return (isset($library['machineName']) ? $library['machineName'] : $library['name']) . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
 
   /**
