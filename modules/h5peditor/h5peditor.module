@@ -200,7 +200,7 @@ function h5peditor_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       if (!isset($node->h5p_type) || $node->h5p_type == 'upload') {
         return;
       }
-      
+
       $editor = h5peditor_get_instance();
       $content_id = h5p_get_content_id($node);
 
@@ -240,7 +240,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
   $editor = h5peditor_get_instance();
   
   // TODO: Make Drupal cache result?
-  // TODO: Consider how smart it really is to do it this way? We are not leveraging browser caching at all, and each lib does not have that many files.
+  // TODO: Consider if we should leverage browser caching by just using .js files instead of eval, or a combination.
 
   drupal_set_header("Cache-Control: no-cache");
   drupal_set_header('Content-type: application/json');
