@@ -58,7 +58,7 @@ function h5p_schema() {
         'default' => 0,
       ),
     ),
-    'primary key' => array('content_id', 'library_id'),
+    'primary key' => array('content_id', 'library_id', 'dependency_type'),
   );
 
   $schema['h5p_libraries'] = array(
@@ -412,6 +412,7 @@ function h5p_update_6105(&$sandbox) {
   $ret = array();
     
   if (isset($sandbox['content']) === FALSE) {
+    db_drop_primary_key($ret, 'h5p_nodes_libraries');
     db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
       'description' => "0 = dynamic, 1 = preloaded, 2 = editor",
       'type' => 'int',
@@ -419,6 +420,8 @@ function h5p_update_6105(&$sandbox) {
       'unsigned' => TRUE,
       'not null' => TRUE,
       'default' => 1,
+    ), array(
+      'primary key' => array('content_id', 'library_id', 'dependency_type')
     ));
   
     // Update h5p_nodes_libraries to get all dependencies.
