@@ -423,6 +423,11 @@ function h5p_update_6105(&$sandbox) {
     ), array(
       'primary key' => array('content_id', 'library_id', 'dependency_type')
     ));
+    
+    $result = end($ret);
+    if ($result['success'] === FALSE) {
+      return $ret; // Do not update nodes if update failed.
+    }
   
     // Update h5p_nodes_libraries to get all dependencies.
     $result = db_query("
