@@ -47,7 +47,7 @@ class H5peditor {
    * @return boolean
    */
   public function createDirectories($id) {
-    $this->content_directory = $this->files_directory . '/content/' . $id . '/';
+    $this->content_directory = $this->files_directory . '/h5p/content/' . $id . '/';
 
     $sub_directories = array('', 'files', 'images', 'videos', 'audios');
     foreach ($sub_directories AS $sub_directory) {
@@ -137,7 +137,7 @@ class H5peditor {
   private function processField(&$field, &$params, &$files, &$libraries) {
     static $h5peditor_path;
     if (!$h5peditor_path) {
-      $h5peditor_path = $this->files_directory . '/editor/';
+      $h5peditor_path = $this->files_directory . '/h5peditor/';
     }
     switch ($field->type) {
       case 'file':
@@ -227,7 +227,7 @@ class H5peditor {
       if (empty($library['preloadedJs']) === FALSE) {
         foreach (explode(',', $library['preloadedJs']) as $js_path) {
           // TODO: Fix path
-          $jsFilePath = $this->files_directory . '/libraries/' . H5PCore::libraryToString($library, TRUE) . '/' . trim($js_path);
+          $jsFilePath = $this->files_directory . '/h5p/libraries/' . H5PCore::libraryToString($library, TRUE) . '/' . trim($js_path);
           if (!isset($libraryData->javascript[$jsFilePath])) {
             $libraryData->javascript[$jsFilePath] = '';
           }
@@ -246,7 +246,7 @@ class H5peditor {
       // Stylesheets
       if (!empty($library['preloadedCss'])) {
         foreach (explode(',', $library['preloadedCss']) as $css_path) {
-          $cssFilePath = $this->files_directory . '/libraries/' . H5PCore::libraryToString($library, TRUE) . '/' . trim($css_path);
+          $cssFilePath = $this->files_directory . '/h5p/libraries/' . H5PCore::libraryToString($library, TRUE) . '/' . trim($css_path);
           H5peditor::buildCssPath(NULL, $this->basePath . dirname($cssFilePath) . '/');
           $css = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents($cssFilePath));
           $libraryData->css[$cssFilePath] = $css;
