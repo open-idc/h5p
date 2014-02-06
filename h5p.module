@@ -340,7 +340,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
       );
       
       $h5p = h5p_get_instance();
-      $files = $h5p->loadContentDependencies($content_id);
+      $files = $h5p->loadContentDependencies($content_id, H5PCore::DEPENDENCY_TYPE_PRELOADED);
       $embed = $h5p->determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
       if ($embed === 'div') {
         h5p_add_files_and_settings_div($settings, $files);

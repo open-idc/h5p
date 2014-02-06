@@ -26,7 +26,7 @@ class H5peditor {
     'scripts/h5peditor-none.js',
     'ckeditor/ckeditor.js',
   );
-  private $storage, $files_directory, $basePath, $development;
+  private $h5p, $storage, $files_directory, $basePath;
 
   /**
    * Constructor.
@@ -34,11 +34,11 @@ class H5peditor {
    * @param object $storage
    * @param string $files_directory
    */
-  function __construct($storage, $filesDirectory, $basePath, $development = NULL) {
+  function __construct($h5p, $storage, $filesDirectory, $basePath) {
+    $this->h5p = $h5p;
     $this->storage = $storage;
     $this->files_directory = $filesDirectory;
     $this->basePath = $basePath;
-    $this->development = $development;
   }
   
   /**
@@ -66,8 +66,8 @@ class H5peditor {
   
     $libraries = $this->storage->getLibraries($libraries === NULL ? NULL : $libraries);
     
-    if ($this->development !== NULL) {
-      $devLibs = $this->development->getLibraries();
+    if ($this->h5p->development_mode & H5PDevelopment::MODE_LIBRARY) {
+      $devLibs = $this->h5p->development->getLibraries();
       
       // Replace libraries with devlibs
       for ($i = 0, $s = count($libraries); $i < $s; $i++) {
@@ -132,25 +132,25 @@ class H5peditor {
     $oldLibraries = array($oldLibrary);
 
     // Find new libraries and files.
-    $this->processSemantics($newFiles, $newLibraries, $this->storage->getSemantics($newLibrary['machineName'], $newLibrary['majorVersion'], $newLibrary['minorVersion']), $newParameters);
-
-    $h5pStorage = _h5p_get_instance('storage');
+    $this->processSemantics($newFiles, $newLibraries, $this->h5p->loadLibrarySemantics($newLibrary['machineName'], $newLibrary['majorVersion'], $newLibrary['minorVersion']), $newParameters);
 
     $librariesUsed = $newLibraries; // Copy
 
     foreach ($newLibraries as $library) {
-      $libraryFull = $h5pStorage->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      $libraryFull = $this->h5p->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $librariesUsed[$library['machineName']]['library'] = $libraryFull;
       $librariesUsed[$library['machineName']]['type'] = H5PCore::DEPENDENCY_TYPE_PRELOADED;
-      $h5pStorage->findLibraryDependencies($librariesUsed, $libraryFull);
+      $this->h5p->findLibraryDependencies($librariesUsed, $libraryFull);
     }
 
+    // TODO: Prevent usage of Drupal here.
+    $h5pStorage = _h5p_get_instance('storage');
     $h5pStorage->h5pF->deleteLibraryUsage($contentId);
     $h5pStorage->h5pF->saveLibraryUsage($contentId, $librariesUsed);
 
     if ($oldLibrary) {
       // Find old files and libraries.
-      $this->processSemantics($oldFiles, $oldLibraries, $this->storage->getSemantics($oldLibrary['machineName'], $oldLibrary['majorVersion'], $oldLibrary['minorVersion']), $oldParameters);
+      $this->processSemantics($oldFiles, $oldLibraries, $this->h5p->loadLibrarySemantics($oldLibrary['machineName'], $oldLibrary['majorVersion'], $oldLibrary['minorVersion']), $oldParameters);
 
       // Remove old files.
       for ($i = 0, $s = count($oldFiles); $i < $s; $i++) {
@@ -236,7 +236,7 @@ class H5peditor {
         if (isset($params->library) && isset($params->params)) {
           $libraryData = h5peditor_get_library_property($params->library);
           $libraries[$libraryData['machineName']] = $libraryData;
-          $this->processSemantics($files, $libraries, $this->storage->getSemantics($libraryData['machineName'], $libraryData['majorVersion'], $libraryData['minorVersion']), $params->params);
+          $this->processSemantics($files, $libraries, $this->h5p->loadLibrarySemantics($libraryData['machineName'], $libraryData['majorVersion'], $libraryData['minorVersion']), $params->params);
         }
         break;
 
@@ -263,9 +263,9 @@ class H5peditor {
    * TODO: Consider moving to core.
    */
   public function getLibraryLanguage($machineName, $majorVersion, $minorVersion) {
-    if ($this->development !== NULL) {
+    if ($this->h5p->development_mode & H5PDevelopment::MODE_LIBRARY) {
       // Try to get language development library first.
-      $language = $this->development->getLanguage($machineName, $majorVersion, $minorVersion);
+      $language = $this->h5p->development->getLanguage($machineName, $majorVersion, $minorVersion);
     }
     
     if (isset($language) === FALSE) {
@@ -276,35 +276,27 @@ class H5peditor {
   }
   
   /**
-   * TODO: Consider moving to core.
+   * Return all libraries used by the given editor library.
+   *
+   * @param string $machineName Library identfier part 1
+   * @param int $majorVersion Library identfier part 2
+   * @param int $minorVersion Library identfier part 3
    */
-  public function getEditorLibraries($machineName, $majorVersion, $minorVersion) {
-    if ($this->development !== NULL) {
-      // Try to get development editor libraries first
-      $editors = $this->development->getLibraryEditors($machineName, $majorVersion, $minorVersion);
+  public function findEditorLibraries($machineName, $majorVersion, $minorVersion) {
+    $library = $this->h5p->loadLibrary($machineName, $majorVersion, $minorVersion);
+    $dependencies = array();
+    $this->h5p->findLibraryDependencies($dependencies, $library);
+    
+    $editorLibraries = array();
+    foreach ($dependencies as $dependency) {
+      if ($dependency['type'] !== H5PCore::DEPENDENCY_TYPE_EDITOR) {
+        continue; // Only load editor libraries.
+      }
+      $dependency['library']['dropCss'] = $dependency['dropCss'];
+      $editorLibraries[$dependency['library']['libraryId']] = $dependency['library'];
     }
     
-    if ($editors === NULL) {
-      $editors = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
-    }
-
-    return $editors;
-  }
-  
-  /**
-   * TODO: Consider moving to core.
-   */
-  public function getLibraryFiles($machineName, $majorVersion, $minorVersion) {
-    if ($this->development !== NULL) {
-      // Try to get language development library first.
-      $files = $this->development->getLibraryFiles($machineName, $majorVersion, $minorVersion);
-    }
-    
-    if ($files === NULL) {
-      $files = $this->storage->getLibraryFiles($machineName, $majorVersion, $minorVersion);
-    }
-    
-    return $files;
+    return $editorLibraries;
   }
 
   /**
@@ -316,49 +308,39 @@ class H5peditor {
   public function getLibraryData($machineName, $majorVersion, $minorVersion) {
     $libraryData = new stdClass();
     
-    $libraries = $this->storage->getEditorLibraries($machineName, $majorVersion, $minorVersion);
-    $library = reset($libraries);
-    
-    // TODO: Dev mode is probably broken since load library doesn't read from file.
-    $libraryData->semantics = $this->storage->getSemantics($library);
-
-    // TODO: Get language from $library.
+    $libraries = $this->findEditorLibraries($machineName, $majorVersion, $minorVersion);
+    $libraryData->semantics = $this->h5p->loadLibrarySemantics($machineName, $majorVersion, $minorVersion);
     $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
-    // TODO: langauge gets added a second time for the same library in JS futher down in this function.
 
-    // TODO: Remember to check dropLibraryCss...
-    foreach ($libraries as $library) {
-      $files = $this->getLibraryFiles($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      
-      // Javascripts
-      if (!empty($files['scripts'])) {
-        foreach ($files['scripts'] as $script) {
-          if (!isset($libraryData->javascript[$script])) {
-            $libraryData->javascript[$script] = '';
-          }
-          // TODO: rtrim and check substr(-1) === '}'? jsmin?
-          // TODO: Perhaps just using the JS files would be fine? This would leverage browser caching and reduce server load.
-          // TODO: Explain why we are using .= here.
-          $libraryData->javascript[$script] .= "\n" . file_get_contents($script);
+    $files = $this->h5p->getDependenciesFiles($libraries);
+    
+    // Javascripts
+    if (!empty($files['scripts'])) {
+      foreach ($files['scripts'] as $script) {
+        if (!isset($libraryData->javascript[$script])) {
+          $libraryData->javascript[$script] = '';
         }
+        // TODO: rtrim and check substr(-1) === '}'? jsmin?
+        // TODO: Perhaps just using the JS files would be fine? This would leverage browser caching and reduce server load.
+        // TODO: Explain why we are using .= here.
+        $libraryData->javascript[$script] .= "\n" . file_get_contents($script);
       }
-      
+    }
+    
+    // Stylesheets
+    if (!empty($files['styles'])) {
+      foreach ($files['styles'] as $css) {
+        H5peditor::buildCssPath(NULL, $this->basePath . dirname($css) . '/');
+        $libraryData->css[$css] = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents($css));
+      }
+    }
+
+    // Add translations for libraries.
+    foreach ($libraries as $library) {
       $language = $this->getLibraryLanguage($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-    
-    
-      // Languages
-      $language = $this->storage->getLanguage($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       if ($language !== NULL) {
         $lang = '; H5PEditor.language["' . $library['machineName'] . '"] = ' . $language . ';';
         $libraryData->javascript[md5($lang)] = $lang;
-      }
-      
-      // Stylesheets
-      if (!empty($files['styles'])) {
-        foreach ($files['styles'] as $css) {
-          H5peditor::buildCssPath(NULL, $this->basePath . dirname($css) . '/');
-          $libraryData->css[$css] = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents($css));
-        }
       }
     }
 
