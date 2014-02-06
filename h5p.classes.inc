@@ -408,8 +408,14 @@ class H5PDrupal implements H5PFrameworkInterface {
       }
     }
 
-    $editor = h5peditor_get_instance();
-    $editorLibraries = $editor->getEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion']);
+    if (module_exists('h5peditor')) {
+      $editor = h5peditor_get_instance();
+      // TODO: Move this function to core?
+      $editorLibraries = $editor->findEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion']);
+    }
+    else {
+      $editorLibraries = array();
+    }
 
     // Set language to drupals node language, or 'und' if not set.
     $exportLanguage = $language == TRUE ? $language : 'und';
@@ -458,16 +464,27 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements loadContentDependencies().
    */
-  public function loadContentDependencies($id) {
-    $result = db_query(
-      "SELECT hl.library_id, hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion, preloaded_css AS preloadedCss, preloaded_js AS preloadedJs, hnl.drop_css AS dropCss
-       FROM {h5p_nodes_libraries} hnl
-       JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
-       WHERE hnl.content_id = %d
-       AND hnl.dependency_type = %d", 
-       $id, 
-       H5PCore::DEPENDENCY_TYPE_PRELOADED
-    );
+  public function loadContentDependencies($id, $type = NULL) {
+    $query = 
+      "SELECT hl.library_id, 
+              hl.machine_name AS machineName, 
+              hl.major_version AS majorVersion, 
+              hl.minor_version AS minorVersion, 
+              hl.preloaded_css AS preloadedCss, 
+              hl.preloaded_js AS preloadedJs, 
+              hnl.drop_css AS dropCss,
+              hnl.dependency_type AS dependencyType
+        FROM {h5p_nodes_libraries} hnl
+        JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
+        WHERE hnl.content_id = %d";
+    $queryArgs = array($id);
+    
+    if ($type !== NULL) {
+      $query .= " AND hnl.dependency_type = %d";
+      $queryArgs[] = $type;
+    }
+    
+    $result = db_query($query, $queryArgs);
     
     $dependencies = array();
     while ($dependency = db_fetch_array($result)) {

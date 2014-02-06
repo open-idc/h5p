@@ -283,7 +283,14 @@ interface H5PFrameworkInterface {
    */
   public function loadContent($id);
   
-  public function loadContentDependencies($id);
+  /**
+   * Load dependencies for the given content of the given type.
+   *
+   * @param int $id content.
+   * @param int $type dependency.
+   * @return array
+   */
+  public function loadContentDependencies($id, $type = NULL);
 }
 
 /**
@@ -1011,7 +1018,7 @@ class H5PStorage {
 
       // Save what libraries is beeing used by this package/content
       $librariesInUse = array();
-      $this->findLibraryDependencies($librariesInUse, $this->h5pC->mainJsonData);
+      $this->h5pC->findLibraryDependencies($librariesInUse, $this->h5pC->mainJsonData);
       
       $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
       H5PCore::recursiveUnlink($this->h5pF->getUploadedH5pFolderPath());
@@ -1071,43 +1078,6 @@ class H5PStorage {
     $this->h5pC->copyTree($source_path, $destination_path);
 
     $this->h5pF->copyLibraryUsage($contentId, $copyFromId, $contentMainId);
-  }
-
-  /**
-   * Recusive. Goes through the dependency tree for the given library and 
-   * adds all the dependencies to the given array in a flat format.
-   * 
-   * @param array $librariesUsed Flat list of all dependencies.
-   * @param array $library To find all dependencies for.
-   * @param bool $editor Used interally to force all preloaded sub dependencies of an editor dependecy to be editor dependencies.
-   */
-  public function findLibraryDependencies(&$dependencies, $library, $editor = FALSE) {
-    foreach (array('dynamic', 'preloaded', 'editor') as $type) {
-      $property = $type . 'Dependencies';
-      if ($library[$property] === NULL) {
-        continue; // Skip, no such dependencies.
-      }
-      
-      if ($type === 'preloaded' && $editor === TRUE) {
-        // All preloaded dependencies of an editor library is set to editor.
-        $type = 'editor';
-      }
-      
-      foreach ($library[$property] as $dependency) {
-        $dependencyKey = $type . '-' . $dependency['machineName'];
-        if (isset($dependencies[$dependencyKey]) === TRUE) {
-          continue; // Skip, already have this.
-        }
-        
-        $dependencyType = H5PCore::dependencyStringToConstant($type);
-        $dependencyLibrary = $this->h5pF->loadLibrary($dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']);
-        $dependencies[$dependencyKey] = array(
-          'library' => $dependencyLibrary,
-          'type' => $dependencyType
-        );
-        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $dependencyType === H5PCore::DEPENDENCY_TYPE_EDITOR);
-      }
-    }
   }
 }
 
@@ -1205,7 +1175,16 @@ Class H5PExport {
       
       // Copies libraries to temp dir and create mention in h5p.json
       foreach($exportData['libraries'] as $library) {
-        $source = $h5pDir . 'libraries' . DIRECTORY_SEPARATOR . $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
+        if ($this->h5pC->development_mode & H5PDevelopment::MODE_LIBRARY) {
+          $devlib = $this->h5pC->development->getLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+          if ($devlib !== NULL) {
+            $source = $devlib['path'];
+          }
+        }
+        
+        if ($source === NULL) {
+          $source = $h5pDir . 'libraries' . DIRECTORY_SEPARATOR . $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
+        }
         $destination = $tempPath . DIRECTORY_SEPARATOR . $library['machineName'];
         $this->h5pC->copyTree($source, $destination);
       }
@@ -1303,7 +1282,7 @@ class H5PCore {
   public $contentJsonData;
   public $mainJsonData;
   
-  private $db, $path, $development_mode, $development;
+  public $db, $path, $development_mode, $development;
 
   /**
    * Constructor for the H5PCore
@@ -1368,26 +1347,38 @@ class H5PCore {
    * @param int $id for content.
    * @return array
    */
-  public function loadContentDependencies($id) {
-    $dependencies = $this->db->loadContentDependencies($id);
+  public function loadContentDependencies($id, $type = NULL) {
+    $dependencies = $this->db->loadContentDependencies($id, $type);
   
     if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
       $developmentLibraries = $this->development->getLibraries();
+      
+      foreach ($dependencies as $key => $dependency) {
+        $libraryString = H5PCore::libraryToString($dependency);
+        if (isset($developmentLibraries[$libraryString])) {
+          $dependencies[$key] = $developmentLibraries[$libraryString];
+        }
+      }
     }
     
+    return $this->getDependenciesFiles($dependencies);
+  }
+  
+  /**
+   * Return file paths for all dependecies files.
+   *
+   * @param array $dependencies
+   * @return array files.
+   */
+  public function getDependenciesFiles($dependencies) {
     $files = array(
       'scripts' => array(),
       'styles' => array(),
     );
     
     foreach ($dependencies as $dependency) {
-      $libraryId = H5PCore::libraryToString($dependency, TRUE);
-      
-      if (isset($developmentLibraries[$libraryId])) {
-        $dependency = $developmentLibraries[$libraryId];
-      }
-      else {
-        $dependency['path'] = $this->path . '/libraries/' . $libraryId;
+      if (isset($dependency['path']) === FALSE) {
+        $dependency['path'] = $this->path . '/libraries/' . H5PCore::libraryToString($dependency, TRUE);
         $dependency['preloadedJs'] = explode(',', $dependency['preloadedJs']);
         $dependency['preloadedCss'] = explode(',', $dependency['preloadedCss']);
       }
@@ -1451,6 +1442,62 @@ class H5PCore {
     }
     
     return $semantics;
+  }
+  
+  /**
+   * Load library.
+   *
+   * @return array or null.
+   */
+  public function loadLibrary($name, $majorVersion, $minorVersion) {
+    if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
+      // Try to load from dev
+      $library = $this->development->getLibrary($name, $majorVersion, $minorVersion);
+    }
+    
+    if ($library === NULL) {
+      // Try to load from DB.
+      $library = $this->db->loadLibrary($name, $majorVersion, $minorVersion);
+    }
+  
+    return $library;
+  }
+  
+  /**
+   * Recusive. Goes through the dependency tree for the given library and 
+   * adds all the dependencies to the given array in a flat format.
+   * 
+   * @param array $librariesUsed Flat list of all dependencies.
+   * @param array $library To find all dependencies for.
+   * @param bool $editor Used interally to force all preloaded sub dependencies of an editor dependecy to be editor dependencies.
+   */
+  public function findLibraryDependencies(&$dependencies, $library, $editor = FALSE) {
+    foreach (array('dynamic', 'preloaded', 'editor') as $type) {
+      $property = $type . 'Dependencies';
+      if ($library[$property] === NULL) {
+        continue; // Skip, no such dependencies.
+      }
+      
+      if ($type === 'preloaded' && $editor === TRUE) {
+        // All preloaded dependencies of an editor library is set to editor.
+        $type = 'editor';
+      }
+      
+      foreach ($library[$property] as $dependency) {
+        $dependencyKey = $type . '-' . $dependency['machineName'];
+        if (isset($dependencies[$dependencyKey]) === TRUE) {
+          continue; // Skip, already have this.
+        }
+        
+        $dependencyType = H5PCore::dependencyStringToConstant($type);
+        $dependencyLibrary = $this->loadLibrary($dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']);
+        $dependencies[$dependencyKey] = array(
+          'library' => $dependencyLibrary,
+          'type' => $dependencyType
+        );
+        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $dependencyType === H5PCore::DEPENDENCY_TYPE_EDITOR);
+      }
+    }
   }
 
   /**

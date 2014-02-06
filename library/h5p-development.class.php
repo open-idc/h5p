@@ -111,6 +111,19 @@ class H5PDevelopment {
   }
   
   /**
+   * Get library
+   * 
+   * @param string $name of the library.
+   * @param int $majorVersion of the library.
+   * @param int $minorVersion of the library.
+   * @return array library.
+   */
+  public function getLibrary($name, $majorVersion, $minorVersion) {
+    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+    return isset($this->libraries[$library]) === TRUE ? $this->libraries[$library] : NULL;
+  }
+  
+  /**
    * Get semantics for the given library.
    * 
    * @param string $name of the library.
@@ -147,78 +160,6 @@ class H5PDevelopment {
   }
   
   /**
-   * Get editor library dependencies.
-   *
-   * @param string $name of the library.
-   * @param int $majorVersion of the library.
-   * @param int $minorVersion of the library.
-   * @return null NULL.
-   */
-  public function getLibraryEditors($name, $majorVersion, $minorVersion) {
-    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-    
-    if (isset($this->libraries[$library]) === FALSE) {
-      return NULL;
-    }
-    $library = $this->libraries[$library];
-    
-    if ($library->editorDependencies === NULL) {
-      return NULL;
-    }
-    
-    // Apparently all dependencies has to be in the database.
-    $editorlibraries = array();
-    for ($i = 0, $s = count($library->editorDependencies); $i < $s; $i++) {
-      $elid = $this->innerface->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      if ($elid === FALSE) {
-        continue; // This dependency does not exist. TODO: Call somebody?
-      }
-      
-      $editorlibraries[$elid] = $library->editorDependencies[$i];
-    }
-    
-    return $editorlibraries;
-  }
-  
-  /**
-   * Get file paths for proloaded scripts and styles for the library in question.
-   *
-   * @param string $name of the library.
-   * @param int $majorVersion of the library.
-   * @param int $minorVersion of the library.
-   * @return array with script and styles. NULL if not a dev lib.
-   */
-  public function getLibraryFiles($name, $majorVersion, $minorVersion) {
-    $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-
-    if (isset($this->libraries[$library]) === FALSE) {
-      return NULL;
-    }
-    $library = $this->libraries[$library];
-    
-    $file_paths = array(
-      'scripts' => array(),
-      'styles' => array()
-    );
-  
-    // Add scripts
-    if (isset($library['preloadedJs']) === TRUE) {
-      for ($i = 0, $s = count($library['preloadedJs']); $i < $s; $i++) {
-        $file_paths['scripts'][] = $library['path'] . '/' . $library['preloadedJs'][$i]['path'];
-      }
-    }
-    
-    // Add styles
-    if (isset($library['preloadedCss']) === TRUE) {
-      for ($i = 0, $s = count($library['preloadedCss']); $i < $s; $i++) {
-        $file_paths['styles'][] = $library['path'] . '/' . $library['preloadedCss'][$i]['path'];
-      }
-    }
-
-    return $file_paths;
-  }
-  
-  /**
    * Writes library as string on the form "name majorVersion.minorVersion"
    *
    * @param string $name Machine readable library name
@@ -227,7 +168,7 @@ class H5PDevelopment {
    * @return string Library identifier.
    */
   public static function libraryToString($name, $majorVersion, $minorVersion) {
-    return $name . '-' . $majorVersion . '.' . $minorVersion;
+    return $name . ' ' . $majorVersion . '.' . $minorVersion;
   }
 }
 
