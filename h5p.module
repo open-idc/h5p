@@ -282,7 +282,7 @@ function h5p_update($node) {
   // Also we won't have to check if the file exists all the time.
 
   // Note that ()-> will not work prior to PHP 5.3. This could be an issue since many use 5.2 for Drupal 6.
-  _h5p_get_instance('export')->deleteExport($node->nid);
+  _h5p_get_instance('export')->deleteExport($content_id);
   _h5p_clear_js_and_css_cache();
 }
 
