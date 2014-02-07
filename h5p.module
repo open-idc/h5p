@@ -331,7 +331,7 @@ function h5p_get_embed_type($node) {
 function h5p_view($node, $view_mode = 'full') {
   node_object_prepare($node);
   if ($view_mode === 'full') {
-    if (isset($node->main_library)) {
+    if (isset($node->in_preview) === FALSE && isset($node->main_library) === TRUE) {
       $content_id = h5p_get_content_id($node);
       $main_library = $node->main_library['machineName'];
       
@@ -355,7 +355,8 @@ function h5p_view($node, $view_mode = 'full') {
         }
       }
     }
-    else {
+    
+    if (isset($html) === FALSE) {
       $html = '<div>' . t('Sorry, preview of H5P content is not yet available.') . '</div>';
     }
 
