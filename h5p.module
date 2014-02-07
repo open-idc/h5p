@@ -691,6 +691,7 @@ function h5p_field_extra_fields() {
     ),
     'display' => array(
       'h5p' => array(
+        'label' => t('Interactive content'),
         'description' => t('Interactive content'),
         'weight' => 2,
       )
