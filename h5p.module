@@ -202,7 +202,7 @@ function h5p_insert($node) {
  * Implementation of hook_update().
  */
 function h5p_update($node) {
-  $content_id = h5p_get_content_id($node)
+  $content_id = h5p_get_content_id($node);
 
   if (isset($_SESSION['h5p_upload'])) {
     if ($node->revision && variable_get('h5p_revisioning', 1)) {
