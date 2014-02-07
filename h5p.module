@@ -19,8 +19,8 @@
  */
 function h5p_menu() {
   $items = array();
-  $items['admin/config/h5p'] = array(
-    'title' => 'h5p',
+  $items['admin/config/system/h5p'] = array(
+    'title' => 'H5P',
     'description' => 'Configure the location of h5p files.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('h5p_admin_settings'),
