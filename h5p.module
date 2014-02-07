@@ -231,14 +231,14 @@ function h5p_update($node) {
         SET json_content = '%s', embed_type = '%s', main_library_id = '%d'
         WHERE content_id = %d", $node->json_content, $node->embed_type, $node->main_library_id, $content_id
       );
-      
-      // TODO: Consider only running if a library has been updated or content dependencies has changed.
-      _h5p_clear_js_and_css_cache();
     }
     else {
       // No rows, insert new row. (this happens if the module is reinstalled)
       h5p_insert($node);
     }
+    
+    // TODO: Consider only running if a library has been updated or content dependencies has changed.
+    _h5p_clear_js_and_css_cache();
   }
 
   $export = _h5p_get_instance('export');
