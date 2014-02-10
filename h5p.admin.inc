@@ -148,7 +148,7 @@ function h5p_library_list() {
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content. 
-  return '<div class="h5p-admin-add-library"><div class="add-button">' . t('Add H5P libraries') . '</div>' . drupal_get_form('h5p_library_upload_form') . '</div><div id="h5p-admin-container"></div>';
+  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . drupal_get_form('h5p_library_upload_form') . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3><div id="h5p-admin-container"></div>';
 }
 
 /**
@@ -241,7 +241,8 @@ function _h5p_admin_add_generic_css_and_js($module_path) {
  */
 function h5p_library_upload_form(&$form_state) {
   $form['#attributes'] = array(
-    'enctype' => 'multipart/form-data'
+    'enctype' => 'multipart/form-data',
+    'class' => 'h5p-admin-upload-libraries-form'
   );
 
   $form['h5p'] = array(
