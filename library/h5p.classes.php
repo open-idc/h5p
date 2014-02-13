@@ -1399,28 +1399,6 @@ class H5PCore {
   }
   
   /**
-   * Determine the correct embed type to use.
-   * TODO: Use constants.
-   *
-   * @return string 'div' or 'iframe'.
-   */
-  public function determineEmbedType($contentEmbedType, $libraryEmbedTypes) {
-    // Detect content embed type
-    $embedType = strpos(strtolower($contentEmbedType), 'div') !== FALSE ? 'div' : 'iframe';
-    
-    if ($libraryEmbedTypes !== NULL && $libraryEmbedTypes !== '') {
-      // Check that embed type is available for library
-      $embedTypes = strtolower($libraryEmbedTypes);
-      if (strpos($embedTypes, $embedType) === FALSE) {
-        // Not available, pick default.
-        $embedType = strpos($embedTypes, 'div') !== FALSE ? 'div' : 'iframe';
-      }  
-    }
-    
-    return $embedType;
-  }
-  
-  /**
    * Load library semantics.
    *
    * @return string 'div' or 'iframe'.
@@ -1644,6 +1622,28 @@ class H5PCore {
         return 'dynamic';
     }
     return $dependencyType;
+  }
+  
+  /**
+   * Determine the correct embed type to use.
+   * TODO: Use constants.
+   *
+   * @return string 'div' or 'iframe'.
+   */
+  public static function determineEmbedType($contentEmbedType, $libraryEmbedTypes) {
+    // Detect content embed type
+    $embedType = strpos(strtolower($contentEmbedType), 'div') !== FALSE ? 'div' : 'iframe';
+    
+    if ($libraryEmbedTypes !== NULL && $libraryEmbedTypes !== '') {
+      // Check that embed type is available for library
+      $embedTypes = strtolower($libraryEmbedTypes);
+      if (strpos($embedTypes, $embedType) === FALSE) {
+        // Not available, pick default.
+        $embedType = strpos($embedTypes, 'div') !== FALSE ? 'div' : 'iframe';
+      }  
+    }
+    
+    return $embedType;
   }
 }
 
