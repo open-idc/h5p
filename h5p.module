@@ -593,9 +593,11 @@ function _h5p_get_instance($type) {
     $development_mode = H5PDevelopment::MODE_NONE;
     if (variable_get('h5p_content_dev_mode', '0') === 1) {
       $development_mode |= H5PDevelopment::MODE_CONTENT;
+      drupal_set_message(t('H5P content development mode is enabled.'), 'warning');
     }
     if (variable_get('h5p_library_development', 0) === 1) {
       $development_mode |= H5PDevelopment::MODE_LIBRARY;
+      drupal_set_message(t('H5P library development directory is enabled.'), 'warning');
     }
     
     $core = new H5PCore($interface, _h5p_get_h5p_path(), $language->language, $development_mode);
