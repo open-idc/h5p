@@ -224,9 +224,13 @@ function h5p_validate($node, &$form) {
  */
 function h5p_insert($node) {
   // TODO: Make sure node_load -> node_save works by implementing presave
+
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
     $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
+    
+    // TODO: Consider only running if a library has been updated or content dependencies has changed.
+    _h5p_clear_js_and_css_cache();
   }
   else {
     db_query(
@@ -242,7 +246,7 @@ function h5p_insert($node) {
  */
 function h5p_update($node) {
   $content_id = h5p_get_content_id($node);
-  
+
   if (isset($_SESSION['h5p_upload'])) {
     if ($node->revision && variable_get('h5p_revisioning', 1)) {
       h5p_insert($node);
@@ -250,6 +254,9 @@ function h5p_update($node) {
     else {
       $h5p_core = _h5p_get_instance('storage');
       $h5p_core->updatePackage($content_id, $node->nid);
+
+      // TODO: Consider only running if a library has been updated or content dependencies has changed.
+      _h5p_clear_js_and_css_cache();
     }
   }
   elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
@@ -275,15 +282,17 @@ function h5p_update($node) {
       // No rows, insert new row. (this happens if the module is reinstalled)
       h5p_insert($node);
     }
+    
+    // TODO: Consider only running if a library has been updated or content dependencies has changed.
+    _h5p_clear_js_and_css_cache();
   }
 
   // TODO: Consider creating the .h5p for export here, or use rewrite like image cacheing 
   // in Drupal 7. This way we can prevent broken links if somebody links directly to the .h5p file.
   // Also we won't have to check if the file exists all the time.
 
-  // Note that ()-> will not work prior to PHP 5.3. This could be an issue since many use 5.2 for Drupal 6.
-  _h5p_get_instance('export')->deleteExport($content_id);
-  _h5p_clear_js_and_css_cache();
+  $export = _h5p_get_instance('export');
+  $export->deleteExport($content_id);
 }
 
 /**
@@ -296,7 +305,9 @@ function h5p_delete($node) {
   while ($content_id = db_result($res)) {
     $h5p_core->deletePackage($content_id);
   }
-  _h5p_get_instance('export')->deleteExport($node->nid);
+  
+  $export = _h5p_get_instance('export');
+  $export->deleteExport($content_id);
 }
 
 /**
