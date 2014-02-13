@@ -10,10 +10,6 @@ var H5PLibraryList= H5PLibraryList || {};
     
     // Create library list
     $adminContainer.append(H5PLibraryList.createLibraryList(H5PIntegration.getLibraryList()));
-    
-    $('.h5p-admin-add-library .add-button').on('click', function () {
-      $('.h5p-admin-add-library').toggleClass('expanded');
-    });
   };
   
   /**
@@ -41,20 +37,23 @@ var H5PLibraryList= H5PLibraryList || {};
         '<button class="h5p-admin-delete-library">&#xf057;</button>'
       ]);
       
-      if(library.contentCount > 0) {
-        $('.h5p-admin-delete-library', $libraryRow).addClass('disabled');
-      }
-      
       // Open details view when clicked
-      $libraryRow.on('click', function (){
+      $('.h5p-admin-view-library', $libraryRow).on('click', function () {
         window.location.href = library.detailsUrl;
       });
       
-      $('.h5p-admin-delete-library', $libraryRow).on('click', function (event) {
-        window.location.href = library.deleteUrl;
-        return false;
-      });
-      
+      var $deleteButton = $('.h5p-admin-delete-library', $libraryRow);
+      if (library.contentCount !== 0) {
+        // Disabled delete if content.
+        $deleteButton.attr('disabled', true); //.addClass('disabled');
+      }
+      else {
+        // Go to delete page om click.
+        $deleteButton.on('click', function () {
+          window.location.href = library.deleteUrl;
+        });
+      }
+
       $table.append($libraryRow);
     });
     

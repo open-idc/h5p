@@ -31,9 +31,6 @@
   font-weight: bold;
 }
 
-.h5p-admin-table.libraries tbody tr {
-  cursor: pointer;
-}
 .h5p-admin-table.libraries th:last-child,
 .h5p-admin-table.libraries td:last-child {
   text-align: right;
@@ -41,31 +38,35 @@
 
 .h5p-admin-table.libraries button {
   font-family: H5PFontAwesome4;
-  margin-right: 10px;
   font-size: 1.6em;
+  font-style: normal;
+  font-weight: normal;
+  margin-right: 10px;
   cursor: pointer;
   border: 1px solid #AAA;
   border-radius: .2em;
   line-height: 1.6em;
   width: 1.6em;
-  background-color: #ddd;
+  background-color: #e0e0e0;
+  text-shadow: 0 0 0.5em #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .h5p-admin-table.libraries button:hover,
 .h5p-admin-table.libraries .h5p-admin-delete-library:hover {
-  background-color: #AAA;
+  background-color: #d0d0d0;
 }
 
-.h5p-admin-table.libraries .h5p-admin-delete-library.disabled:hover {
-  background-color: #ddd;
+.h5p-admin-table.libraries .h5p-admin-delete-library:disabled:hover {
+  background-color: #e0e0e0;
 }
 
-.h5p-admin-delete-library {
-  color: red; 
+.h5p-admin-table.libraries .h5p-admin-delete-library {
+  color: #f9010f; 
 }
-
-.h5p-admin-delete-library.disabled {
-  cursor: auto;
-  color: #CCC;
+.h5p-admin-table.libraries .h5p-admin-delete-library:disabled {
+  cursor: default;
+  color: #c0c0c0;
 }
 
 .h5p-library-info {
@@ -211,51 +212,16 @@ button.h5p-admin.disabled:hover {
   display: inline-block;
 }
 
-.h5p-admin-add-library {
-  margin: 20px 0;
+.h5p-admin-header {
+  margin-top: 1.5em;
 }
-
-.h5p-admin-add-library > .add-button {
-  display: inline;
-  padding: 5px 10px;
-  
-  border: 1px solid #AAA;
-  border-radius: 3px;
-  background: #DDD;
-  font-size: 1.2em;
-  
-  cursor: pointer;
-}
-
-.h5p-admin-add-library > .add-button:hover {
-  background-color: #AAA
-}
-
-.h5p-admin-add-library > .add-button:before {
-  font-family: H5PFontAwesome4;
-  margin-right: 10px;
-  content: "\f055";
-  font-size: 1.2em;
-  color: green;
-} 
-
-.h5p-admin-add-library .form-button, 
-.h5p-admin-add-library .form-submit {
+#h5p-library-upload-form.h5p-admin-upload-libraries-form {
+  position: relative;
   margin: 0;
-}
 
-.h5p-admin-add-library form {
-  display: none;
 }
-
-.h5p-admin-add-library.expanded form {
-  display: block;
-  margin-bottom: 0 !important;
-}
-
-.h5p-admin-add-library.expanded {
-  display: inline-block;
-  padding: 10px;
-  border: 1px solid #AAA;
-  border-radius: 3px;
+.h5p-admin-upload-libraries-form .form-submit {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
