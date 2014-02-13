@@ -355,7 +355,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
       
       $h5p = h5p_get_instance();
       $files = $h5p->loadContentDependencies($content_id, H5PCore::DEPENDENCY_TYPE_PRELOADED);
-      $embed = $h5p->determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
+      $embed = H5PCore::determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
       if ($embed === 'div') {
         h5p_add_files_and_settings_div($settings, $files);
         $html = '<div class="h5p-content" data-class="' . $node->main_library['name'] . '" data-content-id="' .  $content_id . '"></div>';
@@ -593,11 +593,11 @@ function _h5p_get_instance($type) {
     $development_mode = H5PDevelopment::MODE_NONE;
     if (variable_get('h5p_content_dev_mode', '0') === 1) {
       $development_mode |= H5PDevelopment::MODE_CONTENT;
-      drupal_set_message(t('H5P content development mode is enabled.'), 'warning');
+      drupal_set_message(t('H5P content development mode is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/settings/h5p'))), 'warning', FALSE);
     }
     if (variable_get('h5p_library_development', 0) === 1) {
       $development_mode |= H5PDevelopment::MODE_LIBRARY;
-      drupal_set_message(t('H5P library development directory is enabled.'), 'warning');
+      drupal_set_message(t('H5P library development directory is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/settings/h5p'))), 'warning', FALSE);
     }
     
     $core = new H5PCore($interface, _h5p_get_h5p_path(), $language->language, $development_mode);
