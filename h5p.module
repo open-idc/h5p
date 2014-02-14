@@ -545,8 +545,9 @@ function h5p_filter_json_content($node) {
 function _h5p_check_settings() {
   // File paths
   $path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p'));
-
-  foreach (array('temp', 'libraries', 'content', 'exports', 'development') as $directory) {
+  
+  // Creating directories - the first empty string is for creating the parent H5P directory
+  foreach (array('', 'temp', 'libraries', 'content', 'exports', 'development') as $directory) {
     $directory = $path . '/' . $directory;
     if (file_check_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS) === FALSE) {
       return FALSE;
