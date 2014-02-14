@@ -407,6 +407,11 @@ function h5p_update_6104() {
 
 /**
  * Implementation of hook_update_N().
+ * 
+ * Renames the h5p_nodes_libraries.preloaded field to dependency_type,
+ * and converts it to contain an integer.
+ * 
+ * Updates h5p_nodes_libraries to get all dependencies.
  */
 function h5p_update_6105(&$sandbox) {
   $ret = array();
@@ -439,7 +444,7 @@ function h5p_update_6105(&$sandbox) {
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
     ");
 
-    $sandbox['content'] = array();      
+    $sandbox['content'] = array();
     while ($content = db_fetch_object($result)) {
       $sandbox['content'][] = $content;
     }
@@ -468,11 +473,11 @@ function h5p_update_6105(&$sandbox) {
  */
 function h5p_save_content_dependencies($content) {
   $i = _h5p_get_instance('interface');
-  $s = _h5p_get_instance('storage');
+  $core = _h5p_get_instance('core');
   
   $library = $i->loadLibrary($content->libraryName, $content->libraryMajorVersion, $content->libraryMinorVersion);
   
   $dependencies = array();
-  $s->findLibraryDependencies($dependencies, $library);
+  $core->findLibraryDependencies($dependencies, $library);
   $i->saveLibraryUsage($content->id, $dependencies);
 }
