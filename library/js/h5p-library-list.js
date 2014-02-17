@@ -33,6 +33,7 @@ var H5PLibraryList= H5PLibraryList || {};
         library.name, 
         library.machineName, 
         library.contentCount, 
+        library.libraryDependencyCount,
         '<button class="h5p-admin-view-library">&#xf002;</button>' +
         '<button class="h5p-admin-delete-library">&#xf057;</button>'
       ]);
@@ -43,7 +44,7 @@ var H5PLibraryList= H5PLibraryList || {};
       });
       
       var $deleteButton = $('.h5p-admin-delete-library', $libraryRow);
-      if (library.contentCount !== 0) {
+      if (library.contentCount !== 0 || library.libraryDependencyCount !== 0) {
         // Disabled delete if content.
         $deleteButton.attr('disabled', true); //.addClass('disabled');
       }
