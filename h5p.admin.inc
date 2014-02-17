@@ -113,36 +113,26 @@ function h5p_library_list() {
   
   $libraries = array();
   
+  $h5p_drupal = _h5p_get_instance('interface');
+  
   // Get the libraries
   $res = db_query('SELECT * FROM {h5p_libraries} ORDER BY title ASC');
   while ($library = db_fetch_object($res)) {
-    $library->content_count = 0;
-    $libraries[$library->library_id] = $library;
-  }
-  
-  // Get usage of each library:
-  $res = db_query('SELECT COUNT(distinct n.nid) as content_count, l.library_id
-                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id  
-                   GROUP BY l.library_id');
-  
-  while ($counter = db_fetch_object($res)) {
-    $libraries[$counter->library_id]->content_count = $counter->content_count;
-  }
-  
-  // Build result
-  foreach ($libraries as $library) {
-    $title = $library->title . ' (' . $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version . ')';
+    // Get usage:
+    $library_usage = $h5p_drupal->getLibraryUsage($library->library_id);
+    
     $settings['h5p']['libraries']['listData'][] = array(
-      'name' => $title,
+      'name' => $library->title . ' (' . $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version . ')',
       'machineName' => $library->machine_name,
-      'contentCount' => $library->content_count,
+      'contentCount' => $library_usage['content'],
+      'libraryDependencyCount' => $library_usage['libraries'],
       'detailsUrl' => url('admin/content/h5p/libraries/' . $library->library_id),
       'deleteUrl' => url('admin/content/h5p/libraries/' . $library->library_id . '/delete', array('query' => drupal_get_destination()))
     );
   }
   
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter'), ''); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter'), t('Library dependencies'), ''); 
 
   // Include libraries and more to Drupal setting
   drupal_add_js($settings, 'setting');
@@ -219,14 +209,14 @@ function h5p_library_delete($library_id) {
   
   // Is library deletable ?
   $h5p_drupal = _h5p_get_instance('interface');
-  $library_usage_counter = $h5p_drupal->getLibraryUsage($library_id);
-  if ($library_usage_counter == 0) {
+  $library_usage = $h5p_drupal->getLibraryUsage($library_id);
+  if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
     // Create form:
     return drupal_get_form('h5p_library_delete_form', $library_id, _h5p_library_details_title($library_id));
   }
   else {
     // May not delete this one
-    return t('Library is in use by content, and can therefore not be deleted');
+    return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
   }
 }
 

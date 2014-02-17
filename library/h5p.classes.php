@@ -196,9 +196,12 @@ interface H5PFrameworkInterface {
   public function saveLibraryUsage($contentId, $librariesInUse);
 
   /**
-   * Get number of content/nodes using a library
+   * Get number of content/nodes using a library, and the number of 
+   * dependencies to other libraries
    * 
-   * @param unknown $library_id
+   * @param int $library_id
+   * @return array The array contains two elements, keyed by 'content' and 'libraries'. 
+   *               Each element contains a number
    */
   public function getLibraryUsage($libraryId);
 

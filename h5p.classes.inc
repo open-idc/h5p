@@ -102,13 +102,25 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * Implements getLibraryUsage
+   *  
+   * Get number of content/nodes using a library, and the number of 
+   * dependencies to other libraries
    * 
-   * @param unknown $library_id
+   * @param int $library_id
+   * @return array The array contains two elements, keyed by 'content' and 'libraries'. 
+   *               Each element contains a number
    */
   public function getLibraryUsage($libraryId) {
-    return db_result(db_query('SELECT COUNT(distinct n.nid)
+    $usage = array();
+    
+    $usage['content'] = intval(db_result(db_query('SELECT COUNT(distinct n.nid)
                    FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
-                   WHERE l.library_id = %d', $libraryId));
+                   WHERE l.library_id = %d', $libraryId)));
+    
+    $usage['libraries'] = intval(db_result(db_query('SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = %d', $libraryId)));
+    
+    return $usage;
   }
   
   /**
