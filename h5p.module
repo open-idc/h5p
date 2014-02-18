@@ -603,7 +603,7 @@ function _h5p_get_instance($type) {
       $message = t('H5P library development directory is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/settings/h5p')));
       
       if ($preprocess_css_or_js) {
-        $message .= t('<br/>Preprocessing of css and/or js files is enabled. <b>This is not supported</b> when using the development directory option. Please disable preprocessing, and clear the cache');
+        $message .= '<br/>' . t('Preprocessing of css and/or js files is enabled. This is not supported when using the development directory option. Please disable preprocessing, and clear the cache');
       }
       
       drupal_set_message($message, 'warning', FALSE);
