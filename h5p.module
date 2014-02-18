@@ -169,6 +169,7 @@ function h5p_insert($node) {
  * Implements hook_update().
  */
 function h5p_update($node) {
+  // TODO: Determine correct embed type before saving. Now everything gets 'div'.
   if (isset($_SESSION['h5p_upload'])) {
     if ($node->revision && variable_get('h5p_revisioning', 1)) {
       h5p_insert($node);
@@ -245,7 +246,7 @@ function h5p_load($nodes) {
         'machineName' => $h5p->machine_name,
         'majorVersion' => $h5p->major_version,
         'minorVersion' => $h5p->minor_version,
-        'embedTypes' => $h5p->embed_type,
+        'embedTypes' => $h5p->embed_types,
       );
       
       unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version, $h5p->embed_types);
