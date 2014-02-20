@@ -360,7 +360,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
   if (!$teaser) {
     if (isset($node->main_library)) {
       $content_id = h5p_get_content_id($node);
-      $main_library = $node->main_library['machineName'];
+      $main_library = $node->main_library['machineName'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'];
       
       if (h5p_get_embed_type($node) === 'div') {
         h5p_add_files_and_settings($node, 'div');
