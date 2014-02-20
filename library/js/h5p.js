@@ -8,7 +8,10 @@ H5P.isFramed = (window.self !== window.top); // (window.parent !== window);
  * Scans for ".h5p-content" in the document and initializes H5P instances where found.
  */
 H5P.init = function () {
+  // TODO: Check what can be moved out of init.
+  
   if (H5P.$window === undefined) {
+    // TODO: Deprecate? Was only used for resize events.
     H5P.$window = H5P.jQuery(window);
   }
   if (H5P.$body === undefined) {
@@ -39,19 +42,20 @@ H5P.init = function () {
   }
 
   // H5Ps added in normal DIV.
-  H5P.jQuery(".h5p-content").each(function (idx, el) {
-    var $el = H5P.jQuery(el),
-      contentId = $el.data('content-id'),
-      mainLibrary = $el.data('class'),
-      obj = new (H5P.classFromName(mainLibrary))(H5P.jQuery.parseJSON(H5PIntegration.getJsonContent(contentId)), contentId);
-
-    // Render H5P in container.
-    obj.attach($el);
-
-    // Add Fullscreen button if relevant.
+  H5P.jQuery(".h5p-content").each(function () {
+    var $element = H5P.jQuery(this);
+    var contentId = $element.data('content-id');
+    var library = {
+      library: $element.data('class'),
+      params: H5P.jQuery.parseJSON(H5PIntegration.getJsonContent(contentId))
+    };
+    
+    var obj = H5P.newRunnable(library, $element, contentId);
+    
+    // Check if we should display fullscreen button for this H5P.
     if (H5PIntegration.getFullscreen(contentId)) {
-      H5P.jQuery('<div class="h5p-content-controls"><div role="button" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($el).children().click(function () {
-        H5P.fullScreen($el, obj);
+      H5P.jQuery('<div class="h5p-content-controls"><div role="button" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($element).children().click(function () {
+        H5P.fullScreen($element, obj);
         return false;
       });
     };
@@ -267,7 +271,68 @@ H5P.classFromName = function (name) {
   return this[arr[arr.length-1]];
 };
 
-// Helper object for keeping coordinates in the same format all over.
+/**
+ * A safe way of creating a new instance of a runnable H5P.
+ *
+ * TODO: Should we check if version matches the library?
+ * TODO: Dynamically try to load libraries currently not loaded?
+ * 
+ * @param {Object} library Library/action object form params.
+ * @param {jQuery} $attachTo The element to attach the new instance to.
+ * @param {Number} contentId 
+ * @return {Object} Instance.
+ */
+H5P.newRunnable = function (library, $attachTo, contentId) {
+  try {
+    var nameSplit = library.library.split(' ', 2);
+    var versionSplit = nameSplit[1].split('.', 2);
+  }
+  catch (err) {
+    return H5P.error('Invalid library string: ' + library.library);
+  }
+  
+  if ((library.params instanceof Object) !== true || (library.params instanceof Array) === true) {
+    H5P.error('Invalid library params for: ' + library.library);
+    return H5P.error(library.params);
+  }
+  
+  // Find constructor function
+  try {
+    nameSplit = nameSplit[0].split('.');
+    var constructor = window;
+    for (var i = 0; i < nameSplit.length; i++) { 
+      constructor = constructor[nameSplit[i]];
+    };
+    if (typeof constructor !== 'function') {
+      throw null;
+    }
+  }
+  catch (err) {
+    return H5P.error('Unable to find constructor for: ' + library.library);
+  }
+  
+  var instance = new constructor(library.params, contentId);
+  instance.attach($attachTo);
+  return instance;
+};
+
+/**
+ * Used to print useful error messages.
+ *
+ * @param {mixed} Error to print.
+ * @returns {null}
+ */
+H5P.error = function (err) {
+  if (window['console'] !== undefined && console.error !== undefined) {
+    console.error(err);
+  }
+}
+
+/**
+ * THIS FUNCTION IS DEPRECATED AND WILL BE REMOVED.
+ *
+ * Helper object for keeping coordinates in the same format all over.
+ */
 H5P.Coords = function (x, y, w, h) {
   if ( !(this instanceof H5P.Coords) )
     return new H5P.Coords(x, y, w, h);
