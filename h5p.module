@@ -19,8 +19,8 @@
  */
 function h5p_menu() {
   $items = array();
-  $items['admin/config/h5p'] = array(
-    'title' => 'h5p',
+  $items['admin/config/system/h5p'] = array(
+    'title' => 'H5P',
     'description' => 'Configure the location of h5p files.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('h5p_admin_settings'),
@@ -169,6 +169,7 @@ function h5p_insert($node) {
  * Implements hook_update().
  */
 function h5p_update($node) {
+  // TODO: Determine correct embed type before saving. Now everything gets 'div'.
   if (isset($_SESSION['h5p_upload'])) {
     if ($node->revision && variable_get('h5p_revisioning', 1)) {
       h5p_insert($node);
@@ -245,7 +246,7 @@ function h5p_load($nodes) {
         'machineName' => $h5p->machine_name,
         'majorVersion' => $h5p->major_version,
         'minorVersion' => $h5p->minor_version,
-        'embedTypes' => $h5p->embed_type,
+        'embedTypes' => $h5p->embed_types,
       );
       
       unset($h5p->machine_name, $h5p->major_version, $h5p->minor_version, $h5p->embed_types);
@@ -331,7 +332,7 @@ function h5p_get_embed_type($node) {
 function h5p_view($node, $view_mode = 'full') {
   node_object_prepare($node);
   if ($view_mode === 'full') {
-    if (isset($node->main_library)) {
+    if (isset($node->in_preview) === FALSE && isset($node->main_library) === TRUE) {
       $content_id = h5p_get_content_id($node);
       $main_library = $node->main_library['machineName'];
       
@@ -355,7 +356,8 @@ function h5p_view($node, $view_mode = 'full') {
         }
       }
     }
-    else {
+    
+    if (isset($html) === FALSE) {
       $html = '<div>' . t('Sorry, preview of H5P content is not yet available.') . '</div>';
     }
 
@@ -690,6 +692,7 @@ function h5p_field_extra_fields() {
     ),
     'display' => array(
       'h5p' => array(
+        'label' => t('Interactive content'),
         'description' => t('Interactive content'),
         'weight' => 2,
       )
