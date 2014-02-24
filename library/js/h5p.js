@@ -35,7 +35,7 @@ H5P.init = function () {
   var $window = window.top.H5P.jQuery(window.top);
 
   // H5Ps added in normal DIV.
-  var $containers = H5P.jQuery(".h5p-content").each(function () {
+  var $containers = H5P.jQuery(".h5p-content").each(function () { 
     var $element = H5P.jQuery(this);
     var contentId = $element.data('content-id');
     var library = {
@@ -44,12 +44,12 @@ H5P.init = function () {
     };
     
     // Create new instance.
-    var obj = H5P.newRunnable(library, contentId, $element);
+    var instance = H5P.newRunnable(library, contentId, $element);
     
     // Check if we should add and display a fullscreen button for this H5P.
     if (H5PIntegration.getFullscreen(contentId)) {
       H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($element).children().click(function () {
-        H5P.fullScreen($element, obj); // TODO: obj can be removed with DEPRECATED stuff
+        H5P.fullScreen($element, instance);
       });
     };
     
@@ -67,8 +67,9 @@ H5P.init = function () {
     // Resize everything when window is resized.
     $window.resize(function () {
       var fullscreen = $element.hasClass('h5p-fullscreen') || $element.hasClass('h5p-semi-fullscreen');
-      $element.trigger('h5pResize', [fullscreen]);
-      
+      if (instance.$ !== undefined) {
+        instance.$.trigger('h5pResize');
+      }
       if (resizeIframe !== undefined && !fullscreen) {
         resizeIframe();
       }
@@ -81,7 +82,7 @@ H5P.init = function () {
     var contentId = $iframe.data('content-id');
     var mainLibrary = $iframe.data('class');
 
-    // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps LISTEN FOR THE h5pResize EVENT ON ITS CONTAINER.
+    // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps LISTEN FOR THE h5pResize EVENT.
     $iframe.ready(function () {
       resizeIframeInterval = setInterval(function () {
         if (H5P.isFullscreen) {
@@ -111,21 +112,15 @@ H5P.init = function () {
  * Enable full screen for the given h5p.
  *
  * @param {jQuery} $element Content container.
- * @param {object} obj DEPRECATED instance.
+ * @param {object} instance
  * @param {function} exitCallback Callback function called when user exits fullscreen.
  * @param {jQuery} $body For internal use. Gives the body of the iframe.
  * @returns {undefined}
  */
-H5P.fullScreen = function ($element, obj, exitCallback, body) {
-  if (typeof obj === 'function') {
-    // Using new syntax (no more obj).
-    exitCallback = obj;
-    obj = undefined;
-  }
-  
+H5P.fullScreen = function ($element, instance, exitCallback, body) {
   if (H5P.isFramed) {
     // Trigger resize on wrapper in parent window.
-    window.parent.H5P.fullScreen($element, obj, exitCallback, H5P.$body.get());
+    window.parent.H5P.fullScreen($element, instance, exitCallback, H5P.$body.get());
     return;
   }
   
@@ -157,10 +152,12 @@ H5P.fullScreen = function ($element, obj, exitCallback, body) {
     }
     else {
       // Trigger resizing of container.
-      $element.trigger('h5pResize', [false]);
-      // DEPRECATED AND WILL BE REMOVED
-      if (obj !== undefined && obj.resize !== undefined) {
-        obj.resize(false);
+      if (instance.$ !== undefined) {
+        instance.$.trigger('h5pResize');
+      }
+      else if (instance.resize !== undefined) {
+        // DEPRECATED AND WILL BE REMOVED
+        instance.resize(true);
       }
     }
 
@@ -226,10 +223,12 @@ H5P.fullScreen = function ($element, obj, exitCallback, body) {
   }
   else {
     // Trigger resizing of container.
-    $element.trigger('h5pResize', [true]);
-    // DEPRECATED AND WILL BE REMOVED
-    if (obj !== undefined && obj.resize !== undefined) {
-      obj.resize(true);
+    if (instance.$ !== undefined) {
+      instance.$.trigger('h5pResize', {toggleFullscreen: true});
+    }
+    else if (instance.resize !== undefined) {
+      // DEPRECATED AND WILL BE REMOVED
+      instance.resize(true);
     }
   }
 };
@@ -322,7 +321,9 @@ H5P.newRunnable = function (library, contentId, $attachTo) {
   var instance = new constructor(library.params, contentId);
   if ($attachTo !== undefined) {
     instance.attach($attachTo);
-    $attachTo.trigger('h5pResize', [false]);
+    if (instance.$ !== undefined) {
+      instance.$.trigger('h5pResize');
+    }
   }
   return instance;
 };
