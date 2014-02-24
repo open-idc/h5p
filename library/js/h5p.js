@@ -44,12 +44,12 @@ H5P.init = function () {
     };
     
     // Create new instance.
-    var obj = H5P.newRunnable(library, $element, contentId);
+    var obj = H5P.newRunnable(library, contentId, $element);
     
     // Check if we should add and display a fullscreen button for this H5P.
     if (H5PIntegration.getFullscreen(contentId)) {
       H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($element).children().click(function () {
-        H5P.fullScreen($element, obj);
+        H5P.fullScreen($element, obj); // TODO: obj can be removed with DEPRECATED stuff
       });
     };
     
@@ -286,11 +286,11 @@ H5P.classFromName = function (name) {
  * TODO: Dynamically try to load libraries currently not loaded? That will require a callback.
  * 
  * @param {Object} library Library/action object form params.
- * @param {jQuery} $attachTo The element to attach the new instance to.
  * @param {Number} contentId 
+ * @param {jQuery} $attachTo The element to attach the new instance to.
  * @return {Object} Instance.
  */
-H5P.newRunnable = function (library, $attachTo, contentId) {
+H5P.newRunnable = function (library, contentId, $attachTo) {
   try {
     var nameSplit = library.library.split(' ', 2);
     var versionSplit = nameSplit[1].split('.', 2);
@@ -320,8 +320,10 @@ H5P.newRunnable = function (library, $attachTo, contentId) {
   }
   
   var instance = new constructor(library.params, contentId);
-  instance.attach($attachTo);
-  $attachTo.trigger('h5pResize', [false]);
+  if ($attachTo !== undefined) {
+    instance.attach($attachTo);
+    $attachTo.trigger('h5pResize', [false]);
+  }
   return instance;
 };
 
