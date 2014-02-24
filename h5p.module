@@ -586,6 +586,13 @@ function _h5p_maintain_session_variables() {
  * be kept between validating and saving the node for instance
  *
  * TODO: Remove the "_" infront of the function name to make it "public"
+ * TODO: Could this be renamed "h5p_get_core", and always return core. Code using
+ *       this function could then do e.g. h5p_get_core()->getValidator(). 
+ *       
+ *       Another solution could be removing this function totally and make the name of the 
+ *       Framework-implementation class the same on all platforms. Then core could do everything
+ *       by itself. Usage could the be e.g. H5PCore::get()->getValidator(), where H5PCore::get()
+ *       would create the instance of the interface if it was not instantiated yet.
  *
  * @staticvar H5PDrupal $interface
  *  The interface between the H5P library and drupal
@@ -597,29 +604,28 @@ function _h5p_maintain_session_variables() {
  *  The instance og h5p specified by type
  */
 function _h5p_get_instance($type) {
-  static $interface, $core;
+  static $core;
 
-  if (!isset($interface)) {
+  if (!isset($core)) {
     // TODO: Use Drupal's built in class registry. Simply declare a "files[] =" line in the info file for each class file.
     // This makes it possible for module who depend on this to use the classes as well. (Without breaking coding standards by using this "private" function.)
     $path = drupal_get_path('module', 'h5p');
     require_once DRUPAL_ROOT . '/' . $path . '/library/h5p.classes.php';
     require_once DRUPAL_ROOT . '/' . $path . '/h5p.classes.inc';
-    $interface = new H5PDrupal();
-    $core = new H5PCore($interface);
+    $core = new H5PCore(new H5PDrupal());
   }
 
   switch ($type) {
     case 'validator':
-      return new H5PValidator($interface, $core);
+      return $core->getValidator();
     case 'storage':
-      return new H5PStorage($interface, $core);
+      return $core->getStorage();
     case 'contentvalidator':
-      return new H5PContentValidator($interface, $core);
+      return $core->getContentValidator();
     case 'export':
-      return new H5PExport($interface, $core);
+      return $core->getExporter();
     case 'interface':
-      return $interface;
+      return $core->getInterface();
     case 'core':
       return $core;
   }
