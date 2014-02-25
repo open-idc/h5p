@@ -1162,7 +1162,8 @@ Class H5PExport {
       file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'h5p.json', $results);
       
       // Add the editor libraries to the list of libraries
-      $exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
+      // TODO: Comment in when mering in 6.x-1.x changes.
+      //$exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
       
       // Getting all dependencies:
       $editorDependencies = array();
