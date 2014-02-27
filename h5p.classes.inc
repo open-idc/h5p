@@ -448,7 +448,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     $editorLibraries = $this->getEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion'], TRUE);
-
+    
     $export = array(
       'contentId' => $contentId,
       'mainLibrary' => $mainLibraryMachineName,
@@ -490,20 +490,20 @@ class H5PDrupal implements H5PFrameworkInterface {
     ", array(':hl_machine_name' => $machineName, ':hl_major_version' => $majorVersion, ':hl_minor_version' => $minorVersion, ':hll_dependency_type' => 'editor'));
 
     $jsonData = array('preloadedDependencies' => array());
-    foreach ($result as $editorLibrary) {
-      $editorLibraries[$editorLibrary->libraryId] = $editorLibrary;
+    while ($editorLibrary = $result->fetchAssoc()) {
+      $editorLibraries[$editorLibrary['libraryId']] = $editorLibrary;
 
-      $jsonData['preloadedDependencies'][$editorLibrary->libraryId] = array(
-        'machineName' => $editorLibrary->machineName,
-        'majorVersion' => $editorLibrary->majorVersion,
-        'minorVersion' => $editorLibrary->minorVersion,
+      $jsonData['preloadedDependencies'][$editorLibrary['libraryId']] = array(
+        'machineName' => $editorLibrary['machineName'],
+        'majorVersion' => $editorLibrary['majorVersion'],
+        'minorVersion' => $editorLibrary['minorVersion'],
       );
     }
 
     $libraries = array();
     $storage = _h5p_get_instance('storage');
     $storage->getLibraryUsage($libraries, $jsonData, FALSE, $complete);
-
+    
     foreach ($libraries as $library) {
       if ($library['preloaded']) {
         $editorLibraries[$library['library']['libraryId']] = $library['library'];
