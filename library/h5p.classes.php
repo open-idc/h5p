@@ -1127,7 +1127,6 @@ Class H5PExport {
       // Make embedTypes into an array
       $embedTypes = explode(', ', $exportData['embedType']);
 
-
       // Build h5p.json
       $h5pJson = array (
         'title' => $title,
@@ -1163,11 +1162,16 @@ Class H5PExport {
       file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'h5p.json', $results);
       
       // Add the editor libraries to the list of libraries
-      // TODO: Add support for dependencies or editor libraries
-      $exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
+      // TODO: Comment in when mering in 6.x-1.x changes.
+      //$exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
+      
+      // Getting all dependencies:
+      $editorDependencies = array();
+      $this->h5pC->getStorage()->getLibraryUsage($editorDependencies, $h5pJson, FALSE, TRUE);
       
       // Copies libraries to temp dir and create mention in h5p.json
-      foreach($exportData['libraries'] as $library) {
+      foreach($editorDependencies as $lib) {
+        $library = $lib['library'];
         $source = $h5pDir . 'libraries' . DIRECTORY_SEPARATOR . $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
         $destination = $tempPath . DIRECTORY_SEPARATOR . $library['machineName'];
         $this->h5pC->copyTree($source, $destination);
@@ -1226,7 +1230,7 @@ Class H5PExport {
    */
   private function addEditorLibraries($libraries, $editorLibraries) {
     foreach ($editorLibraries as $editorLibrary) {
-      $libraries[$editorLibrary['machineName']] = $editorLibrary;      
+      $libraries[$editorLibrary['machineName']] = $editorLibrary;
     }
     return $libraries;
   }
@@ -1252,9 +1256,18 @@ class H5PCore {
   public static $defaultLibraryWhitelistExtras = 'js css';
 
   public $h5pF;
+  public $storage;
+  public $validator;
+  public $contentValidator;
+  public $exporter;
   public $librariesJsonData;
   public $contentJsonData;
   public $mainJsonData;
+  
+  /* This could be used by all other classes in core to get an instance of all other
+   * core classes. Another, probably better solution, is to make all other classes abstract,
+   * containing only static functions. */
+  public static $instance;
 
   /**
    * Constructor for the H5PCore
@@ -1262,10 +1275,36 @@ class H5PCore {
    * @param object $H5PFramework
    *  The frameworks implementation of the H5PFrameworkInterface
    */
-  public function __construct($H5PFramework) {
-    $this->h5pF = $H5PFramework;
+  public function __construct($framework) {
+    $this->h5pF = $framework;
+    $this->storage = new H5PStorage($framework, $this);
+    $this->validator = new H5PValidator($framework, $this);
+    $this->contentValidator = new H5PContentValidator($framework, $this);
+    $this->exporter = new H5PExport($framework, $this);
+    
+    H5PCore::$instance = $this;
   }
 
+  public function getStorage() {
+    return $this->storage;
+  }
+  
+  public function getValidator() {
+    return $this->validator;
+  }
+  
+  public function getContentValidator() {
+    return $this->contentValidator;
+  }
+  
+  public function getExporter() {
+    return $this->exporter;
+  }
+  
+  public function getInterface() {
+    return $this->h5pF;
+  }
+  
   /**
    * Check if a library is of the version we're looking for
    *
@@ -2132,6 +2171,5 @@ class H5PContentValidator {
 
     return $uri;
   }
-
 }
 ?>
