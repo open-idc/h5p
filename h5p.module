@@ -532,7 +532,7 @@ function h5p_add_iframe_assets(&$settings, $content_id, $files, $cache_file_pref
     
     // Refactor scripts array to Drupal eatable format.
     $scripts = array();
-    foreach ($file_paths['preloadedJs'] as $script) {
+    foreach ($files['scripts'] as $script) {
       $scripts[$script] = array(
         'preprocess' => TRUE,
       );
