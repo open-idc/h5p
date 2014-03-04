@@ -21,10 +21,15 @@ $fa: H5PFontAwesome4;
     &:last-child {
       margin-bottom: 0;
     }
-  }
-  .field .library {
-    border: 1px solid #666;
-    padding: 8px;
+    
+    &.boolean .h5peditor-label {
+      display: inline;
+    }
+    
+    .library {
+      border: 1px solid #666;
+      padding: 8px;
+    }
   }
   .errors p {
     margin: 0 0 4px 0;
