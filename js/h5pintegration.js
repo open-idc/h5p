@@ -39,8 +39,7 @@ H5PIntegration.getContentPath = function (contentId) {
  * @returns {string} The full path to the library
  */
 H5PIntegration.getLibraryPath = function (library) {
-  // TODO: This is silly and needs to be changed, why does the h5peditor
-  // have its own namespace for these things?
+  // TODO: Does the h5peditor really need its own namespace for these things?
   var libraryPath = Drupal.settings.h5p !== undefined ? Drupal.settings.h5p.libraryPath : Drupal.settings.h5peditor.libraryPath
 
   return Drupal.settings.basePath + libraryPath + library;

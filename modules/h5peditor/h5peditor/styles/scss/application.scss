@@ -2,6 +2,7 @@
 @import "compass/css3/box-shadow";
 @import "compass/css3/opacity";
 @import "compass/css3/text-shadow";
+@import "compass/css3/transition";
 
 $fa: H5PFontAwesome4;
 
@@ -25,12 +26,16 @@ $fa: H5PFontAwesome4;
     &.boolean .h5peditor-label {
       display: inline;
     }
+    &.video, &.image, &.file, &.audio {
+      position: relative;
+    }
     
     .library {
       border: 1px solid #666;
       padding: 8px;
     }
   }
+  
   .errors p {
     margin: 0 0 4px 0;
     color: #f00;
@@ -336,6 +341,61 @@ $fa: H5PFontAwesome4;
   .h5peditor-loading {
     padding: 0.875em 0 1em 3.25em;
     font-style: italic;
+  }
+  .h5p-copyrights-button {
+    position: relative;
+    float: left;
+    color: #fde;
+    text-shadow: 0 0 0.25em #666;
+    @include text-shadow(0 0 0.25em #666);
+    cursor: pointer;
+    width: 2em;
+    height: 2em;
+    font-size: 1.5em;
+    @include transition(color 0.2s);
+    
+    &:before {
+      position: absolute;
+      left: 0.5em;
+      top: 0.5em;
+      font-family: $fa;
+      content: "\f071";
+    }
+    &:hover {
+      color: #fbc;
+    }
+  }
+  
+  .h5p-editor-dialog {
+    position: absolute;
+    z-index: 1;
+    width: 90%;
+    background: #fff;
+    padding: 10px 10px 0;
+    margin: 4em 0 1em;
+    visibility: hidden;
+    opacity: 0;
+    @include box-shadow(0 0 8px #666);
+    @include transition(visibility 0s 0.2s, opacity 0.2s, margin-top 0.2s);
+    
+    &.h5p-open {
+      margin-top: 2em;
+      visibility: visible;
+      opacity: 1;
+      @include transition(visibility 0s 0s, opacity 0.2s, margin-top 0.2s);
+    }
+    
+    .h5p-close:before {
+      font-size: 2em;
+      right: 10px;
+      position: absolute;
+      font-family: H5PFontAwesome4;
+      content: "\f00d";
+    }
+    
+    & > .field {
+      margin: 0 0 10px;
+    }
   }
 }
 
