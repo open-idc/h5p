@@ -174,22 +174,43 @@ body.h5p-iframe-content.h5p-fullscreen div.h5p-content {
   height: 100%;
 }
 
-.h5p-export {
-  margin-top: 6px;
-  display: block;
-  position: relative;
+
+.h5p-actions {
+  overflow: hidden;
+  list-style: none;
+  padding: 4px;
+  margin: 0.25em 0;
+}
+.h5p-fullscreen .h5p-actions, .h5p-semi-fullscreen .h5p-actions {
+  display: none;
+}
+.h5p-actions > .h5p-button {
   float: left;
+  cursor: pointer;
+  margin: 0 1em 0 0;
+  padding: 4px 12px 3px;
   border-radius: 4px;
-  padding: 4px 58px 3px 12px;
   font-weight: 900; 
   font-family: "Arial Black", Arial, sans-serif;
   text-transform: uppercase;
-  color: white !important;
+  color: #fff;
   background-color: #ccc;
   box-shadow: 0px 0px 4px #666;
+  -webkit-transition: all 0.2s ease-in;
+  -moz-transition: all 0.2s ease-in;
+  -o-transition: all 0.2s ease-in;
+  transition: all 0.2s ease-in;
 }
-
-.h5p-export:after {
+.h5p-actions > .h5p-button:hover {
+  text-decoration: none;
+  box-shadow: 0px 0px 6px #333;
+  background-color: #0092bf;
+}
+.h5p-actions > .h5p-button.h5p-export {
+  position: relative;
+  padding-right: 58px;
+}
+.h5p-actions > .h5p-button.h5p-export:after {
   content: "";
   
   display: inline;
@@ -198,25 +219,10 @@ body.h5p-iframe-content.h5p-fullscreen div.h5p-content {
   
   position: absolute;
   right: 0;
-  top: 0;
+  top: 2px;
   
   background-image: url(../images/h5p_logo.png);
   background-image: url(../images/h5p_logo.svg), none;
   background-repeat: no-repeat;
   background-position: left center;
-}
-
-.h5p-export:hover {
-  text-decoration: none;
-  color: white;
-  box-shadow: 0px 0px 6px #333;
-  background-color: #0092bf;
-  /* Firefox */
-  -moz-transition: all 0.4s ease-in;
-  /* WebKit */
-  -webkit-transition: all 0.4s ease-in;
-  /* Opera */
-  -o-transition: all 0.4s ease-in;
-  /* Standard */
-  transition: all 0.4s ease-in;
 }
