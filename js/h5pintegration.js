@@ -14,6 +14,14 @@ $(document).ready(function () {
   H5P.loadedCss = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.loadedCss !== undefined ? Drupal.settings.h5p.loadedCss : [];
 });
 
+H5PIntegration.getContentData = function (id) {
+  return Drupal.settings.h5p.content['cid-' + id];
+};
+
+H5PIntegration.getJsonContent = function (contentId) {
+  return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
+};
+
 H5PIntegration.getJsonContent = function (contentId) {
   return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
 };
@@ -93,6 +101,8 @@ H5PIntegration.getHeadTags = function (contentId) {
 };
 
 H5PIntegration.fullscreenText = Drupal.t('Fullscreen');
+H5PIntegration.exportText = Drupal.t('Download');
+H5PIntegration.copyrightsText = Drupal.t('Copyrights');
 
 /**
  *  Returns an object containing a library metadata

@@ -38,29 +38,33 @@ H5P.init = function () {
   var $containers = H5P.jQuery(".h5p-content").each(function () { 
     var $element = H5P.jQuery(this);
     var contentId = $element.data('content-id');
+    var contentData = H5PIntegration.getContentData(contentId);
     var library = {
-      library: $element.data('class'),
-      params: H5P.jQuery.parseJSON(H5PIntegration.getJsonContent(contentId))
+      library: contentData.library,
+      params: H5P.jQuery.parseJSON(contentData.jsonContent)
     };
-    
+
     // Create new instance.
     var instance = H5P.newRunnable(library, contentId, $element);
     
     // Check if we should add and display a fullscreen button for this H5P.
-    if (H5PIntegration.getFullscreen(contentId)) {
+    if (contentData.fullScreen === '1') {
       H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($element).children().click(function () {
         H5P.fullScreen($element, instance);
       });
     };
     
+    console.log(contentData);
     var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
-    if (true) { // Display export button
-      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1">Export</li>').appendTo($actions).click(function () {
-        console.log('Downloading...');
+    if (contentData.export !== '') {
+      // Display export button
+      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1">' + H5PIntegration.exportText + '</li>').appendTo($actions).click(function () {
+        window.location.href = contentData.export;
       });
     }
-    if (true) { // Display copyrights button
-      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1">Copyrights</li>').appendTo($actions).click(function () {
+    if (true) {
+      // Display copyrights button
+      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1">' + H5PIntegration.copyrightsText + '</li>').appendTo($actions).click(function () {
         console.log('Gathering copyright information...');
       });
     }
@@ -96,7 +100,6 @@ H5P.init = function () {
   H5P.jQuery("iframe.h5p-iframe").each(function () {
     var $iframe = H5P.jQuery(this);
     var contentId = $iframe.data('content-id');
-    var mainLibrary = $iframe.data('class');
 
     // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps EXPOSES A resize FUNCTION.
     $iframe.ready(function () {
@@ -119,7 +122,7 @@ H5P.init = function () {
     // END DEPRECATION
 
     this.contentDocument.open();
-    this.contentDocument.write('<!doctype html><html class="h5p-iframe"><head>' + H5PIntegration.getHeadTags(contentId) + '</head><body><div class="h5p-content" data-class="' + mainLibrary + '" data-content-id="' + contentId + '"/></body></html>');
+    this.contentDocument.write('<!doctype html><html class="h5p-iframe"><head>' + H5PIntegration.getHeadTags(contentId) + '</head><body><div class="h5p-content" data-content-id="' + contentId + '"/></body></html>');
     this.contentDocument.close();
   });
 };
@@ -150,7 +153,7 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     $classes = $body.add($element.get());
     var iframeSelector = '#h5p-iframe-' + $element.data('content-id');
     $iframe = H5P.jQuery(iframeSelector);
-    $element = H5P.jQuery(iframeSelector + '-wrapper'); // Put iframe wrapper in fullscreen, not container.
+    $element = $iframe.parent(); // Put iframe wrapper in fullscreen, not container.
   }
   
   $classes = $element.add(H5P.$body).add($classes);
