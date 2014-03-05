@@ -53,6 +53,21 @@ H5P.init = function () {
       });
     };
     
+    var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
+    if (true) { // Display export button
+      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1">Export</li>').appendTo($actions).click(function () {
+        console.log('Downloading...');
+      });
+    }
+    if (true) { // Display copyrights button
+      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1">Copyrights</li>').appendTo($actions).click(function () {
+        console.log('Gathering copyright information...');
+      });
+    }
+    if ($actions.children().length) {
+      $actions.insertAfter($element);
+    }
+    
     if (H5P.isFramed) {
       // Make it possible to resize the iframe when the content changes size. This way we get no scrollbars.
       var $iframe = H5P.jQuery('#h5p-iframe-' + contentId, window.parent.document);

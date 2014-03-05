@@ -11,11 +11,22 @@ var ns = H5PEditor;
  * @returns {ns.File}
  */
 ns.File = function (parent, field, params, setValue) {
+  var self = this;
+  
+  this.parent = parent;
   this.field = field;
   this.params = params;
   this.setValue = setValue;
-
+  
+  if (params !== undefined) {
+    this.copyrights = params.copyrights;
+  }
+  
   this.changes = [];
+  this.passReadies = true;
+  parent.ready(function () {
+    self.passReadies = false;
+  });
 };
 
 /**
@@ -25,6 +36,7 @@ ns.File = function (parent, field, params, setValue) {
  * @returns {undefined}
  */
 ns.File.prototype.appendTo = function ($wrapper) {
+  var self = this;
   ns.File.addIframe();
 
   var label = '';
@@ -32,11 +44,26 @@ ns.File.prototype.appendTo = function ($wrapper) {
     label = '<span class="h5peditor-label">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</span>';
   }
 
-  var html = ns.createItem(this.field.type, label + '<div class="file"></div>', this.field.description);
+  var html = ns.createItem(this.field.type, label + '<div class="file"></div><a class="h5p-copyrights-button" href="#" title="' + ns.t('core', 'copyrights') + '"></a><div class="h5p-editor-dialog"><a href="#" class="h5p-close" title="' + ns.t('core', 'close') + '"></a></div>', this.field.description);
 
-  this.$file = ns.$(html).appendTo($wrapper).children('.file');
+  var $container = ns.$(html).appendTo($wrapper);
+  this.$file = $container.find('.file');
+  this.$errors = $container.find('.h5p-errors');
   this.addFile();
-  this.$errors = this.$file.next();
+  
+  var $dialog = $container.find('.h5p-editor-dialog');
+  $container.find('.h5p-copyrights-button').add($dialog.find('.h5p-close')).click(function () {
+    $dialog.toggleClass('h5p-open');
+    return false;
+  });
+  
+  var group = new ns.widgets.list(self, ns.copyrightsSemantics, self.copyrights, function (field, value) {
+    if (self.params !== undefined) {
+      self.params.copyrights = value;
+    }
+    self.copyrights = value;
+  });
+  group.appendTo($dialog);
 };
 
 /**
@@ -100,7 +127,7 @@ ns.File.prototype.uploadFile = function () {
   this.$errors.html('');
 
   ns.File.changeCallback = function () {
-    that.$file.html('<div class="h5peditor-uploading">Uploading, please wait...</div>');
+    that.$file.html('<div class="h5peditor-uploading">' + ns.t('core', 'uploading') + '</div>');
   };
 
   ns.File.callback = function (json) {
@@ -112,7 +139,8 @@ ns.File.prototype.uploadFile = function () {
 
       that.params = {
         path: result.path,
-        mime: result.mime
+        mime: result.mime,
+        copyrights: that.copyrights
       };
       if (that.field.type === 'image') {
         that.params.width = result.width;
@@ -163,6 +191,21 @@ ns.File.prototype.validate = function () {
 ns.File.prototype.remove = function () {
   // TODO: Check what happens when removed during upload.
   this.$file.parent().remove();
+};
+
+/**
+ * Collect functions to execute once the tree is complete.
+ *
+ * @param {function} ready
+ * @returns {undefined}
+ */
+ns.File.prototype.ready = function (ready) {
+  if (this.passReadies) {
+    this.parent.ready(ready);
+  }
+  else {
+    ready();
+  }
 };
 
 /**
