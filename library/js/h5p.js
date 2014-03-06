@@ -37,6 +37,7 @@ H5P.init = function () {
   // H5Ps added in normal DIV.
   var $containers = H5P.jQuery(".h5p-content").each(function () { 
     var $element = H5P.jQuery(this);
+    var $container = H5P.jQuery('<div class="h5p-container"></div>').appendTo($element);
     var contentId = $element.data('content-id');
     var contentData = H5PIntegration.getContentData(contentId);
     var library = {
@@ -45,31 +46,33 @@ H5P.init = function () {
     };
 
     // Create new instance.
-    var instance = H5P.newRunnable(library, contentId, $element);
+    var instance = H5P.newRunnable(library, contentId, $container);
     
     // Check if we should add and display a fullscreen button for this H5P.
     if (contentData.fullScreen === '1') {
-      H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($element).children().click(function () {
-        H5P.fullScreen($element, instance);
+      H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5P.t('fullscreen') + '</div></div>').insertBefore($container).children().click(function () {
+        H5P.fullScreen($container, instance);
       });
     };
     
-    console.log(contentData);
     var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
     if (contentData.export !== '') {
       // Display export button
-      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1">' + H5PIntegration.exportText + '</li>').appendTo($actions).click(function () {
+      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1">' + H5P.t('download') + '</li>').appendTo($actions).click(function () {
         window.location.href = contentData.export;
       });
     }
-    if (true) {
+    if (instance.getCopyrights !== undefined) {
       // Display copyrights button
-      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1">' + H5PIntegration.copyrightsText + '</li>').appendTo($actions).click(function () {
-        console.log('Gathering copyright information...');
+      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
+        H5P.openCopyrightsDialog($actions, instance);
       });
     }
     if ($actions.children().length) {
-      $actions.insertAfter($element);
+      $actions.insertAfter($container);
+    }
+    else {
+      $actions.remove();
     }
     
     if (H5P.isFramed) {
@@ -85,7 +88,7 @@ H5P.init = function () {
     
     // Resize everything when window is resized.
     $window.resize(function () {
-      var fullscreen = $element.hasClass('h5p-fullscreen') || $element.hasClass('h5p-semi-fullscreen');
+      var fullscreen = $container.hasClass('h5p-fullscreen') || $container.hasClass('h5p-semi-fullscreen');
       if (instance.resize !== undefined) {
         // Resize content.
         instance.resize();
@@ -151,7 +154,7 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     // We're called from an iframe.
     $body = H5P.jQuery(body);
     $classes = $body.add($element.get());
-    var iframeSelector = '#h5p-iframe-' + $element.data('content-id');
+    var iframeSelector = '#h5p-iframe-' + $element.parent().data('content-id');
     $iframe = H5P.jQuery(iframeSelector);
     $element = $iframe.parent(); // Put iframe wrapper in fullscreen, not container.
   }
@@ -339,13 +342,203 @@ H5P.newRunnable = function (library, contentId, $attachTo) {
 /**
  * Used to print useful error messages.
  *
- * @param {mixed} Error to print.
- * @returns {null}
+ * @param {mixed} err Error to print.
+ * @returns {undefined}
  */
 H5P.error = function (err) {
   if (window['console'] !== undefined && console.error !== undefined) {
     console.error(err);
   }
+}
+
+/**
+ * Translate text strings.
+ *
+ * @param {String} key Translation identifier, may only contain a-zA-Z0-9. No spaces or special chars.
+ * @param {Object} vars Data for placeholders.
+ * @param {String} ns Translation namespace. Defaults to H5P.
+ * @returns {String} Text
+ */
+H5P.t = function (key, vars, ns) {
+  if (ns === undefined) {
+    ns = 'H5P';
+  }
+
+  if (H5PIntegration.i18n[ns] === undefined) {
+    return '[Missing translation namespace "' + ns + '"]';
+  }
+  
+  if (H5PIntegration.i18n[ns][key] === undefined) {
+    return '[Missing translation "' + key + '" in "' + ns + '"]';
+  }
+
+  var translation = H5PIntegration.i18n[ns][key];
+  
+  if (vars !== undefined) {
+    // Replace placeholder with variables.
+    for (var placeholder in vars) {
+      translation = translation.replace(placeholder, vars[placeholder]);
+    }  
+  }
+
+  return translation;
+};
+
+/**
+ * Gather copyright information and display in a dialog over the content.
+ *
+ * @param {jQuery} $element to insert dialog after.
+ * @param {object} instance to get copyright information from.
+ * @returns {undefined}
+ */
+H5P.openCopyrightsDialog = function ($element, instance) {
+  var $d = H5P.jQuery('<div class="h5p-copyrights-dialog"><div class="h5p-inner">' + H5P.createCopyrights(instance.getCopyrights()) + '</div><div class="h5p-close" role="button" tabindex="1" titel="Close"></div></div>')
+    .insertAfter($element)
+    .click(function () {
+      $d.removeClass('h5p-open'); // Fade out
+      setTimeout(function () {
+        $d.remove();
+      }, 200);
+    })
+    .children('.h5p-inner')
+      .click(function () {
+        return false;
+      })
+      .end();
+      
+  setTimeout(function () {
+    $d.addClass('h5p-open'); // Fade in
+  }, 1);
+};
+
+/**
+ * Recursive function that creates html for copyright information. 
+ */
+H5P.createCopyrights = function (information) {
+  var html = '';
+  
+  // Render copyright fields
+  if (information.copyrights !== undefined) {
+    if (information.copyrights instanceof Array) {
+      for (var i = 0; i < information.copyrights.length; i++) {
+        html += H5P.createDefinitionList(information.copyrights[i]);
+      }
+    }
+    else {
+      html += information.copyrights;
+    }
+  }
+  
+  // Check for children with copyright information.
+  if (information.children !== undefined) {
+    for (var i = 0; i < information.children.length; i++) {
+      html += H5P.createCopyrights(information.children[i]);
+    }
+  }
+  
+  if (html !== '') {
+    // Add a label to this info
+    if (information.label !== undefined) {
+      html = '<h3>' +  information.label + '</h3>' + html;
+    }
+    
+    // Add wrapper
+    html = '<div class="h5p-copyright-information">' + html + '</div>';
+  }
+  
+  return html;
+}
+
+// Translate table for copyright license codes.
+H5P.copyrightLicenses = {
+  'U': 'Undisclosed',
+  'CC BY': 'Attribution',
+  'CC BY-SA': 'Attribution-ShareAlike',
+  'CC BY-ND': 'Attribution-NoDerivs',
+  'CC BY-NC': 'Attribution-NonCommercial',
+  'CC BY-NC-SA': 'Attribution-NonCommercial-ShareAlike',
+  'CC BY-NC-ND': 'Attribution-NonCommercial-NoDerivs',
+  'GNU GPL': 'General Public License',
+  'PD': 'Public Domain',
+  'ODC PDDL': 'Public Domain Dedication and Licence',
+  'CC PDM': 'Public Domain Mark',
+  'C': 'Copyright'
+};
+
+/**
+ * Creates a list with mulitple copyrights for e.g. an image.
+ *
+ * @param {Array} copyrights List with copyright information.
+ * @param {Object} labels translation.
+ * @param {Array} order of fields. Optional.
+ * @param {Object} extraFields to add for each copyright. Optional.
+ * @returns {Array} fields.
+ */
+H5P.getCopyrightList = function (copyrights, labels, order, extraFields) {
+  var copyrightList = [];
+  
+  if (copyrights !== undefined) {
+    for (var i = 0; i < copyrights.length; i++) {
+      var copyright = copyrights[i];
+      
+      // Add the extra fields
+      for (var field in extraFields) {
+        copyright[field] = extraFields[field];
+      }
+      
+      // Get the fields with labels in the correct order
+      var fields = H5P.getCopyrightFields(copyright, labels, order);
+      if (fields.length) {
+        copyrightList.push(fields);
+      }
+    }
+  }
+  
+  return copyrightList;
+}
+
+/**
+ * Creates a ordered list of copyright fields with labels and values.
+ * TODO: Make labels optional by using core translations?
+ *
+ * @param {Object} copyright information fields.
+ * @param {Object} labels translation.
+ * @param {Array} order of fields. Optional.
+ * @returns {Array} fields.
+ */
+H5P.getCopyrightFields = function (copyright, labels, order) {
+  var fields = [];
+  
+  if (order === undefined) {
+    order = ['title', 'author', 'year', 'source', 'license'];
+  }
+  
+  for (var i = 0; i < order.length; i++) {
+    var fieldName = order[i];
+    if (copyright[fieldName] !== undefined) {
+      fields.push({
+        label: (labels === undefined || labels[fieldName] === undefined ? H5P.t(fieldName) : labels[fieldName]),
+        value: (fieldName === 'license' ? H5P.copyrightLicenses[copyright[fieldName]] : copyright[fieldName]) 
+      });
+    }
+  }
+  
+  return fields;
+}
+
+/**
+ * Simple function that creates html for a definition list.
+ *
+ * @param {Array} fields to create list from.
+ * @returns {String} HTML.
+ */
+H5P.createDefinitionList = function (fields) {
+  var html = '';
+  for (var i = 0; i < fields.length; i++) {
+    var field = fields[i];
+    html += '<dt>' + field.label + '</dt><dd>' + field.value + '</dd>';
+  }
+  return (html === '' ? html : '<dl>' + html + '</dl>');
 }
 
 /**
