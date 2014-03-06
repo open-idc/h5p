@@ -100,9 +100,21 @@ H5PIntegration.getHeadTags = function (contentId) {
        + createScriptTags(Drupal.settings.h5p['cid-' + contentId].scripts);
 };
 
-H5PIntegration.fullscreenText = Drupal.t('Fullscreen');
-H5PIntegration.exportText = Drupal.t('Download');
-H5PIntegration.copyrightsText = Drupal.t('Copyrights');
+/**
+ * Define core translations.
+ */
+H5PIntegration.i18n = {
+  H5P: {
+    fullscreen: Drupal.t('Fullscreen'),
+    download: Drupal.t('Download'),
+    copyrights: Drupal.t('Copyrights'),
+    title: Drupal.t('Title'),
+    author: Drupal.t('Author'),
+    year: Drupal.t('Year'),
+    source: Drupal.t('Source'),
+    license: Drupal.t('License')
+  }
+};
 
 /**
  *  Returns an object containing a library metadata
