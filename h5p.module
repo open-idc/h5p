@@ -550,7 +550,7 @@ function h5p_filter_json_content($node) {
   if (isset($node->vid)) {
     $cid = 'validated_json_' . $node->vid;
     $cache = cache_get($cid);
-    if (isset($cache->data) && !variable_get('h5p_content_dev_mode', 0) && variable_get('h5p_library_development', 0) === 0) {
+    if (isset($cache->data) && !variable_get('h5p_content_dev_mode', 0) && !variable_get('h5p_library_development', 0)) {
       return $cache->data;
     }
   }
