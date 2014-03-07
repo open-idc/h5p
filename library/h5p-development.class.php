@@ -14,7 +14,10 @@ class H5PDevelopment {
   /**
    * Constructor.
    *
-   * @param string Files path
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
+   * @param string $filesPath
+   *  Path to where H5P should store its files
    * @param array $libraries Optional cache input.
    */
   public function __construct($H5PFramework, $filesPath, $language, $libraries = NULL) {
