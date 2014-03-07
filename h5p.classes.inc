@@ -392,7 +392,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     // Use library ids to get library info.
     $res = db_query(
       "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, 
-      hnl.dependency_type as preloaded, hl.library_id as library_id
+      hnl.dependency_type, hl.library_id as library_id
       FROM {h5p_libraries} hl
       JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
       WHERE hnl.content_id = %d", $contentId);
@@ -402,7 +402,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'machineName' => $libs['machine_name'],
         'majorVersion' => $libs['major_version'],
         'minorVersion' => $libs['minor_version'],
-        'preloaded' => H5PCore::dependencyConstantToString($libs['preloaded']),
+        'dependencyType' => $libs['dependency_type'],
       );
 
       // Save the main libary machine name.
@@ -410,15 +410,6 @@ class H5PDrupal implements H5PFrameworkInterface {
         $mainLibraryMachineName = $libs['machine_name'];
         $mainLibrary = $librariesInfo[$mainLibraryMachineName];
       }
-    }
-
-    if (module_exists('h5peditor')) {
-      $editor = h5peditor_get_instance();
-      // TODO: Move this function to core?
-      $editorLibraries = $editor->findEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion']);
-    }
-    else {
-      $editorLibraries = array();
     }
 
     // Set language to drupals node language, or 'und' if not set.
@@ -429,7 +420,6 @@ class H5PDrupal implements H5PFrameworkInterface {
       'mainLibrary' => $mainLibraryMachineName,
       'embedType' => $content['embed_type'],
       'libraries' => $librariesInfo,
-      'editorLibraries' => $editorLibraries,
       'language' => $exportLanguage,
       'jsonContent' => $content['json_content'],
     );

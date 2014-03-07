@@ -455,7 +455,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
   );
   
   $h5p = _h5p_get_instance('core');
-  $files = $h5p->loadContentDependencies($content_id, H5PCore::DEPENDENCY_TYPE_PRELOADED);
+  $files = $h5p->loadContentDependencies($content_id, 'preloaded');
   if ($embed_type === 'div') {
     foreach ($files['scripts'] as $js_path) {
       if (!isset($added_js[$js_path])) {
