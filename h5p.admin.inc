@@ -288,7 +288,7 @@ function h5p_library_upload_form_validate($form, &$form_state) {
 function h5p_library_upload_form_submit($form, &$form_state) {
   // Save package
   $h5p_core = _h5p_get_instance('storage');
-  if ($h5p_core->savePackage(-31337) === TRUE) {
+  if ($h5p_core->savePackage(NULL, NULL, TRUE) === TRUE) {
     _h5p_clear_js_and_css_cache();
   }
   
