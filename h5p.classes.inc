@@ -105,9 +105,10 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getLibraryUsage($libraryId) {
     $usage = array();
     
-    $usage['content'] = intval(db_result(db_query('SELECT COUNT(distinct n.nid)
-                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
-                   WHERE l.library_id = %d', $libraryId)));
+    $usage['content'] = intval(db_result(db_query(
+      'SELECT COUNT(distinct n.nid)
+      FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
+      WHERE l.library_id = %d', $libraryId)));
     
     $usage['libraries'] = intval(db_result(db_query('SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = %d', $libraryId)));
     
