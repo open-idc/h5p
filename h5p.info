@@ -2,7 +2,7 @@
 ;  h5p.info ini file
 ;  Contains general information about the h5p Drupal module.
 name = h5p manager
-description = "Enables privileged users to share HTML5 packages."
+description = "Enables privileged users to create and share rich HTML5 content using H5P."
 core = 6.x
 
 dependencies[] = autoload
