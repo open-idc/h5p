@@ -1067,7 +1067,7 @@ class H5PStorage {
   public function copyPackage($contentId, $copyFromId, $contentMainId = NULL) {
     $source_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $copyFromId;
     $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
-    $this->h5pC->copyTree($source_path, $destination_path);
+    $this->h5pC->copyFileTree($source_path, $destination_path);
 
     $this->h5pF->copyLibraryUsage($contentId, $copyFromId, $contentMainId);
   }
@@ -1117,7 +1117,7 @@ Class H5PExport {
       @mkdir($tempPath);
       $exportData = $this->h5pF->getExportData($contentId);
       // Create content folder
-      if ($this->h5pC->copyTree($h5pDir . 'content' . DIRECTORY_SEPARATOR . $contentId, $tempPath . DIRECTORY_SEPARATOR . 'content') === FALSE) {
+      if ($this->h5pC->copyFileTree($h5pDir . 'content' . DIRECTORY_SEPARATOR . $contentId, $tempPath . DIRECTORY_SEPARATOR . 'content') === FALSE) {
         return FALSE;
       }
       file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . 'content.json', $exportData['jsonContent']);
@@ -1178,7 +1178,7 @@ Class H5PExport {
           $source = $h5pDir . 'libraries' . DIRECTORY_SEPARATOR . $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
         }
         $destination = $tempPath . DIRECTORY_SEPARATOR . $library['machineName'];
-        $this->h5pC->copyTree($source, $destination);
+        $this->h5pC->copyFileTree($source, $destination);
       }
 
       // Create new zip instance.
@@ -1513,7 +1513,7 @@ class H5PCore {
    * @return boolean
    *  Indicates if the directory existed.
    */
-  public function copyTree($source, $destination) {
+  public function copyFileTree($source, $destination) {
     $dir = opendir($source);
 
     if ($dir === FALSE) {
@@ -1525,7 +1525,7 @@ class H5PCore {
     while (false !== ($file = readdir($dir))) {
         if (($file != '.') && ($file != '..')) {
             if (is_dir($source . DIRECTORY_SEPARATOR . $file)) {
-              $this->copyTree($source . DIRECTORY_SEPARATOR . $file, $destination . DIRECTORY_SEPARATOR . $file);
+              $this->copyFileTree($source . DIRECTORY_SEPARATOR . $file, $destination . DIRECTORY_SEPARATOR . $file);
             }
             else {
               copy($source . DIRECTORY_SEPARATOR . $file,$destination . DIRECTORY_SEPARATOR . $file);
