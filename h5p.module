@@ -309,7 +309,7 @@ function h5p_delete($node) {
  * Implementation of hook_load().
  */
 function h5p_load($node) {
-  $h5p = h5p_get_instance();
+  $h5p = _h5p_get_instance('core');
   $content = $h5p->loadContent(h5p_get_content_id($node));
 
   $additions = new stdClass();  
@@ -454,7 +454,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
     )
   );
   
-  $h5p = h5p_get_instance();
+  $h5p = _h5p_get_instance('core');
   $files = $h5p->loadContentDependencies($content_id, H5PCore::DEPENDENCY_TYPE_PRELOADED);
   if ($embed_type === 'div') {
     foreach ($files['scripts'] as $js_path) {
@@ -558,7 +558,7 @@ function h5p_filter_json_content($node) {
   // Get params as object
   $params = json_decode($node->json_content);
 
-  $h5p = h5p_get_instance();
+  $h5p = _h5p_get_instance('core');
   // Get semantics.
   $semantics = $h5p->loadLibrarySemantics($node->main_library['name'], $node->main_library['majorVersion'], $node->main_library['minorVersion']);
   
@@ -676,13 +676,6 @@ function _h5p_get_instance($type) {
     case 'core':
       return $core;
   }
-}
-
-/**
- * @return H5PCore instance.
- */
-function h5p_get_instance() {
-  return _h5p_get_instance('core');
 }
 
 /**
