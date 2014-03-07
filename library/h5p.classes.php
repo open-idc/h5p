@@ -43,13 +43,6 @@ interface H5PFrameworkInterface {
    * @return string Path to the folder where the last uploaded h5p for this session is located.
    */
   public function getUploadedH5pFolderPath();
-  
-  /**
-   * Get the SkipContentValidation to the last uploaded h5p
-   *
-   * @return boolean Wether to skip validation of content for the last uploaded h5p for this session or not.
-   */
-  public function getUploadedH5pSkipContent();
 
   /**
    * @return string Path to the folder where all h5p files are stored
@@ -397,11 +390,10 @@ class H5PValidator {
    * @return boolean
    *  TRUE if the .h5p file is valid
    */
-  public function isValidPackage() {
+  public function isValidPackage($skipContent = FALSE) {
     // Create a temporary dir to extract package in.
     $tmpDir = $this->h5pF->getUploadedH5pFolderPath();
     $tmp_path = $this->h5pF->getUploadedH5pPath();
-    $skipcontentvalidation = $this->h5pF->getUploadedH5pSkipContent();
 
     $valid = TRUE;
 
@@ -431,7 +423,7 @@ class H5PValidator {
       $filePath = $tmpDir . DIRECTORY_SEPARATOR . $file;
       // Check for h5p.json file.
       if (strtolower($file) == 'h5p.json') {
-        if ($skipcontentvalidation === TRUE) {
+        if ($skipContent === TRUE) {
           continue;
         }
       
@@ -457,7 +449,7 @@ class H5PValidator {
       }
       // Content directory holds content.
       elseif ($file == 'content') {
-        if ($skipcontentvalidation === TRUE) {
+        if ($skipContent === TRUE) {
           continue;
         }
         
@@ -500,7 +492,7 @@ class H5PValidator {
         }
       }
     }
-    if ($skipcontentvalidation === FALSE) {
+    if ($skipContent === FALSE) {
       if (!$contentExists) {
         $this->h5pF->setErrorMessage($this->h5pF->t('A valid content folder is missing'));
         $valid = FALSE;
@@ -513,7 +505,7 @@ class H5PValidator {
     if ($valid) {
       $this->h5pC->librariesJsonData = $libraries;
       
-      if ($skipcontentvalidation === FALSE) {
+      if ($skipContent === FALSE) {
         $this->h5pC->mainJsonData = $mainH5pData;
         $this->h5pC->contentJsonData = $contentJsonData;
         $libraries['mainH5pData'] = $mainH5pData; // Check for the dependencies in h5p.json as well as in the libraries
