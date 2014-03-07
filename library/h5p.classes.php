@@ -1168,7 +1168,7 @@ Class H5PExport {
       // Copies libraries to temp dir and create mention in h5p.json
       foreach($exportData['libraries'] as $library) {
         if ($this->h5pC->development_mode & H5PDevelopment::MODE_LIBRARY) {
-          $devlib = $this->h5pC->development->getLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+          $devlib = $this->h5pC->h5pD->getLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
           if ($devlib !== NULL) {
             $source = $devlib['path'];
           }
@@ -1269,12 +1269,7 @@ class H5PCore {
   public static $defaultContentWhitelist = 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf';
   public static $defaultLibraryWhitelistExtras = 'js css';
 
-  public $h5pF;
-  public $librariesJsonData;
-  public $contentJsonData;
-  public $mainJsonData;
-  
-  public $db, $path, $development_mode, $development;
+  public $librariesJsonData, $contentJsonData, $mainJsonData, $h5pF, $path, $development_mode, $h5pD;
 
   /**
    * Constructor for the H5PCore
@@ -1288,12 +1283,12 @@ class H5PCore {
   public function __construct($H5PFramework, $path, $language = 'en', $development_mode = H5PDevelopment::MODE_NONE) {
     $this->h5pF = $H5PFramework;
     
-    $this->db = $H5PFramework;
+    $this->h5pF = $H5PFramework;
     $this->path = $path;
     $this->development_mode = $development_mode;
     
     if ($development_mode & H5PDevelopment::MODE_LIBRARY) {
-      $this->development = new H5PDevelopment($this->db, $path, $language);
+      $this->h5pD = new H5PDevelopment($this->h5pF, $path, $language);
     }
   }
 
@@ -1304,7 +1299,7 @@ class H5PCore {
    * @return object
    */
   public function loadContent($id) {
-    $content = $this->db->loadContent($id);
+    $content = $this->h5pF->loadContent($id);
     
     if ($content !== NULL) {
       $content['library'] = array(
@@ -1340,10 +1335,10 @@ class H5PCore {
    * @return array
    */
   public function loadContentDependencies($id, $type = NULL) {
-    $dependencies = $this->db->loadContentDependencies($id, $type);
+    $dependencies = $this->h5pF->loadContentDependencies($id, $type);
   
     if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
-      $developmentLibraries = $this->development->getLibraries();
+      $developmentLibraries = $this->h5pD->getLibraries();
       
       foreach ($dependencies as $key => $dependency) {
         $libraryString = H5PCore::libraryToString($dependency);
@@ -1396,17 +1391,17 @@ class H5PCore {
   public function loadLibrarySemantics($name, $majorVersion, $minorVersion) {
     if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
       // Try to load from dev lib
-      $semantics = $this->development->getSemantics($name, $majorVersion, $minorVersion);
+      $semantics = $this->h5pD->getSemantics($name, $majorVersion, $minorVersion);
     }
     
     if ($semantics === NULL) {
       // Try to load from DB.
-      $semantics = $this->db->loadLibrarySemantics($name, $majorVersion, $minorVersion);
+      $semantics = $this->h5pF->loadLibrarySemantics($name, $majorVersion, $minorVersion);
     }
     
     if ($semantics !== NULL) {
       $semantics = json_decode($semantics);
-      $this->db->alterLibrarySemantics($semantics, $name, $majorVersion, $minorVersion);
+      $this->h5pF->alterLibrarySemantics($semantics, $name, $majorVersion, $minorVersion);
     }
     
     return $semantics;
@@ -1420,12 +1415,12 @@ class H5PCore {
   public function loadLibrary($name, $majorVersion, $minorVersion) {
     if ($this->development_mode & H5PDevelopment::MODE_LIBRARY) {
       // Try to load from dev
-      $library = $this->development->getLibrary($name, $majorVersion, $minorVersion);
+      $library = $this->h5pD->getLibrary($name, $majorVersion, $minorVersion);
     }
     
     if ($library === NULL) {
       // Try to load from DB.
-      $library = $this->db->loadLibrary($name, $majorVersion, $minorVersion);
+      $library = $this->h5pF->loadLibrary($name, $majorVersion, $minorVersion);
     }
   
     return $library;
