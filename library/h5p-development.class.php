@@ -17,8 +17,8 @@ class H5PDevelopment {
    * @param string Files path
    * @param array $libraries Optional cache input.
    */
-  public function __construct($outerface, $filesPath, $language, $libraries = NULL) {
-    $this->h5pF = $outerface;
+  public function __construct($H5PFramework, $filesPath, $language, $libraries = NULL) {
+    $this->h5pF = $H5PFramework;
     $this->language = $language;
     if ($libraries !== NULL) {
       $this->libraries = $libraries;
