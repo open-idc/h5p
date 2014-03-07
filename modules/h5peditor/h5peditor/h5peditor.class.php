@@ -139,7 +139,7 @@ class H5peditor {
     foreach ($newLibraries as $library) {
       $libraryFull = $this->h5p->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $librariesUsed[$library['machineName']]['library'] = $libraryFull;
-      $librariesUsed[$library['machineName']]['type'] = H5PCore::DEPENDENCY_TYPE_PRELOADED;
+      $librariesUsed[$library['machineName']]['type'] = 'preloaded';
       $this->h5p->findLibraryDependencies($librariesUsed, $libraryFull);
     }
 
@@ -289,7 +289,7 @@ class H5peditor {
     
     $editorLibraries = array();
     foreach ($dependencies as $dependency) {
-      if ($dependency['type'] !== H5PCore::DEPENDENCY_TYPE_EDITOR) {
+      if ($dependency['type'] !== 'editor') {
         continue; // Only load editor libraries.
       }
       $dependency['library']['dropCss'] = $dependency['dropCss'];

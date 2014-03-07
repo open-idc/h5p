@@ -1137,13 +1137,13 @@ Class H5PExport {
       // Copies libraries to temp dir and create mention in h5p.json
       foreach($exportData['libraries'] as $library) {
         // Set preloaded and dynamic dependencies
-        if ($library['preloaded']) {
+        if ($library['dependencyType'] == 'preloaded') {
           $preloadedDependencies[] = array(
             'machineName' => $library['machineName'],
             'majorVersion' => $library['majorVersion'],
             'minorVersion' => $library['minorVersion'],
           );
-        } else {
+        } elseif ($library['dependencyType'] == 'dynamic') {
           $dynamicDependencies[] = array(
             'machineName' => $library['machineName'],
             'majorVersion' => $library['majorVersion'],
@@ -1159,11 +1159,6 @@ Class H5PExport {
       // Save h5p.json
       $results = print_r(json_encode($h5pJson), true);
       file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'h5p.json', $results);
-      
-      // Add the editor libraries to the list of libraries
-      // TODO: Add support for dependencies or editor libraries
-      // Note that since 6105 all dependencies should be in h5p_nodes_libraries.
-      $exportData['libraries'] = $this->addEditorLibraries($exportData['libraries'], $exportData['editorLibraries']);
       
       // Copies libraries to temp dir and create mention in h5p.json
       foreach($exportData['libraries'] as $library) {
@@ -1244,11 +1239,6 @@ Class H5PExport {
  * Functions and storage shared by the other H5P classes
  */
 class H5PCore {
-
-  // These tree probably belongs on a library or dependency class.
-  const DEPENDENCY_TYPE_DYNAMIC = 0;
-  const DEPENDENCY_TYPE_PRELOADED = 1;
-  const DEPENDENCY_TYPE_EDITOR = 2;
 
   public static $coreApi = array(
     'majorVersion' => 1,
@@ -1452,13 +1442,12 @@ class H5PCore {
           continue; // Skip, already have this.
         }
         
-        $dependencyType = H5PCore::dependencyStringToConstant($type);
         $dependencyLibrary = $this->loadLibrary($dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']);
         $dependencies[$dependencyKey] = array(
           'library' => $dependencyLibrary,
-          'type' => $dependencyType
+          'type' => $type
         );
-        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $dependencyType === H5PCore::DEPENDENCY_TYPE_EDITOR);
+        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $dependencyType === 'editor');
       }
     }
   }
@@ -1571,42 +1560,6 @@ class H5PCore {
       );
     }
     return FALSE;
-  }
-  
-  /**
-   * Convert dependency type string to constant.
-   *
-   * @param $dependencyType string
-   * @return int
-   */
-  public static function dependencyStringToConstant($dependencyType) {
-    switch ($dependencyType) {
-      case 'editor': 
-        return H5PCore::DEPENDENCY_TYPE_EDITOR;
-      case 'preloaded':
-        return H5PCore::DEPENDENCY_TYPE_PRELOADED;
-      case 'dynamic':
-        return H5PCore::DEPENDENCY_TYPE_DYNAMIC;
-    }
-    return $dependencyType;
-  }
-  
-  /**
-   * Convert dependency type constant to string.
-   *
-   * @param $dependencyType int
-   * @return string
-   */
-  public static function dependencyConstantToString($dependencyType) {
-    switch ($dependencyType) {
-      case H5PCore::DEPENDENCY_TYPE_EDITOR: 
-        return 'editor';
-      case H5PCore::DEPENDENCY_TYPE_PRELOADED:
-        return 'preloaded';
-      case H5PCore::DEPENDENCY_TYPE_DYNAMIC:
-        return 'dynamic';
-    }
-    return $dependencyType;
   }
   
   /**
