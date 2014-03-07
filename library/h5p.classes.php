@@ -466,6 +466,7 @@ class H5PValidator {
         }
 
         if (!$this->h5pCV->validateContentFiles($filePath)) {
+          // validateContentfiles prints error messages itself
           $valid = FALSE;
           continue;
         }
