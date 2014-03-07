@@ -319,7 +319,6 @@ function h5p_load($node) {
     $additions->embed_type = $content['embedType'];
     $additions->main_library = $content['library'];
   }
-  // TODO: Gather h5p attrs under a h5p namespace.
   return $additions;
 }
 
