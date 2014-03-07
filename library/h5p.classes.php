@@ -405,7 +405,7 @@ class H5PValidator {
     }
     else {
       $this->h5pF->setErrorMessage($this->h5pF->t('The file you uploaded is not a valid HTML5 Package.'));
-      H5PCore::recursiveUnlink($tmpDir);
+      H5PCore::deleteFileTree($tmpDir);
       return;
     }
     unlink($tmpPath);
@@ -525,7 +525,7 @@ class H5PValidator {
       $valid = empty($missingLibraries) && $valid;
     }
     if (!$valid) {
-      H5PCore::recursiveUnlink($tmpDir);
+      H5PCore::deleteFileTree($tmpDir);
     }
     return $valid;
   }
@@ -981,7 +981,7 @@ class H5PStorage {
 
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
       $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE);
-      H5PCore::recursiveUnlink($destination_path);
+      H5PCore::deleteFileTree($destination_path);
       rename($current_path, $destination_path);
 
       $library_saved = TRUE;
@@ -1013,7 +1013,7 @@ class H5PStorage {
       $this->h5pC->findLibraryDependencies($librariesInUse, $this->h5pC->mainJsonData);
       
       $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
-      H5PCore::recursiveUnlink($this->h5pF->getUploadedH5pFolderPath());
+      H5PCore::deleteFileTree($this->h5pF->getUploadedH5pFolderPath());
 
       // Save the data in content.json
       $contentJson = file_get_contents($destination_path . DIRECTORY_SEPARATOR . 'content.json');
@@ -1031,7 +1031,7 @@ class H5PStorage {
    *  The content id
    */
   public function deletePackage($contentId) {
-    H5PCore::recursiveUnlink($this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
+    H5PCore::deleteFileTree($this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
     $this->h5pF->deleteContentData($contentId);
   }
 
@@ -1200,7 +1200,7 @@ Class H5PExport {
       }
       // Close zip and remove temp dir
       $zip->close();
-      H5PCore::recursiveUnlink($tempPath);
+      H5PCore::deleteFileTree($tempPath);
     }
 
     return str_replace(DIRECTORY_SEPARATOR, '/', $zipPath);
@@ -1494,13 +1494,13 @@ class H5PCore {
    * @return boolean
    *  Indicates if the directory existed.
    */
-  public static function recursiveUnlink($dir) {
+  public static function deleteFileTree($dir) {
     if (!is_dir($dir)) {
       return;
     }
     $files = array_diff(scandir($dir), array('.','..'));
     foreach ($files as $file) {
-      (is_dir("$dir/$file")) ? self::recursiveUnlink("$dir/$file") : unlink("$dir/$file");
+      (is_dir("$dir/$file")) ? self::deleteFileTree("$dir/$file") : unlink("$dir/$file");
     }
     return rmdir($dir);
   }
