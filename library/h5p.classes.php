@@ -1378,7 +1378,6 @@ class H5PCore {
       'scripts' => array(),
       'styles' => array(),
     );
-    
     foreach ($dependencies as $dependency) {
       if (isset($dependency['path']) === FALSE) {
         $dependency['path'] = $this->path . '/libraries/' . H5PCore::libraryToString($dependency, TRUE);
@@ -1388,16 +1387,15 @@ class H5PCore {
       
       if (empty($dependency['preloadedJs']) === FALSE) {
         foreach ($dependency['preloadedJs'] as $file) {
-          $files['scripts'][] = $dependency['path'] . '/' . trim(isset($file['path']) ? $file['path'] : $file);
+          $files['scripts'][] = $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file);
         }
       }
       if ($dependency['dropCss'] !== '1' && empty($dependency['preloadedCss']) === FALSE) {
         foreach ($dependency['preloadedCss'] as $file) {
-          $files['styles'][] = $dependency['path'] . '/' . trim(isset($file['path']) ? $file['path'] : $file);
+          $files['styles'][] = $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file);
         }
       }
     }
-    
     return $files;
   }
   
