@@ -47,15 +47,6 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getUploadedH5pPath() {
     return $_SESSION['h5p_upload'];
   }
-  
-  /**
-   * Implements getUploadedH5PSkipContent
-   */
-  public function getUploadedH5pSkipContent() {
-    return ( isset($_SESSION['h5p_upload_skip_content']) === TRUE
-             && $_SESSION['h5p_upload_skip_content'] === TRUE
-             ? TRUE : FALSE );
-  }
 
   /**
    * Implements getLibraryId

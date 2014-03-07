@@ -272,13 +272,12 @@ function h5p_library_upload_form_validate($form, &$form_state) {
     // These has to be set instead of sending parameteres to the validation function.
     $_SESSION['h5p_upload'] = $file->filepath;
     $_SESSION['h5p_upload_folder'] = $temporary_file_path;
-    $_SESSION['h5p_upload_skip_content'] = TRUE;
     
     $validator = _h5p_get_instance('validator');
-    if ($validator->isValidPackage() === FALSE) {
+    if ($validator->isValidPackage(TRUE) === FALSE) {
       form_set_error('h5p', t('The uploaded file was not a valid h5p package'));
       // Maintain session variables.
-      unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder'], $_SESSION['h5p_upload_skip_content']);
+      unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
     }
   }
 }
@@ -294,5 +293,5 @@ function h5p_library_upload_form_submit($form, &$form_state) {
   }
   
   // Maintain session variables.
-  unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder'], $_SESSION['h5p_upload_skip_content']);
+  unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
 }
