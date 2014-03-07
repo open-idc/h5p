@@ -263,9 +263,6 @@ function h5p_update($node) {
     h5p_insert($node);
   }
   else {
-    // TODO: Consider creating saveContent in core, where we might update json files and 
-    // create the .h5p for export.
-    
     // Make sure a row exists before we try updating it.
     $content_id = db_result(db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = %d", $content_id));
     
