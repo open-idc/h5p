@@ -393,13 +393,13 @@ class H5PValidator {
   public function isValidPackage($skipContent = FALSE) {
     // Create a temporary dir to extract package in.
     $tmpDir = $this->h5pF->getUploadedH5pFolderPath();
-    $tmp_path = $this->h5pF->getUploadedH5pPath();
+    $tmpPath = $this->h5pF->getUploadedH5pPath();
 
     $valid = TRUE;
 
     // Extract and then remove the package file.
     $zip = new ZipArchive;
-    if ($zip->open($tmp_path) === true) {
+    if ($zip->open($tmpPath) === true) {
       $zip->extractTo($tmpDir);
       $zip->close();
     }
@@ -408,7 +408,7 @@ class H5PValidator {
       H5PCore::recursiveUnlink($tmpDir);
       return;
     }
-    unlink($tmp_path);
+    unlink($tmpPath);
 
     // Process content and libraries
     $libraries = array();
