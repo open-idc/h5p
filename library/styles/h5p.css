@@ -272,7 +272,27 @@ div.h5p-fullscreen {
 .h5p-copyrights-dialog .h5p-close:hover:after {
   -webkit-transform: scale(1.25,1.25);
 }
-
-.h5p-copyright-information {
-  margin-left: 2em;
+.h5p-copyrights-dialog h2 {
+  margin: 0.25em 0 0.5em;
+}
+.h5p-copyrights-dialog h3 {
+  margin: 0.75em 0 0.25em;
+}
+.h5p-copyrights-dialog dl {
+  margin: 0.25em 0 0.75em;
+}
+.h5p-copyrights-dialog dt {
+  float: left;
+  margin: 0 0.75em 0 0;
+}
+.h5p-copyrights-dialog dt:after {
+  content: ':';
+}
+.h5p-copyrights-dialog dd {
+  margin: 0;
+}
+.h5p-copyright-information .h5p-copyright-information {
+  border-left: 0.25em solid #d0d0d0;
+  margin-left: 0.25em;
+  padding-left: 0.25em;
 }
