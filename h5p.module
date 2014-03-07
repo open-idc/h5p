@@ -95,7 +95,7 @@ function h5p_node_info() {
     'h5p_content' => array(
       'name' => t('Interactive content'),
       'module' => 'h5p',
-      'description' => 'Upload HTML5 packages(.h5p) to create interactive content.',
+      'description' => 'Create interactive HTML5 content using H5P.',
     )
   );
 }
