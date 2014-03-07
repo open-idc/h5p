@@ -392,7 +392,7 @@ H5P.t = function (key, vars, ns) {
  * @returns {undefined}
  */
 H5P.openCopyrightsDialog = function ($element, instance) {
-  var $d = H5P.jQuery('<div class="h5p-copyrights-dialog"><div class="h5p-inner">' + H5P.createCopyrights(instance.getCopyrights()) + '</div><div class="h5p-close" role="button" tabindex="1" titel="Close"></div></div>')
+  var $d = H5P.jQuery('<div class="h5p-copyrights-dialog"><div class="h5p-inner"><h2>' + H5P.t('copyrightInformation') + '</h2>' + H5P.createCopyrights(instance.getCopyrights()) + '</div><div class="h5p-close" role="button" tabindex="1" titel="' + H5P.t('close') + '"></div></div>')
     .insertAfter($element)
     .click(function () {
       $d.removeClass('h5p-open'); // Fade out

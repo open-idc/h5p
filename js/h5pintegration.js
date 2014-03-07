@@ -108,6 +108,8 @@ H5PIntegration.i18n = {
     fullscreen: Drupal.t('Fullscreen'),
     download: Drupal.t('Download'),
     copyrights: Drupal.t('Copyrights'),
+    copyrightInformation: Drupal.t('Copyright information'),
+    close: Drupal.t('Close'),
     title: Drupal.t('Title'),
     author: Drupal.t('Author'),
     year: Drupal.t('Year'),
