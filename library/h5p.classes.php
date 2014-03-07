@@ -448,11 +448,7 @@ class H5PValidator {
         $imageExists = TRUE;
       }
       // Content directory holds content.
-      elseif ($file == 'content') {
-        if ($skipContent === TRUE) {
-          continue;
-        }
-        
+      elseif ($file == 'content' && !$skipContent) {
         if (!is_dir($filePath)) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Invalid content folder'));
           $valid = FALSE;
