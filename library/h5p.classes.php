@@ -951,7 +951,7 @@ class H5PStorage {
    *  TRUE if one or more libraries were updated
    *  FALSE otherwise
    */
-  public function savePackage($contentId, $contentMainId = NULL) {
+  public function savePackage($contentId = NULL, $contentMainId = NULL, $skipContent = FALSE) {
     // Save the libraries we processed during validation
     $library_saved = FALSE;
     $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
@@ -1002,7 +1002,7 @@ class H5PStorage {
       }
     }
     
-    if ($this->h5pF->getUploadedH5pSkipContent() === FALSE) {
+    if (!$skipContent) {
       // Move the content folder
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . 'content';
       $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
