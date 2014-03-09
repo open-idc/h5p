@@ -309,8 +309,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
       db_query(
         "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
-        VALUES (%d, %d, %d, %d)
-        ON DUPLICATE KEY UPDATE dependency_type = %d, drop_css = %d",
+        VALUES (%d, %d, '%s', %d)
+        ON DUPLICATE KEY UPDATE dependency_type = '%s', drop_css = %d",
         $contentId, $dependency['library']['libraryId'], $dependency['type'], $dropCss, $dependency['type'], $dropCss
       );
     }
