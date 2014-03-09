@@ -1162,6 +1162,7 @@ Class H5PExport {
       
       // Copies libraries to temp dir and create mention in h5p.json
       foreach($exportData['libraries'] as $library) {
+        $source = NULL;
         if ($this->h5pC->development_mode & H5PDevelopment::MODE_LIBRARY) {
           $devlib = $this->h5pC->h5pD->getLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
           if ($devlib !== NULL) {
