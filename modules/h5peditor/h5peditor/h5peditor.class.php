@@ -289,6 +289,9 @@ class H5peditor {
     
     $editorLibraries = array();
     foreach ($dependencies as $dependency) {
+      if ($dependency['type'] !== 'editor') {
+        continue; // Only load editor libraries.
+      }
       $dependency['library']['dropCss'] = $dependency['dropCss'];
       $editorLibraries[$dependency['library']['libraryId']] = $dependency['library'];
     }
