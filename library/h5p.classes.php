@@ -1364,12 +1364,12 @@ class H5PCore {
         $dependency['preloadedCss'] = explode(',', $dependency['preloadedCss']);
       }
       
-      if (empty($dependency['preloadedJs']) === FALSE) {
+      if (!empty($dependency['preloadedJs']) && $dependency['preloadedJs'][0] !== '') {
         foreach ($dependency['preloadedJs'] as $file) {
           $files['scripts'][] = $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file);
         }
       }
-      if ($dependency['dropCss'] !== '1' && empty($dependency['preloadedCss']) === FALSE) {
+      if ($dependency['dropCss'] !== '1' && !empty($dependency['preloadedCss']) && $dependency['preloadedCss'][0] !== '') {
         foreach ($dependency['preloadedCss'] as $file) {
           $files['styles'][] = $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file);
         }
