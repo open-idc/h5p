@@ -1452,7 +1452,7 @@ class H5PCore {
           'library' => $dependencyLibrary,
           'type' => $type
         );
-        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $dependencyType === 'editor');
+        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $type === 'editor');
       }
     }
   }
