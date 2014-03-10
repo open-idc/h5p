@@ -317,9 +317,6 @@ class H5peditor {
         if (!isset($libraryData->javascript[$script])) {
           $libraryData->javascript[$script] = '';
         }
-        // TODO: rtrim and check substr(-1) === '}'? jsmin?
-        // TODO: Perhaps just using the JS files would be fine? This would leverage browser caching and reduce server load.
-        // TODO: Explain why we are using .= here.
         $libraryData->javascript[$script] .= "\n" . file_get_contents($script);
       }
     }
