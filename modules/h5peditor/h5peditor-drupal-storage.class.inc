@@ -70,8 +70,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     
     $libraries = array();
 
-    // Get some books from the library.
-    $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL");
+    $libraries_result = db_query("SELECT machine_name AS machineName, title, major_version as majorVersion, minor_version as minorVersion FROM {h5p_libraries} WHERE runnable = 1 AND semantics IS NOT NULL ORDER BY title");
     while ($library = db_fetch_object($libraries_result)) {
       $libraries[] = $library;
     }
