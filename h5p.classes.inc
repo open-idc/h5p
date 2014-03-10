@@ -486,17 +486,17 @@ class H5PDrupal implements H5PFrameworkInterface {
     $queryArgs = array($id);
     
     if ($type !== NULL) {
-      $query .= " AND hnl.dependency_type = %d";
+      $query .= " AND hnl.dependency_type = '%s'";
       $queryArgs[] = $type;
     }
-    
+
     $result = db_query($query, $queryArgs);
     
     $dependencies = array();
     while ($dependency = db_fetch_array($result)) {
       $dependencies[] = $dependency;
     }
-    
+
     return $dependencies;
   }  
   
