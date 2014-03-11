@@ -412,7 +412,7 @@ function h5p_update_6104() {
  * 
  * Updates h5p_nodes_libraries to get all dependencies.
  */
-/*function h5p_update_6105(&$sandbox) {
+function h5p_update_6105(&$sandbox) {
   $ret = array();
 
   if (isset($sandbox['content']) === FALSE) {
@@ -464,7 +464,7 @@ function h5p_update_6104() {
   }
   
   return $ret;
-}*/
+}
 
 /**
  * (re)Save all dependencies for given content.
