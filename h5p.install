@@ -414,7 +414,7 @@ function h5p_update_6104() {
  */
 function h5p_update_6105(&$sandbox) {
   $ret = array();
-    
+
   if (isset($sandbox['content']) === FALSE) {
     db_drop_primary_key($ret, 'h5p_nodes_libraries');
     db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
@@ -441,6 +441,9 @@ function h5p_update_6105(&$sandbox) {
       FROM {h5p_nodes} hn
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
     ");
+    
+    // Clean h5p_nodes_libraries - it will be rebuilt
+    db_query('delete from h5p_nodes_libraries');
 
     $sandbox['content'] = array();
     while ($content = db_fetch_object($result)) {
@@ -477,5 +480,12 @@ function h5p_save_content_dependencies($content) {
   
   $dependencies = array();
   $core->findLibraryDependencies($dependencies, $library);
+  
+  // Add main library
+  $dependencies['preloaded-' . $content->libraryName] = array(
+    'library' => $library,
+    'type' => 'preloaded'
+  );
+  
   $i->saveLibraryUsage($content->id, $dependencies);
 }
