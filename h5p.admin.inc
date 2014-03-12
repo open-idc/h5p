@@ -63,7 +63,6 @@ function h5p_admin_settings() {
   
   /*** 
    * Devmode disabled because of bugs found before release. 
-   * Will be fixed and released in the next version (beta 26)
    * 
    * $form['h5p_library_development'] = array(
     '#type' => 'checkbox',
