@@ -632,11 +632,10 @@ function _h5p_get_instance($type) {
     // We've started to use autoload without enforcing it, so we still need to require the files
     // TODO: Enforce autoload through hook_update_N and remove the code below. Remember to clear cache as well
     $H5P_path = './' . drupal_get_path('module', 'h5p');
-    require_once $H5P_path . "/h5p.classes.inc";
     require_once $H5P_path . "/library/h5p.classes.php";
     require_once $H5P_path . "/library/h5p-development.class.php";
-
-
+    require_once $H5P_path . "/h5p.classes.inc";
+    
     $interface = new H5PDrupal();
 
     $development_mode = H5PDevelopment::MODE_NONE;
