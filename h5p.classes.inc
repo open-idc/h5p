@@ -47,15 +47,6 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getUploadedH5pPath() {
     return $_SESSION['h5p_upload'];
   }
-  
-  /**
-   * Implements getUploadedH5PSkipContent
-   */
-  public function getUploadedH5pSkipContent() {
-    return ( isset($_SESSION['h5p_upload_skip_content']) === TRUE
-             && $_SESSION['h5p_upload_skip_content'] === TRUE
-             ? TRUE : FALSE );
-  }
 
   /**
    * Implements getLibraryId
@@ -114,9 +105,10 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getLibraryUsage($libraryId) {
     $usage = array();
     
-    $usage['content'] = intval(db_result(db_query('SELECT COUNT(distinct n.nid)
-                   FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
-                   WHERE l.library_id = %d', $libraryId)));
+    $usage['content'] = intval(db_result(db_query(
+      'SELECT COUNT(distinct n.nid)
+      FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
+      WHERE l.library_id = %d', $libraryId)));
     
     $usage['libraries'] = intval(db_result(db_query('SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = %d', $libraryId)));
     
@@ -218,7 +210,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $library = db_fetch_object(db_query("select * from {h5p_libraries} where library_id = %d", $libraryId));
     
     // Delete files:
-    H5PCore::recursiveUnlink(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
+    H5PCore::deleteFileTree(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
     
     // Delete data in database (won't delete content):
     db_query("DELETE FROM {h5p_libraries_libraries} WHERE library_id = %d", $libraryId);
@@ -317,8 +309,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
       db_query(
         "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
-        VALUES (%d, %d, %d, %d)
-        ON DUPLICATE KEY UPDATE dependency_type = %d, drop_css = %d",
+        VALUES (%d, %d, '%s', %d)
+        ON DUPLICATE KEY UPDATE dependency_type = '%s', drop_css = %d",
         $contentId, $dependency['library']['libraryId'], $dependency['type'], $dropCss, $dependency['type'], $dropCss
       );
     }
@@ -357,6 +349,18 @@ class H5PDrupal implements H5PFrameworkInterface {
       }
     }
     return $library;
+  }
+  
+  private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
+    $semanticsPath = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
+    if (file_exists($semanticsPath)) {
+      $semantics = file_get_contents($semanticsPath);
+      if (!json_decode($semantics, TRUE)) {
+        drupal_set_message(t('Invalid json in semantics for %library', array('%library' => $machineName)), 'warning');
+      }
+      return $semantics;
+    }
+    return FALSE;
   }
 
   /**
@@ -400,7 +404,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     // Use library ids to get library info.
     $res = db_query(
       "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, 
-      hnl.dependency_type as preloaded, hl.library_id as library_id
+      hnl.dependency_type, hl.library_id as library_id
       FROM {h5p_libraries} hl
       JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
       WHERE hnl.content_id = %d", $contentId);
@@ -410,7 +414,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'machineName' => $libs['machine_name'],
         'majorVersion' => $libs['major_version'],
         'minorVersion' => $libs['minor_version'],
-        'preloaded' => H5PCore::dependencyConstantToString($libs['preloaded']),
+        'dependencyType' => $libs['dependency_type'],
       );
 
       // Save the main libary machine name.
@@ -418,15 +422,6 @@ class H5PDrupal implements H5PFrameworkInterface {
         $mainLibraryMachineName = $libs['machine_name'];
         $mainLibrary = $librariesInfo[$mainLibraryMachineName];
       }
-    }
-
-    if (module_exists('h5peditor')) {
-      $editor = h5peditor_get_instance();
-      // TODO: Move this function to core?
-      $editorLibraries = $editor->findEditorLibraries($mainLibraryMachineName, $mainLibrary['majorVersion'], $mainLibrary['minorVersion']);
-    }
-    else {
-      $editorLibraries = array();
     }
 
     // Set language to drupals node language, or 'und' if not set.
@@ -437,7 +432,6 @@ class H5PDrupal implements H5PFrameworkInterface {
       'mainLibrary' => $mainLibraryMachineName,
       'embedType' => $content['embed_type'],
       'libraries' => $librariesInfo,
-      'editorLibraries' => $editorLibraries,
       'language' => $exportLanguage,
       'jsonContent' => $content['json_content'],
     );

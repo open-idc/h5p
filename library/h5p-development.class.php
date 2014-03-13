@@ -9,16 +9,19 @@ class H5PDevelopment {
   const MODE_CONTENT = 1;
   const MODE_LIBRARY = 2;
 
-  private $implements, $libraries, $language;
+  private $h5pF, $libraries, $language;
 
   /**
    * Constructor.
    *
-   * @param string Files path
+   * @param object $H5PFramework
+   *  The frameworks implementation of the H5PFrameworkInterface
+   * @param string $filesPath
+   *  Path to where H5P should store its files
    * @param array $libraries Optional cache input.
    */
-  public function __construct($outerface, $filesPath, $language, $libraries = NULL) {
-    $this->implements = $outerface;
+  public function __construct($H5PFramework, $filesPath, $language, $libraries = NULL) {
+    $this->h5pF = $H5PFramework;
     $this->language = $language;
     if ($libraries !== NULL) {
       $this->libraries = $libraries;
@@ -80,8 +83,8 @@ class H5PDevelopment {
       // TODO: Validate props? Not really needed, is it? this is a dev site.
       
       // Save/update library.
-      $library['libraryId'] = $this->implements->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      $this->implements->saveLibraryData($library, $library['libraryId'] === FALSE);
+      $library['libraryId'] = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      $this->h5pF->saveLibraryData($library, $library['libraryId'] === FALSE);
       
       $library['path'] = $libraryPath;
       $this->libraries[H5PDevelopment::libraryToString($library['machineName'], $library['majorVersion'], $library['minorVersion'])] = $library;
@@ -91,12 +94,12 @@ class H5PDevelopment {
 
     // Go trough libraries and insert dependencies. Missing deps. will just be ignored and not available. (I guess?!)
     foreach ($this->libraries as $library) {
-      $this->implements->deleteLibraryDependencies($library['libraryId']); 
+      $this->h5pF->deleteLibraryDependencies($library['libraryId']);
       // This isn't optimal, but without it we would get duplicate warnings.
       $types = array('preloaded', 'dynamic', 'editor');
       foreach ($types as $type) {
         if (isset($library[$type . 'Dependencies'])) {
-          $this->implements->saveLibraryDependencies($library['libraryId'], $library[$type . 'Dependencies'], $type);
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library[$type . 'Dependencies'], $type);
         }
       }
     }
