@@ -122,10 +122,11 @@ ns.Group.prototype.findSummary = function () {
     var child = this.children[j];
     var params = this.field.fields.length === 1 ? this.params : this.params[child.field.name];
 
-    if (child.field.type === 'text') {
+    if (child.field.type === 'text' && child instanceof H5P.Text) {
       if (params !== undefined && params !== '') {
         summary = params.replace(/(<([^>]+)>)/ig, "");
       }
+
       child.$input.change(function () {
         var params = that.field.fields.length === 1 ? that.params : that.params[child.field.name];
         if (params !== undefined && params !== '') {
