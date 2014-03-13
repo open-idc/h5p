@@ -67,7 +67,7 @@ class H5peditor {
     $libraries = $this->storage->getLibraries($libraries === NULL ? NULL : $libraries);
     
     if ($this->h5p->development_mode & H5PDevelopment::MODE_LIBRARY) {
-      $devLibs = $this->h5p->development->getLibraries();
+      $devLibs = $this->h5p->h5pD->getLibraries();
       
       // Replace libraries with devlibs
       for ($i = 0, $s = count($libraries); $i < $s; $i++) {
@@ -139,7 +139,7 @@ class H5peditor {
     foreach ($newLibraries as $library) {
       $libraryFull = $this->h5p->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $librariesUsed[$library['machineName']]['library'] = $libraryFull;
-      $librariesUsed[$library['machineName']]['type'] = H5PCore::DEPENDENCY_TYPE_PRELOADED;
+      $librariesUsed[$library['machineName']]['type'] = 'preloaded';
       $this->h5p->findLibraryDependencies($librariesUsed, $libraryFull);
     }
 
@@ -265,7 +265,7 @@ class H5peditor {
   public function getLibraryLanguage($machineName, $majorVersion, $minorVersion) {
     if ($this->h5p->development_mode & H5PDevelopment::MODE_LIBRARY) {
       // Try to get language development library first.
-      $language = $this->h5p->development->getLanguage($machineName, $majorVersion, $minorVersion);
+      $language = $this->h5p->h5pD->getLanguage($machineName, $majorVersion, $minorVersion);
     }
     
     if (isset($language) === FALSE) {
@@ -289,7 +289,7 @@ class H5peditor {
     
     $editorLibraries = array();
     foreach ($dependencies as $dependency) {
-      if ($dependency['type'] !== H5PCore::DEPENDENCY_TYPE_EDITOR) {
+      if ($dependency['type'] !== 'editor') {
         continue; // Only load editor libraries.
       }
       $dependency['library']['dropCss'] = $dependency['dropCss'];

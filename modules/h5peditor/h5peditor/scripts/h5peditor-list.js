@@ -24,9 +24,9 @@ ns.List = function (parent, field, params, setValue) {
     this.params = params;
   }
 
-  if (field.num === undefined && field.min !== undefined) {
-    // Use min as num if num isn't set.
-    field.num = field.min;
+  if (field.defaultNum === undefined && field.min !== undefined) {
+    // Use min as defaultNum if defaultNum isn't set.
+    field.defaultNum = field.min;
   }
 
   this.field = field;
@@ -75,7 +75,7 @@ ns.List.prototype.appendTo = function ($wrapper) {
   }
   else {
     // Add default number of fields.
-    for (var i = 0; i < this.field.num; i++) {
+    for (var i = 0; i < this.field.defaultNum; i++) {
       that.$add.click();
     }
   }
