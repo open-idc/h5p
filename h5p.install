@@ -414,22 +414,25 @@ function h5p_update_6104() {
  */
 function h5p_update_6105(&$sandbox) {
   $ret = array();
-    
+
   if (isset($sandbox['content']) === FALSE) {
-    db_drop_primary_key($ret, 'h5p_nodes_libraries');
-    db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
-      'description' => "dynamic, preloaded or editor",
-      'type' => 'varchar',
-      'length' => 255,
-      'not null' => TRUE,
-      'default' => 'preloaded',
-    ), array(
-      'primary key' => array('content_id', 'library_id', 'dependency_type')
-    ));
     
-    $result = end($ret);
-    if ($result['success'] === FALSE) {
-      return $ret; // Do not update nodes if update failed.
+    if (db_column_exists('h5p_nodes_libraries', 'preloaded')) {
+      db_drop_primary_key($ret, 'h5p_nodes_libraries');
+      db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
+        'description' => "dynamic, preloaded or editor",
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'preloaded',
+      ), array(
+        'primary key' => array('content_id', 'library_id', 'dependency_type')
+      ));
+      
+      $result = end($ret);
+      if ($result['success'] === FALSE) {
+        return $ret; // Do not update nodes if update failed.
+      }
     }
   
     // Update h5p_nodes_libraries to get all dependencies.
@@ -441,6 +444,10 @@ function h5p_update_6105(&$sandbox) {
       FROM {h5p_nodes} hn
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
     ");
+    
+    // Update h5p_nodes_libraries since column has changed type
+    db_query("UPDATE {h5p_nodes_libraries} set dependency_type='preloaded' where dependency_type='1'");
+    db_query("UPDATE {h5p_nodes_libraries} set dependency_type='dynamic' where dependency_type='0'");
 
     $sandbox['content'] = array();
     while ($content = db_fetch_object($result)) {
@@ -477,5 +484,6 @@ function h5p_save_content_dependencies($content) {
   
   $dependencies = array();
   $core->findLibraryDependencies($dependencies, $library);
+  
   $i->saveLibraryUsage($content->id, $dependencies);
 }
