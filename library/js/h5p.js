@@ -417,6 +417,15 @@ H5P.openCopyrightsDialog = function ($element, instance) {
 H5P.createCopyrights = function (information) {
   var html = '';
   
+  // Render thumbnail
+  if (information.thumbnail !== undefined) {
+    var width, height = 100;
+    if (information.thumbnail.width !== undefined) {
+      width = Math.round(height * (information.thumbnail.width / information.thumbnail.height));
+    }
+    html += '<img src="' + information.thumbnail.source + '" alt="' + H5P.t('thumbnail') + '" height="' + height + '"' + (width === undefined ? '' : ' width="' + width + '"') + '/>';
+  }
+  
   // Render copyright fields
   if (information.copyrights !== undefined) {
     if (information.copyrights instanceof Array) {
