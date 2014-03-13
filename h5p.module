@@ -95,7 +95,7 @@ function h5p_node_info() {
     'h5p_content' => array(
       'name' => t('Interactive content'),
       'module' => 'h5p',
-      'description' => 'Upload HTML5 packages(.h5p) to create interactive content.',
+      'description' => 'Create interactive HTML5 content using H5P.',
     )
   );
 }
@@ -223,8 +223,6 @@ function h5p_validate($node, &$form) {
  * Implementation of hook_insert().
  */
 function h5p_insert($node) {
-  // TODO: Make sure node_load -> node_save works by implementing presave
-
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
     $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
@@ -265,9 +263,6 @@ function h5p_update($node) {
     h5p_insert($node);
   }
   else {
-    // TODO: Consider creating saveContent in core, where we might update json files and 
-    // create the .h5p for export.
-    
     // Make sure a row exists before we try updating it.
     $content_id = db_result(db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = %d", $content_id));
     
@@ -314,7 +309,7 @@ function h5p_delete($node) {
  * Implementation of hook_load().
  */
 function h5p_load($node) {
-  $h5p = h5p_get_instance();
+  $h5p = _h5p_get_instance('core');
   $content = $h5p->loadContent(h5p_get_content_id($node));
 
   $additions = new stdClass();  
@@ -324,7 +319,6 @@ function h5p_load($node) {
     $additions->embed_type = $content['embedType'];
     $additions->main_library = $content['library'];
   }
-  // TODO: Gather h5p attrs under a h5p namespace.
   return $additions;
 }
 
@@ -454,8 +448,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
     )
   );
   
-  $h5p = h5p_get_instance();
-  $files = $h5p->loadContentDependencies($content_id, H5PCore::DEPENDENCY_TYPE_PRELOADED);
+  $h5p = _h5p_get_instance('core');
+  $files = $h5p->loadContentDependencies($content_id, 'preloaded');
   if ($embed_type === 'div') {
     foreach ($files['scripts'] as $js_path) {
       if (!isset($added_js[$js_path])) {
@@ -550,7 +544,7 @@ function h5p_filter_json_content($node) {
   if (isset($node->vid)) {
     $cid = 'validated_json_' . $node->vid;
     $cache = cache_get($cid);
-    if (isset($cache->data) && !variable_get('h5p_content_dev_mode', 0) && variable_get('h5p_library_development', 0) === 0) {
+    if (isset($cache->data) && !variable_get('h5p_content_dev_mode', 0) && !variable_get('h5p_library_development', 0)) {
       return $cache->data;
     }
   }
@@ -558,7 +552,7 @@ function h5p_filter_json_content($node) {
   // Get params as object
   $params = json_decode($node->json_content);
 
-  $h5p = h5p_get_instance();
+  $h5p = _h5p_get_instance('core');
   // Get semantics.
   $semantics = $h5p->loadLibrarySemantics($node->main_library['name'], $node->main_library['majorVersion'], $node->main_library['minorVersion']);
   
@@ -629,6 +623,14 @@ function _h5p_get_instance($type) {
   global $language;
 
   if (!isset($interface)) {
+    // We've started to use autoload without enforcing it, so we still need to require the files
+    // TODO: Enforce autoload through hook_update_N and remove the code below. Remember to clear cache as well
+    $H5P_path = './' . drupal_get_path('module', 'h5p');
+    require_once $H5P_path . "/h5p.classes.inc";
+    require_once $H5P_path . "/library/h5p.classes.php";
+    require_once $H5P_path . "/library/h5p-development.class.php";
+
+
     $interface = new H5PDrupal();
 
     $development_mode = H5PDevelopment::MODE_NONE;
@@ -668,13 +670,6 @@ function _h5p_get_instance($type) {
     case 'core':
       return $core;
   }
-}
-
-/**
- * @return H5PCore instance.
- */
-function h5p_get_instance() {
-  return _h5p_get_instance('core');
 }
 
 /**
