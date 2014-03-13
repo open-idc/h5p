@@ -366,15 +366,19 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements loadLibrarySemantics().
    */
-  public function loadLibrarySemantics($name, $majorVersion, $minorVersion) {
-    $semantics = db_result(db_query(
-      "SELECT semantics
-       FROM {h5p_libraries}
-       WHERE machine_name = '%s'
-       AND major_version = %d
-       AND minor_version = %d",
-      $name, $majorVersion, $minorVersion));
-
+  public function loadLibrarySemantics($machineName, $majorVersion, $minorVersion) {
+    if ($this->isInDevMode()) {
+      $semantics = $this->getSemanticsFromFile($machineName, $majorVersion, $minorVersion);
+    }
+    else {
+      $semantics = db_result(db_query(
+        "SELECT semantics
+         FROM {h5p_libraries}
+         WHERE machine_name = '%s'
+         AND major_version = %d
+         AND minor_version = %d",
+        $machineName, $majorVersion, $minorVersion));
+    }
     return ($semantics === FALSE ? NULL : $semantics);
   }
   
@@ -486,17 +490,17 @@ class H5PDrupal implements H5PFrameworkInterface {
     $queryArgs = array($id);
     
     if ($type !== NULL) {
-      $query .= " AND hnl.dependency_type = %d";
+      $query .= " AND hnl.dependency_type = '%s'";
       $queryArgs[] = $type;
     }
-    
+
     $result = db_query($query, $queryArgs);
     
     $dependencies = array();
     while ($dependency = db_fetch_array($result)) {
       $dependencies[] = $dependency;
     }
-    
+
     return $dependencies;
   }  
   
