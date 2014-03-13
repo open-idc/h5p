@@ -114,7 +114,8 @@ H5PIntegration.i18n = {
     author: Drupal.t('Author'),
     year: Drupal.t('Year'),
     source: Drupal.t('Source'),
-    license: Drupal.t('License')
+    license: Drupal.t('License'),
+    thumbnail: Drupal.t('Thumbnail')
   }
 };
 
