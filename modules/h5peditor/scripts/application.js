@@ -16,7 +16,7 @@ ns.init = function () {
   ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
   
   // Semantics describing what copyright information can be stored for media.
-  ns.copyrightsSemantics = Drupal.settings.h5peditor.copyrightsSemantics;
+  ns.copyrightSemantics = Drupal.settings.h5peditor.copyrightSemantics;
 
   $type.change(function () {
     if ($type.filter(':checked').val() === 'upload') {
