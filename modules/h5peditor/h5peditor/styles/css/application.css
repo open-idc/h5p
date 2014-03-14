@@ -394,7 +394,7 @@
   font-style: italic;
 }
 /* line 345, ../scss/application.scss */
-.h5peditor .h5p-copyrights-button {
+.h5peditor .h5p-copyright-button {
   position: relative;
   float: left;
   color: #fde;
@@ -410,7 +410,7 @@
   transition: color 0.2s;
 }
 /* line 357, ../scss/application.scss */
-.h5peditor .h5p-copyrights-button:before {
+.h5peditor .h5p-copyright-button:before {
   position: absolute;
   left: 0.5em;
   top: 0.5em;
@@ -418,7 +418,7 @@
   content: "\f071";
 }
 /* line 364, ../scss/application.scss */
-.h5peditor .h5p-copyrights-button:hover {
+.h5peditor .h5p-copyright-button:hover {
   color: #fbc;
 }
 /* line 369, ../scss/application.scss */
@@ -454,7 +454,7 @@
 /* line 388, ../scss/application.scss */
 .h5peditor .h5p-editor-dialog .h5p-close:before {
   font-size: 2em;
-  right: 10px;
+  right: 13px;
   position: absolute;
   font-family: H5PFontAwesome4;
   content: "\f00d";

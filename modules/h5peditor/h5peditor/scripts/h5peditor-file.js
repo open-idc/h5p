@@ -17,9 +17,10 @@ ns.File = function (parent, field, params, setValue) {
   this.field = field;
   this.params = params;
   this.setValue = setValue;
+  this.library = parent.library + '/' + field.name;
   
   if (params !== undefined) {
-    this.copyrights = params.copyrights;
+    this.copyright = params.copyright;
   }
   
   this.changes = [];
@@ -44,7 +45,7 @@ ns.File.prototype.appendTo = function ($wrapper) {
     label = '<span class="h5peditor-label">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</span>';
   }
 
-  var html = ns.createItem(this.field.type, label + '<div class="file"></div><a class="h5p-copyrights-button" href="#" title="' + ns.t('core', 'copyrights') + '"></a><div class="h5p-editor-dialog"><a href="#" class="h5p-close" title="' + ns.t('core', 'close') + '"></a></div>', this.field.description);
+  var html = ns.createItem(this.field.type, label + '<div class="file"></div><a class="h5p-copyright-button" href="#" title="' + ns.t('core', 'copyright') + '"></a><div class="h5p-editor-dialog"><a href="#" class="h5p-close" title="' + ns.t('core', 'close') + '"></a></div>', this.field.description);
 
   var $container = ns.$(html).appendTo($wrapper);
   this.$file = $container.find('.file');
@@ -52,18 +53,21 @@ ns.File.prototype.appendTo = function ($wrapper) {
   this.addFile();
   
   var $dialog = $container.find('.h5p-editor-dialog');
-  $container.find('.h5p-copyrights-button').add($dialog.find('.h5p-close')).click(function () {
+  $container.find('.h5p-copyright-button').add($dialog.find('.h5p-close')).click(function () {
     $dialog.toggleClass('h5p-open');
     return false;
   });
   
-  var group = new ns.widgets.list(self, ns.copyrightsSemantics, self.copyrights, function (field, value) {
+  var group = new ns.widgets.group(self, ns.copyrightSemantics, self.copyright, function (field, value) {
     if (self.params !== undefined) {
-      self.params.copyrights = value;
+      self.params.copyright = value;
     }
-    self.copyrights = value;
+    self.copyright = value;
   });
   group.appendTo($dialog);
+  group.expand();
+  group.$group.find('.title').remove();
+  this.children = [group];
 };
 
 /**
@@ -140,7 +144,7 @@ ns.File.prototype.uploadFile = function () {
       that.params = {
         path: result.path,
         mime: result.mime,
-        copyrights: that.copyrights
+        copyright: that.copyright
       };
       if (that.field.type === 'image') {
         that.params.width = result.width;

@@ -25,6 +25,6 @@ H5PEditor.language.core = {
   commonFields: 'Felles felter',
   uploading: 'Laster opp fil, vennligst vent...',
   noFollow: 'Kunne ikke følge feltet ":path".',
-  copyrights: 'Opphavsretter',
+  copyright: 'Opphavsrett',
   close: 'Lukk'
 };
