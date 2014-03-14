@@ -427,7 +427,7 @@ H5P.createCopyrights = function (information) {
   }
   
   // Render copyright fields
-  if (information.copyrights !== undefined) {
+  if (information.copyrights !== undefined && information.copyrights.length) {
     if (information.copyrights instanceof Array) {
       for (var i = 0; i < information.copyrights.length; i++) {
         html += H5P.createDefinitionList(information.copyrights[i]);
@@ -475,47 +475,24 @@ H5P.copyrightLicenses = {
 };
 
 /**
- * Creates a list with mulitple copyrights for e.g. an image.
- *
- * @param {Array} copyrights List with copyright information.
- * @param {Object} labels translation.
- * @param {Array} order of fields. Optional.
- * @param {Object} extraFields to add for each copyright. Optional.
- * @returns {Array} fields.
- */
-H5P.getCopyrightList = function (copyrights, labels, order, extraFields) {
-  var copyrightList = [];
-  
-  if (copyrights !== undefined) {
-    for (var i = 0; i < copyrights.length; i++) {
-      var copyright = copyrights[i];
-      
-      // Add the extra fields
-      for (var field in extraFields) {
-        copyright[field] = extraFields[field];
-      }
-      
-      // Get the fields with labels in the correct order
-      var fields = H5P.getCopyrightFields(copyright, labels, order);
-      if (fields.length) {
-        copyrightList.push(fields);
-      }
-    }
-  }
-  
-  return copyrightList;
-}
-
-/**
  * Creates a ordered list of copyright fields with labels and values.
- * TODO: Make labels optional by using core translations?
  *
  * @param {Object} copyright information fields.
- * @param {Object} labels translation.
+ * @param {Object} labels translation.  Optional.
  * @param {Array} order of fields. Optional.
+ * @param {Object} extraFields for copyright. Optional.
  * @returns {Array} fields.
  */
-H5P.getCopyrightFields = function (copyright, labels, order) {
+H5P.getCopyrightFields = function (copyright, labels, order, extraFields) {
+  if (copyright === undefined) {
+    return;
+  }
+
+  // Add the extra fields
+  for (var field in extraFields) {
+    copyright[field] = extraFields[field];
+  }
+  
   var fields = [];
   
   if (order === undefined) {
@@ -543,9 +520,11 @@ H5P.getCopyrightFields = function (copyright, labels, order) {
  */
 H5P.createDefinitionList = function (fields) {
   var html = '';
-  for (var i = 0; i < fields.length; i++) {
-    var field = fields[i];
-    html += '<dt>' + field.label + '</dt><dd>' + field.value + '</dd>';
+  if (fields !== undefined) {
+    for (var i = 0; i < fields.length; i++) {
+      var field = fields[i];
+      html += '<dt>' + field.label + '</dt><dd>' + field.value + '</dd>';
+    }
   }
   return (html === '' ? html : '<dl>' + html + '</dl>');
 }

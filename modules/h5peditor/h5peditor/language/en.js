@@ -25,6 +25,6 @@ H5PEditor.language.core = {
   commonFields: 'Common fields',
   uploading: 'Uploading, please wait...',
   noFollow: 'Cannot follow field ":path".',
-  copyrights: 'Copyrights',
+  copyright: 'Copyright',
   close: 'Close'
 };
