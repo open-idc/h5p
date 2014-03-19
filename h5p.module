@@ -89,7 +89,8 @@ function h5p_menu() {
 /**
  * Make URLs absolute.
  *
- * @param array $urls.
+ * @param array $urls
+ * @param array $remove Optional urls to skip.
  * @return array absolute urls.
  */
 function _h5p_make_urls_absolute($urls, $remove = array()) {
@@ -107,14 +108,16 @@ function _h5p_make_urls_absolute($urls, $remove = array()) {
 }
 
 /**
- * Embed data
+ * Embed data.
+ *
+ * Caching this in DB probably won't have much to say? Since the 
+ * node needs to be loaded first. Varnish or other page cache
+ * will work much better.
  *
  * Embed code example: 
  * <script src="//127.0.0.1/sites/all/modules/h5p/library/js/h5p-embed.js" data-h5p="//127.0.0.1/h5p/embed/1" async></script>
  */
 function h5p_embed($node) {
-  // TODO: Cache this.
-  // TODO: Add export button? Copyrights?
   $callback = filter_input(INPUT_GET, 'callback');
   
   if ($callback === NULL) {
