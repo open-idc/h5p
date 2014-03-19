@@ -226,6 +226,9 @@ div.h5p-fullscreen {
   /*background: rgba(0,0,0,0.75);*/
   opacity: 0;
   -webkit-transition: opacity 0.2s;
+  -moz-transition: opacity 0.2s;
+  -o-transition: opacity 0.2s;
+  transition: opacity 0.2s;
 }
 .h5p-copyrights-dialog.h5p-open {
   opacity: 1;
@@ -266,11 +269,18 @@ div.h5p-fullscreen {
   bottom: 0.5em;
   cursor: pointer;
   -webkit-transition: -webkit-transform 0.2s;
+  -moz-transition: -moz-transform 0.2s;
+  -o-transition: -o-transform 0.2s;
+  transition: transform 0.2s;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 .h5p-copyrights-dialog .h5p-close:hover:after {
   -webkit-transform: scale(1.25,1.25);
+  -moz-transform: scale(1.25,1.25);
+  -ms-transform: scale(1.25,1.25);
+  -o-transform: scale(1.25,1.25);
+  transform: scale(1.25,1.25);
 }
 .h5p-copyrights-dialog h2 {
   margin: 0.25em 0 0.5em;
