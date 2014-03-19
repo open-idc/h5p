@@ -131,14 +131,35 @@ function h5p_embed($node) {
   $settings = array();
   h5p_add_iframe_assets($settings, $id, $h5p->loadContentDependencies($id, 'preloaded'), 'h5p-' . $node->nid . '-' . $node->vid);
   
+  if (variable_get('h5p_export', 1)) {
+    $e = _h5p_get_instance('export');
+    $h5p_path = url($e->getExportPath($id, $node->title, $node->language), array('absolute' => TRUE));
+  }
+  
   $content = array(
     'id' => intval($id),
     'path' => url(_h5p_get_h5p_path(), array('absolute' => TRUE)) . '/',
     'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
     'fullscreen' => intval($node->main_library['fullscreen']),
+    'export' => (isset($h5p_path) ? $h5p_path : ''),
     'styles' => _h5p_make_urls_absolute(array_merge($settings['h5p']['core']['styles'], $settings['h5p']['cid-' . $id]['styles'])),
     'scripts' => _h5p_make_urls_absolute(array_merge($settings['h5p']['core']['scripts'], $settings['h5p']['cid-' . $id]['scripts']), array(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js')),
     'params' => h5p_filter_json_content($node),
+    'i18n' => array(
+      'H5P' => array(
+        'fullscreen' => t('Fullscreen'),
+        'download' => t('Download'),
+        'copyrights' => t('Copyrights'),
+        'copyrightInformation' => t('Copyright information'),
+        'close' => t('Close'),
+        'title' => t('Title'),
+        'author' => t('Author'),
+        'year' => t('Year'),
+        'source' => t('Source'),
+        'license' => t('License'),
+        'thumbnail' => t('Thumbnail'),
+      ),
+    ),
   );
   
   print $callback . '(' . json_encode($content) . ');';
@@ -417,17 +438,6 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
   }
 
   return $node;
-}
-
-/**
- * Implementation of hook_theme()
- */
-function h5p_theme() { // &$cache, $type, $theme, $path
-  return array(
-    'h5p_export_button' => array(
-        'arguments' => array('nid' => NULL)
-    ),
-  );
 }
 
 /**
