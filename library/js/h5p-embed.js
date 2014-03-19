@@ -4,7 +4,7 @@
 var H5P = H5P || (function () {
   var head = document.getElementsByTagName('head')[0];
   var contentId = 0;
-  var contents = {};
+  var contents = {};
   
   /**
    * Wraps multiple content between a prefix and a suffix.
@@ -100,7 +100,7 @@ var H5P = H5P || (function () {
     getFullscreen: function (id) {
       return contents[id].fullscreen;
     },
-    getLibraryPath: function (library) {
+    getLibraryPath: function (library) {
       return contents[0].path + 'libraries/' + library;
     },
     fullscreenText: 'Fullscreen'
