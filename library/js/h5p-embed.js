@@ -49,7 +49,7 @@ var H5P = H5P || (function () {
         <!doctype html><html class="h5p-iframe">\
         <head>\
           <script>\
-            var H5PIntegration = window.parent.H5P.integration;\
+            var H5PIntegration = window.parent.H5P.getIntegration(' + id + ');\
           </script>\
           ' + wrap('<link rel="stylesheet" href="', content.styles, '">') + '\
           ' + wrap('<script src="', content.scripts, '"></script>') + '\
@@ -89,21 +89,34 @@ var H5P = H5P || (function () {
     }
   };
   
-  // Integration object
-  H5P.integration = {
-    getJsonContent: function (id) {
-      return contents[id].params;
-    },
-    getContentPath: function (id) {
-      return contents[id].path + 'content/' + contents[id].id + '/';
-    },
-    getFullscreen: function (id) {
-      return contents[id].fullscreen;
-    },
-    getLibraryPath: function (library) {
-      return contents[0].path + 'libraries/' + library;
-    },
-    fullscreenText: 'Fullscreen'
+  /**
+   * Return integration object
+   */
+  H5P.getIntegration = function (id) {
+    var content = contents[id];
+    return {
+      getJsonContent: function () {
+        return content.params;
+      },
+      getContentPath: function () {
+        return content.path + 'content/' + content.id + '/';
+      },
+      getFullscreen: function () {
+        return content.fullscreen;
+      },
+      getLibraryPath: function (library) {
+        return content.path + 'libraries/' + library;
+      },
+      getContentData: function () {
+        return {
+          library: content.library,
+          jsonContent: content.params,
+          fullScreen: content.fullscreen,
+          export: content.export
+        };
+      },
+      i18n: content.i18n
+    };
   };
   
   // Detect if we support fullscreen, and what prefix to use.
@@ -128,7 +141,7 @@ var H5P = H5P || (function () {
    * Enter fullscreen mode.
    */
   H5P.fullScreen = function ($element, instance, exitCallback, body) {
-    var iframe = document.getElementById('h5p-iframe-' + $element.data('content-id'));
+    var iframe = document.getElementById('h5p-iframe-' + $element.parent().data('content-id'));
     var $classes = $element.add(body);
     var $body = $classes.eq(1);
     
