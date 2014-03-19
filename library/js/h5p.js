@@ -50,7 +50,7 @@ H5P.init = function () {
     instance.attach($container); // Not sent to newRunnable to avoid resize.
     
     // Check if we should add and display a fullscreen button for this H5P.
-    if (contentData.fullScreen) {
+    if (contentData.fullScreen == 1) {
       H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5P.t('fullscreen') + '</div></div>').insertBefore($container).children().click(function () {
         H5P.fullScreen($container, instance);
       });
