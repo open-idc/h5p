@@ -82,7 +82,7 @@ H5P.init = function () {
       var resizeIframe = function () {
         // Use timeout to make sure the iframe is resized
         setTimeout(function () {
-          var fullscreen = $element.hasClass('h5p-fullscreen') || $element.hasClass('h5p-semi-fullscreen');
+          var fullscreen = $container.hasClass('h5p-fullscreen') || $container.hasClass('h5p-semi-fullscreen');
           if (!fullscreen) {
             // Resize iframe so all content is visible.
             iframe.style.height = '1px';
