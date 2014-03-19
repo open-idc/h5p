@@ -44,7 +44,8 @@ H5P.init = function () {
     };
     
     // Create new instance.
-    var instance = H5P.newRunnable(library, contentId, $element);
+    var instance = H5P.newRunnable(library, contentId);
+    instance.attach($element); // Not sent to newRunnable to avoid resize.
     
     // Check if we should add and display a fullscreen button for this H5P.
     if (H5PIntegration.getFullscreen(contentId)) {
@@ -91,7 +92,7 @@ H5P.init = function () {
     var contentId = $iframe.data('content-id');
     var mainLibrary = $iframe.data('class');
 
-    // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps EXPOSES A resize FUNCTION.
+    // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps EXPOSES A $ AND A resize FUNCTION.
     $iframe.ready(function () {
       resizeIframeInterval = setInterval(function () {
         if (H5P.isFullscreen) {
@@ -324,9 +325,9 @@ H5P.newRunnable = function (library, contentId, $attachTo) {
   var instance = new constructor(library.params, contentId);
   if ($attachTo !== undefined) {
     instance.attach($attachTo);
-    if (instance.resize !== undefined) {
+    if (instance.$ !== undefined) {
       // Resize content.
-      instance.resize();
+      instance.$.trigger('resize');
     }
   }
   return instance;
