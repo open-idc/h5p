@@ -121,8 +121,9 @@ ns.Group.prototype.findSummary = function () {
   for (var j = 0; j < this.children.length; j++) {
     var child = this.children[j];
     var params = this.field.fields.length === 1 ? this.params : this.params[child.field.name];
-
-    if (child.field.type === 'text' && child instanceof H5P.Text) {
+    var widget = ns.getWidgetName(child.field); 
+    
+    if (widget === 'text') {
       if (params !== undefined && params !== '') {
         summary = params.replace(/(<([^>]+)>)/ig, "");
       }
@@ -135,7 +136,7 @@ ns.Group.prototype.findSummary = function () {
       });
       break;
     }
-    else if (child.field.type === 'library') {
+    else if (widget === 'library') {
       if (params !== undefined) {
         summary = child.$select.children(':selected').text();
       }
