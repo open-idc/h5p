@@ -148,8 +148,9 @@ function h5p_embed($node) {
     'i18n' => array(
       'H5P' => array(
         'fullscreen' => t('Fullscreen'),
-        'download' => t('Download'),
+        'download' => t('Download H5P'),
         'copyrights' => t('Copyrights'),
+        'embed' => t('Embed'),
         'copyrightInformation' => t('Copyright information'),
         'close' => t('Close'),
         'title' => t('Title'),
@@ -163,6 +164,21 @@ function h5p_embed($node) {
   );
   
   print $callback . '(' . json_encode($content) . ');';
+}
+
+/**
+ * Generate embed code for a given node
+ * 
+ * @param integer $nid
+ * @return string
+ */
+function _h5p_generate_embed_code($nid) {
+  global $base_url, $base_path;
+  $module_path = drupal_get_path('module', 'h5p');
+  $embed_js_url = url($module_path . '/library/js/h5p-embed.js', array('absolute' => TRUE));
+  $data_url = url('h5p/embed/' . $nid, array('absolute' => TRUE));
+  
+  return '<script src="' . $embed_js_url .'" data-h5p="' . $data_url . '" async></script>';
 }
 
 /**
@@ -519,6 +535,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'jsonContent' => $h5p_params,
           'fullScreen' => $node->main_library['fullscreen'],
           'export' => (isset($h5p_path) ? $h5p_path : ''),
+          'embedCode' => _h5p_generate_embed_code($node->nid)
         )
       )
     )
