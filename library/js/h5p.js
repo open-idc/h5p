@@ -69,6 +69,13 @@ H5P.init = function () {
         H5P.openCopyrightsDialog($actions, instance);
       });
     }
+    if (contentData.embedCode !== undefined) {
+      // Display embed button
+      H5P.jQuery('<li class="h5p-button h5p-embed" role="button" tabindex="1">' + H5P.t('embed') + '</li>').appendTo($actions).click(function () {
+        H5P.openEmbedDialog($actions, contentData.embedCode);
+      });
+    }
+    H5P.jQuery('<a class="h5p-button h5p-logo" role="button" href="http://www.h5p.org" target="_blank"></a>').appendTo($actions);
     if ($actions.children().length) {
       $actions.insertAfter($container);
     }
@@ -411,7 +418,7 @@ H5P.openCopyrightsDialog = function ($element, instance) {
   if (copyrights === undefined) {
     copyrights = H5P.t('noCopyrights');
   }
-  var $d = H5P.jQuery('<div class="h5p-copyrights-dialog"><div class="h5p-inner"><h2>' + H5P.t('copyrightInformation') + '</h2>' + copyrights + '</div><div class="h5p-close" role="button" tabindex="1" titel="' + H5P.t('close') + '"></div></div>')
+  var $d = H5P.jQuery('<div class="h5p-popup-dialog h5p-copyrights-dialog"><div class="h5p-inner"><h2>' + H5P.t('copyrightInformation') + '</h2>' + copyrights + '</div><div class="h5p-close" role="button" tabindex="1" title="' + H5P.t('close') + '"></div></div>')
     .insertAfter($element)
     .click(function () {
       $d.removeClass('h5p-open'); // Fade out
@@ -425,6 +432,35 @@ H5P.openCopyrightsDialog = function ($element, instance) {
       })
       .end();
       
+  setTimeout(function () {
+    $d.addClass('h5p-open'); // Fade in
+  }, 1);
+};
+
+/**
+ * Display a dialog containing the embed code.
+ *
+ * @param {jQuery} $element to insert dialog after.
+ * @param {string} embed code.
+ * @returns {undefined}
+ */
+H5P.openEmbedDialog = function ($element, embedCode) {
+  var $d = H5P.jQuery('<div class="h5p-popup-dialog h5p-embed-dialog"><div class="h5p-inner"><h2>' + H5P.t('embed') + '</h2><textarea class="h5p-embed-code-container">' + embedCode + '</textarea></div><div class="h5p-close" role="button" tabindex="1" titel="' + H5P.t('close') + '"></div></div>')
+    .insertAfter($element)
+    .click(function () {
+      $d.removeClass('h5p-open'); // Fade out
+      setTimeout(function () {
+        $d.remove();
+      }, 200);
+    })
+    .children('.h5p-inner')
+      .click(function () {
+        return false;
+      })
+      .end();
+  
+  $d.find('.h5p-embed-code-container').select();
+  
   setTimeout(function () {
     $d.addClass('h5p-open'); // Fade in
   }, 1);
