@@ -8,7 +8,7 @@
 }
 
 @font-face {
-  font-family: 'h5p';
+  font-family: 'H5P';
   src:url('../fonts/h5p.eot?-r12eb7');
   src:url('../fonts/h5p.eot?#iefix-r12eb7') format('embedded-opentype'),
     url('../fonts/h5p.woff?-r12eb7') format('woff'),
@@ -213,7 +213,7 @@ div.h5p-fullscreen {
   content: "\f019";
 }
 .h5p-actions > .h5p-button.h5p-copyrights:before {
-  font-family: h5p;
+  font-family: H5P;
   content: "\e668";
   font-size: 1.7em;
   padding-right: 0;
@@ -229,7 +229,7 @@ div.h5p-fullscreen {
   left: .2em;
 }
 .h5p-actions > .h5p-button.h5p-logo:before {
-  font-family: h5p;
+  font-family: H5P;
   content: "\e667";
 }
 .h5p-popup-dialog {
