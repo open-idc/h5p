@@ -415,7 +415,10 @@ H5P.t = function (key, vars, ns) {
  */
 H5P.openCopyrightsDialog = function ($element, instance) {
   var copyrights = instance.getCopyrights();
-  if (copyrights === undefined || copyrights.none()) {
+  if (copyrights !== undefined) {
+    copyrights = copyrights.toString();
+  }
+  if (copyrights === undefined || copyrights === '') {
     copyrights = H5P.t('noCopyrights');
   }
   var $d = H5P.jQuery('<div class="h5p-popup-dialog h5p-copyrights-dialog"><div class="h5p-inner"><h2>' + H5P.t('copyrightInformation') + '</h2>' + copyrights + '</div><div class="h5p-close" role="button" tabindex="1" title="' + H5P.t('close') + '"></div></div>')
@@ -503,15 +506,6 @@ H5P.ContentCopyrights = function () {
     if (newContent !== undefined) {
       content.push(newContent);
     }
-  };
-  
-  /**
-   * Public. Check if we have any rights.
-   *
-   * @returns {Boolean}
-   */
-  this.none = function () {
-    return media.length === 0 && content.length === 0;
   };
   
   /**
