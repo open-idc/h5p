@@ -116,7 +116,8 @@ H5PIntegration.i18n = {
     year: Drupal.t('Year'),
     source: Drupal.t('Source'),
     license: Drupal.t('License'),
-    thumbnail: Drupal.t('Thumbnail')
+    thumbnail: Drupal.t('Thumbnail'),
+    noCopyrights: Drupal.t('No copyright information available.')
   }
 };
 
