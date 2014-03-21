@@ -106,9 +106,10 @@ H5PIntegration.getHeadTags = function (contentId) {
 H5PIntegration.i18n = {
   H5P: {
     fullscreen: Drupal.t('Fullscreen'),
-    download: Drupal.t('Download'),
-    copyrights: Drupal.t('Copyrights'),
-    copyrightInformation: Drupal.t('Copyright information'),
+    download: Drupal.t('Download H5P'),
+    copyrights: Drupal.t('Rights of use'),
+    embed: Drupal.t('Embed'),
+    copyrightInformation: Drupal.t('Rights of use'),
     close: Drupal.t('Close'),
     title: Drupal.t('Title'),
     author: Drupal.t('Author'),
