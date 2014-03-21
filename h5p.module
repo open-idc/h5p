@@ -159,6 +159,7 @@ function h5p_embed($node) {
         'source' => t('Source'),
         'license' => t('License'),
         'thumbnail' => t('Thumbnail'),
+        'noCopyrights' => t('No copyright information available.'),
       ),
     ),
   );

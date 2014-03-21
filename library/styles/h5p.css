@@ -38,6 +38,10 @@ html.h5p-iframe .h5p-content {
   width: 100%;
   height: 100%;
 }
+.h5p-container {
+  position: relative;
+  z-index: 1;
+}
 .h5p-container.h5p-semi-fullscreen {
   position: fixed;
   top: 0;
@@ -50,6 +54,8 @@ html.h5p-iframe .h5p-content {
 .h5p-content-controls {
   margin: 0;
   text-align: right;
+  position: relative;
+  z-index: 3;
 }
 .h5p-iframe > .h5p-fullscreen .h5p-content-controls {
   display: none;
@@ -178,6 +184,8 @@ div.h5p-fullscreen {
   list-style: none;
   padding: 4px;
   margin: 0.25em 0;
+  position: relative;
+  z-index: 2;
   font-size: 12px;
 }
 .h5p-fullscreen .h5p-actions, .h5p-semi-fullscreen .h5p-actions {
@@ -320,7 +328,7 @@ div.h5p-fullscreen {
 .h5p-popup-dialog dd {
   margin: 0;
 }
-.h5p-copyright-information .h5p-copyright-information {
+.h5p-content-copyrights {
   border-left: 0.25em solid #d0d0d0;
   margin-left: 0.25em;
   padding-left: 0.25em;
