@@ -511,8 +511,36 @@ H5P.ContentCopyrights = function () {
  * @param {Object} extraFields for copyright. Optional.
  */
 H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
-  var thumbnail = '';
+  var thumbnail;
   var list = new H5P.DefinitionList();
+  
+  /**
+   * Private. Get translated label for field.
+   *
+   * @param {String} fieldName
+   * @return {String} 
+   */
+  var getLabel = function (fieldName) {
+    if (labels === undefined || labels[fieldName] === undefined) {
+      return H5P.t(fieldName);
+    }
+    
+    return labels[fieldName];
+  }
+  
+  /**
+   * Private. Get humanized value for field.
+   *
+   * @param {String} fieldName
+   * @return {String} 
+   */
+  var humanizeValue = function (fieldName, value) {
+    if (fieldName === 'license') {
+      return H5P.copyrightLicenses[value];
+    }
+    
+    return value;
+  }
   
   if (copyright !== undefined) {
     // Add the extra fields
@@ -530,10 +558,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
     for (var i = 0; i < order.length; i++) {
       var fieldName = order[i];
       if (copyright[fieldName] !== undefined) {
-        list.addField(
-          (labels === undefined || labels[fieldName] === undefined ? H5P.t(fieldName) : labels[fieldName]),
-          (fieldName === 'license' ? H5P.copyrightLicenses[copyright[fieldName]] : copyright[fieldName])
-        );
+        list.add(new H5P.Field(getLabel(fieldName), humanizeValue(fieldName, copyright[fieldName])));
       }
     }
   }
@@ -548,12 +573,37 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   }
   
   /**
+   * Public. Checks if this copyright is undisclosed.
+   * I.e. only has the license attribute set, and it's undisclosed.
+   *
+   * @returns {Boolean}
+   */
+  this.undisclosed = function () {
+    if (list.size() === 1) {
+      var field = list.get(0);
+      if (field.getLabel() === getLabel('license') && field.getValue() === humanizeValue('license', 'U')) {
+        return true;
+      }
+    }
+    return false;
+  };
+  
+  /**
    * Public. Print media copyright.
    *
    * @returns {String} HTML.
    */
   this.toString = function () {
-    var html = thumbnail + list;
+    var html = '';
+    
+    if (this.undisclosed()) {
+      return html; // No need to print a copyright with a single undisclosed license.
+    }
+    
+    if (thumbnail !== undefined) {
+      html += thumbnail;
+    }
+    html += list;
     
     if (html !== '') {
       html = '<div class="h5p-media-copyright">' + html + '</div>';
@@ -603,6 +653,29 @@ H5P.Thumbnail = function (source, width, height) {
 }
 
 /**
+ * Simple data class for storing a single field.
+ */
+H5P.Field = function (label, value) {
+  /**
+   * Public. Get field label.
+   *
+   * @returns {String}
+   */ 
+  this.getLabel = function () {
+    return label;
+  }
+  
+  /**
+   * Public. Get field value.
+   *
+   * @returns {String}
+   */ 
+  this.getValue = function () {
+    return value;
+  }
+}
+
+/**
  * Simple class for creating a definition list.
  */
 H5P.DefinitionList = function () {
@@ -611,14 +684,29 @@ H5P.DefinitionList = function () {
   /**
    * Public. Add field to list.
    *
-   * @param {String} label
-   * @param {String} value
+   * @param {H5P.Field} field
    */
-  this.addField = function (label, value) {
-    fields.push({
-      label: label,
-      value: value
-    });
+  this.add = function (field) {
+    fields.push(field);
+  }
+  
+  /**
+   * Public. Get Number of fields.
+   *
+   * @returns {Number}
+   */
+  this.size = function () {
+    return fields.length;
+  }
+  
+  /**
+   * Public. Get field at given index.
+   *
+   * @param {Number} index
+   * @returns {Object}
+   */
+  this.get = function (index) {
+    return fields[index];
   }
   
   /**
@@ -630,7 +718,7 @@ H5P.DefinitionList = function () {
     var html = '';
     for (var i = 0; i < fields.length; i++) {
       var field = fields[i];
-      html += '<dt>' + field.label + '</dt><dd>' + field.value + '</dd>';
+      html += '<dt>' + field.getLabel() + '</dt><dd>' + field.getValue() + '</dd>';
     }
     return (html === '' ? html : '<dl class="h5p-definition-list">' + html + '</dl>');
   };
