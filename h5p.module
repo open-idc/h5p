@@ -149,9 +149,9 @@ function h5p_embed($node) {
       'H5P' => array(
         'fullscreen' => t('Fullscreen'),
         'download' => t('Download H5P'),
-        'copyrights' => t('Copyrights'),
+        'copyrights' => t('Rights of use'),
         'embed' => t('Embed'),
-        'copyrightInformation' => t('Copyright information'),
+        'copyrightInformation' => t('Rights of use'),
         'close' => t('Close'),
         'title' => t('Title'),
         'author' => t('Author'),
