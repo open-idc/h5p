@@ -415,7 +415,7 @@ H5P.t = function (key, vars, ns) {
  */
 H5P.openCopyrightsDialog = function ($element, instance) {
   var copyrights = instance.getCopyrights();
-  if (copyrights === undefined) {
+  if (copyrights === undefined || copyrights.none()) {
     copyrights = H5P.t('noCopyrights');
   }
   var $d = H5P.jQuery('<div class="h5p-popup-dialog h5p-copyrights-dialog"><div class="h5p-inner"><h2>' + H5P.t('copyrightInformation') + '</h2>' + copyrights + '</div><div class="h5p-close" role="button" tabindex="1" title="' + H5P.t('close') + '"></div></div>')
@@ -481,7 +481,7 @@ H5P.ContentCopyrights = function () {
    */
   this.setLabel = function (newLabel) {
     label = newLabel;
-  }
+  };
   
   /**
    * Public. Add sub content.
@@ -492,7 +492,7 @@ H5P.ContentCopyrights = function () {
     if (newMedia !== undefined) {
       media.push(newMedia);
     }
-  }
+  };
   
   /**
    * Public. Add sub content.
@@ -503,7 +503,16 @@ H5P.ContentCopyrights = function () {
     if (newContent !== undefined) {
       content.push(newContent);
     }
-  }
+  };
+  
+  /**
+   * Public. Check if we have any rights.
+   *
+   * @returns {Boolean}
+   */
+  this.none = function () {
+    return media.length === 0 && content.length === 0;
+  };
   
   /**
    * Public. Print content copyright.
@@ -535,7 +544,7 @@ H5P.ContentCopyrights = function () {
     }
     
     return html;
-  }
+  };
 }
 
 /**
@@ -562,7 +571,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
     }
     
     return labels[fieldName];
-  }
+  };
   
   /**
    * Private. Get humanized value for field.
@@ -576,7 +585,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
     }
     
     return value;
-  }
+  };
   
   if (copyright !== undefined) {
     // Add the extra fields
@@ -606,7 +615,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
    */
   this.setThumbnail = function (newThumbnail) {
     thumbnail = newThumbnail;
-  }
+  };
   
   /**
    * Public. Checks if this copyright is undisclosed.
@@ -646,7 +655,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
     }
     
     return html;
-  }
+  };
 }
 
 // Translate table for copyright license codes.
@@ -699,7 +708,7 @@ H5P.Field = function (label, value) {
    */ 
   this.getLabel = function () {
     return label;
-  }
+  };
   
   /**
    * Public. Get field value.
@@ -708,7 +717,7 @@ H5P.Field = function (label, value) {
    */ 
   this.getValue = function () {
     return value;
-  }
+  };
 }
 
 /**
@@ -724,7 +733,7 @@ H5P.DefinitionList = function () {
    */
   this.add = function (field) {
     fields.push(field);
-  }
+  };
   
   /**
    * Public. Get Number of fields.
@@ -733,7 +742,7 @@ H5P.DefinitionList = function () {
    */
   this.size = function () {
     return fields.length;
-  }
+  };
   
   /**
    * Public. Get field at given index.
@@ -743,7 +752,7 @@ H5P.DefinitionList = function () {
    */
   this.get = function (index) {
     return fields[index];
-  }
+  };
   
   /**
    * Public. Print definition list.
