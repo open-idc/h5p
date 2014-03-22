@@ -75,13 +75,8 @@ H5P.init = function () {
         H5P.openEmbedDialog($actions, contentData.embedCode);
       });
     }
-    H5P.jQuery('<a class="h5p-button h5p-logo" role="button" href="http://www.h5p.org" target="_blank"></a>').appendTo($actions);
-    if ($actions.children().length) {
-      $actions.insertAfter($container);
-    }
-    else {
-      $actions.remove();
-    }
+    H5P.jQuery('<li><a class="h5p-link" href="http://www.h5p.org" target="_blank"></a></li>').appendTo($actions);
+    $actions.insertAfter($container);
     
     if (H5P.isFramed) {
       // Make it possible to resize the iframe when the content changes size. This way we get no scrollbars.

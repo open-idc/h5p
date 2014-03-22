@@ -217,18 +217,20 @@ div.h5p-fullscreen {
   content: "\e668";
   font-size: 1.7em;
   padding-right: 0;
+  vertical-align: bottom;
 }
 .h5p-actions > .h5p-button.h5p-embed:before {
   content: "\f121";
 }
-.h5p-actions > .h5p-button.h5p-logo {
+.h5p-actions .h5p-link {
   float: right;
   margin-right: 0;
   font-size: 2.0em;
-  position: relative;
-  left: .2em;
+  overflow: hidden;
+  color: #999;
+  text-decoration: none;
 }
-.h5p-actions > .h5p-button.h5p-logo:before {
+.h5p-actions .h5p-link:before {
   font-family: H5P;
   content: "\e667";
 }
