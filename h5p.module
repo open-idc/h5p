@@ -159,7 +159,11 @@ function h5p_embed($node) {
         'source' => t('Source'),
         'license' => t('License'),
         'thumbnail' => t('Thumbnail'),
-        'noCopyrights' => t('No copyright information available.'),
+        'noCopyrights' => t('No copyright information available for this content.'),
+        'downloadDescription' => t('Download this content as a H5P file.'),
+        'copyrightsDescription' => t('View copyright information for this content.'),
+        'embedDescription' => t('View the embed code for this content.'),
+        'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
       ),
     ),
   );

@@ -59,23 +59,23 @@ H5P.init = function () {
     var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
     if (contentData.export !== '') {
       // Display export button
-      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1">' + H5P.t('download') + '</li>').appendTo($actions).click(function () {
+      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1" title="' + H5P.t('downloadDescription') + '">' + H5P.t('download') + '</li>').appendTo($actions).click(function () {
         window.location.href = contentData.export;
       });
     }
     if (instance.getCopyrights !== undefined) {
       // Display copyrights button
-      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
+      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
         H5P.openCopyrightsDialog($actions, instance);
       });
     }
     if (contentData.embedCode !== undefined) {
       // Display embed button
-      H5P.jQuery('<li class="h5p-button h5p-embed" role="button" tabindex="1">' + H5P.t('embed') + '</li>').appendTo($actions).click(function () {
+      H5P.jQuery('<li class="h5p-button h5p-embed" role="button" tabindex="1" title="' + H5P.t('embedDescription') + '">' + H5P.t('embed') + '</li>').appendTo($actions).click(function () {
         H5P.openEmbedDialog($actions, contentData.embedCode);
       });
     }
-    H5P.jQuery('<li><a class="h5p-link" href="http://www.h5p.org" target="_blank"></a></li>').appendTo($actions);
+    H5P.jQuery('<li><a class="h5p-link" href="http://h5p.org" target="_blank" title="' + H5P.t('h5pDescription') + '"></a></li>').appendTo($actions);
     $actions.insertAfter($container);
     
     if (H5P.isFramed) {
@@ -401,6 +401,44 @@ H5P.t = function (key, vars, ns) {
   return translation;
 };
 
+H5P.Dialog = function (name, title, content, $element) {
+  var self = this;
+  var $dialog = H5P.jQuery('<div class="h5p-popup-dialog h5p-' + name + '-dialog">\
+                              <div class="h5p-inner">\
+                                <h2>' + title + '</h2>\
+                                <div class="h5p-scroll-content">' + content + '</div>\
+                                <div class="h5p-close" role="button" tabindex="1" title="' + H5P.t('close') + '">\
+                              </div>\
+                            </div>')
+    .insertAfter($element)
+    .click(function () {
+      self.close();
+    })
+    .children('.h5p-inner')
+      .click(function () {
+        return false;
+      })
+      .find('.h5p-close')
+        .click(function () {
+          self.close();
+        })
+        .end()
+      .end();
+    
+  this.open = function () {
+    setTimeout(function () {
+      $dialog.addClass('h5p-open'); // Fade in
+    }, 1);
+  };
+  
+  this.close = function () {
+    $dialog.removeClass('h5p-open'); // Fade out
+    setTimeout(function () {
+      $dialog.remove();
+    }, 200);
+  };
+};
+
 /**
  * Gather copyright information and display in a dialog over the content.
  *
@@ -416,23 +454,9 @@ H5P.openCopyrightsDialog = function ($element, instance) {
   if (copyrights === undefined || copyrights === '') {
     copyrights = H5P.t('noCopyrights');
   }
-  var $d = H5P.jQuery('<div class="h5p-popup-dialog h5p-copyrights-dialog"><div class="h5p-inner"><h2>' + H5P.t('copyrightInformation') + '</h2>' + copyrights + '</div><div class="h5p-close" role="button" tabindex="1" title="' + H5P.t('close') + '"></div></div>')
-    .insertAfter($element)
-    .click(function () {
-      $d.removeClass('h5p-open'); // Fade out
-      setTimeout(function () {
-        $d.remove();
-      }, 200);
-    })
-    .children('.h5p-inner')
-      .click(function () {
-        return false;
-      })
-      .end();
-      
-  setTimeout(function () {
-    $d.addClass('h5p-open'); // Fade in
-  }, 1);
+  
+  var dialog = new H5P.Dialog('copyrights', H5P.t('copyrightInformation'), copyrights, $element);
+  dialog.open();
 };
 
 /**
@@ -443,25 +467,8 @@ H5P.openCopyrightsDialog = function ($element, instance) {
  * @returns {undefined}
  */
 H5P.openEmbedDialog = function ($element, embedCode) {
-  var $d = H5P.jQuery('<div class="h5p-popup-dialog h5p-embed-dialog"><div class="h5p-inner"><h2>' + H5P.t('embed') + '</h2><textarea class="h5p-embed-code-container">' + embedCode + '</textarea></div><div class="h5p-close" role="button" tabindex="1" titel="' + H5P.t('close') + '"></div></div>')
-    .insertAfter($element)
-    .click(function () {
-      $d.removeClass('h5p-open'); // Fade out
-      setTimeout(function () {
-        $d.remove();
-      }, 200);
-    })
-    .children('.h5p-inner')
-      .click(function () {
-        return false;
-      })
-      .end();
-  
-  $d.find('.h5p-embed-code-container').select();
-  
-  setTimeout(function () {
-    $d.addClass('h5p-open'); // Fade in
-  }, 1);
+  var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container">' + embedCode + '</textarea>', $element);
+  dialog.open();
 };
 
 /**
