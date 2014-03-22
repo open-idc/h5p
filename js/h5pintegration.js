@@ -117,7 +117,11 @@ H5PIntegration.i18n = {
     source: Drupal.t('Source'),
     license: Drupal.t('License'),
     thumbnail: Drupal.t('Thumbnail'),
-    noCopyrights: Drupal.t('No copyright information available.')
+    noCopyrights: Drupal.t('No copyright information available for this content.'),
+    downloadDescription: Drupal.t('Download this content as a H5P file.'),
+    copyrightsDescription: Drupal.t('View copyright information for this content.'),
+    embedDescription: Drupal.t('View the embed code for this content.'),
+    h5pDescription: Drupal.t('Visit H5P.org to check out more cool content.')
   }
 };
 
