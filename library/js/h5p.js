@@ -32,58 +32,90 @@ H5P.init = function () {
   H5P.$body = H5P.jQuery('body');
 
   // Prepare internal resizer for content.
-  var $window = window.top.H5P.jQuery(window.top);
+  var $window = H5P.jQuery(window.top);
 
   // H5Ps added in normal DIV.
   var $containers = H5P.jQuery(".h5p-content").each(function () { 
     var $element = H5P.jQuery(this);
+    var $container = H5P.jQuery('<div class="h5p-container"></div>').appendTo($element);
     var contentId = $element.data('content-id');
+    var contentData = H5PIntegration.getContentData(contentId);
     var library = {
-      library: $element.data('class'),
-      params: H5P.jQuery.parseJSON(H5PIntegration.getJsonContent(contentId))
+      library: contentData.library,
+      params: H5P.jQuery.parseJSON(contentData.jsonContent)
     };
-    
+
     // Create new instance.
-    var instance = H5P.newRunnable(library, contentId, $element);
+    var instance = H5P.newRunnable(library, contentId);
+    instance.attach($container); // Not sent to newRunnable to avoid resize.
     
     // Check if we should add and display a fullscreen button for this H5P.
-    if (H5PIntegration.getFullscreen(contentId)) {
-      H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5PIntegration.fullscreenText + '</div></div>').insertBefore($element).children().click(function () {
-        H5P.fullScreen($element, instance);
+    if (contentData.fullScreen == 1) {
+      H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen">' + H5P.t('fullscreen') + '</div></div>').insertBefore($container).children().click(function () {
+        H5P.fullScreen($container, instance);
       });
     };
     
+    var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
+    if (contentData.export !== '') {
+      // Display export button
+      H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1" title="' + H5P.t('downloadDescription') + '">' + H5P.t('download') + '</li>').appendTo($actions).click(function () {
+        window.location.href = contentData.export;
+      });
+    }
+    if (instance.getCopyrights !== undefined) {
+      // Display copyrights button
+      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
+        H5P.openCopyrightsDialog($actions, instance);
+      });
+    }
+    if (contentData.embedCode !== undefined) {
+      // Display embed button
+      H5P.jQuery('<li class="h5p-button h5p-embed" role="button" tabindex="1" title="' + H5P.t('embedDescription') + '">' + H5P.t('embed') + '</li>').appendTo($actions).click(function () {
+        H5P.openEmbedDialog($actions, contentData.embedCode);
+      });
+    }
+    H5P.jQuery('<li><a class="h5p-link" href="http://h5p.org" target="_blank" title="' + H5P.t('h5pDescription') + '"></a></li>').appendTo($actions);
+    $actions.insertAfter($container);
+    
     if (H5P.isFramed) {
       // Make it possible to resize the iframe when the content changes size. This way we get no scrollbars.
-      var $iframe = H5P.jQuery('#h5p-iframe-' + contentId, window.parent.document);
+      var iframe = window.parent.document.getElementById('h5p-iframe-' + contentId);
       var resizeIframe = function () {
-        // Resize iframe so all content is visible.
-        $iframe.css('height', '1px');
-        $iframe.css('height', $iframe.contents().height() + 'px');
+        // Use timeout to make sure the iframe is resized
+        setTimeout(function () {
+          var fullscreen = $container.hasClass('h5p-fullscreen') || $container.hasClass('h5p-semi-fullscreen');
+          if (!fullscreen) {
+            // Resize iframe so all content is visible.
+            iframe.style.height = '1px';
+            iframe.style.height = (iframe.contentDocument.body.scrollHeight) + 'px';
+          }
+        }, 1);
       };
-      resizeIframe();
+      
+      if (instance.$ !== undefined) {
+        instance.$.on('resize', resizeIframe);
+      }
     }
     
-    // Resize everything when window is resized.
-    $window.resize(function () {
-      var fullscreen = $element.hasClass('h5p-fullscreen') || $element.hasClass('h5p-semi-fullscreen');
-      if (instance.resize !== undefined) {
+    var resize = function () {
+      if (instance.$ !== undefined) {
         // Resize content.
-        instance.resize();
+        instance.$.trigger('resize');
       }
-      if (resizeIframe !== undefined && !fullscreen) {
-        resizeIframe();
-      }
-    });
+    };
+    resize();
+    
+    // Resize everything when window is resized.
+    $window.resize(resize);
   });
 
   // Insert H5Ps that should be in iframes.
   H5P.jQuery("iframe.h5p-iframe").each(function () {
     var $iframe = H5P.jQuery(this);
     var contentId = $iframe.data('content-id');
-    var mainLibrary = $iframe.data('class');
 
-    // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps EXPOSES A resize FUNCTION.
+    // DEPRECATED AND WILL BE REMOVED. MAKE SURE YOUR H5Ps EXPOSES A $ AND A resize FUNCTION.
     $iframe.ready(function () {
       resizeIframeInterval = setInterval(function () {
         if (H5P.isFullscreen) {
@@ -104,7 +136,7 @@ H5P.init = function () {
     // END DEPRECATION
 
     this.contentDocument.open();
-    this.contentDocument.write('<!doctype html><html class="h5p-iframe"><head>' + H5PIntegration.getHeadTags(contentId) + '</head><body><div class="h5p-content" data-class="' + mainLibrary + '" data-content-id="' + contentId + '"/></body></html>');
+    this.contentDocument.write('<!doctype html><html class="h5p-iframe"><head>' + H5PIntegration.getHeadTags(contentId) + '</head><body><div class="h5p-content" data-content-id="' + contentId + '"/></body></html>');
     this.contentDocument.close();
   });
 };
@@ -125,6 +157,7 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     return;
   }
   
+  var $container = $element;
   var $classes, $iframe;
   if (body === undefined)  {
     $body = H5P.$body;
@@ -133,9 +166,9 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     // We're called from an iframe.
     $body = H5P.jQuery(body);
     $classes = $body.add($element.get());
-    var iframeSelector = '#h5p-iframe-' + $element.data('content-id');
+    var iframeSelector = '#h5p-iframe-' + $element.parent().data('content-id');
     $iframe = H5P.jQuery(iframeSelector);
-    $element = H5P.jQuery(iframeSelector + '-wrapper'); // Put iframe wrapper in fullscreen, not container.
+    $element = $iframe.parent(); // Put iframe wrapper in fullscreen, not container.
   }
   
   $classes = $element.add(H5P.$body).add($classes);
@@ -144,16 +177,14 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     H5P.isFullscreen = false;
     $classes.removeClass(c);
     
-    if ($iframe !== undefined) {
-      if (H5P.fullScreenBrowserPrefix === undefined) {
-        // Manually trigger resize event for semi fullscreen.
-        $iframe.css('height', '1px'); // DEPRECATED
-        H5P.$window.resize();
-      }
-    }
-    else if (instance.resize !== undefined) {
+    if (H5P.fullScreenBrowserPrefix === undefined) {
       // Resize content.
-      instance.resize();
+      if (instance.$ !== undefined) {
+        instance.$.trigger('resize');
+      }
+      else if (instance.resize !== undefined) {
+        instance.resize();
+      }
     }
 
     if (exitCallback !== undefined) {
@@ -167,7 +198,7 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     $classes.addClass('h5p-semi-fullscreen');
     H5P.isFullscreen = true;
 
-    var $disable = H5P.jQuery('<a href="#" class="h5p-disable-fullscreen">Disable fullscreen</a>').appendTo($element);
+    var $disable = $container.prepend('<a href="#" class="h5p-disable-fullscreen">Disable fullscreen</a>').children(':first');
     var keyup, disableSemiFullscreen = function () {
       $disable.remove();      
       $body.unbind('keyup', keyup);
@@ -211,14 +242,21 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
   if ($iframe !== undefined) {
     // Set iframe to its default size(100%).
     $iframe.css('height', '');
-    if (H5P.fullScreenBrowserPrefix === undefined) {
-      // Manually trigger resize event for semi fullscreen.
-      H5P.$window.resize();
+  }
+  
+  if (H5P.fullScreenBrowserPrefix === undefined) {
+    // Resize content.
+    if (instance.$ !== undefined) {
+      instance.$.trigger('resize');
+    }
+    else if (instance.resize !== undefined) {
+      instance.resize();
     }
   }
-  else if (instance.resize !== undefined) {
-    // Resize content.
-    instance.resize(true);
+
+  // Allow H5P to set focus when entering fullscreen mode
+  if (instance.focus !== undefined) {
+    instance.focus();
   }
 };
 
@@ -236,7 +274,7 @@ H5P.getPath = function (path, contentId) {
   if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://') {
     return path;
   }
-
+  
   return H5PIntegration.getContentPath(contentId) + path;
 };
 
@@ -310,9 +348,9 @@ H5P.newRunnable = function (library, contentId, $attachTo) {
   var instance = new constructor(library.params, contentId);
   if ($attachTo !== undefined) {
     instance.attach($attachTo);
-    if (instance.resize !== undefined) {
+    if (instance.$ !== undefined) {
       // Resize content.
-      instance.resize();
+      instance.$.trigger('resize');
     }
   }
   return instance;
@@ -321,13 +359,410 @@ H5P.newRunnable = function (library, contentId, $attachTo) {
 /**
  * Used to print useful error messages.
  *
- * @param {mixed} Error to print.
- * @returns {null}
+ * @param {mixed} err Error to print.
+ * @returns {undefined}
  */
 H5P.error = function (err) {
   if (window['console'] !== undefined && console.error !== undefined) {
     console.error(err);
   }
+}
+
+/**
+ * Translate text strings.
+ *
+ * @param {String} key Translation identifier, may only contain a-zA-Z0-9. No spaces or special chars.
+ * @param {Object} vars Data for placeholders.
+ * @param {String} ns Translation namespace. Defaults to H5P.
+ * @returns {String} Text
+ */
+H5P.t = function (key, vars, ns) {
+  if (ns === undefined) {
+    ns = 'H5P';
+  }
+
+  if (H5PIntegration.i18n[ns] === undefined) {
+    return '[Missing translation namespace "' + ns + '"]';
+  }
+  
+  if (H5PIntegration.i18n[ns][key] === undefined) {
+    return '[Missing translation "' + key + '" in "' + ns + '"]';
+  }
+
+  var translation = H5PIntegration.i18n[ns][key];
+  
+  if (vars !== undefined) {
+    // Replace placeholder with variables.
+    for (var placeholder in vars) {
+      translation = translation.replace(placeholder, vars[placeholder]);
+    }  
+  }
+
+  return translation;
+};
+
+H5P.Dialog = function (name, title, content, $element) {
+  var self = this;
+  var $dialog = H5P.jQuery('<div class="h5p-popup-dialog h5p-' + name + '-dialog">\
+                              <div class="h5p-inner">\
+                                <h2>' + title + '</h2>\
+                                <div class="h5p-scroll-content">' + content + '</div>\
+                                <div class="h5p-close" role="button" tabindex="1" title="' + H5P.t('close') + '">\
+                              </div>\
+                            </div>')
+    .insertAfter($element)
+    .click(function () {
+      self.close();
+    })
+    .children('.h5p-inner')
+      .click(function () {
+        return false;
+      })
+      .find('.h5p-close')
+        .click(function () {
+          self.close();
+        })
+        .end()
+      .end();
+    
+  this.open = function () {
+    setTimeout(function () {
+      $dialog.addClass('h5p-open'); // Fade in
+    }, 1);
+  };
+  
+  this.close = function () {
+    $dialog.removeClass('h5p-open'); // Fade out
+    setTimeout(function () {
+      $dialog.remove();
+    }, 200);
+  };
+};
+
+/**
+ * Gather copyright information and display in a dialog over the content.
+ *
+ * @param {jQuery} $element to insert dialog after.
+ * @param {object} instance to get copyright information from.
+ * @returns {undefined}
+ */
+H5P.openCopyrightsDialog = function ($element, instance) {
+  var copyrights = instance.getCopyrights();
+  if (copyrights !== undefined) {
+    copyrights = copyrights.toString();
+  }
+  if (copyrights === undefined || copyrights === '') {
+    copyrights = H5P.t('noCopyrights');
+  }
+  
+  var dialog = new H5P.Dialog('copyrights', H5P.t('copyrightInformation'), copyrights, $element);
+  dialog.open();
+};
+
+/**
+ * Display a dialog containing the embed code.
+ *
+ * @param {jQuery} $element to insert dialog after.
+ * @param {string} embed code.
+ * @returns {undefined}
+ */
+H5P.openEmbedDialog = function ($element, embedCode) {
+  var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container">' + embedCode + '</textarea>', $element);
+  dialog.open();
+};
+
+/**
+ * Copyrights for a H5P Content Library.
+ */
+H5P.ContentCopyrights = function () {
+  var label;
+  var media = [];
+  var content = [];
+  
+  /**
+   * Public. Set label.
+   *
+   * @param {String} newLabel
+   */
+  this.setLabel = function (newLabel) {
+    label = newLabel;
+  };
+  
+  /**
+   * Public. Add sub content.
+   *
+   * @param {H5P.MediaCopyright} newMedia
+   */
+  this.addMedia = function (newMedia) {
+    if (newMedia !== undefined) {
+      media.push(newMedia);
+    }
+  };
+  
+  /**
+   * Public. Add sub content.
+   *
+   * @param {H5P.ContentCopyrights} newContent
+   */
+  this.addContent = function (newContent) {
+    if (newContent !== undefined) {
+      content.push(newContent);
+    }
+  };
+  
+  /**
+   * Public. Print content copyright.
+   *
+   * @returns {String} HTML.
+   */
+  this.toString = function () {
+    var html = '';
+  
+    // Add media rights
+    for (var i = 0; i < media.length; i++) {
+      html += media[i];
+    }
+    
+    // Add sub content rights
+    for (var i = 0; i < content.length; i++) {
+      html += content[i];
+    }
+    
+    
+    if (html !== '') {
+      // Add a label to this info
+      if (label !== undefined) {
+        html = '<h3>' + label + '</h3>' + html;
+      }
+      
+      // Add wrapper
+      html = '<div class="h5p-content-copyrights">' + html + '</div>';
+    }
+    
+    return html;
+  };
+}
+
+/**
+ * A ordered list of copyright fields for media.
+ *
+ * @param {Object} copyright information fields.
+ * @param {Object} labels translation.  Optional.
+ * @param {Array} order of fields. Optional.
+ * @param {Object} extraFields for copyright. Optional.
+ */
+H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
+  var thumbnail;
+  var list = new H5P.DefinitionList();
+  
+  /**
+   * Private. Get translated label for field.
+   *
+   * @param {String} fieldName
+   * @return {String} 
+   */
+  var getLabel = function (fieldName) {
+    if (labels === undefined || labels[fieldName] === undefined) {
+      return H5P.t(fieldName);
+    }
+    
+    return labels[fieldName];
+  };
+  
+  /**
+   * Private. Get humanized value for field.
+   *
+   * @param {String} fieldName
+   * @return {String} 
+   */
+  var humanizeValue = function (fieldName, value) {
+    if (fieldName === 'license') {
+      return H5P.copyrightLicenses[value];
+    }
+    
+    return value;
+  };
+  
+  if (copyright !== undefined) {
+    // Add the extra fields
+    for (var field in extraFields) {
+      if (extraFields.hasOwnProperty(field)) {
+        copyright[field] = extraFields[field];
+      }
+    }
+    
+    if (order === undefined) {
+      // Set default order
+      order = ['title', 'author', 'year', 'source', 'license'];
+    }
+    
+    for (var i = 0; i < order.length; i++) {
+      var fieldName = order[i];
+      if (copyright[fieldName] !== undefined) {
+        list.add(new H5P.Field(getLabel(fieldName), humanizeValue(fieldName, copyright[fieldName])));
+      }
+    }
+  }
+  
+  /**
+   * Public. Set thumbnail.
+   *
+   * @param {H5P.Thumbnail} newThumbnail
+   */
+  this.setThumbnail = function (newThumbnail) {
+    thumbnail = newThumbnail;
+  };
+  
+  /**
+   * Public. Checks if this copyright is undisclosed.
+   * I.e. only has the license attribute set, and it's undisclosed.
+   *
+   * @returns {Boolean}
+   */
+  this.undisclosed = function () {
+    if (list.size() === 1) {
+      var field = list.get(0);
+      if (field.getLabel() === getLabel('license') && field.getValue() === humanizeValue('license', 'U')) {
+        return true;
+      }
+    }
+    return false;
+  };
+  
+  /**
+   * Public. Print media copyright.
+   *
+   * @returns {String} HTML.
+   */
+  this.toString = function () {
+    var html = '';
+    
+    if (this.undisclosed()) {
+      return html; // No need to print a copyright with a single undisclosed license.
+    }
+    
+    if (thumbnail !== undefined) {
+      html += thumbnail;
+    }
+    html += list;
+    
+    if (html !== '') {
+      html = '<div class="h5p-media-copyright">' + html + '</div>';
+    }
+    
+    return html;
+  };
+}
+
+// Translate table for copyright license codes.
+H5P.copyrightLicenses = {
+  'U': 'Undisclosed',
+  'CC BY': 'Attribution',
+  'CC BY-SA': 'Attribution-ShareAlike',
+  'CC BY-ND': 'Attribution-NoDerivs',
+  'CC BY-NC': 'Attribution-NonCommercial',
+  'CC BY-NC-SA': 'Attribution-NonCommercial-ShareAlike',
+  'CC BY-NC-ND': 'Attribution-NonCommercial-NoDerivs',
+  'GNU GPL': 'General Public License',
+  'PD': 'Public Domain',
+  'ODC PDDL': 'Public Domain Dedication and Licence',
+  'CC PDM': 'Public Domain Mark',
+  'C': 'Copyright'
+};
+
+/**
+ * Simple class for creating thumbnails for images.
+ *
+ * @param {String} source
+ * @param {Number} width
+ * @param {Number} height
+ */
+H5P.Thumbnail = function (source, width, height) {
+  var thumbWidth, thumbHeight = 100;
+  if (width !== undefined) {
+    thumbWidth = Math.round(thumbHeight * (width / height));
+  }
+
+  /**
+   * Public. Print thumbnail.
+   *
+   * @returns {String} HTML.
+   */
+  this.toString = function () {
+    return '<img src="' + source + '" alt="' + H5P.t('thumbnail') + '" class="h5p-thumbnail" height="' + thumbHeight + '"' + (thumbWidth === undefined ? '' : ' width="' + thumbWidth + '"') + '/>';
+  };
+}
+
+/**
+ * Simple data class for storing a single field.
+ */
+H5P.Field = function (label, value) {
+  /**
+   * Public. Get field label.
+   *
+   * @returns {String}
+   */ 
+  this.getLabel = function () {
+    return label;
+  };
+  
+  /**
+   * Public. Get field value.
+   *
+   * @returns {String}
+   */ 
+  this.getValue = function () {
+    return value;
+  };
+}
+
+/**
+ * Simple class for creating a definition list.
+ */
+H5P.DefinitionList = function () {
+  var fields = [];
+  
+  /**
+   * Public. Add field to list.
+   *
+   * @param {H5P.Field} field
+   */
+  this.add = function (field) {
+    fields.push(field);
+  };
+  
+  /**
+   * Public. Get Number of fields.
+   *
+   * @returns {Number}
+   */
+  this.size = function () {
+    return fields.length;
+  };
+  
+  /**
+   * Public. Get field at given index.
+   *
+   * @param {Number} index
+   * @returns {Object}
+   */
+  this.get = function (index) {
+    return fields[index];
+  };
+  
+  /**
+   * Public. Print definition list.
+   *
+   * @returns {String} HTML.
+   */
+  this.toString = function () {
+    var html = '';
+    for (var i = 0; i < fields.length; i++) {
+      var field = fields[i];
+      html += '<dt>' + field.getLabel() + '</dt><dd>' + field.getValue() + '</dd>';
+    }
+    return (html === '' ? html : '<dl class="h5p-definition-list">' + html + '</dl>');
+  };
 }
 
 /**
