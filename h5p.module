@@ -79,6 +79,109 @@ function h5p_menu() {
 }
 
 /**
+ * Make URLs absolute.
+ *
+ * @param array $urls
+ * @param array $remove Optional urls to skip.
+ * @return array absolute urls.
+ */
+function _h5p_make_urls_absolute($urls, $remove = array()) {
+  global $base_url;
+  for ($i = 0, $s = count($urls); $i < $s; $i++) {
+    if (in_array($urls[$i], $remove)) {
+      array_splice($urls, $i, 1);
+      $i--;
+      $s--;
+      continue;
+    }
+
+    $urls[$i] =  $base_url . '/' . $urls[$i];
+  }
+  return $urls;
+}
+
+/**
+ * Embed data.
+ *
+ * Caching this in DB probably won't have much to say? Since the 
+ * node needs to be loaded first. Varnish or other page cache
+ * will work much better.
+ *
+ * Embed code example: 
+ * <script src="//127.0.0.1/sites/all/modules/h5p/library/js/h5p-embed.js" data-h5p="//127.0.0.1/h5p/embed/1" async></script>
+ */
+function h5p_embed($node) {
+  global $base_url;
+  $callback = filter_input(INPUT_GET, 'callback');
+  
+  if ($callback === NULL) {
+    drupal_not_found();
+    module_invoke_all('exit');
+    exit();
+  }
+  
+  $id = h5p_get_content_id($node);
+  $h5p = _h5p_get_instance('core');
+  $settings = array();
+  h5p_add_iframe_assets($settings, $id, $h5p->loadContentDependencies($id, 'preloaded'), 'h5p-' . $node->nid . '-' . $node->vid);
+  
+  if (variable_get('h5p_export', 1)) {
+    $e = _h5p_get_instance('export');
+    $h5p_path = $base_url . '/' . $e->getExportPath($id, $node->title, $node->language);
+  }
+  
+  $content = array(
+    'id' => intval($id),
+    'path' => $base_url . '/' . _h5p_get_h5p_path() . '/',
+    'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
+    'fullscreen' => intval($node->main_library['fullscreen']),
+    'export' => (isset($h5p_path) ? $h5p_path : ''),
+    'embedCode' => _h5p_generate_embed_code($node->nid),
+    'styles' => _h5p_make_urls_absolute(array_merge($settings['h5p']['core']['styles'], $settings['h5p']['cid-' . $id]['styles'])),
+    'scripts' => _h5p_make_urls_absolute(array_merge($settings['h5p']['core']['scripts'], $settings['h5p']['cid-' . $id]['scripts']), array(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js')),
+    'params' => h5p_filter_json_content($node),
+    'i18n' => array(
+      'H5P' => array(
+        'fullscreen' => t('Fullscreen'),
+        'download' => t('Download H5P'),
+        'copyrights' => t('Rights of use'),
+        'embed' => t('Embed'),
+        'copyrightInformation' => t('Rights of use'),
+        'close' => t('Close'),
+        'title' => t('Title'),
+        'author' => t('Author'),
+        'year' => t('Year'),
+        'source' => t('Source'),
+        'license' => t('License'),
+        'thumbnail' => t('Thumbnail'),
+        'noCopyrights' => t('No copyright information available for this content.'),
+        'downloadDescription' => t('Download this content as a H5P file.'),
+        'copyrightsDescription' => t('View copyright information for this content.'),
+        'embedDescription' => t('View the embed code for this content.'),
+        'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
+      ),
+    ),
+  );
+  
+  print $callback . '(' . json_encode($content) . ');';
+}
+
+/**
+ * Generate embed code for a given node
+ * 
+ * @param integer $nid
+ * @return string
+ */
+function _h5p_generate_embed_code($nid) {
+  global $base_url;
+  $module_path = drupal_get_path('module', 'h5p');
+  $embed_js_url = $base_url . '/' . $module_path . '/library/js/h5p-embed.js';
+  $data_url = url('h5p/embed/' . $nid, array('absolute' => TRUE));
+  
+  return '<script src="' . $embed_js_url .'" data-h5p="' . $data_url . '" async></script>';
+}
+
+/**
  * Creates the title for the library details page 
  * 
  * @param integer $library_id
