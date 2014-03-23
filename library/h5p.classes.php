@@ -1247,7 +1247,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 1
+    'minorVersion' => 2
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -1869,7 +1869,7 @@ class H5PContentValidator {
 
     // Remove attributes that should not exist, they may contain JSON escape
     // code.
-    $validkeys = array_merge(array('path', 'mime'), $typevalidkeys);
+    $validkeys = array_merge(array('path', 'mime', 'copyright'), $typevalidkeys);
     if (isset($semantics->extraAttributes)) {
       $validkeys = array_merge($validkeys, $semantics->extraAttributes); // TODO: Validate extraAttributes
     }
@@ -1896,6 +1896,10 @@ class H5PContentValidator {
         $file->quality->level = intval($file->quality->level);
         $file->quality->label = htmlspecialchars($file->quality->label, ENT_QUOTES, 'UTF-8', FALSE);
       }
+    }
+    
+    if (isset($file->copyright)) {
+      $this->validateGroup($file->copyright, H5PContentValidator::getCopyrightSemantics());
     }
   }
 
@@ -2347,6 +2351,109 @@ class H5PContentValidator {
 
     return $uri;
   }
-
+  
+  public static function getCopyrightSemantics() {
+    static $semantics;
+    
+    if ($semantics === NULL) {
+      $semantics = (object) array(
+        'name' => 'copyright',
+        'type' => 'group',
+        'label' => 'Copyright information',
+        'fields' => array(
+          (object) array(
+            'name' => 'title',
+            'type' => 'text',
+            'label' => 'Title',
+            'placeholder' => 'La Gioconda',
+            'optional' => TRUE
+          ),
+          (object) array(
+            'name' => 'author',
+            'type' => 'text',
+            'label' => 'Author',
+            'placeholder' => 'Leonardo da Vinci',
+            'optional' => TRUE
+          ),
+          (object) array(
+            'name' => 'year',
+            'type' => 'text',
+            'label' => 'Year(s)',
+            'placeholder' => '1503 - 1517',
+            'optional' => TRUE
+          ),
+          (object) array(
+            'name' => 'source',
+            'type' => 'text',
+            'label' => 'Source',
+            'placeholder' => 'http://en.wikipedia.org/wiki/Mona_Lisa',
+            'optional' => true,
+            'regexp' => (object) array(
+              'pattern' => '^http[s]?://.+',
+              'modifiers' => 'i'
+            )
+          ),
+          (object) array(
+            'name' => 'license',
+            'type' => 'select',
+            'label' => 'License',
+            'default' => 'U',
+            'options' => array(
+              (object) array(
+                'value' => 'U',
+                'label' => 'Undisclosed'
+              ),
+              (object) array(
+                'value' => 'CC BY',
+                'label' => 'Attribution'
+              ),
+              (object) array(
+                'value' => 'CC BY-SA',
+                'label' => 'Attribution-ShareAlike'
+              ),
+              (object) array(
+                'value' => 'CC BY-ND',
+                'label' => 'Attribution-NoDerivs'
+              ),
+              (object) array(
+                'value' => 'CC BY-NC',
+                'label' => 'Attribution-NonCommercial'
+              ),
+              (object) array(
+                'value' => 'CC BY-NC-SA',
+                'label' => 'Attribution-NonCommercial-ShareAlike'
+              ),
+              (object) array(
+                'value' => 'CC BY-NC-ND',
+                'label' => 'Attribution-NonCommercial-NoDerivs'
+              ),
+              (object) array(
+                'value' => 'GNU GPL',
+                'label' => 'General Public License'
+              ),
+              (object) array(
+                'value' => 'PD',
+                'label' => 'Public Domain'
+              ),
+              (object) array(
+                'value' => 'ODC PDDL',
+                'label' => 'Public Domain Dedication and Licence'
+              ),
+              (object) array(
+                'value' => 'CC PDM',
+                'label' => 'Public Domain Mark'
+              ),
+              (object) array(
+                'value' => 'C',
+                'label' => 'Copyright'
+              )
+            )
+          )
+        )
+      );
+    }
+    
+    return $semantics;
+  }
 }
 ?>
