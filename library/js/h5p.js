@@ -428,6 +428,8 @@ H5P.Dialog = function (name, title, content, $element) {
   this.open = function () {
     setTimeout(function () {
       $dialog.addClass('h5p-open'); // Fade in
+      // Triggering an event, in case something has to be done after dialog has been opened.
+      H5P.jQuery(self).trigger('dialog-opened', [$dialog]);
     }, 1);
   };
   
@@ -468,6 +470,12 @@ H5P.openCopyrightsDialog = function ($element, instance) {
  */
 H5P.openEmbedDialog = function ($element, embedCode) {
   var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container">' + embedCode + '</textarea>', $element);
+  
+  // Selecting embed code when dialog is opened
+  H5P.jQuery(dialog).on('dialog-opened', function (event, $dialog) {
+    $dialog.find('.h5p-embed-code-container').select();
+  });
+  
   dialog.open();
 };
 
