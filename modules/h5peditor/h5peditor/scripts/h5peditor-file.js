@@ -70,6 +70,17 @@ ns.File.prototype.appendTo = function ($wrapper) {
   this.children = [group];
 };
 
+  
+/**
+ * Sync copyright between all video files.
+ *
+ * @returns {undefined}
+ */
+ns.File.prototype.setCopyright = function (value) {
+  this.copyright = this.params.copyright = value;
+};
+  
+
 /**
  * Creates thumbnail HTML and actions.
  *
