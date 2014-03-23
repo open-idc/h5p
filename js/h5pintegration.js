@@ -14,6 +14,14 @@ $(document).ready(function () {
   H5P.loadedCss = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.loadedCss !== undefined ? Drupal.settings.h5p.loadedCss : [];
 });
 
+H5PIntegration.getContentData = function (id) {
+  return Drupal.settings.h5p.content['cid-' + id];
+};
+
+H5PIntegration.getJsonContent = function (contentId) {
+  return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
+};
+
 H5PIntegration.getJsonContent = function (contentId) {
   return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
 };
@@ -39,8 +47,7 @@ H5PIntegration.getContentPath = function (contentId) {
  * @returns {string} The full path to the library
  */
 H5PIntegration.getLibraryPath = function (library) {
-  // TODO: This is silly and needs to be changed, why does the h5peditor
-  // have its own namespace for these things?
+  // TODO: Does the h5peditor really need its own namespace for these things?
   var libraryPath = Drupal.settings.h5p !== undefined ? Drupal.settings.h5p.libraryPath : Drupal.settings.h5peditor.libraryPath
 
   return Drupal.settings.basePath + libraryPath + library;
@@ -93,7 +100,30 @@ H5PIntegration.getHeadTags = function (contentId) {
        + createScriptTags(Drupal.settings.h5p['cid-' + contentId].scripts);
 };
 
-H5PIntegration.fullscreenText = Drupal.t('Fullscreen');
+/**
+ * Define core translations.
+ */
+H5PIntegration.i18n = {
+  H5P: {
+    fullscreen: Drupal.t('Fullscreen'),
+    download: Drupal.t('Download'),
+    copyrights: Drupal.t('Rights of use'),
+    embed: Drupal.t('Embed'),
+    copyrightInformation: Drupal.t('Rights of use'),
+    close: Drupal.t('Close'),
+    title: Drupal.t('Title'),
+    author: Drupal.t('Author'),
+    year: Drupal.t('Year'),
+    source: Drupal.t('Source'),
+    license: Drupal.t('License'),
+    thumbnail: Drupal.t('Thumbnail'),
+    noCopyrights: Drupal.t('No copyright information available for this content.'),
+    downloadDescription: Drupal.t('Download this content as a H5P file.'),
+    copyrightsDescription: Drupal.t('View copyright information for this content.'),
+    embedDescription: Drupal.t('View the embed code for this content.'),
+    h5pDescription: Drupal.t('Visit H5P.org to check out more cool content.')
+  }
+};
 
 /**
  *  Returns an object containing a library metadata
