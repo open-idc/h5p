@@ -429,7 +429,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     // Set language to drupals node language, or 'und' if not set.
-    $exportLanguage = $language == TRUE ? $language : 'und';
+    $exportLanguage = 'und'; // TODO: What language to use?
 
     $export = array(
       'contentId' => $contentId,
