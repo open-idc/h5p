@@ -86,9 +86,17 @@ H5P.init = function () {
         setTimeout(function () {
           var fullscreen = $container.hasClass('h5p-fullscreen') || $container.hasClass('h5p-semi-fullscreen');
           if (!fullscreen) {
-            // Resize iframe so all content is visible.
+            // Retain parent size to avoid jumping/scrolling
+            iframe.parentElement.style.height = iframe.parentElement.clientHeight + 'px'; 
+            
+            // Reset iframe height, incase content has shrinked.
             iframe.style.height = '1px';
+            
+            // Resize iframe so all content is visible.
             iframe.style.height = (iframe.contentDocument.body.scrollHeight) + 'px';
+            
+            // Free parent
+            iframe.parentElement.style.height = 'auto';
           }
         }, 1);
       };
