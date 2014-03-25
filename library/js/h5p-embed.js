@@ -36,6 +36,7 @@ var H5P = H5P || (function () {
       parent.insertBefore(iframe, script);
       
       iframe.id = 'h5p-iframe-' + id;
+      iframe.style.display = 'block';
       iframe.style.width = '100%';
       iframe.style.height = '1px';
       iframe.style.border = 'none';
