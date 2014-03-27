@@ -12,6 +12,8 @@ if (window.parent !== window) {
 jQuery(document).ready(function () {
   H5P.loadedJs = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.loadedJs !== undefined ? Drupal.settings.h5p.loadedJs : [];
   H5P.loadedCss = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.loadedCss !== undefined ? Drupal.settings.h5p.loadedCss : [];
+  H5P.postUserStatistics = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.postUserStatistics !== undefined ? Drupal.settings.h5p.postUserStatistics : false;
+  H5P.ajaxPath = Drupal.settings.h5p !== undefined && Drupal.settings.h5p.ajaxPath !== undefined ? Drupal.settings.h5p.ajaxPath : '';
 });
 
 H5PIntegration.getContentData = function (id) {
