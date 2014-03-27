@@ -7,7 +7,9 @@ var ns = H5PEditor;
     var $editor = $('.h5p-editor');
     var $create = $('#edit-h5p-editor').hide();
     var $type = $('input[name="h5p_type"]');
-    var library = $('input[name="h5p_library"]').val();
+    var $params = $('input[name="h5p_params"]');
+    var $library = $('input[name="h5p_library"]');
+    var library = $library.val();
 
     ns.$ = H5P.jQuery;
     ns.basePath = Drupal.settings.basePath +  Drupal.settings.h5peditor.modulePath + '/h5peditor/';
@@ -26,7 +28,7 @@ var ns = H5PEditor;
       else {
         $upload.hide();
         if (h5peditor === undefined) {
-          h5peditor = new ns.Editor(library, JSON.parse($('#edit-h5p-params').val()));
+          h5peditor = new ns.Editor(library, JSON.parse($params.val()));
           h5peditor.replace($editor);
         }
         $create.show();
@@ -50,12 +52,12 @@ var ns = H5PEditor;
         }
 
         if (params !== undefined) {
-          ns.$('#edit-h5p-library').val(h5peditor.getLibrary());
-          ns.$('#edit-h5p-params').val(JSON.stringify(params));
+          $library.val(h5peditor.getLibrary());
+          $params.val(JSON.stringify(params));
         }
       }
     });
   };
 
   $(document).ready(ns.init);
-})(jQuery);
+})(H5P.jQuery);
