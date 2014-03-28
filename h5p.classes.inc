@@ -401,7 +401,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
   
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
-    $semanticsPath = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
+    $semanticsPath = drupal_realpath('public://' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
     if (file_exists($semanticsPath)) {
       $semantics = file_get_contents($semanticsPath);
       if (!json_decode($semantics, TRUE)) {
