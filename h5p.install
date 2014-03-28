@@ -247,6 +247,50 @@ function h5p_schema() {
     ),
     'primary key' => array('content_id'),
   );
+
+  $schema['h5p_points'] = array(
+    'description' => 'Stores user statistics.',
+    'fields' => array(
+      'content_id' => array(
+        'description' => 'Primary Key: The unique identifier for this node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'Primary Key: The id for the user answering this H5P.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'started' => array(
+        'description' => 'When the user started on the interaction',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'finished' => array(
+        'description' => 'When the user submitted the result',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'points' => array(
+        'description' => 'The users score',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'max_points' => array(
+        'description' => 'The maximum score for this test',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('content_id', 'uid'),
+  );
   return $schema;
 }
 
@@ -449,6 +493,52 @@ function h5p_update_6105(&$sandbox) {
     $sandbox['current']++;
     $sandbox['#finished'] = ($sandbox['current'] / $sandbox['max']);
   }
+}
+
+function h5p_update_7100(&$sandbox) {
+  db_create_table('h5p_points', array(
+    'description' => 'Stores user statistics.',
+    'fields' => array(
+      'content_id' => array(
+        'description' => 'Primary Key: The unique identifier for this node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'Primary Key: The id for the user answering this H5P.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'started' => array(
+        'description' => 'When the user started on the interaction',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'finished' => array(
+        'description' => 'When the user submitted the result',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'points' => array(
+        'description' => 'The users score',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'max_points' => array(
+        'description' => 'The maximum score for this test',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('content_id', 'uid'),
+  ));
 }
 
 /**
