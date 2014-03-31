@@ -548,6 +548,10 @@ function h5p_update_7100(&$sandbox) {
  * @param object $content
  */
 function h5p_save_content_dependencies($content) {
+  require_once drupal_get_path('module', 'h5p') . '/library/h5p-development.class.php';
+  require_once drupal_get_path('module', 'h5p') . '/library/h5p.classes.php';
+  require_once drupal_get_path('module', 'h5p') . '/h5p.classes.inc';
+  
   $i = _h5p_get_instance('interface');
   $core = _h5p_get_instance('core');
   
