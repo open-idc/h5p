@@ -59,6 +59,9 @@ function h5p_menu() {
     'access arguments' => array('view', 2),
     'type' => MENU_CALLBACK,
   );
+  
+  // TODO: Should we stick to url conventions? http://moz.com/blog/11-best-practices-for-urls
+  // If we want to hint on return type we should call this //h5p/set-finished.json
   $items['h5p-ajax/setFinished'] = array(
     'page callback' => 'h5p_set_finished',
     'access callback' => 'h5p_access_set_finished',
