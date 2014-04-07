@@ -24,10 +24,6 @@ H5PIntegration.getJsonContent = function (contentId) {
   return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
 };
 
-H5PIntegration.getJsonContent = function (contentId) {
-  return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
-};
-
 // Window parent is always available.
 var locationOrigin = window.parent.location.protocol + "//" + window.parent.location.host;
 H5PIntegration.getContentPath = function (contentId) {
