@@ -1369,7 +1369,7 @@ class H5PCore {
           $files['scripts'][] = $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file);
         }
       }
-      if ($dependency['dropCss'] !== '1' && !empty($dependency['preloadedCss']) && $dependency['preloadedCss'][0] !== '') {
+      if ((!isset($dependency['dropCss']) || $dependency['dropCss'] !== '1') && !empty($dependency['preloadedCss']) && $dependency['preloadedCss'][0] !== '') {
         foreach ($dependency['preloadedCss'] as $file) {
           $files['styles'][] = $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file);
         }
