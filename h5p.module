@@ -568,6 +568,9 @@ function h5p_add_files_and_settings($node, $embed_type) {
   $added_content[$content_id] = TRUE;
     
   $h5p_params = h5p_filter_json_content($node);
+  if ($h5p_params === NULL) {
+    return; // Failure in validation.
+  }
 
   if (variable_get('h5p_export', 1)) {
     $h5p_path = base_path() . _h5p_get_instance('export')->getExportPath($content_id, $node->title, $node->language);
@@ -694,17 +697,22 @@ function h5p_filter_json_content($node) {
     }
   }
   
-  // Get params as object
-  $params = json_decode($node->json_content);
-
   // Get semantics.
   $semantics = _h5p_get_instance('core')->loadLibrarySemantics($node->main_library['name'], $node->main_library['majorVersion'], $node->main_library['minorVersion']);
-  
-  $validator = _h5p_get_instance('contentvalidator');
-  // Validate and filter against main library semantics.
-  $validator->validateBySemantics($params, $semantics);
 
-  $params = json_encode($params);
+  if ($semantics === NULL) {
+    $params = NULL;
+  }
+  else {
+    // Get params as object
+    $params = json_decode($node->json_content);
+    
+    $validator = _h5p_get_instance('contentvalidator');
+    // Validate and filter against main library semantics.
+    $validator->validateBySemantics($params, $semantics);
+
+    $params = json_encode($params);
+  }
 
   if (isset($cid)) {
     // Cache results
