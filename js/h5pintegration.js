@@ -17,11 +17,16 @@ jQuery(document).ready(function () {
 });
 
 H5PIntegration.getContentData = function (id) {
-  return Drupal.settings.h5p.content['cid-' + id];
+  if (Drupal.settings.h5p.content !== undefined) {
+    return Drupal.settings.h5p.content['cid-' + id];
+  }
 };
 
 H5PIntegration.getJsonContent = function (contentId) {
-  return Drupal.settings.h5p.content['cid-' + contentId].jsonContent;
+  var content = H5PIntegration.getContentData(contentId);
+  if (content !== undefined) {
+    return content.jsonContent;
+  }
 };
 
 // Window parent is always available.
