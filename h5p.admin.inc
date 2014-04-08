@@ -59,12 +59,12 @@ function h5p_admin_settings($form, &$form_state) {
     '#description' => t("With this feature enabled content.json will be read from file. Changes to the content made using the editor won't be visible when this mode is actice."),
   );
   
-  $form['h5p_library_development'] = array(
+  /*$form['h5p_library_development'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable library development directory'),
     '#default_value' => variable_get('h5p_library_development', 0),
     '#description' => t('Check to enabled development of libraries in the %dev folder.', array('%dev' => _h5p_get_h5p_path() . '/development')),
-  );
+  );*/
 
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().
