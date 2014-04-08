@@ -434,7 +434,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements alterLibrarySemantics().
    */
   public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion) {
-    drupal_alter('h5p_semantics', $semantics); // TODO: Am I missing something?
+    drupal_alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
   }
   
 
