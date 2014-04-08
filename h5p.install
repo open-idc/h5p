@@ -10,9 +10,53 @@
  * Implements hook_uninstall().
  */
 function h5p_uninstall() {
-  // TODO: Add missing variables and unlink h5p directories.
+  // Clean out file dirs.
+  $h5p_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/' . variable_get('h5p_default_path', 'h5p');
+   
+  // Remove these regardless of their content.
+  foreach (array('temp', 'libraries', 'content', 'exports') as $directory) {
+    _h5p_recursive_unlink($h5p_path . '/' . $directory);
+  }
+  
+  // Only remove development dir if it's empty.
+  $dir = $h5p_path . '/development';
+  if (is_dir($dir) && count(scandir($dir)) === 2) {
+    rmdir($dir);
+    
+    // Remove parent if empty.
+    if (count(scandir($h5p_path)) === 2) {
+      rmdir($h5p_path);
+    }
+  }
+
+  // Remove variables.
   variable_del('h5p_export');
   variable_del('h5p_revisioning');
+  variable_del('h5p_content_dev_mode');
+  variable_del('h5p_default_path');
+  variable_del('h5p_dev_mode');
+  variable_del('h5p_library_development');
+  variable_del('h5p_library_whitelist_extras');
+  variable_del('h5p_whitelist');
+}
+
+/**
+ * Recursively remove file or directory.
+ *
+ * @param string $file
+ */
+function _h5p_recursive_unlink($file) {
+  if (is_dir($file)) {
+    // Remove all files in dir.
+    $subfiles = array_diff(scandir($file), array('.','..'));
+    foreach ($subfiles as $subfile)  {
+      _h5p_recursive_unlink($file . '/' . $subfile);
+    }
+    rmdir($file);
+  }
+  elseif (file_exists($file)) {
+    unlink($file);
+  } 
 }
 
 /**
