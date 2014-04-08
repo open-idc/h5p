@@ -2012,7 +2012,7 @@ class H5PContentValidator {
    */
   public function validateLibrary(&$value, $semantics) {
     // Check if provided library is within allowed options
-    if (in_array($value->library, $semantics->options)) {
+    if (isset($value->library) && in_array($value->library, $semantics->options)) {
       if (isset($this->semanticsCache[$value->library])) {
         $librarySemantics = $this->semanticsCache[$value->library];
       }
