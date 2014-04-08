@@ -13,6 +13,7 @@ function h5p_uninstall() {
   // TODO: Add missing variables and unlink h5p directories.
   variable_del('h5p_export');
   variable_del('h5p_revisioning');
+  variable_del('h5p_icon_in_actionbar');
 }
 
 /**

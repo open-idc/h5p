@@ -26,7 +26,15 @@ function h5p_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('h5p_export', '1'),
     '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files. The H5P Editor module must be enabled for export to work."),
   );
-
+  
+  // Disable/enable the H5P icon below each H5P
+  $form['h5p_icon_in_actionbar'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display the H5P icon below each H5P'),
+    '#default_value' => variable_get('h5p_icon_in_actionbar', '1'),
+    '#description' => t("The H5P icon is a link to h5p.org"),
+  );
+  
   // make sure core is loaded
   _h5p_get_instance('core');
   $form['h5p_whitelist'] = array(
