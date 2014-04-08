@@ -29,6 +29,14 @@ function h5p_admin_settings() {
     '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files."),
   );
   
+  // Disable/enable the H5P icon below each H5P
+  $form['h5p_icon_in_actionbar'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display the H5P icon below each H5P'),
+    '#default_value' => variable_get('h5p_icon_in_actionbar', '1'),
+    '#description' => t("The H5P icon is a link to h5p.org"),
+  );
+  
   // make sure core is loaded
   _h5p_get_instance('core');
   $form['h5p_whitelist'] = array(

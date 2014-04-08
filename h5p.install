@@ -20,6 +20,7 @@ function h5p_uninstall() {
   drupal_uninstall_schema('h5p');
   variable_del('h5p_export');
   variable_del('h5p_revisioning');
+  variable_del('h5p_icon_in_actionbar');
 }
 
 /**
