@@ -1465,11 +1465,17 @@ class H5PCore {
         }
         
         $dependencyLibrary = $this->loadLibrary($dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']);
-        $dependencies[$dependencyKey] = array(
-          'library' => $dependencyLibrary,
-          'type' => $type
-        );
-        $this->findLibraryDependencies($dependencies, $dependencyLibrary, $type === 'editor');
+        if ($dependencyLibrary) {
+          $dependencies[$dependencyKey] = array(
+            'library' => $dependencyLibrary,
+            'type' => $type
+          );
+          $this->findLibraryDependencies($dependencies, $dependencyLibrary, $type === 'editor');
+        }
+        else {
+          // This site is missing a dependency!
+          $this->h5pF->setErrorMessage($this->h5pF->t('Missing dependency @dep required by @lib.', array('@dep' => H5PCore::libraryToString($dependency), '@lib' => H5PCore::libraryToString($library))));
+        }
       }
     }
   }
