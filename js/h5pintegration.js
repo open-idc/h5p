@@ -64,6 +64,13 @@ H5PIntegration.getFullscreen = function (contentId) {
 };
 
 /**
+ * Should H5P Icon be displayed in action bar?
+ */
+H5PIntegration.showH5PIconInActionBar = function () {
+  return Drupal.settings.h5p.h5pIconInActionBar;
+};
+
+/**
  * Loop trough styles and create a set of tags for head.
  * TODO: Cache base tags or something to improve performance.
  *
