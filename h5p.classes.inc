@@ -230,8 +230,9 @@ class H5PDrupal implements H5PFrameworkInterface {
         FROM {h5p_libraries} hl
         WHERE machine_name = '%s'
         AND major_version = %d
-        AND minor_version = %d",
-        $libraryId, $dependency_type, $dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion']
+        AND minor_version = %d
+        ON DUPLICATE KEY UPDATE dependency_type='%s'",
+        $libraryId, $dependency_type, $dependency['machineName'], $dependency['majorVersion'], $dependency['minorVersion'], $dependency_type
       );
     }
   }
