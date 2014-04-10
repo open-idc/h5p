@@ -75,7 +75,7 @@ H5P.init = function () {
         H5P.openEmbedDialog($actions, contentData.embedCode);
       });
     }
-    if (contentData.h5pIconInActionbar === true) {
+    if (H5PIntegration.showH5PIconInActionBar()) {
       H5P.jQuery('<li><a class="h5p-link" href="http://h5p.org" target="_blank" title="' + H5P.t('h5pDescription') + '"></a></li>').appendTo($actions);
     }
     $actions.insertAfter($container);
