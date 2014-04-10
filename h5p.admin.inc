@@ -28,10 +28,10 @@ function h5p_admin_settings($form, &$form_state) {
   );
   
   // Disable/enable the H5P icon below each H5P
-  $form['h5p_icon_in_actionbar'] = array(
+  $form['h5p_icon_in_action_bar'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display the H5P icon below each H5P'),
-    '#default_value' => variable_get('h5p_icon_in_actionbar', '1'),
+    '#default_value' => variable_get('h5p_icon_in_action_bar', '1'),
     '#description' => t("The H5P icon is a link to h5p.org"),
   );
   
