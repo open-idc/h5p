@@ -117,7 +117,11 @@ var H5P = H5P || (function () {
           embedCode: content.embedCode
         };
       },
-      i18n: content.i18n
+      i18n: content.i18n,
+      showH5PIconInActionBar: function () {
+        // Always show H5P-icon when embedding
+        return true;
+      }
     };
   };
   
