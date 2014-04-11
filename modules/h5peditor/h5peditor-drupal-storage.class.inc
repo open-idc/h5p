@@ -38,30 +38,33 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    */
   public function addTmpFile($file) {
     global $user;
-    $path = str_replace(file_stream_wrapper_get_instance_by_uri('public://')->realpath(), 'public://', $file->path);
+    $path = str_replace(file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/', 'public://', $file->path);
+    $filename = explode('/', $file->name);
     $id = db_insert('file_managed')
-    ->fields(array(
-      'uid' => $user->uid,
-      'filename' => $file->name,
-      'uri' => $path,
-      'filemime' => $file->type,
-      'filesize' => $file->size,
-      'status' => ~ FILE_STATUS_PERMANENT,
-      'timestamp' => REQUEST_TIME,
-    ))
-    ->execute();
+      ->fields(array(
+        'uid' => $user->uid,
+        'filename' => $filename[count($filename) - 1],
+        'uri' => $path,
+        'filemime' => $file->type,
+        'filesize' => $file->size,
+        'status' => ~ FILE_STATUS_PERMANENT,
+        'timestamp' => REQUEST_TIME,
+      ))
+      ->execute();
   }
 
   /**
    * TODO
    */
   public function keepFile($oldPath, $newPath) {
+    // TODO: Add to file usage?
+    $path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/';
     db_update('file_managed')
     ->fields(array(
-      'uri' => str_replace(file_stream_wrapper_get_instance_by_uri('public://')->realpath(), 'public://', $newPath),
+      'uri' => str_replace($path, 'public://', $newPath),
       'status' => FILE_STATUS_PERMANENT,
     ))
-    ->condition('uri', str_replace(file_stream_wrapper_get_instance_by_uri('public://')->realpath(), 'public://', $oldPath))
+    ->condition('uri', str_replace($path, 'public://', $oldPath))
     ->execute();
   }
 

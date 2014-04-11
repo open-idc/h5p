@@ -248,7 +248,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
  * Callback for file uploads.
  */
 function h5peditor_files_callback() {
-  $files_directory = file_stream_wrapper_get_instance_by_uri('public://')->realpath();
+  $files_directory = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath();
   if (isset($_POST['contentId']) && $_POST['contentId']) {
     $files_directory .= '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . $_POST['contentId'];
   }
