@@ -106,7 +106,7 @@ html.h5p-iframe .h5p-content {
 }
 .h5p-enable-fullscreen:hover, .h5p-disable-fullscreen:hover {
   text-decoration: none;
-  background: rgb(0,0,0);
+  background: rgba(0,0,0,0.5);
 }
 
 .h5p-semi-fullscreen .h5p-content-controls {
