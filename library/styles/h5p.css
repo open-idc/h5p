@@ -34,6 +34,7 @@ html.h5p-iframe, html.h5p-iframe > body {
   font-size: 16px;
   line-height: 1.5em;
   border: 1px solid #EEE;
+  border-bottom: none;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
@@ -179,18 +180,20 @@ div.h5p-fullscreen {
   cursor: pointer;
 }
 
-.h5p-actions {
+.h5p-content ul.h5p-actions {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   overflow: hidden;
   list-style: none;
   padding: 0px 10px;
-  margin: .5em 0 0 0;
+  margin: 0;
   height: 25px;
-  line-height: 25px;
-  position: relative;
-  z-index: 2;
   font-size: 12px;
   background: #FAFAFA;
   border-top: 1px solid #EEE;
+  border-bottom: 1px solid #EEE;
+  clear: both;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 .h5p-fullscreen .h5p-actions, .h5p-semi-fullscreen .h5p-actions {
   display: none;
