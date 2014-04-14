@@ -118,31 +118,24 @@ class H5peditorDrupalStorage implements H5peditorStorage {
        AND semantics IS NOT NULL 
        ORDER BY title");
     foreach ($libraries_result as $library) {
-      $found = FALSE;
-      
       // Make sure we only display the newest version of a library.
       foreach ($libraries as $key => $existingLibrary) {
         if ($library->machineName === $existingLibrary->machineName) {
-          $found = TRUE;
           
-          // Choose newest
-          if ($library->majorVersion === $existingLibrary->majorVersion) {
-            if ($library->minorVersion > $existingLibrary->minorVersion) {
-              // Add
-              $libraries[$key] = $library;
-            }
+          // Mark old ones
+          // This is the newest
+          if (($library->majorVersion === $existingLibrary->majorVersion && $library->minorVersion > $existingLibrary->minorVersion) ||
+              ($library->majorVersion > $existingLibrary->majorVersion)) {
+            $existingLibrary->isOld = TRUE;
           }
-          else if ($library->majorVersion > $existingLibrary->majorVersion) {
-            // Add
-            $libraries[$key] = $library;
+          else {
+            $library->isOld = TRUE;
           }
-          // else: Just skip
         }
       }
       
-      if (!$found) {
-        $libraries[] = $library;
-      }
+      // Add new library
+      $libraries[] = $library;
     }
     
     return $libraries;
