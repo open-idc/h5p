@@ -493,14 +493,13 @@ class H5PValidator {
 
         $libraryH5PData = $this->getLibraryData($file, $filePath, $tmpDir);
         
-        if($libraryH5PData !== FALSE) {
-          /* library's directory name and machineName in library.json must match */
+        if ($libraryH5PData !== FALSE) {
+          // Library's directory name and machineName in library.json must match
           if ($libraryH5PData['machineName'] !== $file) {
             $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName in library.json. (Directory: %directoryName , machineName: %machineName)', array('%directoryName' => $file, '%machineName' => $libraryH5PData['machineName'])));
             $valid = FALSE;
             continue;
           }
-          
           $libraries[$libraryH5PData['machineName']] = $libraryH5PData;
         }
         else {
