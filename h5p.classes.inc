@@ -272,23 +272,18 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements saveContentData
    */
-  public function saveContentData($contentJson, $mainJsonData, $mainLibraryId, $contentMainId = NULL, $contentId = NULL) {
-    $embedTypes = '';
-    if (isset($mainJsonData['embedTypes'])) {
-      $embedTypes = implode(', ', $mainJsonData['embedTypes']);
-    }
-
-    $id = db_insert('h5p_nodes')
+  public function saveContentData($content, $contentMainId = NULL) {
+    db_insert('h5p_nodes')
     ->fields(array(
-      'content_id' => $contentId,
+      'content_id' => $content['id'],
       'nid' => $contentMainId,
-      'json_content' => $contentJson,
-      'embed_type' => $embedTypes,
-      'main_library_id' => $mainLibraryId,
+      'json_content' => $content['params'],
+      'embed_type' => 'div', // TODO: Determine from library?
+      'main_library_id' => $contentMainId,
     ))
     ->execute();
     
-    return $contentId;
+    return $content['id'];
   }
 
   /**
@@ -340,7 +335,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
     $dropLibraryCssList = array();
-    
     foreach ($librariesInUse as $dependency) {
       if (!empty($dependency['library']['dropLibraryCss'])) {
         $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
@@ -349,19 +343,11 @@ class H5PDrupal implements H5PFrameworkInterface {
     
     foreach ($librariesInUse as $dependency) {
       $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
-      db_merge('h5p_nodes_libraries')
-        ->key(array(
+      db_insert('h5p_nodes_libraries')
+        ->fields(array(
           'content_id' => $contentId,
           'library_id' => $dependency['library']['libraryId'],
           'dependency_type' => $dependency['type'], 
-        ))
-        ->insertFields(array(
-          'content_id' => $contentId,
-          'library_id' => $dependency['library']['libraryId'],
-          'dependency_type' => $dependency['type'], 
-          'drop_css' => $dropCss,
-        ))
-        ->updateFields(array(
           'drop_css' => $dropCss,
         ))
         ->execute();
@@ -439,69 +425,6 @@ class H5PDrupal implements H5PFrameworkInterface {
     drupal_alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
   }
   
-
-  /**
-   * Implements getExportData
-   *
-   * @param int $contentId
-   * ContentID of the node we are going to export
-   **/
-  public function getExportData($contentId) {
-    $content = db_query(
-      "SELECT main_library_id, embed_type, json_content
-      FROM {h5p_nodes}
-      WHERE content_id = :content_id", array(':content_id' => $contentId))
-      ->fetchAssoc();
-
-    $mainLibraryId = $content['main_library_id'];
-
-    // Use library ids to get library info.
-    $res = db_query(
-      "SELECT hl.machine_name as machine_name, hl.major_version as major_version, hl.minor_version as minor_version, 
-      hnl.dependency_type, hl.library_id as library_id
-      FROM {h5p_libraries} hl
-      JOIN {h5p_nodes_libraries} hnl ON hl.library_id =  hnl.library_id
-      WHERE hnl.content_id = :hnl_content_id", array(':hnl_content_id' => $contentId));
-
-    while ($libs = $res->fetchAssoc()) {
-      $librariesInfo[$libs['machine_name']] = array(
-        'machineName' => $libs['machine_name'],
-        'majorVersion' => $libs['major_version'],
-        'minorVersion' => $libs['minor_version'],
-        'dependencyType' => $libs['dependency_type'],
-      );
-
-      // Save the main libary machine name.
-      if ($libs['library_id'] == $mainLibraryId) {
-        $mainLibraryMachineName = $libs['machine_name'];
-        $mainLibrary = $librariesInfo[$mainLibraryMachineName];
-      }
-    }
-
-    // Set language to drupals node language, or 'und' if not set.
-    $exportLanguage = LANGUAGE_NONE; // TODO: What language to use?
-
-    $export = array(
-      'contentId' => $contentId,
-      'mainLibrary' => $mainLibraryMachineName,
-      'embedType' => $content['embed_type'],
-      'libraries' => $librariesInfo,
-      'language' => $exportLanguage,
-      'jsonContent' => $content['json_content'],
-    );
-
-    return $export;
-  }
-  
-  /**
-   * Check if h5p export is enabled.
-   *
-   * @return bool
-   */
-  public function isExportEnabled() {
-    return (bool) variable_get('h5p_export', 1);
-  }
-  
   /**
    * Implements loadContent().
    */
@@ -531,6 +454,7 @@ class H5PDrupal implements H5PFrameworkInterface {
               hl.machine_name AS machineName, 
               hl.major_version AS majorVersion, 
               hl.minor_version AS minorVersion, 
+              hl.patch_version AS patchVersion, 
               hl.preloaded_css AS preloadedCss, 
               hl.preloaded_js AS preloadedJs, 
               hnl.drop_css AS dropCss,
