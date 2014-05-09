@@ -256,7 +256,7 @@ function h5peditor_files_callback() {
     $files_directory .= '/h5peditor';
   }
 
-  $file = new H5peditorFile($files_directory);
+  $file = new H5peditorFile(_h5p_get_instance('interface'), $files_directory);
 
   if (!$file->isLoaded()) {
     drupal_not_found();
