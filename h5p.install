@@ -540,6 +540,12 @@ function h5p_update_6105(&$sandbox) {
   }
 }
 
+/**
+ * Implementation of hook_update_N().
+ *
+ * Adds the h5p_points-table, which stores user statistics.
+ * 
+ */
 function h5p_update_7100(&$sandbox) {
   db_create_table('h5p_points', array(
     'description' => 'Stores user statistics.',
@@ -605,5 +611,18 @@ function h5p_save_content_dependencies($content) {
   $dependencies = array();
   $core->findLibraryDependencies($dependencies, $library);
   
-  $i->saveLibraryUsage($content->id, $dependencies);
+  $dropLibraryCssList = array();
+  foreach ($dependencies as $dependency) {
+    if (!empty($dependency['library']['dropLibraryCss'])) {
+      $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
+    }
+  }
+  
+  foreach ($dependencies as $dependency) {
+    $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
+    db_merge('h5p_nodes_libraries')
+    ->key(array('content_id' => $content->id, 'library_id' => $dependency['library']['libraryId'], 'dependency_type' => $dependency['type']))
+    ->fields(array('drop_css' => $dropCss))
+    ->execute();
+  }
 }
