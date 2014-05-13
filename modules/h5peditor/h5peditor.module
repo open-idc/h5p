@@ -290,8 +290,9 @@ function h5peditor_get_instance() {
     $instance = new H5peditor(
       _h5p_get_instance('core'),
       new H5peditorDrupalStorage(), 
-      file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath(), // TODO: Refactor and use h5p_get_path()?
-      base_path()
+      base_path(),
+      _h5p_get_h5p_path(),
+      file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . DIRECTORY_SEPARATOR . 'h5peditor'
     );
   }
 
@@ -299,7 +300,7 @@ function h5peditor_get_instance() {
 }
 
 /**
- * TODO: Move to core. It's used in core.
+ * TODO: Rather use core functions than this?
  */
 function h5peditor_get_library_property($library, $property = 'all') {
   $matches = array();
