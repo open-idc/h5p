@@ -225,6 +225,7 @@ div.h5p-fullscreen {
   font-family: H5P;
   content: "\e668";
   font-size: 1.7em;
+  line-height: 1;
   padding-right: 0;
   vertical-align: bottom;
 }
