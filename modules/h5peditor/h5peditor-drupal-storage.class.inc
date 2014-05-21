@@ -47,7 +47,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         'uri' => $path,
         'filemime' => $file->type,
         'filesize' => $file->size,
-        'status' => ~ FILE_STATUS_PERMANENT,
+        'status' => 0,
         'timestamp' => REQUEST_TIME,
       ))
       ->execute();

@@ -65,6 +65,7 @@ function h5p_admin_settings($form, &$form_state) {
     '#title' => t('Enable H5P content development mode'),
     '#default_value' => variable_get('h5p_content_dev_mode', '0'),
     '#description' => t("With this feature enabled content.json will be read from file. Changes to the content made using the editor won't be visible when this mode is actice."),
+    '#disabled' => TRUE, // Disabled for now, since core is using a Drupal 6-only function
   );
   
   /*$form['h5p_library_development'] = array(
