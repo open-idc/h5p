@@ -86,7 +86,10 @@ function _h5p_make_urls_absolute($urls, $remove = array()) {
       continue;
     }
 
-    $urls[$i] =  $base_url . '/' . $urls[$i];
+    // Skip URLs who already have a base, like aggregated assets.
+    if (substr($urls[$i], 0, strlen($base_url)) !== $base_url) {
+      $urls[$i] =  $base_url . '/' . $urls[$i];
+    }
   }
   return $urls;
 }
