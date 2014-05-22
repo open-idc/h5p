@@ -129,7 +129,7 @@ function h5p_embed($node) {
     'path' => $base_url . '/' . _h5p_get_h5p_path() . '/',
     'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
     'fullscreen' => intval($node->main_library['fullscreen']),
-    'export' => (isset($h5p_path) ? $h5p_path : ''),
+    'exportUrl' => (isset($h5p_path) ? $h5p_path : ''),
     'embedCode' => _h5p_generate_embed_code($node->nid),
     'styles' => _h5p_make_urls_absolute(array_merge($settings['h5p']['core']['styles'], $settings['h5p']['cid-' . $id]['styles'])),
     'scripts' => _h5p_make_urls_absolute(array_merge($settings['h5p']['core']['scripts'], $settings['h5p']['cid-' . $id]['scripts']), array(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js')),
@@ -592,7 +592,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
           'jsonContent' => $h5p_params,
           'fullScreen' => $node->main_library['fullscreen'],
-          'export' => (isset($h5p_path) ? $h5p_path : ''),
+          'exportUrl' => (isset($h5p_path) ? $h5p_path : ''),
           'embedCode' => _h5p_generate_embed_code($node->nid)
         )
       )
