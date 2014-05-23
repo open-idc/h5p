@@ -140,6 +140,7 @@ function h5p_embed($node) {
     'i18n' => array(
       'H5P' => array(
         'fullscreen' => t('Fullscreen'),
+        'disableFullscreen' => t('Disable fullscreen'),
         'download' => t('Download H5P'),
         'copyrights' => t('Rights of use'),
         'embed' => t('Embed'),

@@ -238,6 +238,7 @@ function _h5p_admin_add_generic_css_and_js($module_path) {
   foreach (H5PCore::$adminScripts as $script) {
     drupal_add_js($module_path . '/library/' . $script);
   }
+  drupal_add_css($module_path . '/library/styles/h5p.css');
   drupal_add_css($module_path . '/library/styles/h5p-admin.css');
 }
 
