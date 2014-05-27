@@ -122,6 +122,12 @@ function h5p_library_list() {
   
   $h5p_drupal = _h5p_get_instance('interface');
   
+  $num = $h5p_drupal->getNotCached();
+  if ($num) {
+    $num = variable_get('h5p_revisioning', 1) ? format_plural($num, '1 revision', '@count revisions') : format_plural($num, '1 node', '@count nodes');
+    drupal_set_message(t('Content usage is not accurate. There are %num that need to get their cache rebuilt.', array('%num' => $num)), 'warning');
+  }
+
   // Get the libraries
   $res = db_query('SELECT * FROM {h5p_libraries} ORDER BY title ASC');
   foreach ($res as $library) {
@@ -300,9 +306,7 @@ function h5p_library_upload_form_validate($form, &$form_state) {
 function h5p_library_upload_form_submit($form, &$form_state) {
   // Save package
   $h5p_core = _h5p_get_instance('storage');
-  if ($h5p_core->savePackage(NULL, NULL, TRUE) === TRUE) {
-    _h5p_clear_js_and_css_cache();
-  }
+  $h5p_core->savePackage(NULL, NULL, TRUE);
   
   // Maintain session variables.
   unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);

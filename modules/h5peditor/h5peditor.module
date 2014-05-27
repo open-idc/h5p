@@ -66,18 +66,10 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
     '#default_value' => isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0),
   );
 
-  // Get validated JSON for editor too.
-  if (isset($node->json_content)) {
-    $h5p_params = h5p_filter_json_content($node);
-  }
-  else {
-    $h5p_params = '{}';
-  }
-
   $form['h5p_params'] = array(
     '#type' => 'hidden',
     '#attributes' => array('id' => 'edit-h5p-params'),
-    '#default_value' => $h5p_params,
+    '#default_value' => isset($node->json_content) ? $node->json_content : '{}',
   );
 
   $form['#submit'][] = 'h5peditor_h5p_content_node_form_submit';

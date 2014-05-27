@@ -268,26 +268,48 @@ class H5PDrupal implements H5PFrameworkInterface {
         ->execute();
     }
   }
-
+  
   /**
-   * Implements saveContentData
+   * Implements updateContent
    */
-  public function saveContentData($content, $contentMainId = NULL) {
+  public function updateContent($content, $contentMainId = NULL) {
+    $content_id = db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = :content_id", array(':content_id' => $content['id']))->fetchField();
+    if ($content_id === FALSE) {
+      // This can happen in Drupal when module is reinstalled. (since the ID is predetermined)
+      $this->insertContent($content);
+      return;
+    }
+    
+    db_update('h5p_nodes')
+      ->fields(array(
+        'json_content' => $content['params'],
+        'embed_type' => 'div', // TODO: Determine from library?
+        'main_library_id' => $content['library']['libraryId']
+      ))
+      ->condition('content_id', $content_id)
+      ->execute();
+  }
+  
+  /**
+   * Implements insertContent
+   */
+  public function insertContent($content, $contentMainId = NULL) {
+    // Insert
     db_insert('h5p_nodes')
-    ->fields(array(
-      'content_id' => $content['id'],
-      'nid' => $contentMainId,
-      'json_content' => $content['params'],
-      'embed_type' => 'div', // TODO: Determine from library?
-      'main_library_id' => $content['library']['libraryId'],
-    ))
-    ->execute();
+      ->fields(array(
+        'content_id' => $content['id'],
+        'nid' => $contentMainId,
+        'json_content' => $content['params'],
+        'embed_type' => 'div', // TODO: Determine from library?
+        'main_library_id' => $content['library']['libraryId'],
+      ))
+      ->execute();
     
     return $content['id'];
   }
 
   /**
-   * Implement getWhitelist
+   * Implements getWhitelist
    */
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
     $whitelist = variable_get('h5p_whitelist', $defaultContentWhitelist);
@@ -477,5 +499,59 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     return $dependencies;
+  }
+  
+  /**
+   * Implements cacheGet
+   */
+  public function cacheGet($group, $key) {
+    $data = cache_get('h5p:' . $group . ':' . $key);
+    return $data === FALSE ? NULL : $data->data;
+  }
+  
+  
+  /**
+   * Implements cacheSet
+   */
+  public function cacheSet($group, $key, $data) {
+    cache_set('h5p:' . $group . ':' . $key, $data);
+  }
+  
+  /**
+   * Implements cacheDel
+   */
+  public function cacheDel($group, $key = NULL) {
+    // Clear the given caches
+    if ($key === NULL) {
+      cache_clear_all('h5p:' . $group, 'cache', TRUE);
+    }
+    else {
+      cache_clear_all('h5p:' . $group . ':' . $key, 'cache');
+    }
+  
+    if ($group === 'parameters') {
+      // Clear Drupal's JS & CSS caches.
+      _drupal_flush_css_js();
+      drupal_clear_js_cache();
+      drupal_clear_css_cache();
+    }
+  }
+  
+  /**
+   * Implements invalidateContentCache.
+   */
+  public function invalidateContentCache($library_id) {
+    $contents = db_query("SELECT DISTINCT content_id FROM {h5p_nodes_libraries} WHERE library_id = :library_id", array(':library_id' => $library_id));
+    while ($content_id = $contents->fetchField()) {
+      $this->cacheDel('parameters', $content_id);
+    }
+  }
+  
+  /**
+   * Implements getNotCached.
+   */
+  public function getNotCached() {
+    $num = db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL")->fetchField();
+    return $num === FALSE ? NULL : $num;
   }
 }
