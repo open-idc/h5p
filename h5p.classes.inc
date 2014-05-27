@@ -276,7 +276,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content_id = db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = :content_id", array(':content_id' => $content['id']))->fetchField();
     if ($content_id === FALSE) {
       // This can happen in Drupal when module is reinstalled. (since the ID is predetermined)
-      $this->insertContent($content);
+      $this->insertContent($content, $contentMainId);
       return;
     }
     

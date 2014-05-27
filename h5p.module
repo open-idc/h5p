@@ -95,6 +95,16 @@ function _h5p_make_urls_absolute($urls, $remove = array()) {
 }
 
 /**
+ * Get path to HTML5 Package.
+ * 
+ * @param int $content_id
+ * @return string
+ */
+function h5p_get_export_path($content_id) {
+  return variable_get('h5p_export', 1) ? base_path() . _h5p_get_h5p_path() . '/exports/' . $content_id . '.h5p' : '';
+}
+
+/**
  * Embed data.
  *
  * Caching this in DB probably won't have much to say? Since the 
@@ -137,7 +147,7 @@ function h5p_embed($node) {
     'path' => $base_url . '/' . _h5p_get_h5p_path() . '/',
     'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
     'fullscreen' => intval($node->main_library['fullscreen']),
-    'exportUrl' => (variable_get('h5p_export', 1) ? base_path() . _h5p_get_instance('export')->getExportPath($content) :  ''),
+    'exportUrl' => h5p_get_export_path($content['id']),
     'embedCode' => _h5p_generate_embed_code($node->nid),
     'styles' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['styles'], $assets['h5p']['cid-' . $id]['styles'])),
     'scripts' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['scripts'], $assets['h5p']['cid-' . $id]['scripts']), array(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js')),
@@ -362,9 +372,6 @@ function h5p_update($node) {
       ), $node->nid);
     }
   }
-
-  // TODO: Remove and just let core replace it?
-  _h5p_get_instance('export')->deleteExport(h5p_get_content_id($node));
 }
 
 /**
@@ -590,7 +597,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
           'jsonContent' => $core->filterParameters($content),
           'fullScreen' => $node->main_library['fullscreen'],
-          'exportUrl' => (variable_get('h5p_export', 1) ? base_path() . _h5p_get_instance('export')->getExportPath($content) :  ''),
+          'exportUrl' => h5p_get_export_path($content['id']),
           'embedCode' => _h5p_generate_embed_code($node->nid)
         )
       )
@@ -764,7 +771,7 @@ function _h5p_get_instance($type) {
       drupal_set_message($message, 'warning', FALSE);
     }
     
-    $core = new H5PCore($interface, _h5p_get_h5p_path(), $language->language, $development_mode);
+    $core = new H5PCore($interface, _h5p_get_h5p_path(), $language->language, (variable_get('h5p_export', '1') ? TRUE : FALSE), $development_mode);
   }
 
   switch ($type) {
