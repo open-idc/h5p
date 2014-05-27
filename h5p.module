@@ -248,7 +248,7 @@ function h5p_form(&$node, $form_state) {
 
   $form['json_content'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($node->json_content) ? $node->json_content : '',
+    '#default_value' => isset($node->json_content) ? $node->json_content : '{}',
   );
 
   $form['main_library_id'] = array(

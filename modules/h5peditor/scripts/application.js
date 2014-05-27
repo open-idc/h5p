@@ -7,7 +7,7 @@ var ns = H5PEditor;
     var $editor = $('.h5p-editor');
     var $create = $('#edit-h5p-editor').hide();
     var $type = $('input[name="h5p_type"]');
-    var $params = $('input[name="h5p_params"]');
+    var $params = $('input[name="json_content"]');
     var $library = $('input[name="h5p_library"]');
     var library = $library.val();
 
@@ -33,11 +33,7 @@ var ns = H5PEditor;
         }
         $create.show();
       }
-    });
-
-    if (library) {
-      $type.filter('input[value="create"]').attr('checked', true).change();
-    }
+    }).change();
 
     $('#h5p-content-node-form').submit(function () {
       if (h5peditor !== undefined) {

@@ -42,6 +42,8 @@ function h5peditor_menu() {
  */
 function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $node = h5peditor_get_source_node($form['#node']);
+  $library = isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0);
+  
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),
@@ -49,7 +51,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
       'upload' => t('Upload'),
       'create' => isset($node->nid) ? t('Edit') : t('Create'),
     ),
-    '#default_value' => 'upload',
+    '#default_value' => $library ? 'create' : 'upload',
     '#weight' => $form['h5p']['#weight'] - 1,
   );
   
@@ -63,13 +65,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 
   $form['h5p_library'] = array(
     '#type' => 'hidden',
-    '#default_value' => isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0),
-  );
-
-  $form['h5p_params'] = array(
-    '#type' => 'hidden',
-    '#attributes' => array('id' => 'edit-h5p-params'),
-    '#default_value' => isset($node->json_content) ? $node->json_content : '{}',
+    '#default_value' => $library,
   );
 
   $form['#submit'][] = 'h5peditor_h5p_content_node_form_submit';
