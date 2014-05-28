@@ -163,7 +163,6 @@ function h5peditor_h5p_content_node_form_submit($form, &$form_state) {
     $form_state['values']['h5p_params_old'] = $form['#node']->json_content;
   }
   $form_state['values']['main_library_id'] = h5peditor_get_library_property($form_state['values']['h5p_library'], 'libraryId');
-  $form_state['values']['json_content'] = $form_state['values']['h5p_params'];
 }
 
 /**
