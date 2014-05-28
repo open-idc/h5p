@@ -104,14 +104,16 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Get number of content/nodes using a library, and the number of 
    * dependencies to other libraries
    * 
-   * @param int $library_id
+   * @param int $libraryId
    * @return array The array contains two elements, keyed by 'content' and 'libraries'. 
    *               Each element contains a number
    */
   public function getLibraryUsage($libraryId) {
     $usage = array();
     
-    $usage['content'] = intval(db_query(
+    $usage['notCached'] = $this->getNotCached();
+    
+    $usage['content'] = $usage['notCached'] ? -1 : intval(db_query(
       'SELECT COUNT(distinct n.nid)
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = :id', array(':id' => $libraryId))->fetchField());
@@ -452,8 +454,11 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function loadContent($id) {
     $content = db_query(
-      "SELECT hn.json_content AS params
+      "SELECT hn.content_id AS id
+            , hn.json_content AS params
             , hn.embed_type AS embedType 
+            , n.title
+            , n.language
             , hl.library_id AS libraryId 
             , hl.machine_name AS libraryName
             , hl.major_version AS libraryMajorVersion
@@ -461,6 +466,7 @@ class H5PDrupal implements H5PFrameworkInterface {
             , hl.embed_types AS libraryEmbedTypes
             , hl.fullscreen AS libraryFullscreen
        FROM {h5p_nodes} hn
+       JOIN {node} n ON n.nid = hn.nid
        JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
        WHERE content_id = :id", array(':id' => $id))->fetchAssoc();
        
@@ -551,7 +557,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getNotCached.
    */
   public function getNotCached() {
-    $num = db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL")->fetchField();
-    return $num === FALSE ? NULL : $num;
+    return db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL")->fetchField();
   }
 }

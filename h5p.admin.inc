@@ -124,18 +124,12 @@ function h5p_library_list() {
   
   $h5p_drupal = _h5p_get_instance('interface');
   
-  $num = $h5p_drupal->getNotCached();
-  if ($num) {
-    $num = variable_get('h5p_revisioning', 1) ? format_plural($num, '1 revision', '@count revisions') : format_plural($num, '1 node', '@count nodes');
-    drupal_set_message(t('Content usage is not accurate. There are %num that need to get their cache rebuilt.', array('%num' => $num)), 'warning');
-  }
-
   // Get the libraries
   $res = db_query('SELECT * FROM {h5p_libraries} ORDER BY title ASC');
   foreach ($res as $library) {
     // Get usage:
     $library_usage = $h5p_drupal->getLibraryUsage($library->library_id);
-    
+
     $settings['h5p']['libraries']['listData'][] = array(
       'name' => $library->title . ' (' . $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version . ')',
       'machineName' => $library->machine_name,
@@ -145,10 +139,16 @@ function h5p_library_list() {
       'deleteUrl' => url('admin/content/h5p/libraries/' . $library->library_id . '/delete', array('query' => drupal_get_destination()))
     );
   }
-  
+
   // All translations are made server side
   $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter'), t('Library dependencies'), ''); 
-
+  
+  // Make it possible to rebuild all caches.
+  if ($library_usage['notCached']) {
+    $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($library_usage['notCached']);
+    $settings['h5p']['libraries']['notCached']['message'] .= t('This is required before you can delete any libraries.');
+  }
+      
   // Include libraries and more to Drupal setting
   drupal_add_js($settings, 'setting');
   
@@ -162,6 +162,21 @@ function h5p_library_list() {
   // to find where to put the admin content. 
   $upload_form = drupal_get_form('h5p_library_upload_form');
   return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . drupal_render($upload_form) . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3><div id="h5p-admin-container"></div>';
+}
+
+/**
+ * Settings needed to rebuild cache from UI.
+ * 
+ * @param int $num
+ * @return array
+ */
+function h5p_get_not_cached_settings($num) {
+  return array(
+    'num' => $num,
+    'url' => url('admin/content/h5p/rebuild-cache'),
+    'message' => t('%num need to get their cache rebuilt before content usage can be display.', array('%num' => format_plural($num, '1 content', '@count contents'))),
+    'button' => t('Rebuild cache')
+  );
 }
 
 /**
@@ -195,13 +210,20 @@ function h5p_library_details($library_id) {
     'pageXOfY' => t('Page $x of $y'),
   ); 
 
-  // Build a list of the content using this library
-  $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l join {h5p_nodes} hn on l.content_id = hn.content_id join {node} n on hn.nid = n.nid  where library_id = :id order by n.title', array(':id' => $library_id));
-  foreach($nodes_res as $node) {
-    $settings['h5p']['library']['content'][] = array(
-      'title' => $node->title, 
-      'url' => url('node/' . $node->nid),
-    );
+  $h5p_drupal = _h5p_get_instance('interface');
+  $notCached = $h5p_drupal->getNotCached();
+  if ($notCached) {
+    $settings['h5p']['library']['notCached'] = h5p_get_not_cached_settings($notCached);
+  }
+  else {
+    // Build a list of the content using this library
+    $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l join {h5p_nodes} hn on l.content_id = hn.content_id join {node} n on hn.nid = n.nid  where library_id = :id order by n.title', array(':id' => $library_id));
+    foreach($nodes_res as $node) {
+      $settings['h5p']['library']['content'][] = array(
+        'title' => $node->title, 
+        'url' => url('node/' . $node->nid),
+      );
+    }
   }
   
   // Include all above in Drupal setting
@@ -312,4 +334,33 @@ function h5p_library_upload_form_submit($form, &$form_state) {
   
   // Maintain session variables.
   unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
+}
+
+/**
+ * Callback for rebuilding all content cache.
+ */
+function h5p_rebuild_cache() {
+  if (filter_input(INPUT_SERVER, 'REQUEST_METHOD') !== 'POST') {
+    drupal_set_message(t('HTTP POST is required.'), 'error');
+    drupal_set_title(t('Error'));
+    return '';
+  }
+  
+  // Do as many as we can in ten seconds.
+  $start = microtime(TRUE);
+  
+  $core = _h5p_get_instance('core');
+  $contents = db_query("SELECT hn.content_id FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL");
+  $done = 0;
+  while ($content_id = $contents->fetchField()) {
+    $content = $core->loadContent($content_id);
+    $core->filterParameters($content);
+    $done++;
+    
+    if ((microtime(TRUE) - $start) > 10) {
+      break;
+    }
+  }
+  
+  print ($contents->rowCount() - $done);
 }

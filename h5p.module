@@ -49,6 +49,15 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  
+  $items['admin/content/h5p/rebuild-cache'] = array(
+    'title' => 'H5P Rebuild Content Cache',
+    'page callback' => 'h5p_rebuild_cache',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK, 
+    'file' => 'h5p.admin.inc',
+  );
+  
   $items['h5p/embed/%node'] = array(
     'title' => 'H5P Embed Data',
     'page callback' => 'h5p_embed',
@@ -847,16 +856,14 @@ function h5p_field_extra_fields() {
 /**
  * TODO
  */
-function h5p_library_delete_form(&$form_state, $library_id, $library_name) {
-  
+function h5p_library_delete_form($form, &$form_state, $library_id, $library_name) {
   $form['library_id'] = array(
-      '#type' => 'hidden',
-      '#value' => $library_id
+    '#type' => 'hidden',
+    '#value' => $library_id
   );
   
   $form['info'] = array(
-    '#type' => 'markup',
-    '#value' => '<span>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</span>'
+    '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</div>'
   );
   
   $form['submit'] = array(
