@@ -132,7 +132,11 @@ H5PIntegration.i18n = {
     downloadDescription: Drupal.t('Download this content as a H5P file.'),
     copyrightsDescription: Drupal.t('View copyright information for this content.'),
     embedDescription: Drupal.t('View the embed code for this content.'),
-    h5pDescription: Drupal.t('Visit H5P.org to check out more cool content.')
+    h5pDescription: Drupal.t('Visit H5P.org to check out more cool content.'),
+    upgradeLibrary: Drupal.t('Upgrade library content'),
+    viewLibrary: Drupal.t('View library details'),
+    deleteLibrary: Drupal.t('Delete library'),
+    NA: Drupal.t('N/A')
   }
 };
 

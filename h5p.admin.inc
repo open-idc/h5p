@@ -118,34 +118,44 @@ function h5p_admin_settings_submit($form, &$form_state) {
  */
 function h5p_library_list() {
   _h5p_check_settings();
-  $settings = array();
   
-  $libraries = array();
-  
-  $h5p_drupal = _h5p_get_instance('interface');
+  $core = _h5p_get_instance('core');
   
   // Get the libraries
-  $res = db_query('SELECT * FROM {h5p_libraries} ORDER BY title ASC');
+  $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+  $libraries = array();
   foreach ($res as $library) {
-    // Get usage:
-    $library_usage = $h5p_drupal->getLibraryUsage($library->library_id);
-
-    $settings['h5p']['libraries']['listData'][] = array(
-      'name' => $library->title . ' (' . $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version . ')',
-      'machineName' => $library->machine_name,
-      'contentCount' => $library_usage['content'],
-      'libraryDependencyCount' => $library_usage['libraries'],
-      'detailsUrl' => url('admin/content/h5p/libraries/' . $library->library_id),
-      'deleteUrl' => url('admin/content/h5p/libraries/' . $library->library_id . '/delete', array('query' => drupal_get_destination()))
-    );
+    // Get library usage
+    $library->usage = $core->h5pF->getLibraryUsage($library->id);
+    
+    // Group different versions of this library
+    $libraries[$library->name][] = $library;
+  }
+  
+  // Add settings for each library
+  $settings = array();
+  foreach ($libraries as $versions) {
+    foreach ($versions as $library) {
+      $upgrades = $core->get_upgrades($library, $versions);
+      
+      $settings['h5p']['libraries']['listData'][] = array(
+        'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
+        'numContent' => $core->h5pF->getNumContent($library->id),
+        'numContentDependencies' => $library->usage['content'],
+        'numLibraryDependencies' => $library->usage['libraries'],
+        'upgradeUrl' => empty($upgrades) ? NULL : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination())),
+        'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
+        'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
+      );
+    }
   }
 
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Name'), t('Machine name'), t('Usage counter'), t('Library dependencies'), ''); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Contents'), t('Content Dependencies'), t('Library dependencies'), ''); 
   
   // Make it possible to rebuild all caches.
-  if ($library_usage['notCached']) {
-    $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($library_usage['notCached']);
+  if ($library->usage['notCached']) {
+    $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($library->usage['notCached']);
     $settings['h5p']['libraries']['notCached']['message'] .= t('This is required before you can delete any libraries.');
   }
       
@@ -174,7 +184,7 @@ function h5p_get_not_cached_settings($num) {
   return array(
     'num' => $num,
     'url' => url('admin/content/h5p/rebuild-cache'),
-    'message' => t('%num need to get their cache rebuilt before content usage can be display.', array('%num' => format_plural($num, '1 content', '@count contents'))),
+    'message' => t('%num need to get their cache rebuilt before content dependencies can be display.', array('%num' => format_plural($num, '1 content', '@count contents'))),
     'button' => t('Rebuild cache')
   );
 }
@@ -189,13 +199,13 @@ function h5p_get_not_cached_settings($num) {
 function h5p_library_details($library_id) {
   $settings = array();
   
-  $library = db_query('SELECT * FROM {h5p_libraries} where library_id = :id', array('id' => $library_id))->fetchObject();
+  $library = db_query('SELECT title, machine_name, major_version, minor_version, patch_version, runnable, fullscreen FROM {h5p_libraries} where library_id = :id', array('id' => $library_id))->fetchObject();
   
   // Build library info
   $settings['h5p']['library']['info'] = array(
     t('Name') => $library->title,
     t('Machine name') => $library->machine_name,
-    t('Version') => $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version,
+    t('Version') => H5PCore::libraryVersion($library),
     t('Runnable') => $library->runnable ? t('Yes') : t('No'),
     t('Fullscreen') => $library->fullscreen ? t('Yes') : t('No'),
   );
@@ -363,4 +373,151 @@ function h5p_rebuild_cache() {
   }
   
   print ($contents->rowCount() - $done);
+}
+
+/**
+ * Get a new H5P security token.
+ * 
+ * @param string $key
+ * @return string
+ */
+function h5p_get_token($key) {
+  return $_SESSION['h5p_' . $key] = uniqid('h5p-');
+}
+
+/**
+ * Verifiy a given H5P security token.
+ * 
+ * @param string $key
+ * @param string $token
+ * @return string
+ */
+function h5p_verify_token($key, $token) {
+  return $_SESSION['h5p_' . $key] === $token;
+}
+
+/**
+ * Callback for the library content upgrade page.
+ * 
+ * @param int $library_id
+ * @return string HTML
+ */
+function h5p_content_upgrade($library_id) {
+  if (filter_input(INPUT_SERVER, 'REQUEST_METHOD') === 'POST') {
+    h5p_content_upgrade_progress($library_id);
+    return;
+  }
+  $core = _h5p_get_instance('core');
+  
+  $versions = db_query('SELECT hl2.library_id as id, hl2.machine_name as name, hl2.title, hl2.major_version, hl2.minor_version, hl2.patch_version FROM {h5p_libraries} hl1 JOIN {h5p_libraries} hl2 ON hl1.machine_name = hl2.machine_name WHERE hl1.library_id = :id ORDER BY hl2.title ASC, hl2.major_version ASC, hl2.minor_version ASC', array(':id' => $library_id));
+  foreach ($versions as $library) {
+    if ($library->id === $library_id) {
+      $upgrades = $core->get_upgrades($library, $versions);
+      break;
+    }
+  }
+  
+  drupal_set_title(t('Upgrade @library content', array('@library' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')')));
+  if ($versions->rowCount() < 2) {
+    return t("There are no available upgrades for this library.");
+  }
+  
+  // Get num of contents that can be upgraded
+  $contents = $core->h5pF->getNumContent($library_id);
+  if (!$contents) {
+    return t("There's no content to upgrade.");
+  }
+  
+  // Add JavaScript settings
+  $return = filter_input(INPUT_GET, 'destination');
+  drupal_add_js(array(
+    'h5p' => array(
+      'library' => array(
+        'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => format_plural($contents, '1 content', '@count contents'))),
+        'done' => t('You have successfully upgraded %num.', array('%num' => format_plural($contents, '1 content', '@count contents'))) . ($return ? ' ' . l(t('Return'), $return) : ''),
+        'majorVersion' => $library->major_version,
+        'minorVersion' => $library->minor_version,
+        'versions' => $upgrades,
+        'contents' => $contents,
+        'buttonLabel' => t('Upgrade'),
+        'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
+        'total' => $contents,
+        'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
+      )
+    )
+  ), 'setting');
+  
+  // Add JavaScripts
+  $module_path = drupal_get_path('module', 'h5p');
+  _h5p_admin_add_generic_css_and_js($module_path);
+  drupal_add_js($module_path . '/library/js/h5p-content-upgrade.js');
+  
+  return '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';
+}
+
+/**
+ * AJAX processing for content upgrade script.
+ * 
+ * @param int $library_id
+ * @return string JSON or error
+ */
+function h5p_content_upgrade_progress($library_id) {
+  // Verify security token
+  if (!h5p_verify_token('content_upgrade', filter_input(INPUT_POST, 'token'))) {
+    print t('Error: Invalid security token!');
+    return;
+  }
+  
+  // Get the library we're upgrading to
+  $to_library = db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = :id', array(':id' => filter_input(INPUT_POST, 'libraryId')))->fetch();
+  if (!$to_library) {
+    print t('Error: Your library is missing!');
+    return;
+  }
+  
+  // Prepare response
+  $out = new stdClass();
+  $out->params = array();
+  $out->token = h5p_get_token('content_upgrade');
+  
+  // Prepare our interface
+  $interface = _h5p_get_instance('interface');
+  
+  // Get updated params
+  $params = filter_input(INPUT_POST, 'params');
+  if ($params === NULL) {
+    // Nothing is updated. Find upgrade script
+    $out->script = base_path() . _h5p_get_h5p_path() . '/libraries/' . $to_library->name . '-' . $to_library->major_version . '.' . $to_library->minor_version . '/upgrades.js';
+  }
+  else {
+    // Update params.
+    $params = json_decode($params);
+    foreach ($params as $id => $param) {
+      db_update('h5p_nodes')
+        ->fields(array(
+          'main_library_id' => $to_library->id,
+          'json_content' => $param
+        ))
+        ->condition('content_id', $id)
+        ->execute();
+      
+      // Clear content cache
+      $interface->cacheDel('parameters', $id);
+    }
+  }
+  
+  // Get number of contents for this library
+  $out->left = $interface->getNumContent($library_id);
+  
+  if ($out->left) {
+    // Find the 10 first contents using library and add to params
+    $contents = db_query('SELECT content_id AS id, json_content AS params FROM {h5p_nodes} WHERE main_library_id = :id LIMIT 10', array(':id' => $library_id));
+    foreach ($contents as $content) {
+      $out->params[$content->id] = $content->params;
+    }
+  }
+
+  drupal_add_http_header('Cache-Control', 'no-cache');
+  drupal_add_http_header('Content-type', 'application/json');
+  print json_encode($out);
 }

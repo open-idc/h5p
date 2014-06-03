@@ -40,8 +40,16 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  $items['admin/content/h5p/libraries/%/upgrade'] = array(
+    'title' => 'Upgrade H5P Content',
+    'page callback' => 'h5p_content_upgrade',
+    'page arguments' => array(4),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'h5p.admin.inc',
+  );
   $items['admin/content/h5p/libraries/%/delete'] = array(
-    'title' => 'Delete H5P Library',      
+    'title' => 'Delete H5P Library',
     'description' => 'Delete an unused H5P library',
     'page callback' => 'h5p_library_delete',
     'page arguments' => array(4),

@@ -559,4 +559,11 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getNotCached() {
     return db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL")->fetchField();
   }
+  
+  /**
+   * Implements getNumContent.
+   */
+  public function getNumContent($library_id) {
+    return db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = :id', array(':id' => $library_id))->fetchField();
+  }
 }
