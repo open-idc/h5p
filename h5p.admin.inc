@@ -120,13 +120,14 @@ function h5p_library_list() {
   _h5p_check_settings();
   
   $core = _h5p_get_instance('core');
-  
+  $notCached = $core->h5pF->getNotCached();
+
   // Get the libraries
   $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
   $libraries = array();
   foreach ($res as $library) {
     // Get library usage
-    $library->usage = $core->h5pF->getLibraryUsage($library->id);
+    $library->usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
     
     // Group different versions of this library
     $libraries[$library->name][] = $library;
@@ -154,8 +155,8 @@ function h5p_library_list() {
   $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Contents'), t('Content Dependencies'), t('Library dependencies'), ''); 
   
   // Make it possible to rebuild all caches.
-  if ($library->usage['notCached']) {
-    $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($library->usage['notCached']);
+  if ($notCached) {
+    $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($notCached);
     $settings['h5p']['libraries']['notCached']['message'] .= t('This is required before you can delete any libraries.');
   }
       
@@ -257,7 +258,8 @@ function h5p_library_delete($library_id) {
   
   // Is library deletable ?
   $h5p_drupal = _h5p_get_instance('interface');
-  $library_usage = $h5p_drupal->getLibraryUsage($library_id);
+  $notCached = $h5p_drupal->getNotCached();
+  $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
   if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
     // Create form:
     return drupal_get_form('h5p_library_delete_form', $library_id, _h5p_library_details_title($library_id));

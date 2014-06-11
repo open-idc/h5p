@@ -108,12 +108,10 @@ class H5PDrupal implements H5PFrameworkInterface {
    * @return array The array contains two elements, keyed by 'content' and 'libraries'. 
    *               Each element contains a number
    */
-  public function getLibraryUsage($libraryId) {
+  public function getLibraryUsage($libraryId, $skipContent = FALSE) {
     $usage = array();
     
-    $usage['notCached'] = $this->getNotCached();
-    
-    $usage['content'] = $usage['notCached'] ? -1 : intval(db_query(
+    $usage['content'] = $skipContent ? -1 : intval(db_query(
       'SELECT COUNT(distinct n.nid)
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = :id', array(':id' => $libraryId))->fetchField());
@@ -564,6 +562,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getNumContent.
    */
   public function getNumContent($library_id) {
-    return db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = :id', array(':id' => $library_id))->fetchField();
+    return intval(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = :id', array(':id' => $library_id))->fetchField());
   }
 }
