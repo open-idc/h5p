@@ -137,7 +137,7 @@ function h5p_library_list() {
   $settings = array();
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
-      $upgrades = $core->get_upgrades($library, $versions);
+      $upgrades = $core->getUpgrades($library, $versions);
       
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
@@ -414,7 +414,7 @@ function h5p_content_upgrade($library_id) {
   $versions = db_query('SELECT hl2.library_id as id, hl2.machine_name as name, hl2.title, hl2.major_version, hl2.minor_version, hl2.patch_version FROM {h5p_libraries} hl1 JOIN {h5p_libraries} hl2 ON hl1.machine_name = hl2.machine_name WHERE hl1.library_id = :id ORDER BY hl2.title ASC, hl2.major_version ASC, hl2.minor_version ASC', array(':id' => $library_id));
   foreach ($versions as $library) {
     if ($library->id === $library_id) {
-      $upgrades = $core->get_upgrades($library, $versions);
+      $upgrades = $core->getUpgrades($library, $versions);
       break;
     }
   }
@@ -437,8 +437,11 @@ function h5p_content_upgrade($library_id) {
       'library' => array(
         'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => format_plural($contents, '1 content', '@count contents'))),
         'done' => t('You have successfully upgraded %num.', array('%num' => format_plural($contents, '1 content', '@count contents'))) . ($return ? ' ' . l(t('Return'), $return) : ''),
-        'majorVersion' => $library->major_version,
-        'minorVersion' => $library->minor_version,
+        'library' => array(
+          'name' => $library->name,
+          'version' => $library->major_version . '.' . $library->minor_version,
+        ),
+        'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
         'versions' => $upgrades,
         'contents' => $contents,
         'buttonLabel' => t('Upgrade'),
@@ -487,11 +490,7 @@ function h5p_content_upgrade_progress($library_id) {
   
   // Get updated params
   $params = filter_input(INPUT_POST, 'params');
-  if ($params === NULL) {
-    // Nothing is updated. Find upgrade script
-    $out->script = base_path() . _h5p_get_h5p_path() . '/libraries/' . $to_library->name . '-' . $to_library->major_version . '.' . $to_library->minor_version . '/upgrades.js';
-  }
-  else {
+  if ($params !== NULL) {
     // Update params.
     $params = json_decode($params);
     foreach ($params as $id => $param) {
@@ -522,4 +521,40 @@ function h5p_content_upgrade_progress($library_id) {
   drupal_add_http_header('Cache-Control', 'no-cache');
   drupal_add_http_header('Content-type', 'application/json');
   print json_encode($out);
+}
+
+/**
+ * AJAX loading of libraries for content upgrade script.
+ * 
+ * @param string $name
+ * @param int $major
+ * @param int $minor
+ */
+function h5p_content_upgrade_library($name, $major, $minor) {
+  $library = (object) array(
+    'name' => $name,
+    'version' => (object) array(
+      'major' => $major,
+      'minor' => $minor
+    )
+  );
+  
+  $core = _h5p_get_instance('core');
+  $library->semantics = $core->loadLibrarySemantics($library->name, $library->version->major, $library->version->minor);
+  if ($library->semantics === NULL) {
+    drupal_fast_404();
+  }
+
+  if ($core->development_mode & H5PDevelopment::MODE_LIBRARY) {
+    $dev_lib = $core->h5pD->getLibrary($library->name, $library->version->major, $library->version->minor);
+  }
+    
+  $upgrades_script = (isset($dev_lib) ? $dev_lib['path'] : _h5p_get_h5p_path() . '/libraries/' . $library->name . '-' . $library->version->major . '.' . $library->version->minor) . '/upgrades.js';
+  if (file_exists($upgrades_script)) {
+    $library->upgradesScript = base_path() . $upgrades_script;
+  }
+  
+  drupal_add_http_header('Cache-Control', 'no-cache');
+  drupal_add_http_header('Content-type', 'application/json');
+  print json_encode($library);
 }
