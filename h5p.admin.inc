@@ -152,7 +152,7 @@ function h5p_library_list() {
   }
 
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Contents'), t('Content Dependencies'), t('Library dependencies'), ''); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')); 
   
   // Make it possible to rebuild all caches.
   if ($notCached) {
@@ -185,7 +185,7 @@ function h5p_get_not_cached_settings($num) {
   return array(
     'num' => $num,
     'url' => url('admin/content/h5p/rebuild-cache'),
-    'message' => t('%num need to get their cache rebuilt before content dependencies can be display.', array('%num' => format_plural($num, '1 content', '@count contents'))),
+    'message' => t('%num need to get their cache rebuilt before content dependencies can be display.', array('%num' => format_plural($num, '1 content instance', '@count content instances'))),
     'button' => t('Rebuild cache')
   );
 }
@@ -296,7 +296,7 @@ function h5p_library_upload_form($form_state) {
   $form['h5p'] = array(
     '#title' => t('H5P'),
     '#type' => 'file',
-    '#description' => t('All the libraries from the selected package will be added.')
+    '#description' => t('Here you can upload new libraries or upload updates to existing libraries. Files uploaded here must be in the .h5p file format.')
   );
   
   $form['submit'] = array(
@@ -427,20 +427,22 @@ function h5p_content_upgrade($library_id) {
   // Get num of contents that can be upgraded
   $contents = $core->h5pF->getNumContent($library_id);
   if (!$contents) {
-    return t("There's no content to upgrade.");
+    return t("There's no content instances to upgrade.");
   }
+  
+  $contents_plural = format_plural($contents, '1 content instance', '@count content instances');
   
   // Add JavaScript settings
   $return = filter_input(INPUT_GET, 'destination');
   drupal_add_js(array(
     'h5p' => array(
       'library' => array(
-        'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => format_plural($contents, '1 content', '@count contents'))),
+        'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
         'inProgress' => t('Upgrading to %ver...'),
         'error' => t('An error occurred while processing parameters:'),
         'errorData' => t('Could not load data for library %lib.'),
         'errorScript' => t('Could not load upgrades script for %lib.'),
-        'done' => t('You have successfully upgraded %num.', array('%num' => format_plural($contents, '1 content', '@count contents'))) . ($return ? ' ' . l(t('Return'), $return) : ''),
+        'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
         'library' => array(
           'name' => $library->name,
           'version' => $library->major_version . '.' . $library->minor_version,
