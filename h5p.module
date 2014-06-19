@@ -563,7 +563,8 @@ function h5p_add_core_assets() {
     
     $js = $module_path . '/js/h5pintegration.js';
     drupal_add_js($js);
-    $assets['js'][] = $js;
+    $assets['js'][] = $js . $cache_buster;
+      
     foreach (H5PCore::$scripts as $script) {
       $js = $module_path . '/library/' . $script;
       drupal_add_js($js);
