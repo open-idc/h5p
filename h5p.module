@@ -6,6 +6,9 @@
  *  Drupal module h5p. A HTML5 Package manager for Drupal.
  */
 
+// Views support is included in views/quiz.views.inc
+define('H5P_VIEWS_DIR', drupal_get_path('module', 'h5p') . '/views');
+
 /**
  * Implements hook_menu().
  */
@@ -880,6 +883,16 @@ function h5p_library_delete_form($form, &$form_state, $library_id, $library_name
   );
   
   return $form;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function h5p_views_api() {
+  return array(
+    'api' => 3,
+    'path' => H5P_VIEWS_DIR,
+  );
 }
 
 /**
