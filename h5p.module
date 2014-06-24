@@ -101,10 +101,10 @@ function h5p_menu() {
  * @param array $remove Optional urls to skip.
  * @return array absolute urls.
  */
-function _h5p_make_urls_absolute($urls, $remove = array()) {
+function _h5p_make_urls_absolute($urls, $remove = NULL) {
   global $base_url;
   for ($i = 0, $s = count($urls); $i < $s; $i++) {
-    if (in_array($urls[$i], $remove)) {
+    if ($remove !== NULL && preg_match($remove, $urls[$i])) {
       array_splice($urls, $i, 1);
       $i--;
       $s--;
@@ -161,12 +161,12 @@ function h5p_embed($node) {
   // Important! Params must be filtered before content dependencies are loaded. 
   $params = $core->filterParameters($content);
   
-  $preloaded_dependencies = $core->loadContentDependencies($id, 'preloaded');
+  $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
   $files = $core->getDependenciesFiles($preloaded_dependencies);
   
   $assets = array();
-  h5p_add_iframe_assets($assets, $id, $files);
-  
+  h5p_add_iframe_assets($assets, $content['id'], $files);
+
   $settings = array(
     'id' => intval($content['id']),
     'path' => $base_url . '/' . _h5p_get_h5p_path() . '/',
@@ -174,8 +174,8 @@ function h5p_embed($node) {
     'fullscreen' => intval($node->main_library['fullscreen']),
     'exportUrl' => h5p_get_export_path($content['id']),
     'embedCode' => _h5p_generate_embed_code($node->nid),
-    'styles' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['styles'], $assets['h5p']['cid-' . $id]['styles'])),
-    'scripts' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['scripts'], $assets['h5p']['cid-' . $id]['scripts']), array(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js')),
+    'styles' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['styles'], $assets['h5p']['cid-' . $content['id']]['styles'])),
+    'scripts' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['scripts'], $assets['h5p']['cid-' . $content['id']]['scripts']), '/\/h5pintegration\.js/'),
     'params' => $params,
     'i18n' => array(
       'H5P' => array(
