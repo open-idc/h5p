@@ -236,7 +236,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $library = db_query("SELECT * FROM {h5p_libraries} WHERE library_id = :id", array(':id' => $libraryId))->fetchObject();
     
     // Delete files
-    H5PCore::deleteFileTree(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
+    H5PCore::deleteFileTree(_h5p_get_h5p_path() . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
     
     // Delete data in database (won't delete content)
     db_delete('h5p_libraries_libraries')->condition('library_id', $libraryId)->execute();
