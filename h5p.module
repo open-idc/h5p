@@ -478,7 +478,7 @@ function h5p_access_set_finished() {
   }
   $nid = $_POST['contentId'];
   if (variable_get('h5p_revisioning', 1)) {
-    $nid = db_result(db_query('SELECT nid FROM {node_revisions} WHERE vid = %d', $nid));
+    $nid = db_query('SELECT nid FROM {node_revisions} WHERE vid = :vid', array(':vid' => $nid))->fetchField();
   }
   return node_access('view', node_load((int) $nid));
 }
