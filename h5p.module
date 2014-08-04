@@ -367,34 +367,26 @@ function h5p_insert($node) {
 function h5p_update($node) {
   if ($node->revision && variable_get('h5p_revisioning', 1)) {
     // Create new revision
-    $h5p_core = _h5p_get_instance('storage');
+    $h5p_storage = _h5p_get_instance('storage');
     if (isset($_SESSION['h5p_upload'])) {
       // Use newly uploaded package
-      $h5p_core->savePackage($node->vid, $node->nid);
+      $h5p_storage->savePackage($node->vid, $node->nid);
     }
     else {
       // Copy old package
-      $h5p_core->copyPackage($node->vid, $node->old_vid, $node->nid);
+      $h5p_storage->copyPackage($node->vid, $node->old_vid, $node->nid);
+      // Insert content:
+      h5p_insert($node);
     }
   }
   else {
-    $content_id = h5p_get_content_id($node);
     if (isset($_SESSION['h5p_upload'])) {
       // Replace old package
-      $h5p_core = _h5p_get_instance('storage');
-      $h5p_core->updatePackage($content_id, $node->nid);
+      $h5p_storage = _h5p_get_instance('storage');
+      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid);
     }
     else {
-      // Insert updated params
-      $core = _h5p_get_instance('core');
-      $core->saveContent(array(
-        'id' => $content_id,
-        'params' => $node->json_content,
-        'embed_type' => $node->embed_type,
-        'library' => array(
-          'libraryId' => $node->main_library_id
-        )
-      ), $node->nid);
+      h5p_insert($node);
     }
   }
 }
