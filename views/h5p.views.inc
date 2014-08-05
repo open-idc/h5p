@@ -63,8 +63,8 @@ function h5p_views_data() {
   $data['h5p_points']['table']['join'] = array(
     // Directly links to node table.
     'node' => array(
-      'left_field' => 'content_id',
-      'field' => 'vid',
+      'left_field' => 'vid',
+      'field' => 'content_id',
     ),
   );
 
