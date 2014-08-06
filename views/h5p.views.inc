@@ -17,6 +17,68 @@ function h5p_views_handlers() {
  * Implementation of hook_views_data().
  */
 function h5p_views_data() {
+
+  // ----------------------------------------------------------------
+  // h5p_nodes table -- basic table information.
+
+  // Define the base group of this table. Fields that don't
+  // have a group defined will go into this field by default.
+  $data['h5p_nodes']['table']['group'] = t('H5P');
+
+  // explain how we join
+  $data['h5p_nodes']['table']['join'] = array(
+    // Directly links to node table.
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'nid',
+    ),
+  );
+
+  // content id
+  $data['h5p_nodes']['content_id'] = array(
+    'title' => t('Content ID'),
+    'help' => t('The ID of content. nid or vid depending on the sites settings.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_node_nid',
+      'name_field' => 'title',
+      'numeric' => TRUE,
+      'validate type' => 'nid',
+    ),
+
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array('handler' => 'views_handler_sort'),
+  );
+
+  // nid
+  $data['h5p_nodes']['nid'] = array(
+    'title' => t('Nid'),
+    'help' => t('The node ID to which the H5P belongs to.'),
+    'relationship' => array(
+      'title' => t('Content'),
+      'help' => t('The content to which the H5P belongs to.'),
+      'base' => 'node',
+      'base field' => 'nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Content'),
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+    ),
+  );
+
+
   // ----------------------------------------------------------------
   // h5p_points table -- basic table information.
 
@@ -26,9 +88,9 @@ function h5p_views_data() {
   
   // explain how we join
   $data['h5p_points']['table']['join'] = array(
-    // Directly links to node table.
-    'node' => array(
-      'left_field' => 'vid',
+    // Directly links to h5p_nodes table.
+    'h5p_nodes' => array(
+      'left_field' => 'content_id',
       'field' => 'content_id',
     ),
   );
@@ -36,7 +98,7 @@ function h5p_views_data() {
   // ----------------------------------------------------------------
   // points table -- fields
 
-  // contet id
+  // content id
   $data['h5p_points']['content_id'] = array(
     'title' => t('Content ID'),
     'help' => t('The ID of content. nid or vid depending on the sites settings.'),
@@ -57,25 +119,24 @@ function h5p_views_data() {
     'sort' => array('handler' => 'views_handler_sort'),
     'relationship' => array(
       'handler' => 'views_handler_relationship',
-      'base' => 'node',
-      'base field' => 'vid',
+      'base' => 'h5p_nodes',
+      'base field' => 'content_id',
       'field' => 'content_id',
-      'label' => t('H5P Points - node')
+      'label' => t('H5P Points - H5P Nodes')
     ),
   );
-  
-  // Node - H5P points relationship
-  $data['node']['h5p_nid_points'] = array(
+
+   // User - H5P points relationship
+  $data['h5p_nodes']['h5p_points'] = array(
     'relationship' => array(
       'title' => t('H5P Points for node'),
-      'label'  => t('H5P Points for node'),
-      'help' => t('Will return an entry for each result that is stored for the node in the database.'),
+      'label'  => t('H5P'),
+      'help' => t('Will return points.'),
       'handler' => 'views_handler_relationship',
-      'relationship field' => 'nid',
-      'outer field' => 'node.nid',
-      'argument table' => 'node',
-      'argument field' =>  'nid',
-      'base'   => 'h5p_points',
+      'relationship field' => 'content_id',
+      'argument table' => 'h5p_points',
+      'argument field' =>  'content_id',
+      'base'   => 'h5p_nodes',
       'field'  => 'content_id',
       'base field' => 'content_id',
     ),
