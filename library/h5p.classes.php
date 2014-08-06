@@ -1153,7 +1153,7 @@ Class H5PExport {
     $this->h5pF = $H5PFramework;
     $this->h5pC = $H5PCore;
   }
-
+  
   /**
    * Return path to h5p package.
    *
