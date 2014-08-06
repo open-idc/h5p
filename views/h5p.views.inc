@@ -2,16 +2,9 @@
 
 /**
  * @file
- * This file provides metadata to the Views 2 API for views integration.
+ * This file provides metadata to the Views 3 API for views integration.
  *
  */
-function h5p_views_handlers() {
-  return array(
-    'info' => array(
-      'path' => H5P_VIEWS_DIR . '/handlers',
-    ),
-  );
-}
 
 /**
  * Implementation of hook_views_data().
@@ -24,15 +17,6 @@ function h5p_views_data() {
   // Define the base group of this table. Fields that don't
   // have a group defined will go into this field by default.
   $data['h5p_nodes']['table']['group'] = t('H5P');
-
-  // explain how we join
-  $data['h5p_nodes']['table']['join'] = array(
-    // Directly links to node table.
-    'node' => array(
-      'left_field' => 'nid',
-      'field' => 'nid',
-    ),
-  );
 
   // content id
   $data['h5p_nodes']['content_id'] = array(
@@ -284,75 +268,3 @@ class h5p_access_user_points_plugin extends views_plugin_access {
     return array('h5p_access_user_points', array());
   }
 }
-
-
-// Temporary view export:
-$view = new view();
-$view->name = 'node_points';
-$view->description = '';
-$view->tag = 'default';
-$view->base_table = 'node';
-$view->human_name = 'Node points';
-$view->core = 7;
-$view->api_version = '3.0';
-$view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-
-/* Display: Master */
-$handler = $view->new_display('default', 'Master', 'default');
-$handler->display->display_options['title'] = 'Node points';
-$handler->display->display_options['use_more_always'] = FALSE;
-$handler->display->display_options['access']['type'] = 'h5p-node';
-$handler->display->display_options['cache']['type'] = 'none';
-$handler->display->display_options['query']['type'] = 'views_query';
-$handler->display->display_options['exposed_form']['type'] = 'basic';
-$handler->display->display_options['pager']['type'] = 'full';
-$handler->display->display_options['pager']['options']['items_per_page'] = '20';
-$handler->display->display_options['style_plugin'] = 'table';
-/* Field: Content: Start time */
-$handler->display->display_options['fields']['started']['id'] = 'started';
-$handler->display->display_options['fields']['started']['table'] = 'h5p_points';
-$handler->display->display_options['fields']['started']['field'] = 'started';
-$handler->display->display_options['fields']['started']['date_format'] = 'long';
-/* Field: Content: Finish time */
-$handler->display->display_options['fields']['finished']['id'] = 'finished';
-$handler->display->display_options['fields']['finished']['table'] = 'h5p_points';
-$handler->display->display_options['fields']['finished']['field'] = 'finished';
-$handler->display->display_options['fields']['finished']['date_format'] = 'long';
-/* Field: Content: Points awarded */
-$handler->display->display_options['fields']['points']['id'] = 'points';
-$handler->display->display_options['fields']['points']['table'] = 'h5p_points';
-$handler->display->display_options['fields']['points']['field'] = 'points';
-/* Field: Content: Max points awarded */
-$handler->display->display_options['fields']['max_points']['id'] = 'max_points';
-$handler->display->display_options['fields']['max_points']['table'] = 'h5p_points';
-$handler->display->display_options['fields']['max_points']['field'] = 'max_points';
-$handler->display->display_options['fields']['max_points']['label'] = 'Max points';
-/* Sort criterion: Content: Post date */
-$handler->display->display_options['sorts']['created']['id'] = 'created';
-$handler->display->display_options['sorts']['created']['table'] = 'node';
-$handler->display->display_options['sorts']['created']['field'] = 'created';
-$handler->display->display_options['sorts']['created']['order'] = 'DESC';
-/* Filter criterion: Content: Published */
-$handler->display->display_options['filters']['status']['id'] = 'status';
-$handler->display->display_options['filters']['status']['table'] = 'node';
-$handler->display->display_options['filters']['status']['field'] = 'status';
-$handler->display->display_options['filters']['status']['value'] = 1;
-$handler->display->display_options['filters']['status']['group'] = 1;
-$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-/* Filter criterion: Content: Type */
-$handler->display->display_options['filters']['type']['id'] = 'type';
-$handler->display->display_options['filters']['type']['table'] = 'node';
-$handler->display->display_options['filters']['type']['field'] = 'type';
-$handler->display->display_options['filters']['type']['value'] = array(
-  'h5p_content' => 'h5p_content',
-);
-
-/* Display: Page */
-$handler = $view->new_display('page', 'Page', 'page');
-$handler->display->display_options['path'] = 'node/%/h5p-points';
-$handler->display->display_options['menu']['type'] = 'tab';
-$handler->display->display_options['menu']['title'] = 'Points';
-$handler->display->display_options['menu']['weight'] = '0';
-$handler->display->display_options['menu']['context'] = 0;
-$handler->display->display_options['menu']['context_only_inline'] = 0;
-
