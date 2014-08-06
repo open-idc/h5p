@@ -917,7 +917,7 @@ function h5p_library_delete_form_submit($form, &$form_state) {
 }
 
 /**
- * Handler for the custom node access check
+ * Handler for the custom node points access check
  *
  * @param stdObject $account
  */

@@ -82,7 +82,7 @@ function h5p_views_data() {
   // contet id
   $data['h5p_points']['content_id'] = array(
     'title' => t('Content ID'),
-    'help' => t('The ID of content. nid og vid depending on the sites settings.'),
+    'help' => t('The ID of content. nid or vid depending on the sites settings.'),
     'field' => array(
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
@@ -243,7 +243,6 @@ class h5p_access_node_points_plugin extends views_plugin_access {
    * Determine if the current user has access or not.
    */
   function access($account) {
-    dpm('here');
     return h5p_access_node_points($account);
   }
   function get_access_callback() {
