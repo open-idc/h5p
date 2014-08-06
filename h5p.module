@@ -60,6 +60,14 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  $items['admin/content/h5p/upgrade/library/%/%/%'] = array(
+    'title' => 'H5P Content Upgrade Library',
+    'page callback' => 'h5p_content_upgrade_library',
+    'page arguments' => array(5, 6, 7),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'h5p.admin.inc',
+  );
   
   $items['admin/content/h5p/rebuild-cache'] = array(
     'title' => 'H5P Rebuild Content Cache',
@@ -96,10 +104,10 @@ function h5p_menu() {
  * @param array $remove Optional urls to skip.
  * @return array absolute urls.
  */
-function _h5p_make_urls_absolute($urls, $remove = array()) {
+function _h5p_make_urls_absolute($urls, $remove = NULL) {
   global $base_url;
   for ($i = 0, $s = count($urls); $i < $s; $i++) {
-    if (in_array($urls[$i], $remove)) {
+    if ($remove !== NULL && preg_match($remove, $urls[$i])) {
       array_splice($urls, $i, 1);
       $i--;
       $s--;
@@ -156,12 +164,12 @@ function h5p_embed($node) {
   // Important! Params must be filtered before content dependencies are loaded. 
   $params = $core->filterParameters($content);
   
-  $preloaded_dependencies = $core->loadContentDependencies($id, 'preloaded');
+  $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
   $files = $core->getDependenciesFiles($preloaded_dependencies);
   
   $assets = array();
-  h5p_add_iframe_assets($assets, $id, $files);
-  
+  h5p_add_iframe_assets($assets, $content['id'], $files);
+
   $settings = array(
     'id' => intval($content['id']),
     'path' => $base_url . '/' . _h5p_get_h5p_path() . '/',
@@ -169,8 +177,8 @@ function h5p_embed($node) {
     'fullscreen' => intval($node->main_library['fullscreen']),
     'exportUrl' => h5p_get_export_path($content['id']),
     'embedCode' => _h5p_generate_embed_code($node->nid),
-    'styles' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['styles'], $assets['h5p']['cid-' . $id]['styles'])),
-    'scripts' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['scripts'], $assets['h5p']['cid-' . $id]['scripts']), array(drupal_get_path('module', 'h5p') . '/js/h5pintegration.js')),
+    'styles' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['styles'], $assets['h5p']['cid-' . $content['id']]['styles'])),
+    'scripts' => _h5p_make_urls_absolute(array_merge($assets['h5p']['core']['scripts'], $assets['h5p']['cid-' . $content['id']]['scripts']), '/\/h5pintegration\.js/'),
     'params' => $params,
     'i18n' => array(
       'H5P' => array(
@@ -375,34 +383,26 @@ function h5p_insert($node) {
 function h5p_update($node) {
   if ($node->revision && variable_get('h5p_revisioning', 1)) {
     // Create new revision
-    $h5p_core = _h5p_get_instance('storage');
+    $h5p_storage = _h5p_get_instance('storage');
     if (isset($_SESSION['h5p_upload'])) {
       // Use newly uploaded package
-      $h5p_core->savePackage($node->vid, $node->nid);
+      $h5p_storage->savePackage($node->vid, $node->nid);
     }
     else {
       // Copy old package
-      $h5p_core->copyPackage($node->vid, $node->old_vid, $node->nid);
+      $h5p_storage->copyPackage($node->vid, $node->old_vid, $node->nid);
+      // Insert content:
+      h5p_insert($node);
     }
   }
   else {
-    $content_id = h5p_get_content_id($node);
     if (isset($_SESSION['h5p_upload'])) {
       // Replace old package
-      $h5p_core = _h5p_get_instance('storage');
-      $h5p_core->updatePackage($content_id, $node->nid);
+      $h5p_storage = _h5p_get_instance('storage');
+      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid);
     }
     else {
-      // Insert updated params
-      $core = _h5p_get_instance('core');
-      $core->saveContent(array(
-        'id' => $content_id,
-        'params' => $node->json_content,
-        'embed_type' => $node->embed_type,
-        'library' => array(
-          'libraryId' => $node->main_library_id
-        )
-      ), $node->nid);
+      h5p_insert($node);
     }
   }
 }
@@ -571,7 +571,8 @@ function h5p_add_core_assets() {
     
     $js = $module_path . '/js/h5pintegration.js';
     drupal_add_js($js);
-    $assets['js'][] = $js;
+    $assets['js'][] = $js . $cache_buster;
+      
     foreach (H5PCore::$scripts as $script) {
       $js = $module_path . '/library/' . $script;
       drupal_add_js($js);
