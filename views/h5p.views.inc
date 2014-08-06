@@ -10,41 +10,6 @@ function h5p_views_handlers() {
     'info' => array(
       'path' => H5P_VIEWS_DIR . '/handlers',
     ),
-    /*'handlers' => array(
-      // Fields
-      'h5p_views_handler_field_started' => array(
-        'parent' => 'views_handler_field',
-      ),
-      'h5p_views_handler_field_finished' => array(
-        'parent' => 'views_handler_field',
-      ),
-      'h5p_views_handler_field_points' => array(
-        'parent' => 'views_handler_field_numeric',
-      ),
-      'h5p_views_handler_field_max_pooints' => array(
-        'parent' => 'views_handler_field_numeric',
-      ),
-      // Filters
-      'h5p_views_handler_filter_started' => array(
-        'parent' => 'views_handler_filter',
-      ),
-      'h5p_views_handler_filter_finished' => array(
-        'parent' => 'views_handler_filter',
-      ),
-      'h5p_views_handler_filter_points' => array(
-        'parent' => 'views_handler_filter',
-      ),
-      'h5p_views_handler_filter_max_points' => array(
-        'parent' => 'views_handler_filter',
-      ),
-      // Arguments
-      'h5p_views_handler_argument_h5p_nid' => array(
-        'parent' => 'views_handler_argument_numeric',
-      ),
-      'h5p_views_handler_argument_user_uid_nullable' => array(
-        'parent' => 'views_handler_argument_user_uid',
-      ),
-    ),*/
   );
 }
 
@@ -57,7 +22,7 @@ function h5p_views_data() {
 
   // Define the base group of this table. Fields that don't
   // have a group defined will go into this field by default.
-  $data['h5p_points']['table']['group'] = t('Content');
+  $data['h5p_points']['table']['group'] = t('H5P');
   
   // explain how we join
   $data['h5p_points']['table']['join'] = array(
@@ -67,14 +32,6 @@ function h5p_views_data() {
       'field' => 'content_id',
     ),
   );
-
-//  $data['h5p_points']['table']['default_relationship'] = array(
-//    'node' => array(
-//      'table' => 'node',
-//      'left_field' => 'nid',
-//      'field' => 'content_id',
-//    ),
-//  );
   
   // ----------------------------------------------------------------
   // points table -- fields
@@ -103,15 +60,15 @@ function h5p_views_data() {
       'base' => 'node',
       'base field' => 'vid',
       'field' => 'content_id',
-      'label' => t('Node ID')
+      'label' => t('H5P Points - node')
     ),
   );
   
-  // uid
+  // Node - H5P points relationship
   $data['node']['h5p_nid_points'] = array(
     'relationship' => array(
-      'title' => t('H5P Points'),
-      'label'  => t('H5P Points'),
+      'title' => t('H5P Points for node'),
+      'label'  => t('H5P Points for node'),
       'help' => t('Will return an entry for each result that is stored for the node in the database.'),
       'handler' => 'views_handler_relationship',
       'relationship field' => 'nid',
@@ -136,11 +93,11 @@ function h5p_views_data() {
     ),
   );
   
-  // uid
+  // User - H5P points relationship
   $data['users']['h5p_uid_points'] = array(
     'relationship' => array(
-      'title' => t('H5P Points'),
-      'label'  => t('H5P Points'),
+      'title' => t('H5P Points for user'),
+      'label'  => t('H5P Points for user'),
       'help' => t('Will return an entry for each H5P that is stored for the user in the database.'),
       'handler' => 'views_handler_relationship',
       'relationship field' => 'uid',
