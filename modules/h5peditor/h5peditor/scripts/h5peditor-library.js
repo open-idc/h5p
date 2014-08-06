@@ -122,7 +122,7 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
       // Reset params
       that.params.params = {};
     }
-
+    
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
 
     if (that.libraries !== undefined) {

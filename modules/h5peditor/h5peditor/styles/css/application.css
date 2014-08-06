@@ -500,11 +500,13 @@ a {
   -o-transform: scale(1.1, 1.1);
   transform: scale(1.1, 1.1);
 }
+
 /* line 427, ../scss/application.scss */
 .h5peditor-field-description {
   font-size: 10px;
   color: #555555;
 }
+
 /* line 432, ../scss/application.scss */
 .h5peditor-form {
   position: relative;
