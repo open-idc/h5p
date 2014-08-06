@@ -939,3 +939,27 @@ function h5p_access_node_points($account = NULL) {
   }
   return FALSE;
 }
+
+/**
+ * Handler for the custom user points access check
+ *
+ * @param stdObject $account
+ */
+function h5p_access_user_points($account = NULL) {
+  global $user;
+
+  if (user_access('access all h5p points')) {
+    return TRUE;
+  }
+
+  // menu_get_object isn't working, so we load it manually...
+  if (arg(0) === 'user' && is_numeric(arg(1))) {
+    $accessed_user = user_load(arg(1));
+    if ($accessed_user !== FALSE) {
+      if (user_access('access own h5p points') && $user->uid === $accessed_user->uid) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
