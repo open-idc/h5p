@@ -142,11 +142,7 @@ ns.File.prototype.uploadFile = function () {
   this.$errors.html('');
 
   ns.File.changeCallback = function () {
-<<<<<<< HEAD
-    that.$file.html('<div class="h5peditor-uploading">' + ns.t('core', 'uploading') + '</div>');
-=======
     that.$file.html('<div class="h5peditor-uploading h5p-throbber">' + ns.t('core', 'uploading') + '</div>');
->>>>>>> a98c6b8d434e30a17b5b09712c066c3e9672a796
   };
 
   ns.File.callback = function (json) {
@@ -245,11 +241,7 @@ ns.File.addIframe = function () {
     }
 
     $body.html('');
-<<<<<<< HEAD
-    var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.ajaxPath + 'files"><input name="file" type="file"/><input name="field" type="hidden"/><input name="contentId" type="hidden" value="' + (ns.contentId === undefined ? 0 : ns.contentId) + '"/></form>').appendTo($body);
-=======
     var $form = ns.$('<form method="post" enctype="multipart/form-data" action="' + ns.getAjaxUrl('files') + '"><input name="file" type="file"/><input name="field" type="hidden"/><input name="contentId" type="hidden" value="' + (ns.contentId === undefined ? 0 : ns.contentId) + '"/></form>').appendTo($body);
->>>>>>> a98c6b8d434e30a17b5b09712c066c3e9672a796
 
     ns.File.$field = $form.children('input[name="field"]');
     ns.File.$file = $form.children('input[name="file"]');

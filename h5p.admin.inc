@@ -176,8 +176,6 @@ function h5p_library_list() {
 }
 
 /**
-<<<<<<< HEAD
-=======
  * Settings needed to rebuild cache from UI.
  * 
  * @param int $num
@@ -193,7 +191,6 @@ function h5p_get_not_cached_settings($num) {
 }
 
 /**
->>>>>>> a98c6b8d434e30a17b5b09712c066c3e9672a796
  * Creates the library list page
  * 
  * @param {string} $library_id The id of the library to be displayed

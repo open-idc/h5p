@@ -8,39 +8,6 @@ var ns = H5PEditor;
  * @param {Object} defaultParams
  * @returns {H5peditor}
  */
-<<<<<<< HEAD
-ns.Editor = function (library, defaultParams) {
-  var that = this;
-
-  if (ns.$document === undefined) {
-    ns.$document = ns.$(document);
-  }
-  if (ns.$body === undefined) {
-    ns.$body = ns.$('body');
-  }
-
-  // Create a wrapper
-  this.$wrapper = ns.$('<div class="h5peditor">' + ns.t('core', 'loading', {':type': 'libraries'}) + '</div>');
-
-  // Load libraries.
-  ns.$.getJSON(ns.ajaxPath + 'libraries', function (data) {
-    that.selector = new ns.LibrarySelector(data, library, defaultParams);
-    that.selector.appendTo(that.$wrapper.html(''));
-    if (library) {
-      that.selector.$selector.change();
-    }
-  });
-};
-
-/**
- * Replace $element with our editor element.
- *
- * @param {jQuery} $element
- * @returns {undefined}
- */
-ns.Editor.prototype.replace = function ($element) {
-  $element.replaceWith(this.$wrapper);
-=======
 ns.Editor = function (library, defaultParams, replace) {
   var self = this;
 
@@ -147,7 +114,6 @@ ns.Editor = function (library, defaultParams, replace) {
     // Free parent
     iframe.parentElement.style.height = parentHeight;
   };
->>>>>>> a98c6b8d434e30a17b5b09712c066c3e9672a796
 };
 
 /**
@@ -166,8 +132,6 @@ ns.Editor.prototype.getParams = function () {
   if (this.selector !== undefined) {
     return this.selector.getParams();
   }
-<<<<<<< HEAD
-=======
 };
 
 ns.language = {};
@@ -216,5 +180,4 @@ ns.wrap = function (prefix, content, suffix) {
     result += prefix + content[i] + suffix;
   }
   return result;
->>>>>>> a98c6b8d434e30a17b5b09712c066c3e9672a796
 };
