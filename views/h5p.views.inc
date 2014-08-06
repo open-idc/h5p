@@ -101,8 +101,8 @@ function h5p_views_data() {
     'relationship' => array(
       'handler' => 'views_handler_relationship',
       'base' => 'node',
-      'left_field' => 'content_id',
-      'field' => 'nid',
+      'base field' => 'vid',
+      'field' => 'content_id',
       'label' => t('Node ID')
     ),
   );
