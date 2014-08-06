@@ -245,6 +245,19 @@ function h5p_permission() {
       'title' => t('Update libraries'),
       'description' => t("The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing."),
     ),
+    'access all h5p points' => array(
+      'title' => t('Access all H5P points'),
+      'description' => t("Access all H5P points stored in the system"),
+    ),
+    'access own h5p points' => array(
+      'title' => t('Access own H5P points'),
+      'description' => t("Access own H5P points from user profile."),
+    ),
+    'access h5p points for own content' => array(
+      'title' => t('Access h5p points for own content'),
+      'description' => t("The user is allowed to see all points for content he has created. Available as a tab on each node."),
+    ),
+
   );
 }
 
