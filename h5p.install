@@ -60,6 +60,12 @@ function _h5p_recursive_unlink($file) {
   }
 }
 
+function h5p_enable() {
+  if (function_exists('views_invalidate_cache')) {
+    //views_invalidate_cache();
+  }
+}
+
 /**
  * Implements hook_schema().
  */
@@ -590,6 +596,18 @@ function h5p_update_7100(&$sandbox) {
     ),
     'primary key' => array('content_id', 'uid'),
   ));
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Invalidates views cache so that the new default views will be installed
+ *
+ */
+function h5p_update_7101() {
+  if (function_exists('views_invalidate_cache')) {
+    //views_invalidate_cache();
+  }
 }
 
 /**

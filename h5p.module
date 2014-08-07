@@ -6,6 +6,9 @@
  *  Drupal module h5p. A HTML5 Package manager for Drupal.
  */
 
+// Views support is included in views/quiz.views.inc
+define('H5P_VIEWS_DIR', drupal_get_path('module', 'h5p') . '/views');
+
 /**
  * Implements hook_menu().
  */
@@ -250,6 +253,19 @@ function h5p_permission() {
       'title' => t('Update libraries'),
       'description' => t("The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing."),
     ),
+    'access all h5p points' => array(
+      'title' => t('Access all H5P points'),
+      'description' => t("Access all H5P points stored in the system"),
+    ),
+    'access own h5p points' => array(
+      'title' => t('Access own H5P points'),
+      'description' => t("Access own H5P points from user profile."),
+    ),
+    'access h5p points for own content' => array(
+      'title' => t('Access h5p points for own content'),
+      'description' => t("The user is allowed to see all points for content he has created. Available as a tab on each node."),
+    ),
+
   );
 }
 
@@ -478,7 +494,7 @@ function h5p_access_set_finished() {
   }
   $nid = $_POST['contentId'];
   if (variable_get('h5p_revisioning', 1)) {
-    $nid = db_query('SELECT nid FROM {node_revisions} WHERE vid = :vid', array(':vid' => $nid))->fetchField();
+    $nid = db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $nid))->fetchField();
   }
   return node_access('view', node_load((int) $nid));
 }
@@ -884,9 +900,67 @@ function h5p_library_delete_form($form, &$form_state, $library_id, $library_name
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function h5p_views_api() {
+  return array(
+    'api' => 3,
+    'path' => H5P_VIEWS_DIR,
+  );
+}
+
+/**
  * TODO
  */
 function h5p_library_delete_form_submit($form, &$form_state) {
   // Do the actual deletion:
   _h5p_get_instance('interface')->deleteLibrary($form_state['values']['library_id']);
+}
+
+/**
+ * Handler for the custom node points access check
+ *
+ * @param stdObject $account
+ */
+function h5p_access_node_points($account = NULL) {
+  global $user;
+
+  if (user_access('access all h5p points')) {
+    return TRUE;
+  }
+
+  // menu_get_object isn't working, so we load it manually...
+  if (arg(0) === 'node' && is_numeric(arg(1))) {
+    $node = node_load(arg(1));
+    if ($node !== FALSE && $node->type == 'h5p_content') {
+      if (user_access('access h5p points for own content') && $user->uid === $node->uid) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Handler for the custom user points access check
+ *
+ * @param stdObject $account
+ */
+function h5p_access_user_points($account = NULL) {
+  global $user;
+
+  if (user_access('access all h5p points')) {
+    return TRUE;
+  }
+
+  // menu_get_object isn't working, so we load it manually...
+  if (arg(0) === 'user' && is_numeric(arg(1))) {
+    $accessed_user = user_load(arg(1));
+    if ($accessed_user !== FALSE) {
+      if (user_access('access own h5p points') && $user->uid === $accessed_user->uid) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
 }
