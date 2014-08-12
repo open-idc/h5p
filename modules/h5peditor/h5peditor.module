@@ -161,7 +161,27 @@ function h5peditor_h5p_content_node_form_validate($form, $form_state) {
     h5p_form_validate($form, $form_state);
     return;
   }
-  // TODO: Validate new parameters.
+  else {
+    $library_data = H5PCore::libraryFromString($form_state['values']['h5p_library']);
+    if ($library_data === FALSE) {
+      form_set_error('h5p_editor', t('You must choose an H5P content type or upload an H5P file.'));
+    }
+    else {
+      $is_runnable = db_query(
+        "SELECT runnable
+        FROM {h5p_libraries}
+        WHERE machine_name = :machine_name
+        AND major_version = :major_version
+        AND minor_version = :minor_version", array(
+          ':machine_name' => $library_data['machineName'],
+          ':major_version' => $library_data['majorVersion'],
+          ':minor_version' => $library_data['minorVersion'],
+        ))->fetchField();
+      if (!$is_runnable) {
+        form_set_error('h5p_editor', t('Invalid H5P content type'));
+      }
+    }
+  }
 }
 
 /**
