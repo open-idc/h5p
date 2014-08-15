@@ -62,6 +62,31 @@ function h5p_views_data() {
     ),
   );
 
+  // Node - H5P nodes relationship
+  $data['node']['h5p_nodes'] = array(
+    'relationship' => array(
+      'title' => t('H5P node properties'),
+      'label'  => t('H5P node properties'),
+      'help' => t('Will return h5p data for the node.'),
+      'handler' => 'views_handler_relationship',
+      'relationship field' => 'nid',
+      'outer field' => 'node.nid',
+      'argument table' => 'node',
+      'argument field' =>  'nid',
+      'base'   => 'h5p_nodes',
+      'field'  => 'nid',
+      'base field' => 'nid',
+    ),
+  );
+
+   // explain how we join
+  $data['h5p_nodes']['table']['join'] = array(
+    // Directly links to h5p_nodes table.
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'nid',
+    ),
+  );
 
   // ----------------------------------------------------------------
   // h5p_points table -- basic table information.
@@ -118,9 +143,10 @@ function h5p_views_data() {
       'help' => t('Will return points.'),
       'handler' => 'views_handler_relationship',
       'relationship field' => 'content_id',
-      'argument table' => 'h5p_points',
+      'outer field' => 'h5p_nodes.content_id',
+      'argument table' => 'h5p_nodes',
       'argument field' =>  'content_id',
-      'base'   => 'h5p_nodes',
+      'base'   => 'h5p_points',
       'field'  => 'content_id',
       'base field' => 'content_id',
     ),
