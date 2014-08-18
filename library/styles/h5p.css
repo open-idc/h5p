@@ -199,6 +199,9 @@ div.h5p-fullscreen {
   font-family: 'H5P';
   content: "\e88e";
 }
+.h5p-actions > li {
+  margin: 0;
+}
 .h5p-popup-dialog {
   position: absolute;
   top: 0;
