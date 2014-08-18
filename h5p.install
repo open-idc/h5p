@@ -62,7 +62,7 @@ function _h5p_recursive_unlink($file) {
 
 function h5p_enable() {
   if (function_exists('views_invalidate_cache')) {
-    //views_invalidate_cache();
+    views_invalidate_cache();
   }
 }
 
@@ -606,7 +606,7 @@ function h5p_update_7100(&$sandbox) {
  */
 function h5p_update_7101() {
   if (function_exists('views_invalidate_cache')) {
-    //views_invalidate_cache();
+    views_invalidate_cache();
   }
 }
 
