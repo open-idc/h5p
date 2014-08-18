@@ -9,18 +9,18 @@
 function h5p_views_default_views() {
   // Begin copy and paste of node_points export
   $view = new view();
-  $view->name = 'node_points';
+  $view->name = 'node_results';
   $view->description = '';
   $view->tag = 'default';
   $view->base_table = 'node';
-  $view->human_name = 'Node points';
+  $view->human_name = 'Node results';
   $view->core = 7;
   $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'Points';
+  $handler->display->display_options['title'] = 'Results';
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'h5p-node';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -94,9 +94,9 @@ function h5p_views_default_views() {
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
-  $handler->display->display_options['path'] = 'node/%/h5p-points';
+  $handler->display->display_options['path'] = 'node/%/h5p-results';
   $handler->display->display_options['menu']['type'] = 'tab';
-  $handler->display->display_options['menu']['title'] = 'Points';
+  $handler->display->display_options['menu']['title'] = 'Results';
   $handler->display->display_options['menu']['weight'] = '0';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;
@@ -108,18 +108,18 @@ function h5p_views_default_views() {
 
   // Begin copy and paste of node_points export
   $view = new view();
-  $view->name = 'user_points';
+  $view->name = 'user_results';
   $view->description = '';
   $view->tag = 'default';
   $view->base_table = 'users';
-  $view->human_name = 'User points';
+  $view->human_name = 'User results';
   $view->core = 7;
   $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'User points';
+  $handler->display->display_options['title'] = 'User results';
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'h5p-user';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -191,9 +191,9 @@ function h5p_views_default_views() {
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
-  $handler->display->display_options['path'] = 'user/%/h5p-points';
+  $handler->display->display_options['path'] = 'user/%/h5p-results';
   $handler->display->display_options['menu']['type'] = 'tab';
-  $handler->display->display_options['menu']['title'] = 'Points';
+  $handler->display->display_options['menu']['title'] = 'Results';
   $handler->display->display_options['menu']['weight'] = '0';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;

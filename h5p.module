@@ -251,21 +251,20 @@ function h5p_permission() {
   return array(
     'update h5p libraries' => array(
       'title' => t('Update libraries'),
-      'description' => t("The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing."),
+      'description' => t('The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing.'),
     ),
-    'access all h5p points' => array(
-      'title' => t('Access all H5P points'),
-      'description' => t("Access all H5P points stored in the system"),
+    'access all h5p results' => array(
+      'title' => t('Access all H5P results'),
+      'description' => t('Access all H5P results stored in the system'),
     ),
-    'access own h5p points' => array(
-      'title' => t('Access own H5P points'),
-      'description' => t("Access own H5P points from user profile."),
+    'access own h5p results' => array(
+      'title' => t('Access own H5P results'),
+      'description' => t('Access own H5P results from user profile.'),
     ),
-    'access h5p points for own content' => array(
-      'title' => t('Access h5p points for own content'),
-      'description' => t("The user is allowed to see all points for content he has created. Available as a tab on each node."),
+    'access h5p results for own content' => array(
+      'title' => t('Access h5p results for own content'),
+      'description' => t('The user is allowed to see all results for content he has created. Available as a tab on each node.'),
     ),
-
   );
 }
 
@@ -925,7 +924,7 @@ function h5p_library_delete_form_submit($form, &$form_state) {
 function h5p_access_node_points($account = NULL) {
   global $user;
 
-  if (user_access('access all h5p points')) {
+  if (user_access('access all h5p results')) {
     return TRUE;
   }
 
@@ -933,7 +932,7 @@ function h5p_access_node_points($account = NULL) {
   if (arg(0) === 'node' && is_numeric(arg(1))) {
     $node = node_load(arg(1));
     if ($node !== FALSE && $node->type == 'h5p_content') {
-      if (user_access('access h5p points for own content') && $user->uid === $node->uid) {
+      if (user_access('access h5p results for own content') && $user->uid === $node->uid) {
         return TRUE;
       }
     }
@@ -949,7 +948,7 @@ function h5p_access_node_points($account = NULL) {
 function h5p_access_user_points($account = NULL) {
   global $user;
 
-  if (user_access('access all h5p points')) {
+  if (user_access('access all h5p results')) {
     return TRUE;
   }
 
@@ -957,7 +956,7 @@ function h5p_access_user_points($account = NULL) {
   if (arg(0) === 'user' && is_numeric(arg(1))) {
     $accessed_user = user_load(arg(1));
     if ($accessed_user !== FALSE) {
-      if (user_access('access own h5p points') && $user->uid === $accessed_user->uid) {
+      if (user_access('access own h5p results') && $user->uid === $accessed_user->uid) {
         return TRUE;
       }
     }
