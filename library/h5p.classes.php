@@ -55,6 +55,27 @@ interface H5PFrameworkInterface {
    * @return string Path to the last uploaded h5p
    */
   public function getUploadedH5pPath();
+  
+  /**
+   * Get the list of the current installed libraries
+   * 
+   * @return array Associative array containg one item per machine name. This item contains an array of libraries.
+   */
+  public function loadLibraries();
+  
+  /**
+   * Tells whether validation of library versions is needed
+   * 
+   * @param boolean FALSE means validation is run only if needed. TRUE means validation is forced
+   */
+  public function validateLibrarySupport($force = FALSE);
+  
+  /**
+   * Returns the URL to the library admin page
+   * 
+   * @return string URL to admin page
+   */
+  public function getAdminUrl();
 
   /**
    * Get id to an excisting library
@@ -1081,6 +1102,9 @@ class H5PStorage {
       $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
       H5PCore::deleteFileTree($this->h5pF->getUploadedH5pFolderPath());
     }
+    
+    // Update supported library list if neccessary:
+    $this->h5pF->validateLibrarySupport();
 
     return $library_saved;
   }
@@ -1779,6 +1803,108 @@ class H5PCore {
     }
 
     return $obj ? (object) $newArr : $newArr;
+  }
+  
+  /**
+   * Check if currently installed H5P libraries are supported by
+   * the current versjon of core. Which versions of which libraries are supported is
+   * defined in the library-support.json file.
+   * 
+   * @return mixed NULL if all libraries/versions are supported. If not, an array containing the libraries 
+   *               needing updates
+   */
+  public function validateLibrarySupport() {
+    // Read and parse library-support.json
+    $jsonString = file_get_contents(realpath(dirname(__FILE__)).'/library-support.json');
+    
+    if($jsonString !== FALSE) {
+      // Get all libraries installed, check if any of them is not supported:
+      $libraries = $this->h5pF->loadLibraries();
+      $unsupportedLibraries = array();
+      $minimumLibraryVersions = array();
+      
+      $librariesSupported = json_decode($jsonString, true);
+      foreach ($librariesSupported as $library) {
+        $minimumLibraryVersions[$library['machineName']]['versions'] = $library['minimumVersions'];
+        $minimumLibraryVersions[$library['machineName']]['downloadUrl'] = $library['downloadUrl'];
+      }
+      
+      // Iterate over all installed libraries
+      foreach ($libraries as $machine_name => $libraryList) {
+        // Check if there are any minimum version requirements for this library
+        if (isset($minimumLibraryVersions[$machine_name])) {
+          $minimumVersions = $minimumLibraryVersions[$machine_name]['versions'];
+          // For each version of this library, check if it is supported
+          foreach ($libraryList as $library) {
+            $major_supported = $minor_supported = $patch_supported = false;
+            foreach ($minimumVersions as $minimumVersion) {
+              // A library is supported if:
+              // --- major is higher than any minimumversion
+              // --- minor is higher than any minimumversion for a given major
+              // --- major and minor equals and patch is >= supported
+              $major_supported |= ($library->major_version > $minimumVersion['major']);
+              
+              if($library->major_version == $minimumVersion['major']) {
+                $minor_supported |= ($library->minor_version > $minimumVersion['minor']);
+              }
+              
+              if($library->major_version == $minimumVersion['major'] && 
+                 $library->minor_version == $minimumVersion['minor']) {
+                $patch_supported |= ($library->patch_version >= $minimumVersion['patch']);
+              }
+            }
+            
+            if (!($patch_supported || $minor_supported || $major_supported)) {
+              // Current version of this library is not supported
+              $unsupportedLibraries[] = array (
+                'name' => $machine_name,
+                'downloadUrl' => $minimumLibraryVersions[$machine_name]['downloadUrl'],
+                'currentVersion' => array (
+                  'major' => $library->major_version,
+                  'minor' => $library->minor_version,
+                  'patch' => $library->patch_version,
+                ),
+                'minimumVersions' => $minimumVersions,
+              );
+            }
+          }
+        }
+      }
+      
+      if (!empty($unsupportedLibraries)) {
+        return $unsupportedLibraries;
+      }
+    }
+    
+    return NULL;
+  }
+  
+  /**
+   * Helper function for creating markup for the unsupported libraries list 
+   * 
+   * TODO: Make help text translatable
+   * 
+   * @return string Html
+   * */
+  public function createMarkupForUnsupportedLibraryList($libraries) {
+    $html = '<div><span>The following versions of H5P libraries are not supported anymore:<span><ul>';
+    
+    foreach ($libraries as $library) {
+      $downloadUrl = $library['downloadUrl'];
+      $libraryName = $library['name'];
+      $currentVersion = $library['currentVersion']['major'] . '.' . $library['currentVersion']['minor'] .'.' . $library['currentVersion']['patch'];
+      $minimumVersions = '';
+      $prefix = '';
+      foreach ($library['minimumVersions'] as $version) {
+        $minimumVersions .= $prefix . $version['major'] . '.' . $version['minor'] . '.' . $version['patch'];
+        $prefix = ' or ';
+      }
+      
+      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
+    }
+    
+    $html .= '</ul><span><br>These libraries may cause problems on this site. To update, do the following: <ol><li>Take a database backup</li><li>Download the latest version of each library from h5p.org</li><li>Upload these libraries using the <a href="'. $this->h5pF->getAdminUrl() .'">library admin page</a></li><li>Push the upgrade button for upgradable libraries if needed</li></ol></span><a href="http://h5p.org/support/unsupported-library-versions">Read more</a></div>';
+    return $html;
   }
 }
 

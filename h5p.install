@@ -64,6 +64,7 @@ function h5p_enable() {
   if (function_exists('views_invalidate_cache')) {
     views_invalidate_cache();
   }
+  h5p_validate_library_support();
 }
 
 /**
@@ -608,6 +609,30 @@ function h5p_update_7101() {
   if (function_exists('views_invalidate_cache')) {
     views_invalidate_cache();
   }
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Check if any of the installed H5P libraries are not supported by the current 
+ * H5P core version
+ *
+ */
+function h5p_update_7102() {
+  h5p_validate_library_support();
+}
+
+/**
+ * Check if any library installed is unsupported by core
+ */
+function h5p_validate_library_support() {
+  require_once drupal_get_path('module', 'h5p') . '/library/h5p-development.class.php';
+  require_once drupal_get_path('module', 'h5p') . '/library/h5p.classes.php';
+  require_once drupal_get_path('module', 'h5p') . '/h5p.classes.inc';
+  
+  $interface = _h5p_get_instance('interface');
+  // Force check
+  $interface->validateLibrarySupport(true);
 }
 
 /**

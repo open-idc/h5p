@@ -48,6 +48,37 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * Implements loadLibraries
+   */
+  public function loadLibraries() {
+    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+    
+    $libraries = array();
+    foreach ($res as $library) {
+      $libraries[$library->name][] = $library;
+    }
+    
+    return $libraries;
+  }
+  
+  /**
+   * Implementation of validateLibrarySupport
+   */
+  public function validateLibrarySupport($force = FALSE) {
+    if ($force || variable_get('h5p_unsupported_libraries') !== NULL) {
+      $core = _h5p_get_instance('core');
+      variable_set('h5p_unsupported_libraries', $core->validateLibrarySupport());
+    }
+  }
+  
+  /**
+   * 
+   */
+  public function getAdminUrl() {
+    return url('admin/content/h5p');
+  }
+  
+  /**
    * Implements getLibraryId
    */
   public function getLibraryId($machineName, $majorVersion, $minorVersion) {
