@@ -64,11 +64,18 @@ interface H5PFrameworkInterface {
   public function loadLibraries();
   
   /**
-   * Tells whether validation of library versions is needed
+   * Saving the unsupported library list
    * 
-   * @param boolean FALSE means validation is run only if needed. TRUE means validation is forced
+   * @param array A list of unsupported libraries
    */
-  public function validateLibrarySupport($force = FALSE);
+  public function setUnsupportedLibraries($libraries);
+  
+  /**
+   * Returns unsupported libraries
+   * 
+   * @return array A list of the unsupported libraries
+   */
+  public function getUnsupportedLibraries();
   
   /**
    * Returns the URL to the library admin page
@@ -1104,7 +1111,7 @@ class H5PStorage {
     }
     
     // Update supported library list if neccessary:
-    $this->h5pF->validateLibrarySupport();
+    $this->h5pC->validateLibrarySupport();
 
     return $library_saved;
   }
@@ -1809,11 +1816,15 @@ class H5PCore {
    * Check if currently installed H5P libraries are supported by
    * the current versjon of core. Which versions of which libraries are supported is
    * defined in the library-support.json file.
-   * 
-   * @return mixed NULL if all libraries/versions are supported. If not, an array containing the libraries 
-   *               needing updates
+   *
+   * @param boolean If TRUE, unsupported libraries list are rebuilt. If FALSE, list is 
+   *                rebuilt only if non-existing
    */
-  public function validateLibrarySupport() {
+  public function validateLibrarySupport($force = false) {
+    if (!($this->h5pF->getUnsupportedLibraries() === NULL || $force)) {
+      return;
+    }
+    
     // Read and parse library-support.json
     $jsonString = file_get_contents(realpath(dirname(__FILE__)).'/library-support.json');
     
@@ -1836,29 +1847,16 @@ class H5PCore {
           $minimumVersions = $minimumLibraryVersions[$machine_name]['versions'];
           // For each version of this library, check if it is supported
           foreach ($libraryList as $library) {
-            $major_supported = $minor_supported = $patch_supported = false;
-            foreach ($minimumVersions as $minimumVersion) {
-              // A library is supported if:
-              // --- major is higher than any minimumversion
-              // --- minor is higher than any minimumversion for a given major
-              // --- major and minor equals and patch is >= supported
-              $major_supported |= ($library->major_version > $minimumVersion['major']);
-              
-              if($library->major_version == $minimumVersion['major']) {
-                $minor_supported |= ($library->minor_version > $minimumVersion['minor']);
-              }
-              
-              if($library->major_version == $minimumVersion['major'] && 
-                 $library->minor_version == $minimumVersion['minor']) {
-                $patch_supported |= ($library->patch_version >= $minimumVersion['patch']);
-              }
-            }
             
-            if (!($patch_supported || $minor_supported || $major_supported)) {
+            // Get usage
+            $usage = $this->h5pF->getLibraryUsage($library->id);
+            
+            if ($usage['content'] !== 0 && !self::isLibraryVersionSupported($library, $minimumVersions)) {
               // Current version of this library is not supported
               $unsupportedLibraries[] = array (
                 'name' => $machine_name,
                 'downloadUrl' => $minimumLibraryVersions[$machine_name]['downloadUrl'],
+                'usage' => $usage['content'],
                 'currentVersion' => array (
                   'major' => $library->major_version,
                   'minor' => $library->minor_version,
@@ -1871,12 +1869,37 @@ class H5PCore {
         }
       }
       
-      if (!empty($unsupportedLibraries)) {
-        return $unsupportedLibraries;
+      $this->h5pF->setUnsupportedLibraries(empty($unsupportedLibraries) ? NULL : $unsupportedLibraries);
+    }
+  }
+  
+  /**
+   * Check if a specific version of a library is supported
+   * 
+   * @param object library
+   * @param array An array containing versions
+   * @return boolean TRUE if supported, otherwise FALSE
+   */
+  private static function isLibraryVersionSupported ($library, $minimumVersions) {
+    $major_supported = $minor_supported = $patch_supported = false;
+    foreach ($minimumVersions as $minimumVersion) {
+      // A library is supported if:
+      // --- major is higher than any minimumversion
+      // --- minor is higher than any minimumversion for a given major
+      // --- major and minor equals and patch is >= supported
+      $major_supported |= ($library->major_version > $minimumVersion['major']);
+    
+      if ($library->major_version == $minimumVersion['major']) {
+        $minor_supported |= ($library->minor_version > $minimumVersion['minor']);
+      }
+    
+      if ($library->major_version == $minimumVersion['major'] &&
+          $library->minor_version == $minimumVersion['minor']) {
+        $patch_supported |= ($library->patch_version >= $minimumVersion['patch']);
       }
     }
     
-    return NULL;
+    return ($patch_supported || $minor_supported || $major_supported);
   }
   
   /**
@@ -1892,6 +1915,7 @@ class H5PCore {
     foreach ($libraries as $library) {
       $downloadUrl = $library['downloadUrl'];
       $libraryName = $library['name'];
+      $usage = $library['usage'];
       $currentVersion = $library['currentVersion']['major'] . '.' . $library['currentVersion']['minor'] .'.' . $library['currentVersion']['patch'];
       $minimumVersions = '';
       $prefix = '';
@@ -1900,7 +1924,7 @@ class H5PCore {
         $prefix = ' or ';
       }
       
-      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
+      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> - $usage instances found (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
     }
     
     $html .= '</ul><span><br>These libraries may cause problems on this site. To update, do the following: <ol><li>Take a database backup</li><li>Download the latest version of each library from h5p.org</li><li>Upload these libraries using the <a href="'. $this->h5pF->getAdminUrl() .'">library admin page</a></li><li>Push the upgrade button for upgradable libraries if needed</li></ol></span><a href="http://h5p.org/support/unsupported-library-versions">Read more</a></div>';

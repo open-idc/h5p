@@ -62,13 +62,17 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
   
   /**
-   * Implementation of validateLibrarySupport
+   * Implementation of getUnsupportedLibraries
    */
-  public function validateLibrarySupport($force = FALSE) {
-    if ($force || variable_get('h5p_unsupported_libraries') !== NULL) {
-      $core = _h5p_get_instance('core');
-      variable_set('h5p_unsupported_libraries', $core->validateLibrarySupport());
-    }
+  public function getUnsupportedLibraries() {
+    return variable_get('h5p_unsupported_libraries');
+  }
+  
+  /**
+   * Implementation of setUnsupportedLibraries
+   */
+  public function setUnsupportedLibraries($libraries) {
+    variable_set('h5p_unsupported_libraries', $libraries);
   }
   
   /**

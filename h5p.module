@@ -468,7 +468,8 @@ function h5p_view($node, $view_mode = 'full') {
   }
   
   // Check if any unsupported libraries. Only users which may update this node will get the warning message
-  if (($unsupported_libraries = variable_get('h5p_unsupported_libraries', NULL)) !== NULL && node_access('update', $node)) {
+  $unsupported_libraries = variable_get('h5p_unsupported_libraries');
+  if ($unsupported_libraries !== NULL && node_access('update', $node)) {
     $core = _h5p_get_instance('core');
     drupal_set_message($core->createMarkupForUnsupportedLibraryList($unsupported_libraries), 'warning');
   }
