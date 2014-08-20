@@ -795,13 +795,13 @@ function _h5p_get_instance($type) {
     $development_mode = H5PDevelopment::MODE_NONE;
 //    if (variable_get('h5p_content_dev_mode', '0') === 1) {
 //      $development_mode |= H5PDevelopment::MODE_CONTENT;
-//      drupal_set_message(t('H5P content development mode is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/settings/h5p'))), 'warning', FALSE);
+//      drupal_set_message(t('H5P content development mode is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/config/system/h5p'))), 'warning', FALSE);
 //    }
     if (variable_get('h5p_library_development', 0) === 1) {
       $development_mode |= H5PDevelopment::MODE_LIBRARY;
       $preprocess_css_or_js = variable_get('preprocess_css', 0) === '1' || variable_get('preprocess_js', 0) === '1';
       
-      $message = t('H5P library development directory is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/settings/h5p')));
+      $message = t('H5P library development directory is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/config/system/h5p')));
       
       if ($preprocess_css_or_js) {
         $message .= '<br/>' . t('Preprocessing of css and/or js files is enabled. This is not supported when using the development directory option. Please disable preprocessing, and clear the cache');
