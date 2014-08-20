@@ -10,6 +10,17 @@
 define('H5P_VIEWS_DIR', drupal_get_path('module', 'h5p') . '/views');
 
 /**
+ * Implements hook_init()
+ */
+function h5p_init() {
+  if (path_is_admin(current_path()) && user_access('access administration pages')) {
+    $core = _h5p_get_instance('core');
+    $core->validateLibrarySupport();
+    _h5p_display_unsupported_libraries();
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function h5p_menu() {
@@ -468,10 +479,8 @@ function h5p_view($node, $view_mode = 'full') {
   }
   
   // Check if any unsupported libraries. Only users which may update this node will get the warning message
-  $unsupported_libraries = variable_get('h5p_unsupported_libraries');
-  if ($unsupported_libraries !== NULL && node_access('update', $node)) {
-    $core = _h5p_get_instance('core');
-    drupal_set_message($core->createMarkupForUnsupportedLibraryList($unsupported_libraries), 'warning');
+  if (node_access('update', $node)) {
+    _h5p_display_unsupported_libraries();
   }
 
   $node->content['h5p'] = array(
@@ -480,6 +489,18 @@ function h5p_view($node, $view_mode = 'full') {
   );
 
   return $node;
+}
+
+/**
+ * If unsupported libraries, display a message
+ */
+function _h5p_display_unsupported_libraries() {
+  // Check if any unsupported libraries. Only users which may update this node will get the warning message
+  $unsupported_libraries = variable_get('h5p_unsupported_libraries');
+  if ($unsupported_libraries !== NULL) {
+    $core = _h5p_get_instance('core');
+    drupal_set_message($core->createMarkupForUnsupportedLibraryList($unsupported_libraries), 'warning');
+  }
 }
 
 /**
