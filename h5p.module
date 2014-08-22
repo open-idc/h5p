@@ -16,7 +16,7 @@ function h5p_init() {
   if (path_is_admin(current_path()) && empty($_POST) && user_access('access administration pages')) {
     $core = _h5p_get_instance('core');
     $core->validateLibrarySupport();
-    _h5p_display_unsupported_libraries();
+    _h5p_display_unsupported_libraries(arg(2) === 'h5p');
   }
 }
 
@@ -500,12 +500,23 @@ function h5p_view($node, $view_mode = 'full') {
 /**
  * If unsupported libraries, display a message
  */
-function _h5p_display_unsupported_libraries() {
+function _h5p_display_unsupported_libraries($display_details = FALSE) {
   // Check if any unsupported libraries. Only users which may update this node will get the warning message
   $unsupported_libraries = variable_get('h5p_unsupported_libraries');
   if ($unsupported_libraries !== NULL) {
-    $core = _h5p_get_instance('core');
-    drupal_set_message($core->createMarkupForUnsupportedLibraryList($unsupported_libraries), 'warning', FALSE);
+    
+    if ($display_details) {
+      $core = _h5p_get_instance('core');
+      $message = $core->createMarkupForUnsupportedLibraryList($unsupported_libraries);
+    }
+    else {
+      $message = t('You have %num_libs H5P libraries with versions not supported anymore. Please upgrade all H5P libraries <a href="@url">here</a>', array(
+          '%num_libs' => sizeof($unsupported_libraries),
+          '@url' => url('admin/content/h5p/libraries/upgrade-all'))
+      );
+    }
+    
+    drupal_set_message($message, 'warning', FALSE);
   }
 }
 

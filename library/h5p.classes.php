@@ -1950,7 +1950,7 @@ class H5PCore {
       $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
     }
     
-    $html .= '</ul><span><br>These libraries may cause problems on this site. To update, do the following: <ol><li>Take a database backup</li><li>Download the latest version of each library from h5p.org</li><li>Upload these libraries using the <a href="'. $this->h5pF->getAdminUrl() .'">library admin page</a></li><li>Push the upgrade button for upgradable libraries if needed</li></ol></span><a href="http://h5p.org/support/unsupported-library-versions">Read more</a></div>';
+    $html .= '</ul><span><br>These libraries may cause problems on this site.</div>';
     return $html;
   }
 }
