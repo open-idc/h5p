@@ -76,7 +76,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
   
   /**
-   * 
+   * Implements getAdminUrl
    */
   public function getAdminUrl() {
     return url('admin/content/h5p');
@@ -151,7 +151,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = :id', array(':id' => $libraryId))->fetchField());
     
-    $usage['libraries'] = intval(db_query('SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = :id', array(':id' => $libraryId))->fetchField());
+    $usage['libraries'] = intval(db_query("SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE dependency_type != 'editor' AND required_library_id = :id", array(':id' => $libraryId))->fetchField());
     
     return $usage;
   }
@@ -267,7 +267,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements deleteLibrary. Will delete a library's data both in the database and file system
    */
-  public function deleteLibrary($libraryId) {    
+  public function deleteLibrary($libraryId) {
     $library = db_query("SELECT * FROM {h5p_libraries} WHERE library_id = :id", array(':id' => $libraryId))->fetchObject();
     
     // Delete files
