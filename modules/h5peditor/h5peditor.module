@@ -370,7 +370,7 @@ function h5peditor_get_source_node($node) {
 }
 
 /**
- * Implements of hook_field_extra_fields().
+ * Implements hook_field_extra_fields().
  */
 function h5peditor_field_extra_fields() {
   $extra['node']['h5p_content'] = array(

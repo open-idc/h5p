@@ -76,7 +76,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
   
   /**
-   * 
+   * Implements getAdminUrl
    */
   public function getAdminUrl() {
     return url('admin/content/h5p');
@@ -267,7 +267,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements deleteLibrary. Will delete a library's data both in the database and file system
    */
-  public function deleteLibrary($libraryId) {    
+  public function deleteLibrary($libraryId) {
     $library = db_query("SELECT * FROM {h5p_libraries} WHERE library_id = :id", array(':id' => $libraryId))->fetchObject();
     
     // Delete files

@@ -19,7 +19,7 @@ function h5p_admin_settings($form, &$form_state) {
     '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
     '#disabled' => $h5p_nodes_exists,
   );
-
+  
   $form['h5p_export'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable export of all H5P content'),
@@ -319,7 +319,7 @@ function h5p_library_upload_form_validate($form, &$form_state) {
   $temporary_file_path = 'public://' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-');
   file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
-  if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {    
+  if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
     // These has to be set instead of sending parameteres to the validation function.
     $_SESSION['h5p_upload'] = drupal_realpath($file->uri);
     $_SESSION['h5p_upload_folder'] = drupal_realpath($temporary_file_path);

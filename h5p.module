@@ -40,7 +40,7 @@ function h5p_menu() {
     'description' => 'List, delete and get detailed info on the installed H5P libraries',
     'page callback' => 'h5p_library_list',
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK, 
+    'type' => MENU_LOCAL_TASK,
     'file' => 'h5p.admin.inc',
   );
   $items['admin/content/h5p/libraries/%'] = array(
@@ -84,7 +84,7 @@ function h5p_menu() {
     'title' => 'H5P Rebuild Content Cache',
     'page callback' => 'h5p_rebuild_cache',
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK, 
+    'type' => MENU_LOCAL_TASK,
     'file' => 'h5p.admin.inc',
   );
   
@@ -172,7 +172,7 @@ function h5p_embed($node) {
     'embedType' => 'div',
   );
   $core = _h5p_get_instance('core');
-  // Important! Params must be filtered before content dependencies are loaded. 
+  // Important! Params must be filtered before content dependencies are loaded.
   $params = $core->filterParameters($content);
   
   $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
@@ -593,7 +593,7 @@ function h5p_add_core_assets() {
     foreach (H5PCore::$styles as $style) {
       $css = $module_path . '/library/' . $style;
       drupal_add_css($css);
-      $assets['css'][] = $css . $cache_buster; 
+      $assets['css'][] = $css . $cache_buster;
     }
     
     $js = $module_path . '/js/h5pintegration.js';
