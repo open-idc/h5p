@@ -1586,7 +1586,19 @@ class H5PCore {
   }
   
   /**
-   * Recusive. Goes through the dependency tree for the given library and 
+   * Deletes a library
+   * 
+   * @param unknown $libraryId
+   */
+  public function deleteLibrary($libraryId) {
+    $this->h5pF->deleteLibrary($libraryId);
+    
+    // Force update of unsupported libraries list:
+    $this->validateLibrarySupport(TRUE);
+  }
+  
+  /**
+   * Recursive. Goes through the dependency tree for the given library and 
    * adds all the dependencies to the given array in a flat format.
    * 
    * @param array $librariesUsed Flat list of all dependencies.
@@ -1847,16 +1859,11 @@ class H5PCore {
           $minimumVersions = $minimumLibraryVersions[$machine_name]['versions'];
           // For each version of this library, check if it is supported
           foreach ($libraryList as $library) {
-            
-            // Get usage
-            $usage = $this->h5pF->getLibraryUsage($library->id);
-            
-            if ($usage['content'] !== 0 && !self::isLibraryVersionSupported($library, $minimumVersions)) {
+            if (!self::isLibraryVersionSupported($library, $minimumVersions)) {
               // Current version of this library is not supported
               $unsupportedLibraries[] = array (
                 'name' => $machine_name,
                 'downloadUrl' => $minimumLibraryVersions[$machine_name]['downloadUrl'],
-                'usage' => $usage['content'],
                 'currentVersion' => array (
                   'major' => $library->major_version,
                   'minor' => $library->minor_version,
@@ -1915,7 +1922,6 @@ class H5PCore {
     foreach ($libraries as $library) {
       $downloadUrl = $library['downloadUrl'];
       $libraryName = $library['name'];
-      $usage = $library['usage'];
       $currentVersion = $library['currentVersion']['major'] . '.' . $library['currentVersion']['minor'] .'.' . $library['currentVersion']['patch'];
       $minimumVersions = '';
       $prefix = '';
@@ -1924,7 +1930,7 @@ class H5PCore {
         $prefix = ' or ';
       }
       
-      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> - $usage instance(s) found (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
+      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
     }
     
     $html .= '</ul><span><br>These libraries may cause problems on this site. To update, do the following: <ol><li>Take a database backup</li><li>Download the latest version of each library from h5p.org</li><li>Upload these libraries using the <a href="'. $this->h5pF->getAdminUrl() .'">library admin page</a></li><li>Push the upgrade button for upgradable libraries if needed</li></ol></span><a href="http://h5p.org/support/unsupported-library-versions">Read more</a></div>';

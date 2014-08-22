@@ -499,7 +499,7 @@ function _h5p_display_unsupported_libraries() {
   $unsupported_libraries = variable_get('h5p_unsupported_libraries');
   if ($unsupported_libraries !== NULL) {
     $core = _h5p_get_instance('core');
-    drupal_set_message($core->createMarkupForUnsupportedLibraryList($unsupported_libraries), 'warning');
+    drupal_set_message($core->createMarkupForUnsupportedLibraryList($unsupported_libraries), 'warning', FALSE);
   }
 }
 
@@ -941,7 +941,7 @@ function h5p_views_api() {
  */
 function h5p_library_delete_form_submit($form, &$form_state) {
   // Do the actual deletion:
-  _h5p_get_instance('interface')->deleteLibrary($form_state['values']['library_id']);
+  _h5p_get_instance('core')->deleteLibrary($form_state['values']['library_id']);
 }
 
 /**
