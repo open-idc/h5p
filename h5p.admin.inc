@@ -121,30 +121,26 @@ function h5p_library_list() {
   
   $core = _h5p_get_instance('core');
   $notCached = $core->h5pF->getNotCached();
-
-  // Get the libraries
-  $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
-  $libraries = array();
-  foreach ($res as $library) {
-    // Get library usage
-    $library->usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
-    
-    // Group different versions of this library
-    $libraries[$library->name][] = $library;
-  }
+  $libraries = $core->h5pF->loadLibraries();
   
   // Add settings for each library
   $settings = array();
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
-      $upgrades = $core->getUpgrades($library, $versions);
+      $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
+      if ($library->runnable) {
+        $upgradesUrl = empty($core->getUpgrades($library, $versions)) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+      }
+      else {
+        $upgradesUrl = NULL;
+      }
       
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
         'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $library->usage['content'],
-        'numLibraryDependencies' => $library->usage['libraries'],
-        'upgradeUrl' => empty($upgrades) ? NULL : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination())),
+        'numContentDependencies' => $usage['content'],
+        'numLibraryDependencies' => $usage['libraries'],
+        'upgradeUrl' => $upgradesUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
