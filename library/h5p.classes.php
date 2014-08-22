@@ -1111,7 +1111,7 @@ class H5PStorage {
     }
     
     // Update supported library list if neccessary:
-    $this->h5pC->validateLibrarySupport();
+    $this->h5pC->validateLibrarySupport(TRUE);
 
     return $library_saved;
   }

@@ -13,7 +13,7 @@ define('H5P_VIEWS_DIR', drupal_get_path('module', 'h5p') . '/views');
  * Implements hook_init()
  */
 function h5p_init() {
-  if (path_is_admin(current_path()) && user_access('access administration pages')) {
+  if (path_is_admin(current_path()) && empty($_POST) && user_access('access administration pages')) {
     $core = _h5p_get_instance('core');
     $core->validateLibrarySupport();
     _h5p_display_unsupported_libraries();
