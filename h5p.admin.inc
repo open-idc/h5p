@@ -130,10 +130,10 @@ function h5p_library_list() {
       $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
-        $upgradesUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+        $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
       }
       else {
-        $upgradesUrl = NULL;
+        $upgradeUrl = NULL;
       }
       
       $settings['h5p']['libraries']['listData'][] = array(
@@ -141,7 +141,7 @@ function h5p_library_list() {
         'numContent' => $core->h5pF->getNumContent($library->id),
         'numContentDependencies' => $usage['content'],
         'numLibraryDependencies' => $usage['libraries'],
-        'upgradeUrl' => $upgradesUrl,
+        'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
