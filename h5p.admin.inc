@@ -128,7 +128,6 @@ function h5p_library_list() {
   foreach ($res as $library) {
     // Get library usage
     $library->usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
-    
     // Group different versions of this library
     $libraries[$library->name][] = $library;
   }
@@ -168,11 +167,13 @@ function h5p_library_list() {
   _h5p_admin_add_generic_css_and_js($module_path);
   drupal_add_js($module_path . '/library/js/h5p-library-list.js');
   
+  $upgrade_all_libraries = '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
+  
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content. 
   $upload_form = drupal_get_form('h5p_library_upload_form');
-  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . drupal_render($upload_form) . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3><div id="h5p-admin-container"></div>';
+  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . drupal_render($upload_form) . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>' . $upgrade_all_libraries . '<div id="h5p-admin-container"></div>';
 }
 
 /**
@@ -311,6 +312,10 @@ function h5p_library_upload_form($form_state) {
  * Form validation.
  */
 function h5p_library_upload_form_validate($form, &$form_state) {
+  h5p_validate_h5p_file_upload($form, $form_state);
+}
+
+function h5p_validate_h5p_file_upload($form, &$form_state){
   $validators = array(
     'file_validate_extensions' => array('h5p'),
   );
@@ -318,12 +323,12 @@ function h5p_library_upload_form_validate($form, &$form_state) {
   // during node preview.
   $temporary_file_path = 'public://' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-');
   file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
-
+  
   if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
     // These has to be set instead of sending parameteres to the validation function.
     $_SESSION['h5p_upload'] = drupal_realpath($file->uri);
     $_SESSION['h5p_upload_folder'] = drupal_realpath($temporary_file_path);
-    
+  
     $validator = _h5p_get_instance('validator');
     if ($validator->isValidPackage(TRUE) === FALSE) {
       form_set_error('h5p', t('The uploaded file was not a valid h5p package'));
@@ -563,4 +568,61 @@ function h5p_content_upgrade_library($name, $major, $minor) {
   drupal_add_http_header('Cache-Control', 'no-cache');
   drupal_add_http_header('Content-type', 'application/json');
   print json_encode($library);
+}
+
+/**
+ * Selective upgrade off all installed libraries (with upgrades.h5p as input)
+ */
+function h5p_upgrade_all_libraries() {
+  // Create form
+  return drupal_get_form('h5p_all_libraries_upgrade_upload_form');
+}
+
+/**
+ * Create upload all libraries form
+ */
+function h5p_all_libraries_upgrade_upload_form($form_state) {
+  $form['#attributes'] = array(
+    'enctype' => 'multipart/form-data',
+    'class' => 'h5p-admin-upload-libraries-form',
+  );
+
+  // TODO - support translation
+  $form['info-message'] = array(
+    '#markup' => 
+      '<div>
+        To upgrade all installed libraries, do the following:
+        <ol>
+          <li>Download <a href="http://h5p.org/upgrades.h5p">upgrades.h5p</a>
+          <li>Click the <em>Select file</em> button below, and select the downloaded upgrades.h5p file
+          <li>Click the <em>Upload</em> button 
+        </ol> 
+      </div>',
+  );
+  
+  $form['h5p'] = array(
+    '#title' => t('H5P'),
+    '#type' => 'file',
+    '#description' => t('Upload the upgrades.h5p (downloaded from h5p.org) here'),
+  );
+
+  $form['submit'] = array(
+    '#value' => t('Upload'),
+    '#type' => 'submit',
+  );
+
+  return $form;
+}
+
+function h5p_all_libraries_upgrade_upload_form_validate($form, &$form_state) {
+  h5p_validate_h5p_file_upload($form, $form_state);
+}
+
+function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
+  // Save package
+  $h5p_core = _h5p_get_instance('storage');
+  $h5p_core->savePackage(NULL, NULL, TRUE, TRUE);
+  
+  // Maintain session variables.
+  unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
 }

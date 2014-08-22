@@ -415,7 +415,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadLibrary
    */
   public function loadLibrary($machineName, $majorVersion, $minorVersion) {
-    $library = H5PCore::snakeToCamel(db_query(
+    $library = db_query(
         "SELECT library_id,
                 machine_name,
                 title,
@@ -438,7 +438,12 @@ class H5PDrupal implements H5PFrameworkInterface {
           ':major_version' => $majorVersion, 
           ':minor_version' => $minorVersion
         ))
-        ->fetchObject());
+        ->fetchObject();
+    
+    if ($library === FALSE) {
+      return FALSE;
+    }
+    $library = H5PCore::snakeToCamel($library);
     
     $result = db_query(
       "SELECT hl.machine_name AS name,

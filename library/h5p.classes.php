@@ -543,11 +543,11 @@ class H5PValidator {
         
         if ($libraryH5PData !== FALSE) {
           // Library's directory name and machineName in library.json must match
-          if ($libraryH5PData['machineName'] !== $file) {
-            $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName in library.json. (Directory: %directoryName , machineName: %machineName)', array('%directoryName' => $file, '%machineName' => $libraryH5PData['machineName'])));
-            $valid = FALSE;
-            continue;
-          }
+          //if ($libraryH5PData['machineName'] !== $file) {
+          //  $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName in library.json. (Directory: %directoryName , machineName: %machineName)', array('%directoryName' => $file, '%machineName' => $libraryH5PData['machineName'])));
+          //  $valid = FALSE;
+          //  continue;
+          //}
           $libraries[$libraryH5PData['machineName']] = $libraryH5PData;
         }
         else {
@@ -1019,13 +1019,23 @@ class H5PStorage {
    *  TRUE if one or more libraries were updated
    *  FALSE otherwise
    */
-  public function savePackage($content = NULL, $contentMainId = NULL, $skipContent = FALSE) {
+  public function savePackage($content = NULL, $contentMainId = NULL, $skipContent = FALSE, $upgradeOnly = FALSE) {
     // Save the libraries we processed during validation
     $library_saved = FALSE;
+    $upgradedLibsCount = 0;
     $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
       $libraryId = $this->h5pF->getLibraryId($key, $library['majorVersion'], $library['minorVersion']);
       $library['saveDependencies'] = TRUE;
+      $library['skip'] = FALSE;
+      if ($upgradeOnly) {
+        // Is this library already installed?
+        if ($this->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']) === FALSE) {
+          $library['skip'] = TRUE;
+          continue;
+        }
+      }
+      
       if (!$libraryId) {
         $new = TRUE;
       }
@@ -1060,7 +1070,7 @@ class H5PStorage {
     }
 
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
-      if ($library['saveDependencies']) {
+      if ($library['saveDependencies'] && !$library['skip']) {
         $this->h5pF->deleteLibraryDependencies($library['libraryId']);
         if (isset($library['preloadedDependencies'])) {
           $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
@@ -1074,6 +1084,8 @@ class H5PStorage {
         
         // Make sure libraries dependencies, parameter filtering and export files gets regenerated for all content who uses this library.
         $this->h5pF->invalidateContentCache($library['libraryId']);
+        
+        $upgradedLibsCount++;
       }
     }
     
@@ -1112,6 +1124,11 @@ class H5PStorage {
     
     // Update supported library list if neccessary:
     $this->h5pC->validateLibrarySupport(TRUE);
+    
+    if ($upgradeOnly) {
+      // TODO - support translation
+      $this->h5pF->setInfoMessage($upgradedLibsCount . ' libraries were upgraded!');
+    }
 
     return $library_saved;
   }

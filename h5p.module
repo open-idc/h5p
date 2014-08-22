@@ -79,7 +79,13 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
-  
+  $items['admin/content/h5p/libraries/upgrade-all'] = array(
+      'title' => 'Upgrade All H5P Libraries',
+      'page callback' => 'h5p_upgrade_all_libraries',
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'h5p.admin.inc',
+  );
   $items['admin/content/h5p/rebuild-cache'] = array(
     'title' => 'H5P Rebuild Content Cache',
     'page callback' => 'h5p_rebuild_cache',
