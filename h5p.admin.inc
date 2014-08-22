@@ -129,7 +129,8 @@ function h5p_library_list() {
     foreach ($versions as $library) {
       $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
       if ($library->runnable) {
-        $upgradesUrl = empty($core->getUpgrades($library, $versions)) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+        $upgrades = $core->getUpgrades($library, $versions);
+        $upgradesUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
       }
       else {
         $upgradesUrl = NULL;
