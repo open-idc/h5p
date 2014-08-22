@@ -591,7 +591,7 @@ function h5p_all_libraries_upgrade_upload_form($form_state) {
       '<div>
         To upgrade all installed libraries, do the following:
         <ol>
-          <li>Download <a href="http://h5p.org/upgrades.h5p">upgrades.h5p</a>
+          <li>Download <a href="http://h5p.org/sites/default/files/upgrades.h5p">upgrades.h5p</a>
           <li>Click the <em>Select file</em> button below, and select the downloaded upgrades.h5p file
           <li>Click the <em>Upload</em> button 
         </ol> 
