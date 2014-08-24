@@ -505,16 +505,16 @@ function _h5p_display_unsupported_libraries($display_details = FALSE) {
   $unsupported_libraries = variable_get('h5p_unsupported_libraries');
   if ($unsupported_libraries !== NULL) {
     
+    
     if ($display_details) {
       $core = _h5p_get_instance('core');
       $message = $core->createMarkupForUnsupportedLibraryList($unsupported_libraries);
     }
     else {
-      $message = t('You have %num_libs H5P libraries with versions not supported anymore. Please upgrade all H5P libraries <a href="@url">here</a>', array(
-          '%num_libs' => sizeof($unsupported_libraries),
-          '@url' => url('admin/content/h5p/libraries/upgrade-all'))
-      );
+      $message = t('You have %num_libs H5P libraries with versions not supported anymore. ', array('%num_libs' => sizeof($unsupported_libraries)));
     }
+    
+    $message .= t('Please upgrade all H5P libraries <a href="@url">here</a>', array('@url' => url('admin/content/h5p/libraries/upgrade-all')));
     
     drupal_set_message($message, 'warning', FALSE);
   }

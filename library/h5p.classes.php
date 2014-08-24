@@ -548,7 +548,8 @@ class H5PValidator {
           //  $valid = FALSE;
           //  continue;
           //}
-          $libraries[$libraryH5PData['machineName']] = $libraryH5PData;
+          $libraryH5PData['uploadDirectory'] = $filePath;
+          $libraries[H5PCore::getNameAndVersion($libraryH5PData)] = $libraryH5PData;
         }
         else {
           $valid = FALSE;
@@ -713,13 +714,8 @@ class H5PValidator {
   private function getMissingDependencies($dependencies, $libraries) {
     $missing = array();
     foreach ($dependencies as $dependency) {
-      if (isset($libraries[$dependency['machineName']])) {
-        if (!$this->h5pC->isSameVersion($libraries[$dependency['machineName']], $dependency)) {
-          $missing[$dependency['machineName']] = $dependency;
-        }
-      }
-      else {
-        $missing[$dependency['machineName']] = $dependency;
+      if (!isset($libraries[H5PCore::getNameAndVersion($dependency)])) {
+        $missing[H5PCore::getNameAndVersion($dependency)] = $dependency;
       }
     }
     return $missing;
@@ -1024,17 +1020,38 @@ class H5PStorage {
     $library_saved = FALSE;
     $upgradedLibsCount = 0;
     $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
-    foreach ($this->h5pC->librariesJsonData as $key => &$library) {
-      $libraryId = $this->h5pF->getLibraryId($key, $library['majorVersion'], $library['minorVersion']);
-      $library['saveDependencies'] = TRUE;
-      $library['skip'] = FALSE;
-      if ($upgradeOnly) {
+    
+    // If upgrading we need to add versions with the same minor/major, 
+    // and all dependencies (which may be new ones)
+    if ($upgradeOnly) {
+      $dependencies = array();
+      foreach ($this->h5pC->librariesJsonData as &$library) {
         // Is this library already installed?
-        if ($this->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']) === FALSE) {
-          $library['skip'] = TRUE;
-          continue;
+        $library['skip'] = TRUE;
+        if ($this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']) !== FALSE) {
+          $library['skip'] = FALSE;
+          if (isset($library['preloadedDependencies'])) {
+            $dependencies = array_merge($dependencies, $library['preloadedDependencies']);
+          }
         }
       }
+      
+      // Need to add all new dependencies introduced for each library allready installed
+      foreach ($dependencies as $dependency) {
+        $library = &$this->h5pC->librariesJsonData[H5PCore::getNameAndVersion($dependency)];
+        if ($library) {
+          $library['skip'] = FALSE;
+        }
+      }
+    }
+    
+    foreach ($this->h5pC->librariesJsonData as &$library) {
+      if (isset($library['skip']) && $library['skip'] === TRUE) {
+        continue;
+      }
+      
+      $libraryId = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      $library['saveDependencies'] = TRUE;
       
       if (!$libraryId) {
         $new = TRUE;
@@ -1057,20 +1074,19 @@ class H5PStorage {
 
       $this->h5pF->saveLibraryData($library, $new);
 
-      $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
       $libraries_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries';
       if (!is_dir($libraries_path)) {
         mkdir($libraries_path, 0777, true);
       }
       $destination_path = $libraries_path . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE);
       H5PCore::deleteFileTree($destination_path);
-      rename($current_path, $destination_path);
+      rename($library['uploadDirectory'], $destination_path);
 
       $library_saved = TRUE;
     }
 
-    foreach ($this->h5pC->librariesJsonData as $key => &$library) {
-      if ($library['saveDependencies'] && !$library['skip']) {
+    foreach ($this->h5pC->librariesJsonData as &$library) {
+      if (!(isset($library['skip']) && $library['skip']) && $library['saveDependencies']) {
         $this->h5pF->deleteLibraryDependencies($library['libraryId']);
         if (isset($library['preloadedDependencies'])) {
           $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
@@ -1670,6 +1686,9 @@ class H5PCore {
    *  FALSE otherwise
    */
   public function isSameVersion($library, $dependency) {
+    if ($library['machineName'] != $dependency['machineName']) {
+      return FALSE;
+    }
     if ($library['majorVersion'] != $dependency['majorVersion']) {
       return FALSE;
     }
@@ -1798,6 +1817,22 @@ class H5PCore {
   }
   
   /**
+   * Returns a libraries name, major and minorversion. Eg:
+   * H5P.Text-1.0
+   * 
+   * @param mixed $library
+   * @return string <Name>-<Major>.<Minor>
+   */
+  public static function getNameAndVersion($library) {
+    if (is_array($library)) {
+      return $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
+    }
+    else {
+      return $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version;
+    }
+  }
+  
+  /**
    * Detemine which versions content with the given library can be upgraded to.
    * 
    * @param object $library
@@ -1879,14 +1914,13 @@ class H5PCore {
             if (!self::isLibraryVersionSupported($library, $minimumVersions)) {
               // Current version of this library is not supported
               $unsupportedLibraries[] = array (
-                'name' => $machine_name,
+                'name' => $library->title,
                 'downloadUrl' => $minimumLibraryVersions[$machine_name]['downloadUrl'],
                 'currentVersion' => array (
                   'major' => $library->major_version,
                   'minor' => $library->minor_version,
                   'patch' => $library->patch_version,
-                ),
-                'minimumVersions' => $minimumVersions,
+                )
               );
             }
           }
@@ -1940,14 +1974,7 @@ class H5PCore {
       $downloadUrl = $library['downloadUrl'];
       $libraryName = $library['name'];
       $currentVersion = $library['currentVersion']['major'] . '.' . $library['currentVersion']['minor'] .'.' . $library['currentVersion']['patch'];
-      $minimumVersions = '';
-      $prefix = '';
-      foreach ($library['minimumVersions'] as $version) {
-        $minimumVersions .= $prefix . $version['major'] . '.' . $version['minor'] . '.' . $version['patch'];
-        $prefix = ' or ';
-      }
-      
-      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
+      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> ($currentVersion)</li>";
     }
     
     $html .= '</ul><span><br>These libraries may cause problems on this site.</div>';
