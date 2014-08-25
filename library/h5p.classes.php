@@ -542,12 +542,20 @@ class H5PValidator {
         $libraryH5PData = $this->getLibraryData($file, $filePath, $tmpDir);
         
         if ($libraryH5PData !== FALSE) {
-          // Library's directory name and machineName in library.json must match
-          //if ($libraryH5PData['machineName'] !== $file) {
-          //  $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName in library.json. (Directory: %directoryName , machineName: %machineName)', array('%directoryName' => $file, '%machineName' => $libraryH5PData['machineName'])));
-          //  $valid = FALSE;
-          //  continue;
-          //}
+          // Library's directory name must be:
+          // - <machineName>
+          //     - or -
+          // - <machineName>-<majorVersion>.<minorVersion>
+          // where mcahineName, majorVersion and minorVersion is read from library.json
+          if ($libraryH5PData['machineName'] !== $file && H5PCore::libraryToString($libraryH5PData, TRUE) !== $file) {
+            $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName or machineName-majorVersion.minorVersion (from library.json). (Directory: %directoryName , machineName: %machineName, majorVersion: %majorVersion, minorVersion: %minorVersion)', array(
+                '%directoryName' => $file,
+                '%machineName' => $libraryH5PData['machineName'],
+                '%majorVersion' => $libraryH5PData['majorVersion'],
+                '%minorVersion' => $libraryH5PData['minorVersion'])));
+            $valid = FALSE;
+            continue;
+          }
           $libraryH5PData['uploadDirectory'] = $filePath;
           $libraries[H5PCore::libraryToString($libraryH5PData)] = $libraryH5PData;
         }
