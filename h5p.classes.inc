@@ -151,7 +151,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = :id', array(':id' => $libraryId))->fetchField());
     
-    $usage['libraries'] = intval(db_query("SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE dependency_type != 'editor' AND required_library_id = :id", array(':id' => $libraryId))->fetchField());
+    $usage['libraries'] = intval(db_query("SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = :id", array(':id' => $libraryId))->fetchField());
     
     return $usage;
   }
