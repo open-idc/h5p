@@ -1039,7 +1039,7 @@ class H5PStorage {
         if ($this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']) !== FALSE) {
           $library['skip'] = FALSE;
           if (isset($library['preloadedDependencies'])) {
-            $dependencies = array_merge($dependencies, $library['preloadedDependencies']);
+            $dependencies = array_merge($dependencies, $library['preloadedDependencies'], $library['editorDependencies']);
           }
         }
       }
@@ -1969,7 +1969,7 @@ class H5PCore {
       $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> ($currentVersion)</li>";
     }
     
-    $html .= '</ul><span><br>These libraries may cause problems on this site.</div>';
+    $html .= '</ul><span><br>These libraries may cause problems on this site. See <a href="http://h5p.org/releases/h5p-core-1.3">here</a> for more info</div>';
     return $html;
   }
 }
