@@ -165,7 +165,7 @@ function h5p_library_list() {
   _h5p_admin_add_generic_css_and_js($module_path);
   drupal_add_js($module_path . '/library/js/h5p-library-list.js');
   
-  $upgrade_all_libraries = '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
+  $upgrade_all_libraries = variable_get('h5p_unsupported_libraries', NULL) === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
   
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
