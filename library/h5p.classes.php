@@ -549,7 +549,7 @@ class H5PValidator {
           //  continue;
           //}
           $libraryH5PData['uploadDirectory'] = $filePath;
-          $libraries[H5PCore::getNameAndVersion($libraryH5PData)] = $libraryH5PData;
+          $libraries[H5PCore::libraryToString($libraryH5PData)] = $libraryH5PData;
         }
         else {
           $valid = FALSE;
@@ -714,8 +714,8 @@ class H5PValidator {
   private function getMissingDependencies($dependencies, $libraries) {
     $missing = array();
     foreach ($dependencies as $dependency) {
-      if (!isset($libraries[H5PCore::getNameAndVersion($dependency)])) {
-        $missing[H5PCore::getNameAndVersion($dependency)] = $dependency;
+      if (!isset($libraries[H5PCore::libraryToString($dependency)])) {
+        $missing[H5PCore::libraryToString($dependency)] = $dependency;
       }
     }
     return $missing;
@@ -1038,7 +1038,7 @@ class H5PStorage {
       
       // Need to add all new dependencies introduced for each library allready installed
       foreach ($dependencies as $dependency) {
-        $library = &$this->h5pC->librariesJsonData[H5PCore::getNameAndVersion($dependency)];
+        $library = &$this->h5pC->librariesJsonData[H5PCore::libraryToString($dependency)];
         if ($library) {
           $library['skip'] = FALSE;
         }
@@ -1814,22 +1814,6 @@ class H5PCore {
    */
   public static function libraryVersion($library) {
     return $library->major_version . '.' . $library->minor_version . '.' . $library->patch_version;
-  }
-  
-  /**
-   * Returns a libraries name, major and minorversion. Eg:
-   * H5P.Text-1.0
-   * 
-   * @param mixed $library
-   * @return string <Name>-<Major>.<Minor>
-   */
-  public static function getNameAndVersion($library) {
-    if (is_array($library)) {
-      return $library['machineName'] . '-' . $library['majorVersion'] . '.' . $library['minorVersion'];
-    }
-    else {
-      return $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version;
-    }
   }
   
   /**
