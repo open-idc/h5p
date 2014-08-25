@@ -90,7 +90,7 @@ function h5p_menu() {
     'title' => 'H5P Rebuild Content Cache',
     'page callback' => 'h5p_rebuild_cache',
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
   
