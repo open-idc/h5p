@@ -595,6 +595,8 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements cacheDel
    */
   public function cacheDel($group, $key = NULL) {
+    static $drupal_cache_cleared;
+    
     // Clear the given caches
     if ($key === NULL) {
       cache_clear_all('h5p:' . $group, 'cache', TRUE);
@@ -603,11 +605,13 @@ class H5PDrupal implements H5PFrameworkInterface {
       cache_clear_all('h5p:' . $group . ':' . $key, 'cache');
     }
   
-    if ($group === 'parameters') {
+    if ($group === 'parameters' && !$drupal_cache_cleared) {
       // Clear Drupal's JS & CSS caches.
       _drupal_flush_css_js();
       drupal_clear_js_cache();
       drupal_clear_css_cache();
+      
+      $drupal_cache_cleared = TRUE;
     }
   }
   
