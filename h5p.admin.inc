@@ -623,4 +623,7 @@ function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
   
   // Maintain session variables.
   unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
+  
+  // Redirect to libraries overview:
+  drupal_goto('admin/content/h5p');
 }
