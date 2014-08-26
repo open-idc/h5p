@@ -313,7 +313,7 @@ function h5p_library_upload_form_validate($form, &$form_state) {
   h5p_validate_h5p_file_upload($form, $form_state);
 }
 
-function h5p_validate_h5p_file_upload($form, &$form_state){
+function h5p_validate_h5p_file_upload($form, &$form_state, $upgradeOnly = FALSE){
   $validators = array(
     'file_validate_extensions' => array('h5p'),
   );
@@ -328,7 +328,7 @@ function h5p_validate_h5p_file_upload($form, &$form_state){
     $_SESSION['h5p_upload_folder'] = drupal_realpath($temporary_file_path);
   
     $validator = _h5p_get_instance('validator');
-    if ($validator->isValidPackage(TRUE) === FALSE) {
+    if ($validator->isValidPackage(TRUE, $upgradeOnly) === FALSE) {
       form_set_error('h5p', t('The uploaded file was not a valid h5p package'));
       // Maintain session variables.
       unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
@@ -613,7 +613,7 @@ function h5p_all_libraries_upgrade_upload_form($form_state) {
 }
 
 function h5p_all_libraries_upgrade_upload_form_validate($form, &$form_state) {
-  h5p_validate_h5p_file_upload($form, $form_state);
+  h5p_validate_h5p_file_upload($form, $form_state, TRUE);
 }
 
 function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
