@@ -80,11 +80,11 @@ function h5p_menu() {
     'file' => 'h5p.admin.inc',
   );
   $items['admin/content/h5p/libraries/upgrade-all'] = array(
-      'title' => 'Upgrade All H5P Libraries',
-      'page callback' => 'h5p_upgrade_all_libraries',
-      'access arguments' => array('administer site configuration'),
-      'type' => MENU_NORMAL_ITEM,
-      'file' => 'h5p.admin.inc',
+    'title' => 'Upgrade All H5P Libraries',
+    'page callback' => 'h5p_upgrade_all_libraries',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'h5p.admin.inc',
   );
   $items['admin/content/h5p/rebuild-cache'] = array(
     'title' => 'H5P Rebuild Content Cache',
@@ -504,8 +504,6 @@ function _h5p_display_unsupported_libraries($display_details = FALSE) {
   // Check if any unsupported libraries. Only users which may update this node will get the warning message
   $unsupported_libraries = variable_get('h5p_unsupported_libraries');
   if ($unsupported_libraries !== NULL) {
-    
-    
     if ($display_details) {
       $core = _h5p_get_instance('core');
       $message = $core->createMarkupForUnsupportedLibraryList($unsupported_libraries);
