@@ -250,6 +250,7 @@ function h5p_library_details($library_id) {
 }
 
 /**
+ * Display library delete page with form.
  * 
  * @param string $library_id
  */
@@ -267,6 +268,35 @@ function h5p_library_delete($library_id) {
     // May not delete this one
     return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
   }
+}
+
+/**
+ * Library delete form
+ */
+function h5p_library_delete_form($form, &$form_state, $library_id, $library_name) {
+  $form['library_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $library_id
+  );
+  
+  $form['info'] = array(
+    '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</div>'
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete')
+  );
+  
+  return $form;
+}
+
+/**
+ * Handle library delete submission.
+ */
+function h5p_library_delete_form_submit($form, &$form_state) {
+  // Do the actual deletion:
+  _h5p_get_instance('core')->deleteLibrary($form_state['values']['library_id']);
 }
 
 /**
