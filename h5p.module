@@ -71,6 +71,14 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
+  $items['admin/content/h5p/libraries/%/restrict'] = array(
+    'title' => 'H5P Library Restrict',
+    'page callback' => 'h5p_restrict_library_callback',
+    'page arguments' => array(4),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'h5p.admin.inc',
+  );
   $items['admin/content/h5p/upgrade/library/%/%/%'] = array(
     'title' => 'H5P Content Upgrade Library',
     'page callback' => 'h5p_content_upgrade_library',
@@ -281,6 +289,10 @@ function h5p_permission() {
     'access h5p results for own content' => array(
       'title' => t('Access h5p results for own content'),
       'description' => t('The user is allowed to see all results for content he has created. Available as a tab on each node.'),
+    ),
+    'create restricted h5p content types' => array(
+      'title' => t('Create restricted H5P content types'),
+      'description' => t('The user is allowed to create H5P content types that has been restricted in the library administration interface.'),
     ),
   );
 }

@@ -125,19 +125,33 @@ function h5p_library_list() {
   
   // Add settings for each library
   $settings = array();
+  $i = 0;
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
       $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
         $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+        
+        $restricted = ($library->restricted === '1' ? TRUE : FALSE);
+        $restricted_url = url('admin/content/h5p/libraries/' . $library->id . '/restrict', array(
+          'query' => array(
+            'token' => h5p_get_token('library_' . $i),
+            'token_id' => $i,
+            'restrict' => ($library->restricted === '1' ? 0 : 1)
+          )
+        ));
       }
       else {
         $upgradeUrl = NULL;
+        $restricted = NULL;
+        $restricted_url = NULL;
       }
       
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
+        'restricted' => $restricted,
+        'restrictedUrl' => $restricted_url,
         'numContent' => $core->h5pF->getNumContent($library->id),
         'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
         'numLibraryDependencies' => $usage['libraries'],
@@ -145,11 +159,13 @@ function h5p_library_list() {
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
+      
+      $i++;
     }
   }
 
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Restricted'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')); 
   
   // Make it possible to rebuild all caches.
   if ($notCached) {
@@ -656,4 +672,31 @@ function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
   
   // Redirect to libraries overview:
   drupal_goto('admin/content/h5p');
+}
+
+function h5p_restrict_library_callback($library_id) {
+  $restricted = filter_input(INPUT_GET, 'restrict');
+  $restrict = ($restricted === '1');
+
+  $token_id = filter_input(INPUT_GET, 'token_id');
+  if (!h5p_verify_token('library_' . $token_id, filter_input(INPUT_GET, 'token')) || (!$restrict && $restricted !== '0')) {
+    drupal_access_denied();
+  }
+
+  db_update('h5p_libraries')
+    ->fields(array(
+      'restricted' => $restricted
+    ))
+    ->condition('library_id', $library_id)
+    ->execute();
+  
+  print json_encode(array(
+    'url' => url('admin/content/h5p/libraries/' . $library_id . '/restrict', array(
+      'query' => array(
+        'token' => h5p_get_token('library_' . $token_id),
+        'token_id' => $token_id,
+        'restrict' => ($restrict ? 0 : 1),
+      )
+    )),
+  ));
 }
