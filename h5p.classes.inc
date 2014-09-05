@@ -62,7 +62,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadLibraries
    */
   public function loadLibraries() {
-    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable, restricted FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
     
     $libraries = array();
     foreach ($res as $library) {
