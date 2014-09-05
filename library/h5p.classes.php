@@ -5,6 +5,13 @@
 interface H5PFrameworkInterface {
 
   /**
+   * Returns info for the current platform
+   * 
+   * @return array An array containing info 
+   */
+  public function getPlatformInfo();
+  
+  /**
    * Show the user an error message
    *
    * @param string $message
@@ -271,9 +278,9 @@ interface H5PFrameworkInterface {
   /**
    * Delete a library from database and file system
    * 
-   * @param int $libraryId Library Id
+   * @param mixed $library Library
    */
-  public function deleteLibrary($libraryId);
+  public function deleteLibrary($library);
   
   /**
    * Load content.
@@ -617,7 +624,7 @@ class H5PValidator {
           $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => H5PCore::libraryToString($library))));
         }
         if (!$this->h5pF->mayUpdateLibraries()) {
-           $this->h5pF->setInfoMessage($this->h5pF->t("Note that the libraries may exist in the file you uploaded, but you're not allowed to upload new libraries. Contact the site administrator about this."));
+          $this->h5pF->setInfoMessage($this->h5pF->t("Note that the libraries may exist in the file you uploaded, but you're not allowed to upload new libraries. Contact the site administrator about this."));
         }
       }
       $valid = empty($missingLibraries) && $valid;
@@ -1359,7 +1366,9 @@ class H5PCore {
 
   public static $defaultContentWhitelist = 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf md textile';
   public static $defaultLibraryWhitelistExtras = 'js css';
-
+  
+  const SECONDS_IN_WEEK = 604800; 
+  
   public $librariesJsonData, $contentJsonData, $mainJsonData, $h5pF, $path, $development_mode, $h5pD;
   private $exportEnabled;
 
@@ -1392,7 +1401,7 @@ class H5PCore {
    * @param array $content
    * @return int Content ID
    */
-  public function saveContent($content, $contentMainId) {
+  public function saveContent($content, $contentMainId = NULL) {
     if (isset($content['id'])) {
       $this->h5pF->updateContent($content, $contentMainId);
     }
@@ -1400,7 +1409,10 @@ class H5PCore {
       $content['id'] = $this->h5pF->insertContent($content, $contentMainId); 
     }
     
-    $this->h5pF->cacheDel('parameters', $content['id']);
+    if (!isset($content['filtered'])) {
+      // TODO: Add filtered to all impl. and remove
+      $this->h5pF->cacheDel('parameters', $content['id']);
+    }
     
     return $content['id'];
   }
@@ -1449,7 +1461,14 @@ class H5PCore {
    * @return Object NULL on failure.
    */
   public function filterParameters($content) {
-    $params = $this->h5pF->cacheGet('parameters', $content['id']);
+    if (isset($content['filtered'])) {
+      $params = ($content['filtered'] === '' ? NULL : $content['filtered']);
+    }
+    else {
+      // TODO: Add filtered to all impl. and remove
+      $params = $this->h5pF->cacheGet('parameters', $content['id']);
+    }
+
     if ($params !== NULL) {
       return $params;
     }
@@ -1876,46 +1895,69 @@ class H5PCore {
       return;
     }
     
-    // Read and parse library-support.json
-    $jsonString = file_get_contents(realpath(dirname(__FILE__)).'/library-support.json');
+    $minVersions = $this->getMinimumVersionsSupported(realpath(dirname(__FILE__)) . '/library-support.json');
+    if ($minVersions === NULL) {
+      return;
+    }
     
-    if($jsonString !== FALSE) {
-      // Get all libraries installed, check if any of them is not supported:
-      $libraries = $this->h5pF->loadLibraries();
-      $unsupportedLibraries = array();
-      $minimumLibraryVersions = array();
-      
-      $librariesSupported = json_decode($jsonString, true);
-      foreach ($librariesSupported as $library) {
-        $minimumLibraryVersions[$library['machineName']]['versions'] = $library['minimumVersions'];
-        $minimumLibraryVersions[$library['machineName']]['downloadUrl'] = $library['downloadUrl'];
+    // Get all libraries installed, check if any of them is not supported:
+    $libraries = $this->h5pF->loadLibraries();
+    $unsupportedLibraries = array();
+    
+    // Iterate over all installed libraries
+    foreach ($libraries as $library_name => $versions) {
+      if (!isset($minVersions[$library_name])) {
+        continue;
       }
+      $min = $minVersions[$library_name];
       
-      // Iterate over all installed libraries
-      foreach ($libraries as $machine_name => $libraryList) {
-        // Check if there are any minimum version requirements for this library
-        if (isset($minimumLibraryVersions[$machine_name])) {
-          $minimumVersions = $minimumLibraryVersions[$machine_name]['versions'];
-          // For each version of this library, check if it is supported
-          foreach ($libraryList as $library) {
-            if (!self::isLibraryVersionSupported($library, $minimumVersions)) {
-              // Current version of this library is not supported
-              $unsupportedLibraries[] = array (
-                'name' => $library->title,
-                'downloadUrl' => $minimumLibraryVersions[$machine_name]['downloadUrl'],
-                'currentVersion' => array (
-                  'major' => $library->major_version,
-                  'minor' => $library->minor_version,
-                  'patch' => $library->patch_version,
-                )
-              );
-            }
-          }
+      // For each version of this library, check if it is supported
+      foreach ($versions as $library) {
+        if (!$this->isLibraryVersionSupported($library, $min->versions)) {
+          // Current version of this library is not supported
+          $unsupportedLibraries[] = array (
+            'name' => $library_name,
+            'downloadUrl' => $min->downloadUrl,
+            'currentVersion' => array (
+              'major' => $library->major_version,
+              'minor' => $library->minor_version,
+              'patch' => $library->patch_version,
+            )
+          );
         }
       }
       
       $this->h5pF->setUnsupportedLibraries(empty($unsupportedLibraries) ? NULL : $unsupportedLibraries);
     }
+  }
+  
+  /**
+   * Returns a list of the minimum version of libraries that are supported.
+   * This is needed because some old libraries are no longer supported by core.
+   * 
+   * TODO: Make it possible for the systems to cache this list between requests.
+   * 
+   * @param string $path to json file
+   * @return array indexed using library names
+   */
+  public function getMinimumVersionsSupported($path) {
+    $minSupported = array();
+    
+    // Get list of minimum version for libraries. Some old libraries are no longer supported.
+    $libraries = file_get_contents($path);
+    if ($libraries !== FALSE) {
+      $libraries = json_decode($libraries);
+      if ($libraries !== NULL) {
+        foreach ($libraries as $library) {
+          $minSupported[$library->machineName] = (object) array(
+            'versions' => $library->minimumVersions,
+            'downloadUrl' => $library->downloadUrl
+          );
+        }
+      }
+    }
+    
+    return empty($minSupported) ? NULL : $minSupported;
   }
   
   /**
@@ -1925,22 +1967,22 @@ class H5PCore {
    * @param array An array containing versions
    * @return boolean TRUE if supported, otherwise FALSE
    */
-  private static function isLibraryVersionSupported ($library, $minimumVersions) {
+  public function isLibraryVersionSupported ($library, $minimumVersions) {
     $major_supported = $minor_supported = $patch_supported = false;
     foreach ($minimumVersions as $minimumVersion) {
       // A library is supported if:
       // --- major is higher than any minimumversion
       // --- minor is higher than any minimumversion for a given major
       // --- major and minor equals and patch is >= supported
-      $major_supported |= ($library->major_version > $minimumVersion['major']);
+      $major_supported |= ($library->major_version > $minimumVersion->major);
     
-      if ($library->major_version == $minimumVersion['major']) {
-        $minor_supported |= ($library->minor_version > $minimumVersion['minor']);
+      if ($library->major_version == $minimumVersion->major) {
+        $minor_supported |= ($library->minor_version > $minimumVersion->minor);
       }
     
-      if ($library->major_version == $minimumVersion['major'] &&
-          $library->minor_version == $minimumVersion['minor']) {
-        $patch_supported |= ($library->patch_version >= $minimumVersion['patch']);
+      if ($library->major_version == $minimumVersion->major &&
+          $library->minor_version == $minimumVersion->minor) {
+        $patch_supported |= ($library->patch_version >= $minimumVersion->patch);
       }
     }
     
@@ -1966,6 +2008,30 @@ class H5PCore {
     
     $html .= '</ul><span><br>These libraries may cause problems on this site. See <a href="http://h5p.org/releases/h5p-core-1.3">here</a> for more info</div>';
     return $html;
+  }
+  
+  /**
+   * Get a list of libraries' metadata from h5p.org. Cache it, and refetch once a week.
+   * 
+   * @return mixed An object of objects keyed by machineName
+   */
+  public function getLibrariesMetadata() {
+    // Fetch from cache:
+    $metadata = $this->h5pF->cacheGet('libraries','metadata');
+    
+    // If not available in cache, or older than a week => refetch!
+    if ($metadata === NULL || $metadata->lastTimeFetched < (time() - self::SECONDS_IN_WEEK)) {
+      $platformInfo = $this->h5pF->getPlatformInfo();
+      $json = file_get_contents('http://h5p.org/libraries-metadata.json?platform=' . json_encode($platformInfo));
+      
+      $metadata = new stdClass();
+      $metadata->json = ($json === FALSE ? NULL : json_decode($json));
+      $metadata->lastTimeFetched = time();
+      
+      $this->h5pF->cacheSet('libraries','metadata', $metadata);
+    }
+    
+    return $metadata->json;
   }
 }
 
