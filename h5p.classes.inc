@@ -1,17 +1,6 @@
 <?php
 
 class H5PDrupal implements H5PFrameworkInterface {
-  
-  /**
-   * Implements getPlatformInfo
-   */
-  public function getPlatformInfo() {
-    return array(
-      'name' => 'drupal',
-      'version' => '7'
-    );
-  }
-  
   /**
    * Implements setErrorMessage
    */

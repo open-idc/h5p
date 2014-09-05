@@ -26,6 +26,5 @@ H5PEditor.language.core = {
   uploading: 'Laster opp fil, vennligst vent...',
   noFollow: 'Kunne ikke følge feltet ":path".',
   editCopyright: 'Rediger opphavsrett',
-  close: 'Lukk',
-  tutorialAvailable: 'Veiledning tilgjengelig'
+  close: 'Lukk'
 };

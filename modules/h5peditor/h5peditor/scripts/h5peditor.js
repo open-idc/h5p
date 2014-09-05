@@ -231,7 +231,6 @@ ns.addCommonField = function (field, parent, params, ancestor) {
   });
 
   if (commonField.setValues.length === 1) {
-    ancestor.$common.parent().removeClass('hidden');
     commonField.instance.appendTo(ancestor.$common);
     commonField.params = params[field.name];
   }
