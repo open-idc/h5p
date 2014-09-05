@@ -616,10 +616,9 @@ class H5PValidator {
       $missingLibraries = $this->getMissingLibraries($libraries);
       foreach ($missingLibraries as $missing) {
         if ($this->h5pF->getLibraryId($missing['machineName'], $missing['majorVersion'], $missing['minorVersion'])) {
-          unset($missingLibraries[H5PCore::libraryToString($missing)]);
+          unset($missingLibraries[$missing['machineName']]);
         }
       }
-      
       if (!empty($missingLibraries)) {
         foreach ($missingLibraries as $library) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => H5PCore::libraryToString($library))));
