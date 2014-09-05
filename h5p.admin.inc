@@ -139,7 +139,7 @@ function h5p_library_list() {
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
         'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
+        'numContentDependencies' => $usage['content'],
         'numLibraryDependencies' => $usage['libraries'],
         'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
@@ -154,6 +154,7 @@ function h5p_library_list() {
   // Make it possible to rebuild all caches.
   if ($notCached) {
     $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($notCached);
+    $settings['h5p']['libraries']['notCached']['message'] .= t('This is required before you can delete any libraries.');
   }
       
   // Include libraries and more to Drupal setting
@@ -183,8 +184,7 @@ function h5p_get_not_cached_settings($num) {
   return array(
     'num' => $num,
     'url' => url('admin/content/h5p/rebuild-cache'),
-    'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
-    'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
+    'message' => t('%num need to get their cache rebuilt before content dependencies can be display.', array('%num' => format_plural($num, '1 content instance', '@count content instances'))),
     'button' => t('Rebuild cache')
   );
 }

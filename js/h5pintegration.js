@@ -138,7 +138,8 @@ H5PIntegration.i18n = {
     h5pDescription: Drupal.t('Visit H5P.org to check out more cool content.'),
     upgradeLibrary: Drupal.t('Upgrade library content'),
     viewLibrary: Drupal.t('View library details'),
-    deleteLibrary: Drupal.t('Delete library')
+    deleteLibrary: Drupal.t('Delete library'),
+    NA: Drupal.t('N/A')
   }
 };
 
