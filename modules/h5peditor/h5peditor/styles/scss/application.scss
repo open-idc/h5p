@@ -366,6 +366,10 @@ a {
         display: none;
       }
     }
+    
+    &.hidden {
+      display: none;
+    }
   }
   .moving {
     position: absolute;
@@ -481,4 +485,17 @@ a {
   height: 1px;
   top: -1px;
   border: 0;
+}
+
+.h5p-tutorial-url {
+  font-size: 0.875em;
+} 
+
+.h5p-tutorial-url:before {
+  font-family: $i;
+  content: "\e889";
+  font-size: 1.5em;
+  position: relative;
+  top: .2em;
+  left: .2em;
 }
