@@ -39,7 +39,7 @@ var H5PLibraryList= H5PLibraryList || {};
         library.title,
         '<input class="h5p-admin-restricted" type="checkbox"/>',
         library.numContent,
-        library.numContentDependencies === -1 ? t.NA : library.numContentDependencies,
+        library.numContentDependencies,
         library.numLibraryDependencies,
         '<div class="h5p-admin-buttons-wrapper">\
           <button class="h5p-admin-upgrade-library"></button>\
@@ -68,7 +68,7 @@ var H5PLibraryList= H5PLibraryList || {};
       });
       
       var $deleteButton = $('.h5p-admin-delete-library', $libraryRow);
-      if (library.numContent !== 0 || library.numContentDependencies !== 0 || library.numLibraryDependencies !== 0) {
+      if (libraries.notCached !== undefined || library.numContent !== 0 || (library.numContentDependencies !== '' && library.numContentDependencies !== 0) || (library.numLibraryDependencies !== '' && library.numLibraryDependencies !== 0)) {
         // Disabled delete if content.
         $deleteButton.attr('disabled', true);
       }
