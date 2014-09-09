@@ -438,7 +438,7 @@ class H5PValidator {
    * @return boolean
    *  TRUE if the .h5p file is valid
    */
-  public function isValidPackage($skipContent = FALSE) {
+  public function isValidPackage($skipContent = FALSE, $upgradeOnly = FALSE) {
     // Create a temporary dir to extract package in.
     $tmpDir = $this->h5pF->getUploadedH5pFolderPath();
     $tmpPath = $this->h5pF->getUploadedH5pPath();
@@ -575,6 +575,29 @@ class H5PValidator {
       }
     }
     if ($valid) {
+      if ($upgradeOnly) {
+        // When upgrading, we opnly add allready installed libraries, 
+        // and new dependent libraries
+        $upgrades = array();
+        foreach ($libraries as &$library) {
+          // Is this library already installed?
+          if ($this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']) !== FALSE) {
+            $upgrades[H5PCore::libraryToString($library)] = $library;
+          }
+        }
+        while ($missingLibraries = $this->getMissingLibraries($upgrades)) {
+          foreach ($missingLibraries as $missing) {
+            $libString = H5PCore::libraryToString($missing);
+            $library = $libraries[$libString];
+            if ($library) {
+              $upgrades[$libString] = $library;
+            }
+          }
+        }
+        
+        $libraries = $upgrades;
+      }
+      
       $this->h5pC->librariesJsonData = $libraries;
       
       if ($skipContent === FALSE) {
@@ -586,9 +609,10 @@ class H5PValidator {
       $missingLibraries = $this->getMissingLibraries($libraries);
       foreach ($missingLibraries as $missing) {
         if ($this->h5pF->getLibraryId($missing['machineName'], $missing['majorVersion'], $missing['minorVersion'])) {
-          unset($missingLibraries[$missing['machineName']]);
+          unset($missingLibraries[H5PCore::libraryToString($missing)]);
         }
       }
+      
       if (!empty($missingLibraries)) {
         foreach ($missingLibraries as $library) {
           $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => H5PCore::libraryToString($library))));
@@ -1029,35 +1053,7 @@ class H5PStorage {
     $upgradedLibsCount = 0;
     $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
     
-    // If upgrading we need to add versions with the same minor/major, 
-    // and all dependencies (which may be new ones)
-    if ($upgradeOnly) {
-      $dependencies = array();
-      foreach ($this->h5pC->librariesJsonData as &$library) {
-        // Is this library already installed?
-        $library['skip'] = TRUE;
-        if ($this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']) !== FALSE) {
-          $library['skip'] = FALSE;
-          if (isset($library['preloadedDependencies'])) {
-            $dependencies = array_merge($dependencies, $library['preloadedDependencies'], $library['editorDependencies']);
-          }
-        }
-      }
-      
-      // Need to add all new dependencies introduced for each library allready installed
-      foreach ($dependencies as $dependency) {
-        $library = &$this->h5pC->librariesJsonData[H5PCore::libraryToString($dependency)];
-        if ($library) {
-          $library['skip'] = FALSE;
-        }
-      }
-    }
-    
     foreach ($this->h5pC->librariesJsonData as &$library) {
-      if (isset($library['skip']) && $library['skip'] === TRUE) {
-        continue;
-      }
-      
       $libraryId = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $library['saveDependencies'] = TRUE;
       
@@ -1094,7 +1090,7 @@ class H5PStorage {
     }
 
     foreach ($this->h5pC->librariesJsonData as &$library) {
-      if (!(isset($library['skip']) && $library['skip']) && $library['saveDependencies']) {
+      if ($library['saveDependencies']) {
         $this->h5pF->deleteLibraryDependencies($library['libraryId']);
         if (isset($library['preloadedDependencies'])) {
           $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
