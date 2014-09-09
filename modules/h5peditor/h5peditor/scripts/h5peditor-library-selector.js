@@ -28,6 +28,9 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
       if (libraryName === defaultLibrary || library.name === this.defaultLibraryParameterized) {
         options += ' selected="selected"';
       }
+      if (library.metaData && library.metaData.tutorialURL !== undefined) {
+        options += ' data-tutorial-url="' + library.metaData.tutorialURL + '"';
+      }
       options += '>' + library.title + (library.isOld===true ? ' (deprecated)' : '') + '</option>';
     }
   }
