@@ -125,51 +125,36 @@ function h5p_library_list() {
   
   // Add settings for each library
   $settings = array();
-  $i = 0;
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
       $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
         $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
-        
-        $restricted = ($library->restricted === '1' ? TRUE : FALSE);
-        $restricted_url = url('admin/content/h5p/libraries/' . $library->id . '/restrict', array(
-          'query' => array(
-            'token' => h5p_get_token('library_' . $i),
-            'token_id' => $i,
-            'restrict' => ($library->restricted === '1' ? 0 : 1)
-          )
-        ));
       }
       else {
         $upgradeUrl = NULL;
-        $restricted = NULL;
-        $restricted_url = NULL;
       }
       
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
-        'restricted' => $restricted,
-        'restrictedUrl' => $restricted_url,
         'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
+        'numContentDependencies' => $usage['content'],
         'numLibraryDependencies' => $usage['libraries'],
         'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
-      
-      $i++;
     }
   }
 
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Restricted'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')); 
+  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')); 
   
   // Make it possible to rebuild all caches.
   if ($notCached) {
     $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($notCached);
+    $settings['h5p']['libraries']['notCached']['message'] .= t('This is required before you can delete any libraries.');
   }
       
   // Include libraries and more to Drupal setting
@@ -199,8 +184,7 @@ function h5p_get_not_cached_settings($num) {
   return array(
     'num' => $num,
     'url' => url('admin/content/h5p/rebuild-cache'),
-    'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
-    'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
+    'message' => t('%num need to get their cache rebuilt before content dependencies can be display.', array('%num' => format_plural($num, '1 content instance', '@count content instances'))),
     'button' => t('Rebuild cache')
   );
 }
@@ -266,7 +250,6 @@ function h5p_library_details($library_id) {
 }
 
 /**
- * Display library delete page with form.
  * 
  * @param string $library_id
  */
@@ -284,35 +267,6 @@ function h5p_library_delete($library_id) {
     // May not delete this one
     return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
   }
-}
-
-/**
- * Library delete form
- */
-function h5p_library_delete_form($form, &$form_state, $library_id, $library_name) {
-  $form['library_id'] = array(
-    '#type' => 'hidden',
-    '#value' => $library_id
-  );
-  
-  $form['info'] = array(
-    '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</div>'
-  );
-  
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Delete')
-  );
-  
-  return $form;
-}
-
-/**
- * Handle library delete submission.
- */
-function h5p_library_delete_form_submit($form, &$form_state) {
-  // Do the actual deletion:
-  _h5p_get_instance('core')->deleteLibrary($form_state['values']['library_id']);
 }
 
 /**
@@ -672,31 +626,4 @@ function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
   
   // Redirect to libraries overview:
   drupal_goto('admin/content/h5p');
-}
-
-function h5p_restrict_library_callback($library_id) {
-  $restricted = filter_input(INPUT_GET, 'restrict');
-  $restrict = ($restricted === '1');
-
-  $token_id = filter_input(INPUT_GET, 'token_id');
-  if (!h5p_verify_token('library_' . $token_id, filter_input(INPUT_GET, 'token')) || (!$restrict && $restricted !== '0')) {
-    drupal_access_denied();
-  }
-
-  db_update('h5p_libraries')
-    ->fields(array(
-      'restricted' => $restricted
-    ))
-    ->condition('library_id', $library_id)
-    ->execute();
-  
-  print json_encode(array(
-    'url' => url('admin/content/h5p/libraries/' . $library_id . '/restrict', array(
-      'query' => array(
-        'token' => h5p_get_token('library_' . $token_id),
-        'token_id' => $token_id,
-        'restrict' => ($restrict ? 0 : 1),
-      )
-    )),
-  ));
 }

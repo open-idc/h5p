@@ -79,18 +79,14 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
   /**
    * TODO
-   * 
-   * This does alot of the same as getLibraries in h5p-php-library. Should we just use that instead?
    */
   public function getLibraries($libraries = NULL) {
-    $super_user = user_access('create restricted h5p content types');
-    
     if ($libraries !== NULL) {
       // Get details for the specified libraries only.
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
         $details = db_query(
-          "SELECT title, runnable, restricted
+          "SELECT title, runnable 
            FROM {h5p_libraries} 
            WHERE machine_name = :name 
            AND major_version = :major 
@@ -105,7 +101,6 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         if ($details !== FALSE) {
           $library->title = $details->title;
           $library->runnable = $details->runnable;
-          $library->restricted = $super_user ? FALSE : ($details->restricted === '1' ? TRUE : FALSE);
           $librariesWithDetails[] = $library;
         }
       }
@@ -119,8 +114,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       "SELECT machine_name AS name, 
               title, 
               major_version, 
-              minor_version,
-              restricted
+              minor_version
        FROM {h5p_libraries} 
        WHERE runnable = 1 
        AND semantics IS NOT NULL 
@@ -144,8 +138,6 @@ class H5peditorDrupalStorage implements H5peditorStorage {
           }
         }
       }
-      
-      $library->restricted = $super_user ? FALSE : ($library->restricted === '1' ? TRUE : FALSE);
       
       // Add new library
       $libraries[] = $library;

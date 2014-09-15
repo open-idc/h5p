@@ -7,20 +7,14 @@ var H5PUtils = H5PUtils || {};
    * @param {array} headers List of headers
    */
   H5PUtils.createTable = function (headers) {
-    var $table = $('<table class="h5p-admin-table' + (H5PIntegration.extraTableClasses !== undefined ? ' ' + H5PIntegration.extraTableClasses : '') + '"></table>');
-
+    var $table = $('<table class="h5p-admin-table"></table>');
+    
     if(headers) {
       var $thead = $('<thead></thead>');
       var $tr = $('<tr></tr>');
   
       $.each(headers, function (index, value) {
-        if (!(value instanceof Object)) {
-          value = {
-            text: value
-          };
-        }
-        
-        $('<th/>', value).appendTo($tr);
+        $tr.append('<th>' + value + '</th>');
       });
       
       $table.append($thead.append($tr));
@@ -91,7 +85,7 @@ var H5PUtils = H5PUtils || {};
    * @returns {$}
    */
   H5PUtils.getRebuildCache = function (notCached) {
-    var $container = $('<div class="h5p-admin-rebuild-cache"><p class="message">' + notCached.message + '</p><p class="progress">' + notCached.progress + '</p></div>');
+    var $container = $('<div class="h5p-admin-rebuild-cache"><p>' + notCached.message + '</p></div>');
     var $button = $('<button>' + notCached.button + '</button>').appendTo($container).click(function () {
       var $spinner = $('<div/>', {class: 'h5p-spinner'}).replaceAll($button);
       var parts = ['|', '/', '-', '\\'];
@@ -102,7 +96,7 @@ var H5PUtils = H5PUtils || {};
         if (current === parts.length) current = 0;
       }, 100);
       
-      var $counter = $container.find('.progress');
+      var $counter = $container.find('.placeholder');
       var build = function () {
         $.post(notCached.url, function (left) {
           if (left === '0') {
@@ -111,9 +105,8 @@ var H5PUtils = H5PUtils || {};
             location.reload();
           }
           else {
-            var counter = $counter.text().split(' ');
-            counter[0] = left;
-            $counter.text(counter.join(' '));
+            var counter = $counter.text().split(' ', 2);
+            $counter.text(left + ' ' + counter[1]);
             build();
           }
         });

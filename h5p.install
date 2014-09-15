@@ -187,14 +187,6 @@ function h5p_schema() {
         'type' => 'text',
         'not null' => TRUE,
       ),
-      'restricted' => array(
-        'description' => 'Restricts the ability to create new content using this library.',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 1,
-      )
     ),
     'primary key' => array('library_id'),
   );
@@ -629,20 +621,6 @@ function h5p_update_7101() {
  */
 function h5p_update_7102() {
   h5p_validate_library_support();
-}
-
-/**
- * Adds an option that makes it possible to restrict the creation of selected H5P content types to users with a specific role.
- */
-function h5p_update_7103() {
-  db_add_field('h5p_libraries', 'restricted', array(
-    'description' => 'Restricts the ability to create new content using this library.',
-    'type' => 'int',
-    'size' => 'tiny',
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-    'default' => 0,
-  ));
 }
 
 /**

@@ -71,14 +71,6 @@ function h5p_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
-  $items['admin/content/h5p/libraries/%/restrict'] = array(
-    'title' => 'H5P Library Restrict',
-    'page callback' => 'h5p_restrict_library_callback',
-    'page arguments' => array(4),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_CALLBACK,
-    'file' => 'h5p.admin.inc',
-  );
   $items['admin/content/h5p/upgrade/library/%/%/%'] = array(
     'title' => 'H5P Content Upgrade Library',
     'page callback' => 'h5p_content_upgrade_library',
@@ -154,7 +146,7 @@ function _h5p_make_urls_absolute($urls, $remove = NULL) {
  * @return string
  */
 function h5p_get_export_path($content_id) {
-  return variable_get('h5p_export', 1) ? url(_h5p_get_h5p_path() . '/exports/' . $content_id . '.h5p', array('absolute' => TRUE)) : '';
+  return variable_get('h5p_export', 1) ? base_path() . _h5p_get_h5p_path() . '/exports/' . $content_id . '.h5p' : '';
 }
 
 /**
@@ -289,10 +281,6 @@ function h5p_permission() {
     'access h5p results for own content' => array(
       'title' => t('Access h5p results for own content'),
       'description' => t('The user is allowed to see all results for content he has created. Available as a tab on each node.'),
-    ),
-    'create restricted h5p content types' => array(
-      'title' => t('Create restricted H5P content types'),
-      'description' => t('The user is allowed to create H5P content types that has been restricted in the library administration interface.'),
     ),
   );
 }
@@ -947,6 +935,28 @@ function h5p_field_extra_fields() {
   return $extra;
 }
 
+
+/**
+ * TODO
+ */
+function h5p_library_delete_form($form, &$form_state, $library_id, $library_name) {
+  $form['library_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $library_id
+  );
+  
+  $form['info'] = array(
+    '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</div>'
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete')
+  );
+  
+  return $form;
+}
+
 /**
  * Implements hook_views_api().
  */
@@ -958,6 +968,14 @@ function h5p_views_api() {
 }
 
 /**
+ * TODO
+ */
+function h5p_library_delete_form_submit($form, &$form_state) {
+  // Do the actual deletion:
+  _h5p_get_instance('core')->deleteLibrary($form_state['values']['library_id']);
+}
+
+/**
  * Handler for the custom node points access check
  *
  * @param stdObject $account
@@ -965,14 +983,14 @@ function h5p_views_api() {
 function h5p_access_node_points($account = NULL) {
   global $user;
 
-  if (user_access('access all h5p results')) {
-    return TRUE;
-  }
-
-  // menu_get_object isn't working, so we load it manually...
   if (arg(0) === 'node' && is_numeric(arg(1))) {
     $node = node_load(arg(1));
     if ($node !== FALSE && $node->type == 'h5p_content') {
+      if (user_access('access all h5p results')) {
+        return TRUE;
+      }
+      
+      // menu_get_object isn't working, so we load it manually...
       if (user_access('access h5p results for own content') && $user->uid === $node->uid) {
         return TRUE;
       }
