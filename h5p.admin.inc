@@ -680,7 +680,7 @@ function h5p_restrict_library_callback($library_id) {
 
   $token_id = filter_input(INPUT_GET, 'token_id');
   if (!h5p_verify_token('library_' . $token_id, filter_input(INPUT_GET, 'token')) || (!$restrict && $restricted !== '0')) {
-    drupal_access_denied();
+    return MENU_ACCESS_DENIED;
   }
 
   db_update('h5p_libraries')
