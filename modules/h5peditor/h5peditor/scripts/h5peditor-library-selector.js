@@ -21,18 +21,22 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
   for (var i = 0; i < libraries.length; i++) {
     var library = libraries[i];
     var libraryName = ns.libraryToString(library);
-    
-    // Allow old version of library only if used by existing content
-    if (library.isOld !== true || (library.isOld === true && this.defaultLibrary === libraryName)) {
-      options += '<option value="' + libraryName + '"';
-      if (libraryName === defaultLibrary || library.name === this.defaultLibraryParameterized) {
-        options += ' selected="selected"';
-      }
-      if (library.metaData && library.metaData.tutorialURL !== undefined) {
-        options += ' data-tutorial-url="' + library.metaData.tutorialURL + '"';
-      }
-      options += '>' + library.title + (library.isOld===true ? ' (deprecated)' : '') + '</option>';
+    var inUse = (libraryName === defaultLibrary);
+     
+    if ((library.restricted || library.isOld) && !inUse) {
+      // Skip restricted or old libraries, unless they're used.
+      continue;
     }
+    
+    options += '<option value="' + libraryName + '"';
+    if (inUse || library.name === this.defaultLibraryParameterized) {
+      options += ' selected="selected"';
+    }
+    options += '>' + library.title;
+    if (library.isOld) {
+      options += ' (deprecated)';
+     }
+    options += '</option>';
   }
 
   //Add tutorial link:
