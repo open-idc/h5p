@@ -949,31 +949,6 @@ function h5p_field_extra_fields() {
   return $extra;
 }
 
-<<<<<<< HEAD
-=======
-
-/**
- * TODO
- */
-function h5p_library_delete_form($form, &$form_state, $library_id, $library_name) {
-  $form['library_id'] = array(
-    '#type' => 'hidden',
-    '#value' => $library_id
-  );
-
-  $form['info'] = array(
-    '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</div>'
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Delete')
-  );
-
-  return $form;
-}
-
->>>>>>> 7.x-1.x
 /**
  * Implements hook_views_api().
  */
