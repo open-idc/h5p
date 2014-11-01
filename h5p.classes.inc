@@ -6,10 +6,35 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getPlatformInfo
    */
   public function getPlatformInfo() {
+
+    $uuid = variable_get('h5p_site_uuid', NULL);
+    if ($uuid === NULL) {
+      $uuid = H5PCore::generateUUID();
+      variable_set('h5p_site_uuid', $uuid);
+    }
+
     return array(
       'name' => 'drupal',
-      'version' => VERSION
+      'version' => VERSION,
+      'uuid' => $uuid
     );
+  }
+
+  /**
+   * Implements setLibraryTutorialUrl
+   *
+   * Set the tutorial URL for a library. All versions of the library is set
+   *
+   * @param string $machineName
+   * @param string $tutorialUrl
+   */
+  public function setLibraryTutorialUrl($machineName, $tutorialUrl) {
+    db_update('h5p_libraries')
+    ->fields(array(
+      'tutorial_url' => $tutorialUrl,
+    ))
+    ->condition('machine_name', $machineName)
+    ->execute();
   }
 
   /**
@@ -223,7 +248,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'preloaded_js' => $preloadedJs,
         'preloaded_css' => $preloadedCss,
         'drop_library_css' => $dropLibraryCss,
-        'semantics' => $libraryData['semantics'],
+        'semantics' => $libraryData['semantics']
       ))
       ->condition('library_id', $libraryData['libraryId'])
       ->execute();
@@ -439,7 +464,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 drop_library_css,
                 fullscreen,
                 runnable,
-                semantics
+                semantics,
+                tutorial_url
           FROM {h5p_libraries}
           WHERE machine_name = :machine_name
           AND major_version = :major_version

@@ -40,6 +40,10 @@ function h5p_uninstall() {
   variable_del('h5p_whitelist');
   variable_del('h5p_icon_in_action_bar');
   variable_del('h5p_unsupported_libraries');
+  variable_del('h5p_fetched_library_metadata_on');
+
+  // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
+  // the uuid should be the same
 }
 
 /**
@@ -66,6 +70,14 @@ function h5p_enable() {
     views_invalidate_cache();
   }
   h5p_validate_library_support();
+
+  _h5p_inform_h5p_org_communication();
+}
+
+function _h5p_inform_h5p_org_communication() {
+  if (variable_get('h5p_allow_communication_with_h5p_org', TRUE)) {
+    drupal_set_message(t('The H5P module fetches library metadata from h5p.org. If you want to disable this option, goto <a href="@url">the H5P settings page</a>', array('@url' => url('admin/config/system/h5p'))));
+  }
 }
 
 /**
@@ -194,7 +206,12 @@ function h5p_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 1,
-      )
+      ),
+      'tutorial_url' => array(
+        'description' => 'URL to a tutorial for this library',
+        'type' => 'varchar',
+        'length' => 1000
+      ),
     ),
     'primary key' => array('library_id'),
   );
@@ -654,15 +671,28 @@ function h5p_update_7103() {
 
 /**
  * Adds filtered column to h5p_nodes
+ * Adds tutorial_url column to h5p_libraries
  */
 function h5p_update_7104() {
-  db_add_field('h5p_nodes', 'filtered', array(
-    'description' => 'Filtered version of json_content',
-    'type' => 'text',
-    //'not null' => TRUE,
-    //'default' => '',
-    'size' => 'big',
-  ));
+  if (db_field_exists('h5p_nodes', 'filtered') === FALSE) {
+    db_add_field('h5p_nodes', 'filtered', array(
+      'description' => 'Filtered version of json_content',
+      'type' => 'text',
+      //'not null' => TRUE,
+      //'default' => '',
+      'size' => 'big',
+    ));
+  }
+
+  if (db_field_exists('h5p_libraries', 'tutorial_url') === FALSE) {
+    db_add_field('h5p_libraries', 'tutorial_url', array(
+      'description' => 'URL to a tutorial for this library',
+      'type' => 'varchar',
+      'length' => 1000
+    ));
+  }
+
+  _h5p_inform_h5p_org_communication();
 }
 
 /**

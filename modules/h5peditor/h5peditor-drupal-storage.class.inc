@@ -13,8 +13,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getLanguage($machineName, $majorVersion, $minorVersion) {
-    global $language;
+  public function getLanguage($machineName, $majorVersion, $minorVersion, $language) {
     $lang = db_query(
       "SELECT language_json
       FROM {h5p_libraries_languages} hlt
@@ -29,7 +28,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         ':minor' => $minorVersion,
         ':lang' => $language->language,
       ))->fetchField();
-      
+
     return ($lang === FALSE ? NULL : $lang);
   }
 
@@ -79,60 +78,62 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
   /**
    * TODO
-   * 
+   *
    * This does alot of the same as getLibraries in h5p-php-library. Should we just use that instead?
    */
   public function getLibraries($libraries = NULL) {
     $super_user = user_access('create restricted h5p content types');
-    
+
     if ($libraries !== NULL) {
       // Get details for the specified libraries only.
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
         $details = db_query(
-          "SELECT title, runnable, restricted
-           FROM {h5p_libraries} 
-           WHERE machine_name = :name 
-           AND major_version = :major 
-           AND minor_version = :minor 
-           AND semantics IS NOT NULL", 
+          "SELECT title, runnable, restricted, tutorial_url
+           FROM {h5p_libraries}
+           WHERE machine_name = :name
+           AND major_version = :major
+           AND minor_version = :minor
+           AND semantics IS NOT NULL",
           array(
-            ':name' => $library->name, 
-            ':major' => $library->majorVersion, 
+            ':name' => $library->name,
+            ':major' => $library->majorVersion,
             ':minor' => $library->minorVersion
           ))
           ->fetchObject();
         if ($details !== FALSE) {
+          $library->tutorialUrl = $details->tutorial_url;
           $library->title = $details->title;
           $library->runnable = $details->runnable;
           $library->restricted = $super_user ? FALSE : ($details->restricted === '1' ? TRUE : FALSE);
           $librariesWithDetails[] = $library;
         }
       }
-      
+
       return $librariesWithDetails;
     }
-    
+
     $libraries = array();
 
     $libraries_result = db_query(
-      "SELECT machine_name AS name, 
-              title, 
-              major_version, 
+      "SELECT machine_name AS name,
+              title,
+              major_version,
               minor_version,
-              restricted
-       FROM {h5p_libraries} 
-       WHERE runnable = 1 
-       AND semantics IS NOT NULL 
+              restricted,
+              tutorial_url
+       FROM {h5p_libraries}
+       WHERE runnable = 1
+       AND semantics IS NOT NULL
        ORDER BY title");
     foreach ($libraries_result as $library) {
       // Convert result object properties to camelCase.
       $library = H5PCore::snakeToCamel($library, true);
-      
+
       // Make sure we only display the newest version of a library.
       foreach ($libraries as $existingLibrary) {
         if ($library->name === $existingLibrary->name) {
-          
+
           // Mark old ones
           // This is the newest
           if (($library->majorVersion === $existingLibrary->majorVersion && $library->minorVersion > $existingLibrary->minorVersion) ||
@@ -144,13 +145,13 @@ class H5peditorDrupalStorage implements H5peditorStorage {
           }
         }
       }
-      
+
       $library->restricted = $super_user ? FALSE : ($library->restricted === '1' ? TRUE : FALSE);
-      
+
       // Add new library
       $libraries[] = $library;
     }
-    
+
     return $libraries;
   }
 }

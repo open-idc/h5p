@@ -62,6 +62,13 @@ function h5p_admin_settings($form, &$form_state) {
     '#description' => t('Always update uploaded H5P libraries regardless of patch version. Read library data from file (semantics.json).')
   );
 
+  $form['h5p_allow_communication_with_h5p_org'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Fetch library data from h5p.org'),
+    '#default_value' => variable_get('h5p_allow_communication_with_h5p_org', '1'),
+    '#description' => t('If this option is enabled, the H5P module will fetch metadata for the libraries from h5p.org'),
+  );
+
 //  $form['h5p_content_dev_mode'] = array(
 //    '#type' => 'checkbox',
 //    '#title' => t('Enable H5P content development mode'),
@@ -109,6 +116,10 @@ function h5p_admin_settings_submit($form, &$form_state) {
   $form_state['values']['h5p_default_path'] = rtrim($form_state['values']['h5p_default_path'], '/\\');
   // Ensure that the h5p white list is always stored in lower case.
   $form_state['values']['h5p_whitelist'] = mb_strtolower($form_state['values']['h5p_whitelist']);
+
+  if($form_state['values']['h5p_allow_communication_with_h5p_org'] == 0) {
+    h5p_fetch_libraries_metadata(TRUE);
+  }
 }
 
 /**
