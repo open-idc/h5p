@@ -1526,9 +1526,9 @@ class H5PCore {
   public static $defaultContentWhitelist = 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf md textile';
   public static $defaultLibraryWhitelistExtras = 'js css';
 
+  public $librariesJsonData, $contentJsonData, $mainJsonData, $h5pF, $path, $development_mode, $h5pD, $disableFileCheck;
   const SECONDS_IN_WEEK = 604800;
 
-  public $librariesJsonData, $contentJsonData, $mainJsonData, $h5pF, $path, $development_mode, $h5pD;
   private $exportEnabled;
 
   /**
@@ -2163,7 +2163,7 @@ class H5PCore {
    */
   public function getLibrariesMetadata() {
     // Fetch from cache:
-    $metadata = $this->h5pF->cacheGet('libraries','metadata');
+    //$metadata = $this->h5pF->cacheGet('libraries','metadata');
 
     // If not available in cache, or older than a week => refetch!
     if ($metadata === NULL || $metadata->lastTimeFetched < (time() - self::SECONDS_IN_WEEK)) {
@@ -2174,7 +2174,7 @@ class H5PCore {
       $metadata->json = ($json === FALSE ? NULL : json_decode($json));
       $metadata->lastTimeFetched = time();
 
-      $this->h5pF->cacheSet('libraries','metadata', $metadata);
+      //$this->h5pF->cacheSet('libraries','metadata', $metadata);
     }
 
     return $metadata->json;
@@ -2297,6 +2297,10 @@ class H5PContentValidator {
    *  FALSE if one or more files fail validation. Error message should be set accordingly by validator.
    */
   public function validateContentFiles($contentPath, $isLibrary = FALSE) {
+    if ($this->h5pC->disableFileCheck === TRUE) {
+      return TRUE; 
+    }
+
     // Scan content directory for files, recurse into sub directories.
     $files = array_diff(scandir($contentPath), array('.','..'));
     $valid = TRUE;
