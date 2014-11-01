@@ -12,17 +12,17 @@
 function h5p_uninstall() {
   // Clean out file dirs.
   $h5p_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/' . variable_get('h5p_default_path', 'h5p');
-   
+
   // Remove these regardless of their content.
   foreach (array('temp', 'libraries', 'content', 'exports') as $directory) {
     _h5p_recursive_unlink($h5p_path . '/' . $directory);
   }
-  
+
   // Only remove development dir if it's empty.
   $dir = $h5p_path . '/development';
   if (is_dir($dir) && count(scandir($dir)) === 2) {
     rmdir($dir);
-    
+
     // Remove parent if empty.
     if (count(scandir($h5p_path)) === 2) {
       rmdir($h5p_path);
@@ -305,6 +305,13 @@ function h5p_schema() {
         'description' => 'Meta description as defined in h5p.json',
         'type' => 'text',
       ),
+      'filtered' => array(
+        'description' => 'Filtered version of json_content',
+        'type' => 'text',
+        //'not null' => TRUE,
+        //'default' => '',
+        'size' => 'big',
+      ),
     ),
     'primary key' => array('content_id'),
   );
@@ -363,7 +370,7 @@ function h5p_requirements($phase) {
 
   if ($phase == 'runtime') {
     // TODO: Add check for zip library
-    
+
     // File paths
     // TODO: Merge over _h5p_check_settings from .module?
     $h5p_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/' . variable_get('h5p_default_path', 'h5p');
@@ -501,15 +508,15 @@ function h5p_update_6104() {
 
 /**
  * Implementation of hook_update_N().
- * 
+ *
  * Renames the h5p_nodes_libraries.preloaded field to dependency_type,
  * and converts it to contain an integer.
- * 
+ *
  * Updates h5p_nodes_libraries to get all dependencies.
  */
 function h5p_update_6105(&$sandbox) {
   if (isset($sandbox['content']) === FALSE) {
-    
+
     if (db_field_exists('h5p_nodes_libraries', 'preloaded')) {
       db_drop_primary_key('h5p_nodes_libraries');
       db_change_field('h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
@@ -522,17 +529,17 @@ function h5p_update_6105(&$sandbox) {
         'primary key' => array('content_id', 'library_id', 'dependency_type')
       ));
     }
-  
+
     // Update h5p_nodes_libraries to get all dependencies.
     $result = db_query("
-      SELECT hn.content_id AS id, 
-             hl.machine_name AS libraryName, 
-             hl.major_version AS libraryMajorVersion, 
+      SELECT hn.content_id AS id,
+             hl.machine_name AS libraryName,
+             hl.major_version AS libraryMajorVersion,
              hl.minor_version AS libraryMinorVersion
       FROM {h5p_nodes} hn
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
     ");
-    
+
     // Update h5p_nodes_libraries since column has changed type
     db_query("UPDATE {h5p_nodes_libraries} set dependency_type='preloaded' where dependency_type='1'");
     db_query("UPDATE {h5p_nodes_libraries} set dependency_type='dynamic' where dependency_type='0'");
@@ -541,11 +548,11 @@ function h5p_update_6105(&$sandbox) {
     foreach ($result as $content) {
       $sandbox['content'][] = $content;
     }
-    
+
     $sandbox['current'] = 0;
     $sandbox['max'] = count($sandbox['content']);
   }
-  
+
   if ($sandbox['max'] === 0) {
     $sandbox['#finished'] = 1;
   }
@@ -560,7 +567,7 @@ function h5p_update_6105(&$sandbox) {
  * Implementation of hook_update_N().
  *
  * Adds the h5p_points-table, which stores user statistics.
- * 
+ *
  */
 function h5p_update_7100(&$sandbox) {
   db_create_table('h5p_points', array(
@@ -623,7 +630,7 @@ function h5p_update_7101() {
 /**
  * Implementation of hook_update_N().
  *
- * Check if any of the installed H5P libraries are not supported by the current 
+ * Check if any of the installed H5P libraries are not supported by the current
  * H5P core version
  *
  */
@@ -646,13 +653,26 @@ function h5p_update_7103() {
 }
 
 /**
+ * Adds filtered column to h5p_nodes
+ */
+function h5p_update_7104() {
+  db_add_field('h5p_nodes', 'filtered', array(
+    'description' => 'Filtered version of json_content',
+    'type' => 'text',
+    //'not null' => TRUE,
+    //'default' => '',
+    'size' => 'big',
+  ));
+}
+
+/**
  * Check if any library installed is unsupported by core
  */
 function h5p_validate_library_support() {
   require_once drupal_get_path('module', 'h5p') . '/library/h5p-development.class.php';
   require_once drupal_get_path('module', 'h5p') . '/library/h5p.classes.php';
   require_once drupal_get_path('module', 'h5p') . '/h5p.classes.inc';
-  
+
   $core = _h5p_get_instance('core');
   // Force check
   $core->validateLibrarySupport(true);
@@ -668,22 +688,22 @@ function h5p_save_content_dependencies($content) {
   require_once drupal_get_path('module', 'h5p') . '/library/h5p-development.class.php';
   require_once drupal_get_path('module', 'h5p') . '/library/h5p.classes.php';
   require_once drupal_get_path('module', 'h5p') . '/h5p.classes.inc';
-  
+
   $i = _h5p_get_instance('interface');
   $core = _h5p_get_instance('core');
-  
+
   $library = $i->loadLibrary($content->libraryName, $content->libraryMajorVersion, $content->libraryMinorVersion);
-  
+
   $dependencies = array();
   $core->findLibraryDependencies($dependencies, $library);
-  
+
   $dropLibraryCssList = array();
   foreach ($dependencies as $dependency) {
     if (!empty($dependency['library']['dropLibraryCss'])) {
       $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
     }
   }
-  
+
   foreach ($dependencies as $dependency) {
     $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
     db_merge('h5p_nodes_libraries')
