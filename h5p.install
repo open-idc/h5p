@@ -40,6 +40,7 @@ function h5p_uninstall() {
   variable_del('h5p_whitelist');
   variable_del('h5p_icon_in_action_bar');
   variable_del('h5p_unsupported_libraries');
+  variable_del('h5p_first_runnable_saved');
 }
 
 /**
@@ -663,6 +664,15 @@ function h5p_update_7104() {
     //'default' => '',
     'size' => 'big',
   ));
+}
+
+/**
+ * Store if or not we have runnable libraries
+ */
+function h5p_update_7105() {
+  if (db_query('SELECT 1 FROM {h5p_libraries} WHERE runnable = 1')->fetchField()) {
+    variable_set('h5p_first_runnable_saved', 1);
+  }
 }
 
 /**

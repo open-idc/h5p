@@ -51,7 +51,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
       'upload' => t('Upload'),
       'create' => isset($node->nid) ? t('Edit') : t('Create'),
     ),
-    '#default_value' => $library ? 'create' : 'upload',
+    '#default_value' => $library ? 'create' : (variable_get('h5p_first_runnable_saved', 0) ? 'create' : 'upload'),
     '#weight' => $form['h5p']['#weight'] - 1,
   );
   
