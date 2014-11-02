@@ -6,10 +6,40 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getPlatformInfo
    */
   public function getPlatformInfo() {
+    // Could call system_get_info(), but performance-wise it
+    // does not seem to be smart
+    $h5p_info = unserialize(db_query("SELECT info FROM {system} WHERE name = 'h5p'")->fetchField());
+
     return array(
       'name' => 'drupal',
-      'version' => VERSION
+      'version' => VERSION,
+      'h5pVersion' => isset($h5p_info->version) ? $h5p_info->version : NULL,
     );
+  }
+
+  /**
+   * Implements fetchExternalData
+   */
+  public function fetchExternalData($url) {
+    $response = drupal_http_request($url);
+    return isset($response->error) ? NULL : $response->data;
+  }
+
+  /**
+   * Implements setLibraryTutorialUrl
+   *
+   * Set the tutorial URL for a library. All versions of the library is set
+   *
+   * @param string $machineName
+   * @param string $tutorialUrl
+   */
+  public function setLibraryTutorialUrl($machineName, $tutorialUrl) {
+    db_update('h5p_libraries')
+    ->fields(array(
+      'tutorial_url' => $tutorialUrl,
+    ))
+    ->condition('machine_name', $machineName)
+    ->execute();
   }
 
   /**
@@ -228,7 +258,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'preloaded_js' => $preloadedJs,
         'preloaded_css' => $preloadedCss,
         'drop_library_css' => $dropLibraryCss,
-        'semantics' => $libraryData['semantics'],
+        'semantics' => $libraryData['semantics']
       ))
       ->condition('library_id', $libraryData['libraryId'])
       ->execute();
@@ -335,7 +365,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       ->fields(array(
         'json_content' => $content['params'],
         'embed_type' => 'div', // TODO: Determine from library?
-        'main_library_id' => $content['library']['libraryId']
+        'main_library_id' => $content['library']['libraryId'],
+        'filtered' => '',
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -444,7 +475,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 drop_library_css,
                 fullscreen,
                 runnable,
-                semantics
+                semantics,
+                tutorial_url
           FROM {h5p_libraries}
           WHERE machine_name = :machine_name
           AND major_version = :major_version
@@ -544,7 +576,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.major_version AS library_major_version,
                 hl.minor_version AS library_minor_version,
                 hl.embed_types AS library_embed_types,
-                hl.fullscreen AS library_fullscreen
+                hl.fullscreen AS library_fullscreen,
+                hn.filtered
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -647,6 +680,10 @@ class H5PDrupal implements H5PFrameworkInterface {
     ))
     ->condition('main_library_id', $library_id)
     ->execute();
+
+    _drupal_flush_css_js();
+    drupal_clear_js_cache();
+    drupal_clear_css_cache();
   }
 
   /**
@@ -656,7 +693,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * @return int
    */
   public function getNumNotFiltered() {
-    return intval(db_query("SELECT COUNT(content_id) FROM {h5p_nodes} WHERE filtered IS NULL OR filtered = ''")->fetchField());
+    return intval(db_query("SELECT COUNT(content_id) FROM {h5p_nodes} WHERE filtered = '' AND main_library_id > 0")->fetchField());
   }
 
   /**

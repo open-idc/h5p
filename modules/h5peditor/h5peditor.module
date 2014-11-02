@@ -43,7 +43,7 @@ function h5peditor_menu() {
 function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $node = h5peditor_get_source_node($form['#node']);
   $library = isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0);
-  
+
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),
@@ -54,7 +54,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
     '#default_value' => $library ? 'create' : (variable_get('h5p_first_runnable_saved', 0) ? 'create' : 'upload'),
     '#weight' => $form['h5p']['#weight'] - 1,
   );
-  
+
   $form['h5p_editor'] = array(
     '#type' => 'item',
     '#title' => t('Content type'),
@@ -98,7 +98,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   foreach (H5peditor::$styles as $style) {
     $assets['css'][] = $h5peditor_module_path . '/h5peditor/' . $style . $cache_buster;
   }
-  
+
   // Remove integration from the equation.
   for ($i = 0, $s = count($assets['js']); $i < $s; $i++) {
     if (preg_match('/\/h5pintegration\.js/', $assets['js'][$i])) {
@@ -106,7 +106,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
       break;
     }
   }
-  
+
   // Add our own scripts
   foreach (H5peditor::$scripts as $script) {
     // We do not want the creator of the iframe inside the iframe
@@ -123,9 +123,9 @@ function h5peditor_h5p_content_node_form_after_build($form) {
     $language_file = $h5peditor_module_path . '/h5peditor/language/en.js';
   }
   drupal_add_js($language_file);
-  
+
   // TODO: If we're going to preprocess the assets one day, remember to skip ckeditor.
-  
+
   $file_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath();
   $settings = array(
     'h5peditor' => array(
@@ -256,7 +256,7 @@ function h5peditor_libraries_callback() {
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
   $editor = h5peditor_get_instance();
-  
+
   // TODO: Make Drupal cache result?
   // TODO: Consider if we should leverage browser caching by just using .js files instead of eval, or a combination.
 
@@ -310,7 +310,7 @@ function h5peditor_get_instance() {
     }
     $instance = new H5peditor(
       _h5p_get_instance('core'),
-      new H5peditorDrupalStorage(), 
+      new H5peditorDrupalStorage(),
       base_path(),
       _h5p_get_h5p_path(),
       file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . DIRECTORY_SEPARATOR . 'h5peditor'
@@ -387,6 +387,6 @@ function h5peditor_field_extra_fields() {
       )
     )
   );
-  
+
   return $extra;
 }
