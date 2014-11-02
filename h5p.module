@@ -131,7 +131,7 @@ function h5p_cron() {
 
 function h5p_fetch_libraries_metadata($fetchingDisabled = FALSE) {
   // If fetching of libraries from h5p.org is enabled and
-  // It has not been run the last week, let's do it
+  // It has not been run the last 24 hours, let's do it
   // Intentionally not doing === TRUE on h5p_allow_communication_with_h5p_org test
   if ($fetchingDisabled || (variable_get('h5p_allow_communication_with_h5p_org', TRUE) &&
      (intval(variable_get('h5p_fetched_library_metadata_on', 0)) < (time() - 86400)))) {
