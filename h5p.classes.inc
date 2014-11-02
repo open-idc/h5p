@@ -241,6 +241,11 @@ class H5PDrupal implements H5PFrameworkInterface {
       ))
       ->execute();
       $libraryData['libraryId'] = $libraryId;
+      if ($libraryData['runnable']) {
+        if (!variable_get('h5p_first_runnable_saved', 0)) {
+          variable_set('h5p_first_runnable_saved', 1);
+        }
+      }
     }
     else {
       db_update('h5p_libraries')

@@ -416,6 +416,8 @@ function h5p_validate($node, &$form) {
     $valid = $h5p_validator->isValidPackage();
     if (!$valid) {
       form_set_error('h5p', t('The uploaded file was not a valid H5P package'));
+      // Nothing is valid, nothing is kept.
+      unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
     }
   }
 }
