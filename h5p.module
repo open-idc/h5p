@@ -503,6 +503,7 @@ function h5p_load($nodes) {
       $node->main_library_id = $content['library']['id'];
       $node->embed_type = $content['embedType'];
       $node->main_library = $content['library'];
+      $node->filtered = $content['filtered'];
     }
   }
 }
@@ -713,6 +714,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
     'language' => $node->language,
     'library' => $node->main_library,
     'embedType' => 'div',
+    'filtered' => $node->filtered,
   );
   $core = _h5p_get_instance('core');
 
