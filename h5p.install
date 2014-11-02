@@ -193,7 +193,7 @@ function h5p_schema() {
         'size' => 'tiny',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 1,
+        'default' => 0,
       )
     ),
     'primary key' => array('library_id'),
