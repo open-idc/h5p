@@ -384,6 +384,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'json_content' => $content['params'],
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
+        'filtered' => '',
       ))
       ->execute();
 

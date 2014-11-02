@@ -686,7 +686,7 @@ function h5p_update_7104() {
       'description' => 'Filtered version of json_content',
       'type' => 'text',
       'size' => 'big',
-      'not null' => TRUE
+      'not null' => TRUE,
     ));
   }
 
