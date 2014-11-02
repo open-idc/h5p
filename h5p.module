@@ -624,12 +624,12 @@ function h5p_set_finished() {
   global $user;
   $result = array('success' => FALSE);
 
-  if ($user->uid && $_POST['contentId'] !== NULL && $_POST['points'] !== NULL && $_POST['maxPoints'] !== NULL) {
+  if ($user->uid && $_POST['contentId'] !== NULL && $_POST['score'] !== NULL && $_POST['maxScore'] !== NULL) {
     db_update('h5p_points')
       ->fields(array(
         'finished' => time(),
-        'points' => $_POST['points'],
-        'max_points' => $_POST['maxPoints'],
+        'points' => $_POST['score'],
+        'max_points' => $_POST['maxScore'],
       ))
       ->condition('content_id', $_POST['contentId'])
       ->condition('uid', $user->uid)
