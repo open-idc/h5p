@@ -422,7 +422,7 @@ function h5p_rebuild_cache() {
   $start = microtime(TRUE);
 
   $core = _h5p_get_instance('core');
-  $contents = db_query("SELECT content_id FROM {h5p_nodes} WHERE filtered IS NULL OR filtered = ''");
+  $contents = db_query("SELECT content_id FROM {h5p_nodes} WHERE filtered = ''");
   $done = 0;
   while ($content_id = $contents->fetchField()) {
     $content = $core->loadContent($content_id);
@@ -563,7 +563,8 @@ function h5p_content_upgrade_progress($library_id) {
       db_update('h5p_nodes')
         ->fields(array(
           'main_library_id' => $to_library->id,
-          'json_content' => $param
+          'json_content' => $param,
+          'filtered' => ''
         ))
         ->condition('content_id', $id)
         ->execute();

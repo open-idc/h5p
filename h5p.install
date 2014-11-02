@@ -325,8 +325,8 @@ function h5p_schema() {
       'filtered' => array(
         'description' => 'Filtered version of json_content',
         'type' => 'text',
-        //'not null' => TRUE,
-        //'default' => '',
+        'not null' => TRUE,
+        'default' => '',
         'size' => 'big',
       ),
     ),
@@ -678,8 +678,8 @@ function h5p_update_7104() {
     db_add_field('h5p_nodes', 'filtered', array(
       'description' => 'Filtered version of json_content',
       'type' => 'text',
-      //'not null' => TRUE,
-      //'default' => '',
+      'not null' => TRUE,
+      'default' => '',
       'size' => 'big',
     ));
   }
