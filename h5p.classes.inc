@@ -676,8 +676,6 @@ class H5PDrupal implements H5PFrameworkInterface {
     ->condition('main_library_id', $library_id)
     ->execute();
 
-    // TODO: Use more specific code to remove just h5p-X-X.js/css ?
-    // TODO: Use own cache busting string for each content ?
     _drupal_flush_css_js();
     drupal_clear_js_cache();
     drupal_clear_css_cache();
