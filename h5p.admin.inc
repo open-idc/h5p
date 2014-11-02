@@ -64,9 +64,9 @@ function h5p_admin_settings($form, &$form_state) {
 
   $form['h5p_allow_communication_with_h5p_org'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Fetch library data from h5p.org'),
+    '#title' => t('Get updates from h5p.org'),
     '#default_value' => variable_get('h5p_allow_communication_with_h5p_org', '1'),
-    '#description' => t('If this option is enabled, the H5P module will fetch metadata for the libraries from h5p.org'),
+    '#description' => t('Currently only tutorials are being updated, but in the future notification about code updates and more will be fetched from H5P.org'),
   );
 
 //  $form['h5p_content_dev_mode'] = array(
