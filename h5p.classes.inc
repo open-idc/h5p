@@ -18,6 +18,14 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * Implements fetchExternalFile
+   */
+  public function fetchExternalFile($url) {
+    $response = drupal_http_request($url);
+    return isset($response->error) ? NULL : $response->data;
+  }
+
+  /**
    * Implements setLibraryTutorialUrl
    *
    * Set the tutorial URL for a library. All versions of the library is set
