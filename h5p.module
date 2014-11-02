@@ -134,7 +134,7 @@ function h5p_fetch_libraries_metadata($fetchingDisabled = FALSE) {
   // It has not been run the last week, let's do it
   // Intentionally not doing === TRUE on h5p_allow_communication_with_h5p_org test
   if ($fetchingDisabled || (variable_get('h5p_allow_communication_with_h5p_org', TRUE) &&
-     (intval(variable_get('h5p_fetched_library_metadata_on', 0)) < (time() - 604800)))) {
+     (intval(variable_get('h5p_fetched_library_metadata_on', 0)) < (time() - 86400)))) {
     // Fetch the library-metadata:
     $core = _h5p_get_instance('core');
     $core->fetchLibrariesMetadata($fetchingDisabled);

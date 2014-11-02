@@ -6,17 +6,14 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getPlatformInfo
    */
   public function getPlatformInfo() {
-
-    $uuid = variable_get('h5p_site_uuid', NULL);
-    if ($uuid === NULL) {
-      $uuid = H5PCore::generateUUID();
-      variable_set('h5p_site_uuid', $uuid);
-    }
+    // Could call system_get_info(), but performance-wise it
+    // does not seem to be smart
+    $h5p_info = unserialize(db_query("SELECT info FROM {system} WHERE name = 'h5p'")->fetchField());
 
     return array(
       'name' => 'drupal',
       'version' => VERSION,
-      'uuid' => $uuid
+      'h5pVersion' => isset($h5p_info->version) ? $h5p_info->version : NULL,
     );
   }
 
