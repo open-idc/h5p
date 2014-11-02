@@ -74,8 +74,6 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
       $form['#validate'][$i] = 'h5peditor_h5p_content_node_form_validate';
     }
   }
-
-  h5p_fetch_libraries_metadata();
 }
 
 /**
