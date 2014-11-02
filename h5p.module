@@ -672,7 +672,7 @@ function h5p_add_core_assets() {
       drupal_add_js($js);
       $assets['js'][] = $js . $cache_buster;
     }
-
+dpm($user);
     drupal_add_js(array(
       'h5p' => array(
         'contentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
@@ -681,6 +681,8 @@ function h5p_add_core_assets() {
         'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
         'postUserStatistics' => $user->uid > 0,
         'ajaxPath' => url('h5p-ajax') . '/',
+        'userName' => $user->name,
+        'userMail' => $user->mail,
       )
     ), 'setting');
   }

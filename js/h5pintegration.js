@@ -168,3 +168,14 @@ H5PIntegration.getLibraryInfo = function () {
 H5PIntegration.getAdminContainer = function () {
   return H5P.jQuery('#h5p-admin-container'); 
 };
+
+H5PIntegration.getActor = function() {
+  if (Drupal.settings.h5p === undefined) {
+    return;
+  }
+
+  return {
+    'name': Drupal.settings.h5p.userName,
+    'mbox': Drupal.settings.h5p.userMail
+  }
+};
