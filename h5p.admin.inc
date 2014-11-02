@@ -285,7 +285,7 @@ function h5p_library_delete($library_id) {
 
   // Is library deletable ?
   $h5p_drupal = _h5p_get_instance('interface');
-  $notCached = $h5p_drupal->getNotCached();
+  $notCached = $h5p_drupal->getNumNotFiltered();
   $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
   if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
     // Create form:
@@ -570,7 +570,7 @@ function h5p_content_upgrade_progress($library_id) {
         ->execute();
 
       // Clear content cache
-      $interface->cacheDel('parameters', $id);
+      $interface->setFilteredParameters($id);
     }
   }
 
