@@ -40,7 +40,6 @@ ns.Library = function (parent, field, params, setValue) {
  */
 ns.Library.prototype.appendTo = function ($wrapper) {
   var that = this;
-
   var html = '';
   if (this.field.label !== 0) {
     html = '<label class="h5peditor-label">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
@@ -122,7 +121,7 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
       // Reset params
       that.params.params = {};
     }
-
+    
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
 
     if (that.libraries !== undefined) {

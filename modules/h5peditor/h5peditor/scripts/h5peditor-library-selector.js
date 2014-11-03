@@ -14,40 +14,69 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
   var firstTime = true;
   var options = '<option value="-">-</option>';
 
-  this.defaultParams = JSON.parse(defaultParams);
+  try {
+    this.defaultParams = JSON.parse(defaultParams);
+    if (!(this.defaultParams instanceof Object)) {
+      throw true;
+    }
+  }
+  catch (event) {
+    // Content parameters are broken. Reset. (This allows for broken content to be reused without deleting it)
+    this.defaultParams = {};
+    // TODO: Inform the user?
+  }
+
   this.defaultLibrary = this.currentLibrary = defaultLibrary;
   this.defaultLibraryParameterized = defaultLibrary ? defaultLibrary.replace('.', '-').toLowerCase() : undefined;
 
   for (var i = 0; i < libraries.length; i++) {
     var library = libraries[i];
     var libraryName = ns.libraryToString(library);
-    
-    // Allow old version of library only if used by existing content
-    if (library.isOld !== true || (library.isOld === true && this.defaultLibrary === libraryName)) {
+
+    // Never deny editing existing content
+    // For new content deny old or restricted libs.
+    if (this.defaultLibrary === libraryName
+      || ((library.restricted === undefined || !library.restricted) 
+        && library.isOld !== true
+      )
+    ) {
       options += '<option value="' + libraryName + '"';
       if (libraryName === defaultLibrary || library.name === this.defaultLibraryParameterized) {
         options += ' selected="selected"';
+      }
+      if (library.tutorialUrl !== undefined) {
+        options += ' data-tutorial-url="' + library.tutorialUrl + '"';
       }
       options += '>' + library.title + (library.isOld===true ? ' (deprecated)' : '') + '</option>';
     }
   }
 
+  //Add tutorial link:
+  this.$tutorialUrl = ns.$('<a class="h5p-tutorial-url" target="_blank">' + ns.t('core', 'tutorialAvailable') + '</a>').hide();
+
   this.$selector = ns.$('<select name="h5peditor-library" title="' + ns.t('core', 'selectLibrary') + '">' + options + '</select>').change(function () {
+    var library;
     var changeLibrary = true;
+
     if (!firstTime) {
       changeLibrary = confirm(H5PEditor.t('core', 'confirmChangeLibrary'));
     }
+
     if (changeLibrary) {
-      var library = that.$selector.val();
+      library = that.$selector.val();
       that.loadSemantics(library);
       that.currentLibrary = library;
     }
     else {
       that.$selector.val(that.currentLibrary);
     }
+
     if (library !== '-') {
       firstTime = false;
     }
+
+    var tutorialUrl = ns.$(this).find(':selected').data('tutorial-url');
+    that.$tutorialUrl.attr('href', tutorialUrl).toggle(tutorialUrl !== undefined && tutorialUrl !== null && tutorialUrl.length !== 0);
   });
 };
 
@@ -61,6 +90,8 @@ ns.LibrarySelector.prototype.appendTo = function ($element) {
   this.$parent = $element;
 
   this.$selector.appendTo($element);
+  this.$tutorialUrl.appendTo($element);
+
   $element.append('<div class="h5p-more-libraries">' + ns.t('core', 'moreLibraries') + '</div>');
 };
 
