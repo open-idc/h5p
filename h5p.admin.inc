@@ -64,9 +64,9 @@ function h5p_admin_settings($form, &$form_state) {
 
   $form['h5p_allow_communication_with_h5p_org'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Fetch library data from h5p.org'),
+    '#title' => t('Get updates from h5p.org'),
     '#default_value' => variable_get('h5p_allow_communication_with_h5p_org', '1'),
-    '#description' => t('If this option is enabled, the H5P module will fetch metadata for the libraries from h5p.org'),
+    '#description' => t('Currently only tutorials are being updated, but in the future notification about code updates and more will be fetched from H5P.org'),
   );
 
 //  $form['h5p_content_dev_mode'] = array(
@@ -285,7 +285,7 @@ function h5p_library_delete($library_id) {
 
   // Is library deletable ?
   $h5p_drupal = _h5p_get_instance('interface');
-  $notCached = $h5p_drupal->getNotCached();
+  $notCached = $h5p_drupal->getNumNotFiltered();
   $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
   if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
     // Create form:
@@ -570,7 +570,7 @@ function h5p_content_upgrade_progress($library_id) {
         ->execute();
 
       // Clear content cache
-      $interface->cacheDel('parameters', $id);
+      $interface->setFilteredParameters($id);
     }
   }
 
