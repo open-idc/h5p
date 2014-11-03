@@ -1526,7 +1526,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 3
+    'minorVersion' => 4
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -1648,19 +1648,23 @@ class H5PCore {
 
     // Update content dependencies.
     $content['dependencies'] = $validator->getDependencies();
-    $this->h5pF->deleteLibraryUsage($content['id']);
-    $this->h5pF->saveLibraryUsage($content['id'], $content['dependencies']);
 
-    if ($this->exportEnabled) {
-      // Recreate export file
-      $exporter = new H5PExport($this->h5pF, $this);
-      $exporter->createExportFile($content);
+    // Sometimes the parameters are filtered before content has been created
+    if ($content['id']) {
+      $this->h5pF->deleteLibraryUsage($content['id']);
+      $this->h5pF->saveLibraryUsage($content['id'], $content['dependencies']);
 
-      // TODO: Should we rather create the file once first accessed, like imagecache?
+      if ($this->exportEnabled) {
+        // Recreate export file
+        $exporter = new H5PExport($this->h5pF, $this);
+        $exporter->createExportFile($content);
+
+        // TODO: Should we rather create the file once first accessed, like imagecache?
+      }
+
+      // Cache.
+      $this->h5pF->setFilteredParameters($content['id'], $params);
     }
-
-    // Cache.
-    $this->h5pF->setFilteredParameters($content['id'], $params);
     return $params;
   }
 
@@ -2184,7 +2188,7 @@ class H5PCore {
     $platformInfo['uuid'] = $this->h5pF->getOption('h5p_site_uuid', '');
     // Adding random string to GET to be sure nothing is cached
     $random = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 5);
-    $json = $this->h5pF->fetchExternalData('http://h5p.lvh.me/h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
+    $json = $this->h5pF->fetchExternalData('http://h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
     if ($json !== NULL) {
       $json = json_decode($json);
       if (isset($json->libraries)) {
@@ -2316,7 +2320,7 @@ class H5PContentValidator {
    */
   public function validateContentFiles($contentPath, $isLibrary = FALSE) {
     if ($this->h5pC->disableFileCheck === TRUE) {
-      return TRUE; 
+      return TRUE;
     }
 
     // Scan content directory for files, recurse into sub directories.

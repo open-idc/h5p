@@ -345,13 +345,14 @@ function h5p_form(&$node, $form_state) {
     '#weight' => 2,
   );
 
-  if (isset($node->json_content)) {
+  if (isset($node->json_content) || isset($node->translation_source) && isset($node->translation_source->json_content)) {
+    $source = isset($node->translation_source) ? $node->translation_source : $node;
     $content = array(
       'id' => h5p_get_content_id($node),
-      'title' => $node->title,
-      'params' => $node->json_content,
-      'language' => $node->language,
-      'library' => $node->main_library,
+      'title' => $source->title,
+      'params' => $source->json_content,
+      'language' => $source->language,
+      'library' => $source->main_library,
       'embedType' => 'div',
     );
     $core = _h5p_get_instance('core');
@@ -503,6 +504,7 @@ function h5p_load($nodes) {
       $node->main_library_id = $content['library']['id'];
       $node->embed_type = $content['embedType'];
       $node->main_library = $content['library'];
+      $node->filtered = $content['filtered'];
     }
   }
 }
@@ -622,12 +624,12 @@ function h5p_set_finished() {
   global $user;
   $result = array('success' => FALSE);
 
-  if ($user->uid && $_POST['contentId'] !== NULL && $_POST['points'] !== NULL && $_POST['maxPoints'] !== NULL) {
+  if ($user->uid && $_POST['contentId'] !== NULL && $_POST['score'] !== NULL && $_POST['maxScore'] !== NULL) {
     db_update('h5p_points')
       ->fields(array(
         'finished' => time(),
-        'points' => $_POST['points'],
-        'max_points' => $_POST['maxPoints'],
+        'points' => $_POST['score'],
+        'max_points' => $_POST['maxScore'],
       ))
       ->condition('content_id', $_POST['contentId'])
       ->condition('uid', $user->uid)
@@ -713,6 +715,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
     'language' => $node->language,
     'library' => $node->main_library,
     'embedType' => 'div',
+    'filtered' => $node->filtered,
   );
   $core = _h5p_get_instance('core');
 
@@ -942,6 +945,9 @@ function _h5p_get_h5p_path() {
  *  The nodes vid if we're supporting revisioning. The nodes nid if we aren't
  */
 function h5p_get_content_id($node) {
+  if (!isset($node->vid) || !isset($node->nid)) {
+    return NULL; // We might be translating
+  }
   return variable_get('h5p_revisioning', 1) ? $node->vid : $node->nid;
 }
 

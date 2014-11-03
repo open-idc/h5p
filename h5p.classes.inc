@@ -384,6 +384,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'json_content' => $content['params'],
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
+        'filtered' => '',
       ))
       ->execute();
 
@@ -434,8 +435,6 @@ class H5PDrupal implements H5PFrameworkInterface {
 
   /**
    * Implements saveLibraryUsage
-   *
-   * TODO: Does the name saveContentDependencies() better describe what this function does?
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
     $dropLibraryCssList = array();
@@ -444,7 +443,6 @@ class H5PDrupal implements H5PFrameworkInterface {
         $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
       }
     }
-
     foreach ($librariesInUse as $dependency) {
       $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
       db_insert('h5p_nodes_libraries')
@@ -586,7 +584,6 @@ class H5PDrupal implements H5PFrameworkInterface {
           ':id' => $id
         ))
         ->fetchObject();
-
     return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
   }
 
