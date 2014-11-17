@@ -169,13 +169,13 @@ H5PIntegration.getAdminContainer = function () {
   return H5P.jQuery('#h5p-admin-container'); 
 };
 
-H5PIntegration.getActor = function() {
+H5PIntegration.getUser = function() {
   if (Drupal.settings.h5p === undefined) {
     return;
   }
 
   return {
     'name': Drupal.settings.h5p.userName,
-    'mbox': Drupal.settings.h5p.userMail
+    'mail': Drupal.settings.h5p.userMail
   }
 };
