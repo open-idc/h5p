@@ -81,7 +81,7 @@ function h5p_admin_settings($form, &$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Enable library development directory (For programmers only)'),
     '#default_value' => variable_get('h5p_library_development', 0),
-    '#description' => t('Check to enable development of libraries in the %dev folder. ONLY ENABLE THIS OPTION IF YOU KNOW WHAT YOU ARE DOING!', array('%dev' => _h5p_get_h5p_path() . '/development')),
+    '#description' => t('Check to enable development of libraries in the %dev folder. ONLY ENABLE THIS OPTION IF YOU KNOW WHAT YOU ARE DOING! YOUR SITES H5P DATA WILL BE RUINED BY ENABLING THIS OPTION', array('%dev' => _h5p_get_h5p_path() . '/development')),
   );
 
   // Make changes to the settings before passing them off to
