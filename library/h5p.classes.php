@@ -1476,7 +1476,7 @@ Class H5PExport {
 
     // Create new zip instance.
     $zip = new ZipArchive();
-    $zip->open($zipPath, ZIPARCHIVE::CREATE);
+    $zip->open($zipPath, ZIPARCHIVE::CREATE | ZIPARCHIVE::OVERWRITE);
 
     // Get all files and folders in $tempPath
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempPath . DIRECTORY_SEPARATOR));
