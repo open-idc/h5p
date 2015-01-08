@@ -300,6 +300,15 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     return '';
   }
+  
+  public function lockDependencyStorage() {
+    // db_transaction often deadlocks, we do it more brutally...
+    db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
+  }
+  
+  public function unlockDependencyStorage() {
+    db_query('UNLOCK TABLES');
+  }
 
   /**
    * Implements deleteLibraryDependencies
