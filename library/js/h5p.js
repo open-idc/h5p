@@ -155,28 +155,6 @@ H5P.init = function () {
   });
 };
 
-/*
- * TODO xAPI:
- * 1. Create a xAPI.js file and move xAPI code there (public)
- * 2. Be able to listen for events from both div and iframe embedded content
- * via the same API (this is about adding communication between the iframe and
- * it's parent and make sure that the parent distributes the events from the
- * iframe) (public)
- * 3. Create a separate Drupal module that is able to listen for events from
- * both div and iframe embedded content and send them to analytics (custom for Zavango)
- * 4. Move the event system code to a separate file (public)
- * 5. Make sure the helper functions provides all the relevant data, example values 
- * and time spent (public)
- * 6. Add documentation to the functions (public)
- * 7. Add xAPI events to all the basic questiontype:
- * 7.1 Multichoice
- * 7.2 Fill in the blanks
- * 7.3 Drag and drop
- * 7.4 Drag the words
- * 7.5 Mark the words
- * 8. Add xAPI events to interactive video
- */
-
 H5P.xAPIListener = function(event) {
   if ('verb' in event.statement) {
     if (event.statement.verb.id === 'http://adlnet.gov/expapi/verbs/completed') {
@@ -186,21 +164,21 @@ H5P.xAPIListener = function(event) {
       H5P.setFinished(contentId, score, maxScore);
     }
   }
-}
+};
 
 H5P.xAPIEmitter = function (event) {
   if (event.statement !== undefined) {
     for (var i = 0; i < H5P.xAPIListeners.length; i++) {
-      H5P.xAPIListeners[i](event.statement)
+      H5P.xAPIListeners[i](event.statement);
     }
   }
-}
+};
 
 H5P.xAPIListeners = [];
 
 H5P.onXAPI = function(listener) {
   H5P.xAPIListeners.push(listener);
-}
+};
 
 H5P.onXAPI(function(statement) {
   console.log(statement);
@@ -471,7 +449,7 @@ H5P.EventEnabled.prototype.on = function(type, listener) {
     }
     this.listeners[type].push(listener);
   }
-}
+};
 
 H5P.EventEnabled.prototype.off = function (type, listener) {
   if (this.listeners[type] !== undefined) {
@@ -480,7 +458,7 @@ H5P.EventEnabled.prototype.off = function (type, listener) {
       listeners[type].splice(removeIndex, 1);
     }
   }
-}
+};
 
 H5P.EventEnabled.prototype.trigger = function (type, event) {
   if (event === null) {
@@ -491,16 +469,16 @@ H5P.EventEnabled.prototype.trigger = function (type, event) {
       this.listeners[type][i](event);
     }
   }
-}
+};
 
 H5P.Event = function() {
   // We're going to add bubbling, propagation and other features here later
-}
+};
 
 H5P.XAPIEvent = function() {
   H5P.Event.call(this);
   this.statement = {};
-}
+};
 
 H5P.XAPIEvent.prototype = Object.create(H5P.Event.prototype);
 H5P.XAPIEvent.prototype.constructor = H5P.XAPIEvent;
@@ -512,8 +490,8 @@ H5P.XAPIEvent.prototype.setScoredResult = function(score, maxScore) {
       'max': maxScore,
       'raw': score
     }
-  }
-}
+  };
+};
 
 H5P.XAPIEvent.prototype.setVerb = function(verb) {
   if (H5P.jQuery.inArray(verb, H5P.XAPIEvent.allowedXAPIVerbs) !== -1) {
@@ -522,13 +500,13 @@ H5P.XAPIEvent.prototype.setVerb = function(verb) {
       'display': {
         'en-US': verb
       }
-    }
+    };
   }
   else {
   console.log('illegal verb');
   }
   // Else: Fail silently...
-}
+};
 
 H5P.XAPIEvent.prototype.setObject = function(instance) {
   this.statement.object = {
@@ -536,17 +514,17 @@ H5P.XAPIEvent.prototype.setObject = function(instance) {
     'id': window.location.origin + Drupal.settings.basePath + 'node/' + instance.contentId,
     //'contentId': instance.contentId,
     'objectType': 'Activity'
-  }
-}
+  };
+};
 
 H5P.XAPIEvent.prototype.setActor = function() {
   this.statement.actor = H5P.getActor();
-}
+};
 
 H5P.EventEnabled.prototype.triggerXAPI = function(verb, extra) {
   var event = this.createXAPIEventTemplate(verb, extra);
   this.trigger('xAPI', event);
-}
+};
 
 H5P.EventEnabled.prototype.createXAPIEventTemplate = function(verb, extra) {
   var event = new H5P.XAPIEvent();
@@ -562,17 +540,17 @@ H5P.EventEnabled.prototype.createXAPIEventTemplate = function(verb, extra) {
     event.setObject(this);
   }
   return event;
-}
+};
 
 
 H5P.getActor = function() {
   var user = H5PIntegration.getUser();
   return {
     'name': user.name,
-    'mbox': 'mailto:' . user.mail,
+    'mbox': 'mailto:' + user.mail,
     'objectType': 'Agent'
-  }
-}
+  };
+};
 
 H5P.XAPIEvent.allowedXAPIVerbs = [
   'answered',
@@ -600,7 +578,7 @@ H5P.XAPIEvent.allowedXAPIVerbs = [
   'suspended',
   'terminated',
   'voided'
-]
+];
 
 /**
  * Used to print useful error messages.
