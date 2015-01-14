@@ -84,7 +84,7 @@ H5PIntegration.getHeadTags = function (contentId) {
   var basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath;
 
   var createUrl = function (path) {
-    if (path.substring(0,7) !== 'http://') {
+    if (path.substring(0,7) !== 'http://' && path.substring(0,8) !== 'https://') {
       // Not external, add base path.
       path = basePath + path;
     }
