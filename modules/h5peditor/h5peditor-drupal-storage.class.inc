@@ -13,7 +13,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getLanguage($machineName, $majorVersion, $minorVersion, $language) {
+  public function getLanguage($machineName, $majorVersion, $minorVersion, $languageCode) {
     $lang = db_query(
       "SELECT language_json
       FROM {h5p_libraries_languages} hlt
@@ -26,7 +26,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         ':name' => $machineName,
         ':major' => $majorVersion,
         ':minor' => $minorVersion,
-        ':lang' => $language->language,
+        ':lang' => $languageCode,
       ))->fetchField();
 
     return ($lang === FALSE ? NULL : $lang);
