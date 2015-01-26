@@ -84,7 +84,7 @@ H5PIntegration.getHeadTags = function (contentId) {
   var basePath = window.location.protocol + '//' + window.location.host + Drupal.settings.basePath;
 
   var createUrl = function (path) {
-    if (path.substring(0,7) !== 'http://') {
+    if (path.substring(0,7) !== 'http://' && path.substring(0,8) !== 'https://') {
       // Not external, add base path.
       path = basePath + path;
     }
@@ -138,8 +138,7 @@ H5PIntegration.i18n = {
     h5pDescription: Drupal.t('Visit H5P.org to check out more cool content.'),
     upgradeLibrary: Drupal.t('Upgrade library content'),
     viewLibrary: Drupal.t('View library details'),
-    deleteLibrary: Drupal.t('Delete library'),
-    NA: Drupal.t('N/A')
+    deleteLibrary: Drupal.t('Delete library')
   }
 };
 

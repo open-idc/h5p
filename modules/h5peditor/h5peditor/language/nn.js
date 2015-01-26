@@ -22,9 +22,11 @@ H5PEditor.language.core = {
   invalidFormat: 'Feltets verdi er på eit ugyldig format eller bruker ulovlege tegn.',
   confirmChangeLibrary: 'Er du sikker på at du ønskjer å byte bibliotek?',
   moreLibraries: 'Sjå etter <a href="http://h5p.org/content-types-and-applications" target="_blank">fleir innhaldstypar</a> på h5p.org',
-  commonFields: 'Felles felter',
+  commonFields: 'Innstillinger og tekstar',
+  commonFieldsDescription: 'Her kan du redigere innstillinger eller oversette tekstar som brukast i dette innhaldet.',
   uploading: 'Lastar opp fil, ver venleg og vent...',
   noFollow: 'Kunne ikkje følge feltet ":path".',
   editCopyright: 'Rediger opphavsrett',
-  close: 'Lukk'
+  close: 'Lukk',
+  tutorialAvailable: 'Veiledning tilgjengelig'
 };

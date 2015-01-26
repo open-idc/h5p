@@ -1,6 +1,47 @@
 <?php
 
 class H5PDrupal implements H5PFrameworkInterface {
+
+  /**
+   * Implements getPlatformInfo
+   */
+  public function getPlatformInfo() {
+    // Could call system_get_info(), but performance-wise it
+    // does not seem to be smart
+    $h5p_info = unserialize(db_query("SELECT info FROM {system} WHERE name = 'h5p'")->fetchField());
+
+    return array(
+      'name' => 'drupal',
+      'version' => VERSION,
+      'h5pVersion' => isset($h5p_info->version) ? $h5p_info->version : NULL,
+    );
+  }
+
+  /**
+   * Implements fetchExternalData
+   */
+  public function fetchExternalData($url) {
+    $response = drupal_http_request($url);
+    return isset($response->error) ? NULL : $response->data;
+  }
+
+  /**
+   * Implements setLibraryTutorialUrl
+   *
+   * Set the tutorial URL for a library. All versions of the library is set
+   *
+   * @param string $machineName
+   * @param string $tutorialUrl
+   */
+  public function setLibraryTutorialUrl($machineName, $tutorialUrl) {
+    db_update('h5p_libraries')
+    ->fields(array(
+      'tutorial_url' => $tutorialUrl,
+    ))
+    ->condition('machine_name', $machineName)
+    ->execute();
+  }
+
   /**
    * Implements setErrorMessage
    */
@@ -51,37 +92,37 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadLibraries
    */
   public function loadLibraries() {
-    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
-    
+    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable, restricted FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+
     $libraries = array();
     foreach ($res as $library) {
       $libraries[$library->name][] = $library;
     }
-    
+
     return $libraries;
   }
-  
+
   /**
    * Implementation of getUnsupportedLibraries
    */
   public function getUnsupportedLibraries() {
     return variable_get('h5p_unsupported_libraries');
   }
-  
+
   /**
    * Implementation of setUnsupportedLibraries
    */
   public function setUnsupportedLibraries($libraries) {
     variable_set('h5p_unsupported_libraries', $libraries);
   }
-  
+
   /**
    * Implements getAdminUrl
    */
   public function getAdminUrl() {
     return url('admin/content/h5p');
   }
-  
+
   /**
    * Implements getLibraryId
    */
@@ -135,27 +176,27 @@ class H5PDrupal implements H5PFrameworkInterface {
 
   /**
    * Implements getLibraryUsage
-   *  
-   * Get number of content/nodes using a library, and the number of 
+   *
+   * Get number of content/nodes using a library, and the number of
    * dependencies to other libraries
-   * 
+   *
    * @param int $libraryId
-   * @return array The array contains two elements, keyed by 'content' and 'libraries'. 
+   * @return array The array contains two elements, keyed by 'content' and 'libraries'.
    *               Each element contains a number
    */
   public function getLibraryUsage($libraryId, $skipContent = FALSE) {
     $usage = array();
-    
+
     $usage['content'] = $skipContent ? -1 : intval(db_query(
       'SELECT COUNT(distinct n.nid)
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = :id', array(':id' => $libraryId))->fetchField());
-    
+
     $usage['libraries'] = intval(db_query("SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = :id", array(':id' => $libraryId))->fetchField());
-    
+
     return $usage;
   }
-  
+
   /**
    * Implements saveLibraryData
    */
@@ -200,6 +241,11 @@ class H5PDrupal implements H5PFrameworkInterface {
       ))
       ->execute();
       $libraryData['libraryId'] = $libraryId;
+      if ($libraryData['runnable']) {
+        if (!variable_get('h5p_first_runnable_saved', 0)) {
+          variable_set('h5p_first_runnable_saved', 1);
+        }
+      }
     }
     else {
       db_update('h5p_libraries')
@@ -212,7 +258,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'preloaded_js' => $preloadedJs,
         'preloaded_css' => $preloadedCss,
         'drop_library_css' => $dropLibraryCss,
-        'semantics' => $libraryData['semantics'],
+        'semantics' => $libraryData['semantics']
       ))
       ->condition('library_id', $libraryData['libraryId'])
       ->execute();
@@ -263,22 +309,22 @@ class H5PDrupal implements H5PFrameworkInterface {
     ->condition('library_id', $libraryId)
     ->execute();
   }
-  
+
   /**
    * Implements deleteLibrary. Will delete a library's data both in the database and file system
    */
   public function deleteLibrary($libraryId) {
     $library = db_query("SELECT * FROM {h5p_libraries} WHERE library_id = :id", array(':id' => $libraryId))->fetchObject();
-    
+
     // Delete files
     H5PCore::deleteFileTree(_h5p_get_h5p_path() . '/libraries/' . $library->machine_name . '-' . $library->major_version . '.' . $library->minor_version);
-    
+
     // Delete data in database (won't delete content)
     db_delete('h5p_libraries_libraries')->condition('library_id', $libraryId)->execute();
     db_delete('h5p_libraries_languages')->condition('library_id', $libraryId)->execute();
     db_delete('h5p_libraries')->condition('library_id', $libraryId)->execute();
   }
-  
+
   /**
    * Implements saveLibraryDependencies
    */
@@ -291,7 +337,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       $query->condition('machine_name', $dependency['machineName']);
       $query->condition('major_version', $dependency['majorVersion']);
       $query->condition('minor_version', $dependency['minorVersion']);
-      
+
       db_insert('h5p_libraries_libraries')
         /*
          * TODO: The order of the required_library_id and library_id below is reversed,
@@ -303,7 +349,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         ->execute();
     }
   }
-  
+
   /**
    * Implements updateContent
    */
@@ -314,17 +360,18 @@ class H5PDrupal implements H5PFrameworkInterface {
       $this->insertContent($content, $contentMainId);
       return;
     }
-    
+
     db_update('h5p_nodes')
       ->fields(array(
         'json_content' => $content['params'],
         'embed_type' => 'div', // TODO: Determine from library?
-        'main_library_id' => $content['library']['libraryId']
+        'main_library_id' => $content['library']['libraryId'],
+        'filtered' => '',
       ))
       ->condition('content_id', $content_id)
       ->execute();
   }
-  
+
   /**
    * Implements insertContent
    */
@@ -337,9 +384,10 @@ class H5PDrupal implements H5PFrameworkInterface {
         'json_content' => $content['params'],
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
+        'filtered' => '',
       ))
       ->execute();
-    
+
     return $content['id'];
   }
 
@@ -358,7 +406,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements copyLibraryUsage
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
-    db_query(    
+    db_query(
       "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
       SELECT :toId, hnl.library_id, hnl.dependency_type, hnl.drop_css
       FROM {h5p_nodes_libraries} hnl
@@ -387,8 +435,6 @@ class H5PDrupal implements H5PFrameworkInterface {
 
   /**
    * Implements saveLibraryUsage
-   *
-   * TODO: Does the name saveContentDependencies() better describe what this function does?
    */
   public function saveLibraryUsage($contentId, $librariesInUse) {
     $dropLibraryCssList = array();
@@ -397,14 +443,13 @@ class H5PDrupal implements H5PFrameworkInterface {
         $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
       }
     }
-    
     foreach ($librariesInUse as $dependency) {
       $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
       db_insert('h5p_nodes_libraries')
         ->fields(array(
           'content_id' => $contentId,
           'library_id' => $dependency['library']['libraryId'],
-          'dependency_type' => $dependency['type'], 
+          'dependency_type' => $dependency['type'],
           'drop_css' => $dropCss,
         ))
         ->execute();
@@ -426,25 +471,26 @@ class H5PDrupal implements H5PFrameworkInterface {
                 preloaded_js,
                 preloaded_css,
                 drop_library_css,
-                fullscreen, 
-                runnable, 
-                semantics
+                fullscreen,
+                runnable,
+                semantics,
+                tutorial_url
           FROM {h5p_libraries}
           WHERE machine_name = :machine_name
           AND major_version = :major_version
-          AND minor_version = :minor_version", 
+          AND minor_version = :minor_version",
         array(
-          ':machine_name' => $machineName, 
-          ':major_version' => $majorVersion, 
+          ':machine_name' => $machineName,
+          ':major_version' => $majorVersion,
           ':minor_version' => $minorVersion
         ))
         ->fetchObject();
-    
+
     if ($library === FALSE) {
       return FALSE;
     }
     $library = H5PCore::snakeToCamel($library);
-    
+
     $result = db_query(
       "SELECT hl.machine_name AS name,
               hl.major_version AS major,
@@ -452,9 +498,9 @@ class H5PDrupal implements H5PFrameworkInterface {
               hll.dependency_type AS type
         FROM {h5p_libraries_libraries} hll
         JOIN {h5p_libraries} hl ON hll.required_library_id = hl.library_id
-        WHERE hll.library_id = :library_id", 
+        WHERE hll.library_id = :library_id",
       array(':library_id' => $library['libraryId']));
-    
+
     foreach ($result as $dependency) {
       $library[$dependency->type . 'Dependencies'][] = array(
         'machineName' => $dependency->name,
@@ -470,7 +516,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     return $library;
   }
-  
+
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
     $semanticsPath = drupal_realpath('public://' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
     if (file_exists($semanticsPath)) {
@@ -496,7 +542,7 @@ class H5PDrupal implements H5PFrameworkInterface {
             FROM {h5p_libraries}
             WHERE machine_name = :machine_name
             AND major_version = :major_version
-            AND minor_version = :minor_version", 
+            AND minor_version = :minor_version",
           array(
             ':machine_name' => $machineName,
             ':major_version' => $majorVersion,
@@ -512,7 +558,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion) {
     drupal_alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
   }
-  
+
   /**
    * Implements loadContent().
    */
@@ -528,7 +574,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.major_version AS library_major_version,
                 hl.minor_version AS library_minor_version,
                 hl.embed_types AS library_embed_types,
-                hl.fullscreen AS library_fullscreen
+                hl.fullscreen AS library_fullscreen,
+                hn.filtered
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -537,7 +584,6 @@ class H5PDrupal implements H5PFrameworkInterface {
           ':id' => $id
         ))
         ->fetchObject();
-
     return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
   }
 
@@ -545,11 +591,11 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadContentDependencies().
    */
   public function loadContentDependencies($id, $type = NULL) {
-    $query = 
+    $query =
         "SELECT hl.library_id,
                 hl.machine_name,
                 hl.major_version,
-                hl.minor_version, 
+                hl.minor_version,
                 hl.patch_version,
                 hl.preloaded_css,
                 hl.preloaded_js,
@@ -559,14 +605,14 @@ class H5PDrupal implements H5PFrameworkInterface {
           JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
           WHERE hnl.content_id = :id";
     $queryArgs = array(':id' => $id);
-    
+
     if ($type !== NULL) {
       $query .= " AND hnl.dependency_type = :dt";
       $queryArgs[':dt'] = $type;
     }
 
     $result = db_query($query, $queryArgs);
-    
+
     $dependencies = array();
     while ($dependency = $result->fetchObject()) {
       $dependencies[] = H5PCore::snakeToCamel($dependency);
@@ -574,64 +620,79 @@ class H5PDrupal implements H5PFrameworkInterface {
 
     return $dependencies;
   }
-  
+
   /**
-   * Implements cacheGet
+   * Get stored setting.
+   *
+   * @param string $name
+   *   Identifier for the setting
+   * @param string $default
+   *   Optional default value if settings is not set
+   * @return mixed
+   *   Whatever has been stored as the setting
    */
-  public function cacheGet($group, $key) {
-    $data = cache_get('h5p:' . $group . ':' . $key);
-    return $data === FALSE ? NULL : $data->data;
+  public function getOption($name, $default = NULL) {
+    return variable_get($name, $default);
   }
-  
-  
+
   /**
-   * Implements cacheSet
+   * Stores the given setting.
+   * For example when did we last check h5p.org for updates to our libraries.
+   *
+   * @param string $name
+   *   Identifier for the setting
+   * @param mixed $value Data
+   *   Whatever we want to store as the setting
    */
-  public function cacheSet($group, $key, $data) {
-    cache_set('h5p:' . $group . ':' . $key, $data);
+  public function setOption($name, $value) {
+    variable_set($name, $value);
   }
-  
+
   /**
-   * Implements cacheDel
+   * This will set the filtered parameters for the given content.
+   *
+   * @param int $content_id
+   * @param string $parameters filtered
    */
-  public function cacheDel($group, $key = NULL) {
-    static $drupal_cache_cleared;
-    
-    // Clear the given caches
-    if ($key === NULL) {
-      cache_clear_all('h5p:' . $group, 'cache', TRUE);
-    }
-    else {
-      cache_clear_all('h5p:' . $group . ':' . $key, 'cache');
-    }
-  
-    if ($group === 'parameters' && !$drupal_cache_cleared) {
-      // Clear Drupal's JS & CSS caches.
-      _drupal_flush_css_js();
-      drupal_clear_js_cache();
-      drupal_clear_css_cache();
-      
-      $drupal_cache_cleared = TRUE;
-    }
+  public function setFilteredParameters($content_id, $parameters = '') {
+    db_update('h5p_nodes')
+    ->fields(array(
+      'filtered' => $parameters,
+    ))
+    ->condition('content_id', $content_id)
+    ->execute();
   }
-  
+
   /**
-   * Implements invalidateContentCache.
+   * Will clear filtered params for all the content that uses the specified
+   * library. This means that the content dependencies will have to be rebuilt,
+   * and the parameters refiltered.
+   *
+   * @param int $library_id
    */
-  public function invalidateContentCache($library_id) {
-    $contents = db_query("SELECT DISTINCT content_id FROM {h5p_nodes_libraries} WHERE library_id = :library_id", array(':library_id' => $library_id));
-    while ($content_id = $contents->fetchField()) {
-      $this->cacheDel('parameters', $content_id);
-    }
+  public function clearFilteredParameters($library_id) {
+    db_update('h5p_nodes')
+    ->fields(array(
+      'filtered' => '',
+    ))
+    ->condition('main_library_id', $library_id)
+    ->execute();
+
+    _drupal_flush_css_js();
+    drupal_clear_js_cache();
+    drupal_clear_css_cache();
   }
-  
+
   /**
-   * Implements getNotCached.
+   * Get number of contents that has to get their content dependencies rebuilt
+   * and parameters refiltered.
+   *
+   * @return int
    */
-  public function getNotCached() {
-    return db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL")->fetchField();
+  public function getNumNotFiltered() {
+    return intval(db_query("SELECT COUNT(content_id) FROM {h5p_nodes} WHERE filtered = '' AND main_library_id > 0")->fetchField());
   }
-  
+
   /**
    * Implements getNumContent.
    */
