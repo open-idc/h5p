@@ -719,12 +719,28 @@ function h5p_add_files_and_settings($node, $embed_type) {
   );
   $core = _h5p_get_instance('core');
 
+  $filtered = $core->filterParameters($content);
+  
+  /* 
+   * Allow other modules to alter the filtered parameters,
+   * but don't decode the parameters unless it is needed
+   */
+  $modules = module_implements('h5p_filtered_params_alter');
+  if (!empty($modules)) {
+    $filtered = json_decode($filtered);
+    foreach ($modules as $module) {
+      $function = $module . '_h5p_filtered_params_alter';
+      $function($filtered);
+    }
+    $filtered = json_encode($filtered);
+  }
+  
   $settings = array(
     'h5p' => array(
       'content' => array(
         "cid-$content_id" => array(
           'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
-          'jsonContent' => $core->filterParameters($content),
+          'jsonContent' => $filtered,
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
           'embedCode' => _h5p_generate_embed_code($node->nid)
