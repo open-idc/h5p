@@ -416,8 +416,8 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
     db_query(
-      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
-      SELECT :toId, hnl.library_id, hnl.dependency_type, hnl.drop_css
+      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css, weight)
+      SELECT :toId, hnl.library_id, hnl.dependency_type, hnl.drop_css, hnl.weight
       FROM {h5p_nodes_libraries} hnl
       WHERE hnl.content_id = :fromId", array(':toId' => $contentId, ':fromId' => $copyFromId)
     );
@@ -460,6 +460,7 @@ class H5PDrupal implements H5PFrameworkInterface {
           'library_id' => $dependency['library']['libraryId'],
           'dependency_type' => $dependency['type'],
           'drop_css' => $dropCss,
+          'weight' => $dependency['weight'],
         ))
         ->execute();
     }
@@ -619,7 +620,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       $query .= " AND hnl.dependency_type = :dt";
       $queryArgs[':dt'] = $type;
     }
-
+    $query .= " ORDER BY hnl.weight";
     $result = db_query($query, $queryArgs);
 
     $dependencies = array();
