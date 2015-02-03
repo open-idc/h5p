@@ -1539,7 +1539,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 3
+    'minorVersion' => 4
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -1547,6 +1547,8 @@ class H5PCore {
   public static $scripts = array(
     'js/jquery.js',
     'js/h5p.js',
+    'js/event-dispatcher.js',
+    'js/x-api.js',
   );
   public static $adminScripts = array(
     'js/jquery.js',
