@@ -47,7 +47,7 @@ function h5peditor_menu() {
  */
 function h5peditor_access($node_id) {
   if ($node_id === '0') {
-    return user_access('create h5p_content content');
+    return node_access('create', 'h5p_content');
   }
 
   $node = node_load($node_id);
