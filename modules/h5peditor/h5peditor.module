@@ -272,6 +272,7 @@ function h5peditor_libraries_callback() {
  * @param string $library
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
+  global $language;
   $editor = h5peditor_get_instance();
 
   // TODO: Make Drupal cache result?
@@ -279,7 +280,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
 
   drupal_add_http_header('Cache-Control', 'no-cache');
   drupal_add_http_header('Content-type', 'application/json');
-  print $editor->getLibraryData($machine_name, $major_version, $minor_version);
+  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $language->language);
 }
 
 /**
