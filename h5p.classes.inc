@@ -300,12 +300,12 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     return '';
   }
-  
+
   public function lockDependencyStorage() {
     // db_transaction often deadlocks, we do it more brutally...
     db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
   }
-  
+
   public function unlockDependencyStorage() {
     db_query('UNLOCK TABLES');
   }
@@ -376,6 +376,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
+        'disable' => $content['disable']
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -394,6 +395,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
+        'disable' => $content['disable']
       ))
       ->execute();
 
@@ -585,7 +587,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.minor_version AS library_minor_version,
                 hl.embed_types AS library_embed_types,
                 hl.fullscreen AS library_fullscreen,
-                hn.filtered
+                hn.filtered,
+                hn.disable
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -642,7 +645,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    return variable_get($name, $default);
+    return variable_get('h5p_' . $name, $default);
   }
 
   /**
@@ -655,7 +658,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    *   Whatever we want to store as the setting
    */
   public function setOption($name, $value) {
-    variable_set($name, $value);
+    variable_set('h5p_' . $name, $value);
   }
 
   /**

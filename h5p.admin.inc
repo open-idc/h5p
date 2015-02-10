@@ -3,6 +3,36 @@
  * Menu callback - Form builder function for settings.
  */
 function h5p_admin_settings($form, &$form_state) {
+
+  $form['h5p_display_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Display Options'),
+    '#attributes' => array(
+      'class' => array('h5p-action-bar-settings')
+    ),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'h5p') . '/library/js/disable.js')
+    )
+  );
+
+  $labels = _h5p_get_disable_labels();
+  foreach (H5PCore::$disable as $bit => $name) {
+    $name = ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name);
+    $form['h5p_display_options']['h5p_' . $name] = array(
+      '#type' => 'checkbox',
+      '#title' => $labels[$bit],
+      '#default_value' => variable_get('h5p_' . $name, TRUE)
+    );
+  }
+  // TODO: Should we remove existing H5P files when export gets disabled?
+
+  // Disable/enable the H5P icon below each H5P
+  $form['h5p_display_options']['h5p_icon_in_action_bar'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('About H5P button'),
+    '#default_value' => variable_get('h5p_icon_in_action_bar', TRUE)
+  );
+
   $form['h5p_default_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Default h5p package path'),
@@ -18,22 +48,6 @@ function h5p_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('h5p_revisioning', '1'),
     '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
     '#disabled' => $h5p_nodes_exists,
-  );
-
-  $form['h5p_export'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable export of all H5P content'),
-    '#default_value' => variable_get('h5p_export', '1'),
-    '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files. The H5P Editor module must be enabled for export to work."),
-  );
-  // TODO: Should we remove existing H5P files when export gets disabled?
-
-  // Disable/enable the H5P icon below each H5P
-  $form['h5p_icon_in_action_bar'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display the H5P icon below each H5P'),
-    '#default_value' => variable_get('h5p_icon_in_action_bar', '1'),
-    '#description' => t("The H5P icon is a link to h5p.org"),
   );
 
   // make sure core is loaded

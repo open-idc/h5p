@@ -377,7 +377,57 @@ function h5p_form(&$node, $form_state) {
     '#default_value' => isset($node->embed_type) ? $node->embed_type : 'div',
   );
 
+  // Display options
+  if (variable_get('h5p_frame', TRUE)) {
+    $form['h5p_options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('H5P Options'),
+      '#collapsible' => true,
+      '#collapsed' => true,
+      '#group' => 'additional_settings',
+      '#attributes' => array(
+        'class' => array('h5p-action-bar-settings')
+      ),
+      '#attached' => array(
+        'js' => array(drupal_get_path('module', 'h5p') . '/library/js/disable.js')
+      )
+    );
+
+    $labels = _h5p_get_disable_labels();
+    foreach (H5PCore::$disable as $bit => $name) {
+      if (variable_get('h5p_' . ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
+        $form['h5p_options'][$name] = array(
+          '#type' => 'checkbox',
+          '#title' => $labels[$bit],
+          '#default_value' => !($node->disable & $bit)
+        );
+      }
+    }
+
+    $form['#submit'][] = '_h5p_form_submit';
+  }
+
   return $form;
+}
+
+/**
+ * Handle h5p node form submission
+ */
+function _h5p_form_submit($form, &$form_state) {
+  $form_state['values']['disable'] = H5PCore::getDisable($form_state['values']);
+}
+
+/**
+ * Provide human readable labels for display options.
+ */
+function _h5p_get_disable_labels() {
+  return array(
+    H5PCore::DISABLE_FRAME => t('Display action bar and frame'),
+    H5PCore::DISABLE_DOWNLOAD => t('Download button'),
+    H5PCore::DISABLE_EMBED => t('Embed button'),
+    H5PCore::DISABLE_COPYRIGHT => t('Copyright button'),
+    H5PCore::DISABLE_ABOUT => t('About H5P button')
+  );
 }
 
 /**
@@ -437,6 +487,7 @@ function h5p_insert($node) {
       'id' => h5p_get_content_id($node),
       'params' => $node->json_content,
       'embed_type' => $node->embed_type,
+      'disable' => $node->disable,
       'library' => array(
         'libraryId' => $node->main_library_id
       )
@@ -505,6 +556,7 @@ function h5p_load($nodes) {
       $node->embed_type = $content['embedType'];
       $node->main_library = $content['library'];
       $node->filtered = $content['filtered'];
+      $node->disable = $content['disable'];
     }
   }
 }
@@ -720,8 +772,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
   $core = _h5p_get_instance('core');
 
   $filtered = $core->filterParameters($content);
-  
-  /* 
+
+  /*
    * Allow other modules to alter the filtered parameters,
    * but don't decode the parameters unless it is needed
    */
@@ -734,7 +786,12 @@ function h5p_add_files_and_settings($node, $embed_type) {
     }
     $filtered = json_encode($filtered);
   }
-  
+
+  $node->disable |= $core->getGlobalDisable();
+  if (!variable_get('h5p_icon_in_action_bar', TRUE)) {
+    $node->disable |= H5PCore::DISABLE_ABOUT;
+  }
+
   $settings = array(
     'h5p' => array(
       'content' => array(
@@ -743,7 +800,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'jsonContent' => $filtered,
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
-          'embedCode' => _h5p_generate_embed_code($node->nid)
+          'embedCode' => _h5p_generate_embed_code($node->nid),
+          'disable' => $node->disable
         )
       )
     )
