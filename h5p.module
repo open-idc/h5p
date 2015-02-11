@@ -1049,6 +1049,15 @@ function h5p_field_extra_fields() {
       )
     )
   );
+  $extra['node']['h5p_options'] = array(
+    'form' => array(
+      'h5p_options' => array(
+        'label' => t('H5P Options'),
+        'description' => t('Display options for interactive content.'),
+        'weight' => 3,
+      )
+    )
+  );
 
   return $extra;
 }
