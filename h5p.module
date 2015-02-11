@@ -393,6 +393,10 @@ function h5p_form(&$node, $form_state) {
       )
     );
 
+    if (!isset($node->disable)) {
+      $node->disable = H5PCore::DISABLE_NONE;
+    }
+
     $labels = _h5p_get_disable_labels();
     foreach (H5PCore::$disable as $bit => $name) {
       if (variable_get('h5p_' . ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
