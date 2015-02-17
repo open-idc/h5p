@@ -745,7 +745,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'jsonContent' => $filtered,
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
-          'embedCode' => _h5p_generate_embed_code($node->nid)
+          'embedCode' => _h5p_generate_embed_code($node->nid),
+          'mainId' => $node->nid,
         )
       )
     )

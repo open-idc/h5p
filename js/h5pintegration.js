@@ -169,6 +169,14 @@ H5PIntegration.getAdminContainer = function () {
   return H5P.jQuery('#h5p-admin-container'); 
 };
 
+/**
+ * Get the logged in user's name and email
+ * 
+ * @returns {Object}
+ *  Object with properties
+ *   - name: The user's name
+ *   - mail: The user's e-mail address
+ */
 H5PIntegration.getUser = function() {
   if (Drupal.settings.h5p === undefined) {
     return;
@@ -178,4 +186,15 @@ H5PIntegration.getUser = function() {
     'name': Drupal.settings.h5p.userName,
     'mail': Drupal.settings.h5p.userMail
   }
+};
+
+/**
+ * Get the url to a content based on the contentId
+ * 
+ * @param {int} contentId - The H5P's content id
+ * @returns {String} - The url to the H5P
+ */
+H5PIntegration.getContentUrl = function(contentId) {
+  var mainId = H5PIntegration.getContentData(contentId).mainId;
+  return window.location.origin + Drupal.settings.basePath + 'node/' + mainId;
 };
