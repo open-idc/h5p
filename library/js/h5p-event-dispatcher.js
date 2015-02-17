@@ -1,6 +1,10 @@
 /** @namespace H5P */
 var H5P = H5P || {};
 
+/**
+ * The Event class for the EventDispatcher
+ * @class
+ */
 H5P.Event = function(type, data) {
   this.type = type;
   this.data = data;
@@ -27,13 +31,14 @@ H5P.EventDispatcher = (function () {
      * Add new event listener.
      *
      * @public
-     * @throws {TypeError} listener must be a function
-     * @param {String} type Event type
-     * @param {Function} listener Event listener
+     * @throws {TypeError} listener - Must be a function
+     * @param {String} type - Event type
+     * @param {Function} listener - Event listener
+     * @param {Function} thisArg - Optionally specify the this value when calling listener.
      */
-    self.on = function (type, listener, scope) {
-      if (scope === undefined) {
-        scope = self;
+    self.on = function (type, listener, thisArg) {
+      if (thisArg === undefined) {
+        thisArg = self;
       }
       if (!(listener instanceof Function)) {
         throw TypeError('listener must be a function');
@@ -44,11 +49,11 @@ H5P.EventDispatcher = (function () {
 
       if (!triggers[type]) {
         // First
-        triggers[type] = [{'listener': listener, 'scope': scope}];
+        triggers[type] = [{'listener': listener, 'thisArg': thisArg}];
       }
       else {
         // Append
-        triggers[type].push({'listener': listener, 'scope': scope});
+        triggers[type].push({'listener': listener, 'thisArg': thisArg});
       }
     };
 
@@ -56,13 +61,14 @@ H5P.EventDispatcher = (function () {
      * Add new event listener that will be fired only once.
      *
      * @public
-     * @throws {TypeError} listener must be a function
-     * @param {String} type Event type
-     * @param {Function} listener Event listener
+     * @throws {TypeError} listener - must be a function
+     * @param {String} type - Event type
+     * @param {Function} listener - Event listener
+     * @param {Function} thisArg - Optionally specify the this value when calling listener.
      */
-    self.once = function (type, listener, scope) {
-      if (scope === undefined) {
-        scope = self;
+    self.once = function (type, listener, thisArg) {
+      if (thisArg === undefined) {
+        thisArg = self;
       }
       if (!(listener instanceof Function)) {
         throw TypeError('listener must be a function');
@@ -70,10 +76,10 @@ H5P.EventDispatcher = (function () {
 
       var once = function (event) {
         self.off(event, once);
-        listener.apply(scope, event);
+        listener.apply(thisArg, event);
       };
 
-      self.on(type, once, scope);
+      self.on(type, once, thisArg);
     };
 
     /**
@@ -81,9 +87,9 @@ H5P.EventDispatcher = (function () {
      * If no listener is specified, all listeners will be removed.
      *
      * @public
-     * @throws {TypeError} listener must be a function
-     * @param {String} type Event type
-     * @param {Function} [listener] Event listener
+     * @throws {TypeError} listener - must be a function
+     * @param {String} type - Event type
+     * @param {Function} listener - Event listener
      */
     self.off = function (type, listener) {
       if (listener !== undefined && !(listener instanceof Function)) {
@@ -120,8 +126,10 @@ H5P.EventDispatcher = (function () {
      * Dispatch event.
      *
      * @public
-     * @param {String|Function}
-     *  
+     * @param {String|Function} event - Event object or event type as string
+     * @param {mixed} eventData
+     *  Custom event data(used when event type as string is used as first
+     *  argument
      */
     self.trigger = function (event, eventData) {
       if (event === undefined) {
@@ -138,7 +146,7 @@ H5P.EventDispatcher = (function () {
       }
       // Call all listeners
       for (var i = 0; i < triggers[event.type].length; i++) {
-        triggers[event.type][i].listener.call(triggers[event.type][i].scope, event);
+        triggers[event.type][i].listener.call(triggers[event.type][i].thisArg, event);
       }
     };
   }
