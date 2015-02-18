@@ -60,7 +60,11 @@ function h5peditor_access($node_id) {
 function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $node = h5peditor_get_source_node($form['#node']);
   $library = isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0);
-
+  
+  if (variable_get('h5p_first_runnable_saved', 0) === 0) {
+    drupal_set_message(t("If you don't have any H5P content types installed you may <a href=\"http://h5p.org/update-all-content-types\" target=\"_blank\">download them all at once</a> from H5P.org and upload them all at once on the <a href=\"!library_admin_url\" target=\"_blank\">library admin page</a>. Refresh this page when you've installed the libraries.", array('!library_admin_url' => url('admin/content/h5p'))));
+  }
+  
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),

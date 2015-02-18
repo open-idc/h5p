@@ -341,7 +341,7 @@ function h5p_form(&$node, $form_state) {
   $form['h5p'] = array(
     '#type' => 'file',
     '#title' => t('HTML 5 Package'),
-    '#description' => t('Select a .h5p file to upload and create interactive content from.'),
+    '#description' => t('Select a .h5p file to upload and create interactive content from. You may start with the <a href="http://h5p.org/content-types-and-applications" target="_blank">example files</a> on H5P.org'),
     '#weight' => 2,
   );
 
