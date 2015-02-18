@@ -12,29 +12,46 @@
  */
 function h5peditor_menu() {
   $items = array();
-  $h5peditor_access = array('create h5p_content content');
 
-  $items['h5peditor/libraries'] = array(
+  $items['h5peditor/%/libraries'] = array(
     'title' => 'H5peditor Libraries',
     'page callback' => 'h5peditor_libraries_callback',
-    'access arguments' => $h5peditor_access,
+    'access callback' => 'h5peditor_access',
+    'access arguments' => array(1),
     'type' => MENU_CALLBACK,
   );
-  $items['h5peditor/libraries/%/%/%'] = array(
+  $items['h5peditor/%/libraries/%/%/%'] = array(
     'title' => 'H5peditor Library',
     'page callback' => 'h5peditor_library_callback',
-    'page arguments' => array(2, 3, 4),
-    'access arguments' => $h5peditor_access,
+    'page arguments' => array(3, 4, 5),
+    'access callback' => 'h5peditor_access',
+    'access arguments' => array(1),
     'type' => MENU_CALLBACK,
   );
-  $items['h5peditor/files'] = array(
+  $items['h5peditor/%/files'] = array(
     'title' => 'H5peditor Files',
     'page callback' => 'h5peditor_files_callback',
-    'access arguments' => $h5peditor_access,
+    'access callback' => 'h5peditor_access',
+    'access arguments' => array(1),
     'type' => MENU_CALLBACK,
   );
 
   return $items;
+}
+
+/**
+ * Access callback.
+ *
+ * @param int $node_id
+ * @return bool
+ */
+function h5peditor_access($node_id) {
+  if ($node_id === '0') {
+    return node_access('create', 'h5p_content');
+  }
+
+  $node = node_load($node_id);
+  return node_access('update', $node);
 }
 
 /**
@@ -43,7 +60,11 @@ function h5peditor_menu() {
 function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $node = h5peditor_get_source_node($form['#node']);
   $library = isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0);
-
+  
+  if (variable_get('h5p_first_runnable_saved', 0) === 0) {
+    drupal_set_message(t("If you don't have any H5P content types installed you may <a href=\"http://h5p.org/update-all-content-types\" target=\"_blank\">download them all at once</a> from H5P.org and upload them all at once on the <a href=\"!library_admin_url\" target=\"_blank\">library admin page</a>. Refresh this page when you've installed the libraries.", array('!library_admin_url' => url('admin/content/h5p'))));
+  }
+  
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),
@@ -135,7 +156,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
         'width' => 50,
         'height' => 50,
       ),
-      'ajaxPath' => url('h5peditor/'),
+      'ajaxPath' => url('h5peditor/' . (isset($node->nid) ? $node->nid : 0) . '/'),
       'modulePath' => $h5peditor_module_path,
       'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
       'copyrightSemantics' => H5PContentValidator::getCopyrightSemantics(),
@@ -255,6 +276,7 @@ function h5peditor_libraries_callback() {
  * @param string $library
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
+  global $language;
   $editor = h5peditor_get_instance();
 
   // TODO: Make Drupal cache result?
@@ -262,7 +284,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
 
   drupal_add_http_header('Cache-Control', 'no-cache');
   drupal_add_http_header('Content-type', 'application/json');
-  print $editor->getLibraryData($machine_name, $major_version, $minor_version);
+  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $language->language);
 }
 
 /**

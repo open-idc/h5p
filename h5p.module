@@ -341,7 +341,7 @@ function h5p_form(&$node, $form_state) {
   $form['h5p'] = array(
     '#type' => 'file',
     '#title' => t('HTML 5 Package'),
-    '#description' => t('Select a .h5p file to upload and create interactive content from.'),
+    '#description' => t('Select a .h5p file to upload and create interactive content from. You may start with the <a href="http://h5p.org/content-types-and-applications" target="_blank">example files</a> on H5P.org'),
     '#weight' => 2,
   );
 
@@ -681,6 +681,8 @@ function h5p_add_core_assets() {
         'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
         'postUserStatistics' => $user->uid > 0,
         'ajaxPath' => url('h5p-ajax') . '/',
+        'userName' => $user->name,
+        'userMail' => $user->mail,
       )
     ), 'setting');
   }
@@ -719,15 +721,32 @@ function h5p_add_files_and_settings($node, $embed_type) {
   );
   $core = _h5p_get_instance('core');
 
+  $filtered = $core->filterParameters($content);
+  
+  /* 
+   * Allow other modules to alter the filtered parameters,
+   * but don't decode the parameters unless it is needed
+   */
+  $modules = module_implements('h5p_filtered_params_alter');
+  if (!empty($modules)) {
+    $filtered = json_decode($filtered);
+    foreach ($modules as $module) {
+      $function = $module . '_h5p_filtered_params_alter';
+      $function($filtered);
+    }
+    $filtered = json_encode($filtered);
+  }
+  
   $settings = array(
     'h5p' => array(
       'content' => array(
         "cid-$content_id" => array(
           'library' => $node->main_library['name'] . ' ' . $node->main_library['majorVersion'] . '.' . $node->main_library['minorVersion'],
-          'jsonContent' => $core->filterParameters($content),
+          'jsonContent' => $filtered,
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
-          'embedCode' => _h5p_generate_embed_code($node->nid)
+          'embedCode' => _h5p_generate_embed_code($node->nid),
+          'mainId' => $node->nid,
         )
       )
     )

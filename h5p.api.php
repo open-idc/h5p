@@ -26,4 +26,28 @@ function hook_h5p_semantics_alter(&$semantics, $machine_name, $major_version, $m
   }
 }
 
+/**
+ * Alter an H5Ps parameters
+ * 
+ * May be used to alter the content itself or the behaviour of the H5P
+ * 
+ * @param type $filtered
+ *  json object
+ */
+function hook_h5p_filtered_params_alter(&$filtered) {
+  // Example code from the Quiz module
+  // Disables the retry and solutions options at the end of H5P questions
+  if (_quiz_is_taking_context()) {
+    if (isset($filtered->behaviour)) {
+      $quiz = quiz_get_quiz_from_menu();
+      if (isset($filtered->behaviour->enableRetry)) {
+        $filtered->behaviour->enableRetry = FALSE;
+      }
+      if (isset($filtered->behaviour->enableSolutionsButton)) {
+        $filtered->behaviour->enableSolutionsButton = $quiz->display_feedback && $quiz->feedback_time == QUIZ_FEEDBACK_QUESTION;
+      }
+    }
+  }
+}
+
 ?>

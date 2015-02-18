@@ -13,7 +13,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getLanguage($machineName, $majorVersion, $minorVersion, $language) {
+  public function getLanguage($machineName, $majorVersion, $minorVersion, $languageCode) {
     $lang = db_query(
       "SELECT language_json
       FROM {h5p_libraries_languages} hlt
@@ -26,7 +26,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         ':name' => $machineName,
         ':major' => $majorVersion,
         ':minor' => $minorVersion,
-        ':lang' => $language->language,
+        ':lang' => $languageCode,
       ))->fetchField();
 
     return ($lang === FALSE ? NULL : $lang);
@@ -56,14 +56,16 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    * TODO
    */
   public function keepFile($oldPath, $newPath) {
+    $oldCleanedPath = str_replace(DIRECTORY_SEPARATOR, '/', $oldPath);
+    $newCleanedPath = str_replace(DIRECTORY_SEPARATOR, '/', $newPath);
     // TODO: Add to file usage?
     $path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/';
     db_update('file_managed')
     ->fields(array(
-      'uri' => str_replace($path, 'public://', $newPath),
+      'uri' => str_replace($path, 'public://', $newCleanedPath),
       'status' => FILE_STATUS_PERMANENT,
     ))
-    ->condition('uri', str_replace($path, 'public://', $oldPath))
+    ->condition('uri', str_replace($path, 'public://', $oldCleanedPath))
     ->execute();
   }
 
