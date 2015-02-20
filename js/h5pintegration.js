@@ -1,3 +1,6 @@
+/** @namespace H5P */
+var H5P = H5P || {};
+
 // If run in an iframe, use parent version of globals.
 if (window.parent !== window) {
   Drupal = window.parent.Drupal;
@@ -14,11 +17,13 @@ H5P.jQuery(document).ready(function () {
   H5P.postUserStatistics = Drupal.settings.h5p.postUserStatistics;
   H5P.ajaxPath = Drupal.settings.h5p.ajaxPath;
   H5P.url = Drupal.settings.h5p.url;
-  H5P.l10n = {H5P: Drupal.settings.h5p.i18n};
+  H5P.l10n = H5PIntegration.i18n = {H5P: Drupal.settings.h5p.i18n};
   H5P.contentDatas = Drupal.settings.h5p.content;
   H5P.user = Drupal.settings.h5p.user;
 
-  H5P.init();
+  if (H5P.init !== undefined) {
+    H5P.init();
+  }
 });
 
 /**

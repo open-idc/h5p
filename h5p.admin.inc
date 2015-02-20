@@ -338,6 +338,10 @@ function _h5p_admin_add_generic_css_and_js($module_path) {
   drupal_add_js($module_path . '/js/h5pintegration.js');
   drupal_add_css($module_path . '/library/styles/h5p.css');
   drupal_add_css($module_path . '/library/styles/h5p-admin.css');
+
+  drupal_add_js(array(
+    'h5p' => h5p_get_core_settings()
+  ), 'setting');
 }
 
 /**
