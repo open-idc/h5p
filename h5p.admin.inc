@@ -332,10 +332,10 @@ function h5p_library_delete_form_submit($form, &$form_state) {
  * @param {string} $module_path The H5P path
  */
 function _h5p_admin_add_generic_css_and_js($module_path) {
-  drupal_add_js($module_path . '/js/h5pintegration.js');
   foreach (H5PCore::$adminScripts as $script) {
     drupal_add_js($module_path . '/library/' . $script);
   }
+  drupal_add_js($module_path . '/js/h5pintegration.js');
   drupal_add_css($module_path . '/library/styles/h5p.css');
   drupal_add_css($module_path . '/library/styles/h5p-admin.css');
 }
