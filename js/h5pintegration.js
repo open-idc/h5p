@@ -55,10 +55,10 @@ H5P.getHeadTags = function (contentId) {
     return tags;
   };
 
-  return createStyleTags(Drupal.settings.h5p.core.styles)
-       + createStyleTags(Drupal.settings.h5p['cid-' + contentId].styles)
-       + createScriptTags(Drupal.settings.h5p.core.scripts)
-       + createScriptTags(Drupal.settings.h5p['cid-' + contentId].scripts);
+  return createStyleTags(Drupal.settings.h5p.core.styles) +
+         createStyleTags(Drupal.settings.h5p['cid-' + contentId].styles) +
+         createScriptTags(Drupal.settings.h5p.core.scripts) +
+         createScriptTags(Drupal.settings.h5p['cid-' + contentId].scripts);
 };
 
 /**
