@@ -796,7 +796,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'jsonContent' => $filtered,
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
-          'embedCode' => '<script src="' . url(drupal_get_path('module', 'h5p') . '/library/js/h5p-resizer.js', array('absolute' => TRUE, 'language' => (object)array('language' => FALSE))) . '"></script>' . "\n" . '<iframe src="' . url('h5p/new-embed/' . $content['id'], array('absolute' => TRUE)) . '" width="640" height="421" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+          'embedCode' => '<script src="' . url(drupal_get_path('module', 'h5p') . '/library/js/h5p-resizer.js', array('absolute' => TRUE, 'language' => (object)array('language' => FALSE))) . '"></script>' . "\n" . '<iframe src="' . url('h5p/new-embed/' . $node->nid, array('absolute' => TRUE)) . '" width="640" height="421" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
           'mainId' => $node->nid,
         )
       )
