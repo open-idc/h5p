@@ -720,6 +720,10 @@ function h5p_get_core_settings() {
       'download' => t('Download'),
       'copyrights' => t('Rights of use'),
       'embed' => t('Embed'),
+      'size' => t('Size'),
+      'showAdvanced' => t('Show advanced'),
+      'hideAdvanced' => t('Hide advanced'),
+      'advancedHelp' => t('Include this script on your website if you want dynamic sizing of the embedded content:'),
       'copyrightInformation' => t('Rights of use'),
       'close' => t('Close'),
       'title' => t('Title'),
@@ -796,7 +800,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'jsonContent' => $filtered,
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
-          'embedCode' => '<script src="' . url(drupal_get_path('module', 'h5p') . '/library/js/h5p-resizer.js', array('absolute' => TRUE, 'language' => (object)array('language' => FALSE))) . '"></script>' . "\n" . '<iframe src="' . url('h5p/new-embed/' . $node->nid, array('absolute' => TRUE)) . '" width="640" height="421" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+          'embedCode' => '<iframe src="' . url('h5p/new-embed/' . $node->nid, array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+          'resizeCode' => '<script src="' . url(drupal_get_path('module', 'h5p') . '/library/js/h5p-resizer.js', array('absolute' => TRUE, 'language' => (object)array('language' => FALSE))) . '"></script>',
           'mainId' => $node->nid,
         )
       )
