@@ -111,6 +111,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
 
   $node = h5peditor_get_source_node($form['#node']);
   $assets = h5p_add_core_assets();
+  h5p_add_files_and_settings(TRUE, TRUE); // Force integration
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
   $cache_buster = '?' . variable_get('css_js_query_string', '');

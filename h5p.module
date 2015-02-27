@@ -680,16 +680,16 @@ function h5p_get_resize_url() {
 function h5p_add_files_and_settings($node, $embed_type) {
   static $integration, $added_js, $added_css;
 
+  if ($node === NULL) {
+    return $integration; // For printing
+  }
+
   if (is_null($integration)) {
     // Add integration object
     $integration = h5p_get_core_settings();
 
     // Add core scripts and styles
     h5p_add_core_assets();
-  }
-
-  if ($node === NULL) {
-    return $integration; // For printing
   }
 
   if (!isset($node->json_content) || !isset($node->nid)) {
@@ -1073,5 +1073,7 @@ function h5p_embed($node) {
  */
 function h5p_preprocess_html(&$variables) {
   $integration = h5p_add_files_and_settings(NULL, NULL);
-  drupal_add_js('H5PIntegration = ' . json_encode($integration) . '; H5P.jQuery(document).ready(function () { H5P.init(); });' , 'inline');
+  if ($integration) {
+    drupal_add_js('H5PIntegration = ' . json_encode($integration) . '; H5P.jQuery(document).ready(function () { H5P.init(); });' , 'inline');
+  }
 }
