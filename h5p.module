@@ -662,7 +662,7 @@ function h5p_get_content_settings($content) {
     'jsonContent' => $filtered,
     'fullScreen' => $content['library']['fullscreen'],
     'exportUrl' => h5p_get_export_path($content['id']),
-    'embedCode' => '<iframe src="' . url('h5p/new-embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+    'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
     'mainId' => $content['mainId']
   );
