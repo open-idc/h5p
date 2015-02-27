@@ -159,7 +159,7 @@ function h5p_library_list() {
         $restricted_url = NULL;
       }
 
-      $settings['h5p']['libraries']['listData'][] = array(
+      $settings['libraryList']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
         'restricted' => $restricted,
         'restrictedUrl' => $restricted_url,
@@ -176,19 +176,16 @@ function h5p_library_list() {
   }
 
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Restricted'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions'));
+  $settings['libraryList']['listHeaders'] = array(t('Title'), t('Restricted'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions'));
 
   // Make it possible to rebuild all caches.
   if ($numNotFiltered) {
-    $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($numNotFiltered);
+    $settings['libraryList']['notCached'] = h5p_get_not_cached_settings($numNotFiltered);
   }
-
-  // Include libraries and more to Drupal setting
-  drupal_add_js($settings, 'setting');
 
   // Add the needed css and javascript
   $module_path = drupal_get_path('module', 'h5p');
-  _h5p_admin_add_generic_css_and_js($module_path);
+  _h5p_admin_add_generic_css_and_js($module_path, $settings);
   drupal_add_js($module_path . '/library/js/h5p-library-list.js');
 
   $upgrade_all_libraries = variable_get('h5p_unsupported_libraries', NULL) === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
@@ -229,7 +226,7 @@ function h5p_library_details($library_id) {
   $library = db_query('SELECT title, machine_name, major_version, minor_version, patch_version, runnable, fullscreen FROM {h5p_libraries} where library_id = :id', array('id' => $library_id))->fetchObject();
 
   // Build library info
-  $settings['h5p']['library']['info'] = array(
+  $settings['libraryInfo']['info'] = array(
     t('Name') => $library->title,
     t('Machine name') => $library->machine_name,
     t('Version') => H5PCore::libraryVersion($library),
@@ -238,7 +235,7 @@ function h5p_library_details($library_id) {
   );
 
   // Build the translations needed
-  $settings['h5p']['library']['translations'] = array(
+  $settings['libraryInfo']['translations'] = array(
     'contentCount' => t('Content count'),
     'noContent' => t('No content is using this library'),
     'contentHeader' => t('Content using this library'),
@@ -250,24 +247,21 @@ function h5p_library_details($library_id) {
   $h5p_drupal = _h5p_get_instance('interface');
   $numNotFiltered = $h5p_drupal->getNumNotFiltered();
   if ($numNotFiltered) {
-    $settings['h5p']['library']['notCached'] = h5p_get_not_cached_settings($numNotFiltered);
+    $settings['libraryInfo']['notCached'] = h5p_get_not_cached_settings($numNotFiltered);
   }
   else {
     // Build a list of the content using this library
     $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l join {h5p_nodes} hn on l.content_id = hn.content_id join {node} n on hn.nid = n.nid  where library_id = :id order by n.title', array(':id' => $library_id));
     foreach($nodes_res as $node) {
-      $settings['h5p']['library']['content'][] = array(
+      $settings['libraryInfo']['content'][] = array(
         'title' => $node->title,
         'url' => url('node/' . $node->nid),
       );
     }
   }
 
-  // Include all above in Drupal setting
-  drupal_add_js($settings, 'setting');
-
   $module_path = drupal_get_path('module', 'h5p');
-  _h5p_admin_add_generic_css_and_js($module_path);
+  _h5p_admin_add_generic_css_and_js($module_path, $settings);
   drupal_add_js($module_path . '/library/js/h5p-library-details.js');
 
   // Create the container which all admin content
@@ -331,11 +325,24 @@ function h5p_library_delete_form_submit($form, &$form_state) {
  *
  * @param {string} $module_path The H5P path
  */
-function _h5p_admin_add_generic_css_and_js($module_path) {
+function _h5p_admin_add_generic_css_and_js($module_path, $settings = NULL) {
   foreach (H5PCore::$adminScripts as $script) {
     drupal_add_js($module_path . '/library/' . $script);
   }
-  drupal_add_js($module_path . '/js/h5pintegration.js');
+
+  if ($settings === NULL) {
+    $settings = array();
+  }
+
+  $settings['containerSelector'] = '#h5p-admin-container';
+  $settings['l10n'] = array(
+    'NA' => t('N/A'),
+    'viewLibrary' => t('View library details'),
+    'deleteLibrary' => t('Delete library'),
+    'upgradeLibrary' => t('Upgrade library content')
+  );
+
+  drupal_add_js('H5PAdminIntegration = ' . json_encode($settings) . ';', 'inline');
   drupal_add_css($module_path . '/library/styles/h5p.css');
   drupal_add_css($module_path . '/library/styles/h5p-admin.css');
 
@@ -498,33 +505,31 @@ function h5p_content_upgrade($library_id) {
 
   // Add JavaScript settings
   $return = filter_input(INPUT_GET, 'destination');
-  drupal_add_js(array(
-    'h5p' => array(
+  $settings = array(
+    'libraryInfo' => array(
+      'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
+      'inProgress' => t('Upgrading to %ver...'),
+      'error' => t('An error occurred while processing parameters:'),
+      'errorData' => t('Could not load data for library %lib.'),
+      'errorScript' => t('Could not load upgrades script for %lib.'),
+      'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
       'library' => array(
-        'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
-        'inProgress' => t('Upgrading to %ver...'),
-        'error' => t('An error occurred while processing parameters:'),
-        'errorData' => t('Could not load data for library %lib.'),
-        'errorScript' => t('Could not load upgrades script for %lib.'),
-        'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
-        'library' => array(
-          'name' => $library->name,
-          'version' => $library->major_version . '.' . $library->minor_version,
-        ),
-        'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
-        'versions' => $upgrades,
-        'contents' => $contents,
-        'buttonLabel' => t('Upgrade'),
-        'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
-        'total' => $contents,
-        'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
-      )
+        'name' => $library->name,
+        'version' => $library->major_version . '.' . $library->minor_version,
+      ),
+      'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
+      'versions' => $upgrades,
+      'contents' => $contents,
+      'buttonLabel' => t('Upgrade'),
+      'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
+      'total' => $contents,
+      'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
     )
-  ), 'setting');
+  );
 
   // Add JavaScripts
   $module_path = drupal_get_path('module', 'h5p');
-  _h5p_admin_add_generic_css_and_js($module_path);
+  _h5p_admin_add_generic_css_and_js($module_path, $settings);
   drupal_add_js($module_path . '/library/js/h5p-content-upgrade.js');
 
   return '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';
