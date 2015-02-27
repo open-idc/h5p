@@ -130,20 +130,6 @@ function h5p_menu() {
 }
 
 /**
- * Implements hook_theme().
- */
-function h5p_theme() {
-  $theme = array(
-    'h5p_embed' => array(
-      'template' => 'h5p-embed',
-      'arguments' => array('lang' => NULL, 'content' => NULL, 'contentSettings' => NULL, 'scripts' => NULL, 'styles' => NULL, 'settings' => NULL),
-    )
-  );
-  return $theme;
-}
-
-
-/**
  * Implements hook_cron().
  */
 function h5p_cron() {
@@ -1172,12 +1158,6 @@ function h5p_new_embed($node) {
     $styles[] = base_path() . $style->path . $style->version;
   }
 
-  print theme('h5p_embed', array(
-    'lang' => $language->language,
-    'content' => $content,
-    'contentSettings' => $contentSettings,
-    'scripts' => $scripts,
-    'styles' => $styles,
-    'settings' => $settings
-  ));
+  $lang = $language->language;
+  include('library/embed.php');
 }
