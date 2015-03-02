@@ -198,8 +198,9 @@ H5P.init = function () {
           H5P.trigger(instance, 'resize');
         }
       });
-      H5P.instances.push(instance);
     }
+    
+    H5P.instances.push(instance);
 
     // Resize content.
     H5P.trigger(instance, 'resize');
