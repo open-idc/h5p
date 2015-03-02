@@ -584,15 +584,11 @@ function h5p_add_core_assets() {
 function h5p_get_core_settings() {
   global $user;
 
-  return array(
+  $settings = array(
     'basePath' => base_path(),
     'url' => base_path() . _h5p_get_h5p_path(),
     'postUserStatistics' =>  $user->uid > 0,
     'ajaxPath' => url('h5p-ajax') . '/',
-    'user' => array(
-      'name' => $user->uid ? $user->name : 'Anonymous',
-      'mail' => $user->uid ? $user->mail : ''
-    ),
     'l10n' => array(
       'H5P' => array( // Could core provide this?
         'fullscreen' => t('Fullscreen'),
@@ -620,6 +616,15 @@ function h5p_get_core_settings() {
       )
     )
   );
+
+  if ($user->uid) {
+    $settings['user'] = array(
+      'name' => $user->name,
+      'mail' => $user->mail
+    );
+  }
+
+  return $settings;
 }
 
 function h5p_get_content($node) {
