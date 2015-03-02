@@ -616,11 +616,7 @@ function h5p_get_core_settings() {
         'downloadDescription' => t('Download this content as a H5P file.'),
         'copyrightsDescription' => t('View copyright information for this content.'),
         'embedDescription' => t('View the embed code for this content.'),
-        'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
-        'upgradeLibrary' => t('Upgrade library content'),
-        'viewLibrary' => t('View library details'),
-        'deleteLibrary' => t('Delete library'),
-        'NA' => t('N/A')
+        'h5pDescription' => t('Visit H5P.org to check out more cool content.')
       )
     )
   );
