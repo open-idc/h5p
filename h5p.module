@@ -616,14 +616,14 @@ function h5p_get_core_settings() {
       )
     )
   );
-  
+
   if ($user->uid) {
     $settings['user'] = array(
       'name' => $user->name,
       'mail' => $user->mail
     );
   }
-  
+
   return $settings;
 }
 
