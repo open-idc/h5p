@@ -318,7 +318,7 @@ class H5peditor {
     $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion, $languageCode);
 
     $files = $this->h5p->getDependenciesFiles($libraries);
-    $this->storage->alterFiles($files, $libraries);
+    $this->storage->alterLibraryFiles($files, $libraries);
 
     // Javascripts
     if (!empty($files['scripts'])) {

@@ -35,5 +35,5 @@ interface H5peditorStorage {
    *  List of libraries indexed by machineName with objects as values. The objects
    *  have majorVersion and minorVersion as properties.
    */
-  public function alterFiles(&$files, $libraries);
+  public function alterLibraryFiles(&$files, $libraries);
 }
