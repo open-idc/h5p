@@ -50,4 +50,50 @@ function hook_h5p_filtered_params_alter(&$filtered) {
   }
 }
 
+/**
+ * Add styles to H5Ps
+ * 
+ * @param array $styles
+ *  Array of objects with properties path and version. Version is on the form
+ *  ?ver=1.0.2 and is used as a cache buster
+ * @param array $libraries
+ *  Array of libraries indexed by the library's machineName and with an array
+ *  as value. The value has the properties majorVersion and minorVersion
+ * @param string $mode
+ *  What mode are we in? Possible values are "editor", "div", "iframe" and "external"
+ */
+function hook_h5p_styles_alter(&$styles, $libraries, $mode) {
+  if (isset($libraries['H5P.MultiChoice']) && $libraries['H5P.MultiChoice']['majorVersion'] == '1') {
+    $styles[] = (object) array(
+      // Path relative to drupal root
+      'path' => drupal_get_path('module', 'mymodule') . '/h5p-overrides.css',
+      // Cache buster
+      'version' => '?ver=1',
+    );
+  }
+}
+
+/**
+ * Add scripts to h5ps
+ * 
+ * @param array $scripts
+ *  Array of objects with properties path and version. Version is on the form
+ *  ?ver=1.0.2 and is used as a cache buster
+ * @param array $libraries
+ *  Array of libraries indexed by the library's machineName and with an array
+ *  as value. The value has the properties majorVersion and minorVersion
+ * @param string $mode
+ *  What mode are we in? Possible values are "editor", "div", "iframe" and "external"
+ */
+function hook_h5p_scripts_alter(&$scripts, $libraries, $mode) {
+  if (isset($libraries['H5P.MultiChoice']) && $libraries['H5P.MultiChoice']['majorVersion'] == '1') {
+    $scripts[] = (object) array(
+      // Path relative to drupal root
+      'path' => drupal_get_path('module', 'mymodule') . '/h5p-overrides.js',
+      // Cache buster
+      'version' => '?ver=1',
+    );
+  }
+}
+
 ?>
