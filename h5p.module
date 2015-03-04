@@ -707,7 +707,11 @@ function h5p_add_files_and_settings($node, $embed_type) {
   $core = _h5p_get_instance('core');
   $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
   $files = $core->getDependenciesFiles($preloaded_dependencies);
-
+  $library_list = _h5p_dependencies_to_library_list($preloaded_dependencies);
+  
+  drupal_alter('h5p_view_scripts', $files['scripts'], $library_list, $embed_type);
+  drupal_alter('h5p_view_styles', $files['styles'], $library_list, $embed_type);
+  
   if ($embed_type === 'div') {
     foreach ($files['scripts'] as $script) {
       $url = $script->path . $script->version;
@@ -1057,7 +1061,12 @@ function h5p_embed($node) {
   $core = _h5p_get_instance('core');
   $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
   $files = $core->getDependenciesFiles($preloaded_dependencies);
+  $library_list = _h5p_dependencies_to_library_list($preloaded_dependencies);
 
+  $mode = 'external';
+  drupal_alter('h5p_view_scripts', $files['scripts'], $library_list, $mode);
+  drupal_alter('h5p_view_styles', $files['styles'], $library_list, $mode);
+  
   foreach ($files['scripts'] as $script) {
     $scripts[] = base_path() . $script->path . $script->version;
   }
@@ -1077,4 +1086,24 @@ function h5p_preprocess_html(&$variables) {
   if ($integration) {
     drupal_add_js('H5PIntegration = ' . json_encode($integration) . '; H5P.jQuery(document).ready(function () { H5P.init(); });' , 'inline');
   }
+}
+
+/**
+ * Get a list of libraries more suitable for inspection than the dependencies list
+ * 
+ * @param array $dependencies
+ *  List of dependencies on the format returned from H5P core
+ * @return array
+ *  List of libraries indexed by machineName and with objects as values with 
+ *  major and minor versions as properties.
+ */
+function _h5p_dependencies_to_library_list($dependencies) {
+  $library_list = array();
+  foreach ($dependencies as $dependency) {
+    $library_list[$dependency['machineName']] = array(
+      'majorVersion' => $dependency['majorVersion'],
+      'minorVersion' => $dependency['minorVersion'],
+    );
+  }
+  return $library_list;
 }
