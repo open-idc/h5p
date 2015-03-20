@@ -706,7 +706,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
 
   $core = _h5p_get_instance('core');
   $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
-  $files = $core->getDependenciesFiles($preloaded_dependencies);
+  $files = $core->getDependenciesFiles($preloaded_dependencies, _h5p_get_h5p_path());
   $library_list = _h5p_dependencies_to_library_list($preloaded_dependencies);
 
   drupal_alter('h5p_scripts', $files['scripts'], $library_list, $embed_type);
@@ -714,7 +714,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
 
   if ($embed_type === 'div') {
     foreach ($files['scripts'] as $script) {
-      $url = $script->path . $script->version;
+      $url = base_path() . $script->path . $script->version;
       if (!isset($added_js[$url])) {
         drupal_add_js($script->path);
         $integration['loadedJs'] = $url;
@@ -722,7 +722,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
       }
     }
     foreach ($files['styles'] as $style) {
-      $url = $style->path . $style->version;
+      $url = base_path() . $style->path . $style->version;
       if (!isset($added_css[$url])) {
         drupal_add_css($style->path);
         $integration['loadedCss'][] = $url;
@@ -874,7 +874,7 @@ function _h5p_get_instance($type) {
       drupal_set_message($message, 'warning', FALSE);
     }
 
-    $core = new H5PCore($interface, _h5p_get_h5p_path(), $language->language, (variable_get('h5p_export', '1') ? TRUE : FALSE), $development_mode);
+    $core = new H5PCore($interface, _h5p_get_h5p_path(), base_path(), $language->language, (variable_get('h5p_export', '1') ? TRUE : FALSE), $development_mode);
   }
 
   switch ($type) {
@@ -1060,19 +1060,15 @@ function h5p_embed($node) {
   // Get content assets
   $core = _h5p_get_instance('core');
   $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
-  $files = $core->getDependenciesFiles($preloaded_dependencies);
+  $files = $core->getDependenciesFiles($preloaded_dependencies, _h5p_get_h5p_path());
   $library_list = _h5p_dependencies_to_library_list($preloaded_dependencies);
 
   $mode = 'external';
   drupal_alter('h5p_scripts', $files['scripts'], $library_list, $mode);
   drupal_alter('h5p_styles', $files['styles'], $library_list, $mode);
 
-  foreach ($files['scripts'] as $script) {
-    $scripts[] = base_path() . $script->path . $script->version;
-  }
-  foreach ($files['styles'] as $style) {
-    $styles[] = base_path() . $style->path . $style->version;
-  }
+  $scripts = array_merge($scripts, $core->getAssetsUrls($files['scripts']));
+  $styles = array_merge($styles, $core->getAssetsUrls($files['styles']));
 
   $lang = $language->language;
   include('library/embed.php');
