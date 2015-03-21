@@ -735,14 +735,12 @@ function h5p_add_files_and_settings($node, $embed_type) {
   }
 }
 
-
 /**
  * Add the necessary assets for content to run in an iframe.
  *
  * @param array $integration
  * @param int $content_id
  * @param array $files
- * @param string $cache_file_prefix
  */
 function h5p_add_iframe_assets(&$integration, $content_id, $files) {
   static $core_added;
