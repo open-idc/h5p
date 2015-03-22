@@ -117,6 +117,14 @@ function h5p_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+  $items['h5p-ajax/content-user-data/%/%'] = array(
+    'title' => 'H5P Content User Data',
+    'page callback' => 'h5p_content_user_data',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -142,6 +150,7 @@ function h5p_fetch_libraries_metadata($fetchingDisabled = FALSE) {
 
 /**
  * Make URLs absolute.
+ * TODO: Should this be removed? Doesn't look like it's used
  *
  * @param array $urls
  * @param array $remove Optional urls to skip.
@@ -379,6 +388,12 @@ function h5p_update($node) {
     else {
       h5p_insert($node);
     }
+
+    // Content changed. Remove user data.
+    db_delete('h5p_content_user_data')
+      ->condition('content_main_id', h5p_get_content_id($node))
+      ->condition('delete_on_content_change', 1)
+      ->execute();
   }
 }
 
@@ -396,6 +411,11 @@ function h5p_delete($node) {
   }
   db_delete('h5p_points')
     ->condition('content_id', h5p_get_content_id($node))
+    ->execute();
+
+  // Remove content user data
+  db_delete('h5p_content_user_data')
+    ->condition('content_sub_id', $node->nid)
     ->execute();
 }
 
@@ -484,6 +504,11 @@ function _h5p_display_unsupported_libraries($display_details = FALSE) {
 function h5p_user_delete($account) {
   db_delete('h5p_points')
     ->condition('uid', $account->uid)
+    ->execute();
+
+  // Remove content user data
+  db_delete('h5p_content_user_data')
+    ->condition('user_id', $account->uid)
     ->execute();
 }
 
@@ -641,6 +666,8 @@ function h5p_get_content($node) {
 }
 
 function h5p_get_content_settings($content) {
+  global $user;
+
   $core = _h5p_get_instance('core');
   $filtered = $core->filterParameters($content);
 
@@ -658,6 +685,21 @@ function h5p_get_content_settings($content) {
     $filtered = json_encode($filtered);
   }
 
+  // Get preloaded user datas
+  $results = db_query("SELECT data_id, data FROM {h5p_content_user_data}
+                                WHERE user_id = :user_id
+                                  AND content_main_id = :content_id
+                                  AND preloaded = 1",
+                               array(
+                                 ':user_id' => $user->uid,
+                                 ':content_id' => $content['id']
+                               ));
+
+  $content_user_datas = array();
+  foreach ($results as $result) {
+    $content_user_datas[$result->data_id] = $result->data;
+  }
+
   return array(
     'library' => H5PCore::libraryToString($content['library']),
     'jsonContent' => $filtered,
@@ -665,7 +707,8 @@ function h5p_get_content_settings($content) {
     'exportUrl' => h5p_get_export_path($content['id']),
     'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
-    'mainId' => $content['mainId']
+    'mainId' => $content['mainId'],
+    'contentUserDatas' => $content_user_datas
   );
 }
 
@@ -1003,6 +1046,108 @@ function h5p_access_user_points($account = NULL) {
     }
   }
   return FALSE;
+}
+
+/**
+ * Handles insert, updating and deleteing content user data through AJAX.
+ * TODO: Use token to prevent false deletion of data?
+ *
+ * @param string $content_id
+ * @param string $data_type
+ * @return string JSON
+ */
+function h5p_content_user_data($content_id, $data_type) {
+  global $user;
+
+  if (!$user->uid) {
+    drupal_access_denied();
+    return;
+  }
+
+  $response = (object) array(
+    'success' => TRUE
+  );
+
+  $data = filter_input(INPUT_POST, 'data');
+  $preload = filter_input(INPUT_POST, 'preload');
+  $invalidate = filter_input(INPUT_POST, 'invalidate');
+  if ($data !== NULL && $preload !== NULL && $invalidate !== NULL) {
+    if ($data === '0') {
+      // Remove data
+      db_delete('h5p_content_user_data')
+        ->condition('content_main_id', $content_id)
+        ->condition('data_id', $data_type)
+        ->condition('user_id', $user->uid)
+        ->execute();
+    }
+    else {
+      // Wash values to ensure 0 or 1.
+      $preload = ($preload === '0' ? 0 : 1);
+      $invalidate = ($invalidate === '0' ? 0 : 1);
+
+      // Determine if we should update or insert
+      $content_main_id = db_query("SELECT content_main_id
+                                   FROM {h5p_content_user_data}
+                                   WHERE content_main_id = :content_id",
+                                  array(':content_id' => $content_id)
+                                 )->fetchField();
+
+      if ($content_main_id === FALSE) {
+        // Insert new data
+
+        // Get content sub id for new data
+        $content_sub_id = db_query("SELECT nid
+                                    FROM {h5p_nodes}
+                                    WHERE content_id = :content_id",
+                                   array(':content_id' => $content_id)
+                                  )->fetchField();
+
+        // Insert new data
+        db_insert('h5p_content_user_data')
+          ->fields(array(
+            'user_id' => $user->uid,
+            'content_main_id' => $content_id,
+            'content_sub_id' => $content_sub_id,
+            'data_id' => $data_type,
+            'timestamp' => time(),
+            'data' => $data,
+            'preloaded' => $preload,
+            'delete_on_content_change' => $invalidate
+          ))
+          ->execute();
+      }
+      else {
+        // Update old data
+        db_update('h5p_content_user_data')
+          ->fields(array(
+            'timestamp' => time(),
+            'data' => $data,
+            'preloaded' => $preload,
+            'delete_on_content_change' => $invalidate
+          ))
+          ->condition('user_id', $user->uid)
+          ->condition('content_main_id', $content_id)
+          ->condition('data_id', $data_type)
+          ->execute();
+      }
+    }
+  }
+  else {
+    // Fetch data
+    $response->data = db_query("SELECT data FROM {h5p_content_user_data}
+                                WHERE user_id = :user_id
+                                  AND content_main_id = :content_id
+                                  AND data_id = :data_type",
+                               array(
+                                 ':user_id' => $user->uid,
+                                 ':content_id' => $content_id,
+                                 ':data_type' => $data_type,
+                               ))->fetchField();
+  }
+
+  drupal_add_http_header('Cache-Control', 'no-cache');
+  drupal_add_http_header('Content-type', 'application/json; charset=utf-8');
+  print json_encode($response);
 }
 
 /**

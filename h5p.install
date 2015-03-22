@@ -383,6 +383,63 @@ function h5p_schema() {
     ),
     'primary key' => array('content_id', 'uid'),
   );
+
+  $schema['h5p_content_user_data'] = array(
+    'description' => 'Stores user data about the content',
+    'fields' => array(
+      'user_id' => array(
+        'description' => 'The user identifier',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'content_main_id' => array(
+        'description' => 'The main identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'content_sub_id' => array(
+        'description' => 'The sub identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data_id' => array(
+        'description' => 'The data type identifier',
+        'type' => 'varchar',
+        'length' => 127,
+      ),
+      'timestamp' => array(
+        'description' => 'What the time is',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data' => array(
+        'description' => 'Contains the data saved',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'preloaded' => array(
+        'description' => 'Indicates if the is to be preloaded',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'delete_on_content_change' => array(
+        'description' => 'Indicates if the data is to be deleted when the content gets updated',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('user_id', 'content_main_id', 'data_id'),
+  );
+
   return $schema;
 }
 
@@ -731,6 +788,69 @@ function h5p_update_7106() {
       'default' => 999999,
     ));
   }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Adds a table for storing user data for each interactive content.
+ */
+function h5p_update_7107() {
+  db_create_table('h5p_content_user_data', array(
+    'description' => 'Stores user data about the content',
+    'fields' => array(
+      'user_id' => array(
+        'description' => 'The user identifier',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'content_main_id' => array(
+        'description' => 'The main identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'content_sub_id' => array(
+        'description' => 'The sub identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data_id' => array(
+        'description' => 'The data type identifier',
+        'type' => 'varchar',
+        'length' => 127,
+      ),
+      'timestamp' => array(
+        'description' => 'What the time is',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data' => array(
+        'description' => 'Contains the data saved',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'preloaded' => array(
+        'description' => 'Indicates if the is to be preloaded',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'delete_on_content_change' => array(
+        'description' => 'Indicates if the data is to be deleted when the content gets updated',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('user_id', 'content_main_id', 'data_id'),
+  ));
 }
 
 /**
