@@ -70,7 +70,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements getH5PPath
    */
-  public function getH5pPath() {
+  private function getH5pPath() {
     return _h5p_get_h5p_path();
   }
 
@@ -300,12 +300,12 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     return '';
   }
-  
+
   public function lockDependencyStorage() {
     // db_transaction often deadlocks, we do it more brutally...
     db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
   }
-  
+
   public function unlockDependencyStorage() {
     db_query('UNLOCK TABLES');
   }
