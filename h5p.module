@@ -668,6 +668,7 @@ function h5p_get_content_settings($content) {
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
     'mainId' => $content['mainId'],
     'url' => $content['url'],
+    'title' => $content['title']
   );
 }
 
