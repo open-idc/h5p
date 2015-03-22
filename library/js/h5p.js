@@ -544,7 +544,7 @@ H5P.classFromName = function (name) {
  * @param {Object} The parent of this H5P
  * @return {Object} Instance.
  */
-H5P.newRunnable = function (library, contentId, $attachTo, skipResize, parent) {
+H5P.newRunnable = function (library, contentId, $attachTo, skipResize) {
   var nameSplit, versionSplit;
   try {
     nameSplit = library.library.split(' ', 2);
@@ -575,16 +575,7 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, parent) {
     return H5P.error('Unable to find constructor for: ' + library.library);
   }
 
-  var extras = {};
-
-  if (library.uuid) {
-    extras.uuid = library.uuid;
-  }
-  if (parent) {
-    extras.parent = parent;
-  }
-
-  var instance = new constructor(library.params, contentId, extras);
+  var instance = new constructor(library.params, contentId);
 
   if (instance.$ === undefined) {
     instance.$ = H5P.jQuery(instance);
@@ -592,12 +583,6 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, parent) {
 
   if (instance.contentId === undefined) {
     instance.contentId = contentId;
-  }
-  if (instance.uuid === undefined && library.uuid) {
-    instance.uuid = library.uuid;
-  }
-  if (instance.parent === undefined && parent) {
-    instance.parent = parent;
   }
 
   if ($attachTo !== undefined) {
@@ -1406,21 +1391,6 @@ H5P.on = function(instance, eventType, handler) {
   }
 };
 
-/**
- * Create UUID
- * 
- * @returns {String} UUID
- */
-H5P.createUUID = function() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(char) {
-    var random = Math.random()*16|0, newChar = char === 'x' ? random : (random&0x3|0x8);
-    return newChar.toString(16);
-  });
-};
-
-H5P.createH5PTitle = function(rawTitle) {
-  return H5P.jQuery('<div></div>').text(rawTitle).text().substr(0, 60);
-};
 
 H5P.jQuery(document).ready(function () {
   if (!H5P.preventInit) {
