@@ -79,17 +79,42 @@ H5P.XAPIEvent.prototype.getVerb = function(full) {
 H5P.XAPIEvent.prototype.setObject = function(instance) {
   if (instance.contentId) {
     this.data.statement.object = {
-      'id': H5PIntegration.contents['cid-' + instance.contentId].url,
+      'id': this.getContentXAPIId(instance),
       'objectType': 'Activity',
-      'extensions': {
-        'http://h5p.org/x-api/h5p-local-content-id': instance.contentId
+      'definition': {
+        'extensions': {
+          'http://h5p.org/x-api/h5p-local-content-id': instance.contentId
+        }
       }
     };
+    if (instance.h5pUUID) {
+      this.data.statement.object.extensions['http://h5p.org/x-api/h5p-uuid'] = instance.h5pUUID;
+    }
+    if (typeof instance.getH5PTitle === 'function') {
+      this.data.statement.object.definition.name = {
+        "en-US": instance.getH5PTitle()
+      };
+    }
   }
-  else {
-    // Not triggered by an H5P content type...
-    this.data.statement.object = {
-      'objectType': 'Activity'
+};
+
+/**
+ * Helperfunction to set the context part of the statement.
+ *
+ * @param {object} instance - the H5P instance
+ */
+H5P.XAPIEvent.prototype.setContext = function(instance) {
+  if (instance.parent && instance.parent.contentId || instance.parent.uuid) {
+    var parentId = instance.parent.uuid === undefined ? instance.parent.contentId : instance.parent.uuid;
+    this.data.statement.context = {
+      "contextActivities": {
+        "parent": [
+          {
+            "id": this.getContentXAPIId(instance.parent),
+            "objectType": "Activity"
+          }
+        ]
+      }
     };
   }
 };
@@ -111,10 +136,7 @@ H5P.XAPIEvent.prototype.setActor = function() {
       uuid = localStorage.H5PUserUUID;
     }
     else {
-      uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(char) {
-        var random = Math.random()*16|0, newChar = char === 'x' ? random : (random&0x3|0x8);
-        return newChar.toString(16);
-      });
+      uuid = H5P.createUUID();
       localStorage.H5PUserUUID = uuid;
     }
     this.data.statement.actor = {
@@ -144,6 +166,17 @@ H5P.XAPIEvent.prototype.getMaxScore = function() {
 H5P.XAPIEvent.prototype.getScore = function() {
   return this.getVerifiedStatementValue(['result', 'score', 'raw']);
 };
+
+H5P.XAPIEvent.prototype.getContentXAPIId = function (instance) {
+  var xAPIId;
+  if (instance.contentId) {
+    xAPIId =  H5PIntegration.contents['cid-' + instance.contentId].url;
+    if (instance.uuid) {
+      xAPIId += '?uuid=' +  instance.uuid;
+    }
+  }
+  return xAPIId;
+}
 
 /**
  * Figure out if a property exists in the statement and return it
