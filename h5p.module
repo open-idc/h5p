@@ -637,6 +637,7 @@ function h5p_get_content($node) {
     'library' => $node->main_library,
     'embedType' => 'div',
     'filtered' => $node->filtered,
+    'url' => url('node/' . $node->nid, array('absolute' => TRUE))
   );
 }
 
@@ -665,7 +666,8 @@ function h5p_get_content_settings($content) {
     'exportUrl' => h5p_get_export_path($content['id']),
     'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
-    'mainId' => $content['mainId']
+    'mainId' => $content['mainId'],
+    'url' => $content['url'],
   );
 }
 
@@ -744,7 +746,6 @@ function h5p_add_files_and_settings($node, $embed_type) {
  */
 function h5p_add_iframe_assets(&$integration, $content_id, $files) {
   static $core_added;
-
   if ($core_added === NULL) {
     $core_added = TRUE;
     $core_assets = h5p_add_core_assets();
