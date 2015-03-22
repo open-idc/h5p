@@ -84,6 +84,20 @@ function h5p_admin_settings($form, &$form_state) {
     '#description' => t('Check to enable development of libraries in the %dev folder. ONLY ENABLE THIS OPTION IF YOU KNOW WHAT YOU ARE DOING! YOUR SITES H5P DATA WILL BE RUINED BY ENABLING THIS OPTION', array('%dev' => _h5p_get_h5p_path() . '/development')),
   );
 
+  $form['h5p_save_content_state'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Save content state'),
+    '#default_value' => variable_get('h5p_save_content_state', 0),
+    '#description' => t('Automatically save the current state of interactive content for each user. This means that the user may pick up where he left off.'),
+  );
+
+  $form['h5p_save_content_frequency'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Save content state frequency'),
+    '#default_value' => variable_get('h5p_auto_save_frequency', 30),
+    '#description' => t("In seconds, how often do you wish the user to auto save their progress. Increasee this number if you're having issues with many ajax request."),
+  );
+
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().
   $form['#submit'][] = 'h5p_admin_settings_submit';
@@ -105,6 +119,10 @@ function h5p_admin_settings_validate($form, &$form_state) {
   }
   if (!file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
     form_set_error('h5p_default_path', t('You have specified an invalid directory.'));
+  }
+
+  if (!is_numeric($form_state['values']['h5p_save_content_frequency']) || $form_state['values']['h5p_save_content_frequency'] < 0) {
+    form_set_error('h5p_save_content_frequency', t('You must specify a positive number.'));
   }
 }
 

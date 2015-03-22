@@ -614,6 +614,7 @@ function h5p_get_core_settings() {
     'url' => base_path() . _h5p_get_h5p_path(),
     'postUserStatistics' =>  $user->uid > 0,
     'ajaxPath' => url('h5p-ajax') . '/',
+    'saveFreq' => variable_get('h5p_save_content_state', 0) ? variable_get('h5p_auto_save_frequency', 30) : FALSE,
     'l10n' => array(
       'H5P' => array( // Could core provide this?
         'fullscreen' => t('Fullscreen'),
