@@ -1474,7 +1474,6 @@ H5P.on = function(instance, eventType, handler) {
   }
 };
 
-<<<<<<< HEAD
 /**
  * Create UUID
  * 
@@ -1502,7 +1501,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
   }
   return title;
 };
-=======
+
 // Wrap in privates
 (function ($) {
 
@@ -1559,7 +1558,6 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
         }
       };
     }
->>>>>>> content-user-data
 
     $.ajax(options);
   }
