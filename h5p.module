@@ -389,8 +389,12 @@ function h5p_update($node) {
       h5p_insert($node);
     }
 
-    // Content changed. Remove user data.
-    db_delete('h5p_content_user_data')
+    // Reset user datas for this content
+    db_update('h5p_content_user_data')
+      ->fields(array(
+        'timestamp' => time(),
+        'data' => 'RESET'
+      ))
       ->condition('content_main_id', h5p_get_content_id($node))
       ->condition('delete_on_content_change', 1)
       ->execute();
@@ -638,7 +642,9 @@ function h5p_get_core_settings() {
         'downloadDescription' => t('Download this content as a H5P file.'),
         'copyrightsDescription' => t('View copyright information for this content.'),
         'embedDescription' => t('View the embed code for this content.'),
-        'h5pDescription' => t('Visit H5P.org to check out more cool content.')
+        'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
+        'contentChanged' => t('This content has changed since you last used it.'),
+        'startingOver' => t("You'll be starting over.")
       )
     )
   );
@@ -687,14 +693,15 @@ function h5p_get_content_settings($content) {
   }
 
   // Get preloaded user datas
-  $results = db_query("SELECT data_id, data FROM {h5p_content_user_data}
-                                WHERE user_id = :user_id
-                                  AND content_main_id = :content_id
-                                  AND preloaded = 1",
-                               array(
-                                 ':user_id' => $user->uid,
-                                 ':content_id' => $content['id']
-                               ));
+  $results = db_query("SELECT data_id, data
+                        FROM {h5p_content_user_data}
+                        WHERE user_id = :user_id
+                        AND content_main_id = :content_id
+                        AND preloaded = 1",
+                      array(
+                        ':user_id' => $user->uid,
+                        ':content_id' => $content['id']
+  ));
 
   $content_user_datas = array();
   foreach ($results as $result) {
