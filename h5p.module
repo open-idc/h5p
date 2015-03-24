@@ -711,7 +711,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
   $preloaded_dependencies = $core->loadContentDependencies($content['id'], 'preloaded');
   $files = $core->getDependenciesFiles($preloaded_dependencies, _h5p_get_h5p_path());
   $library_list = _h5p_dependencies_to_library_list($preloaded_dependencies);
-    dpm($files);
+
   drupal_alter('h5p_scripts', $files['scripts'], $library_list, $embed_type);
   drupal_alter('h5p_styles', $files['styles'], $library_list, $embed_type);
 
