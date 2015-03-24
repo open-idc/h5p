@@ -86,7 +86,7 @@ class H5PDevelopment {
       $library['libraryId'] = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $this->h5pF->saveLibraryData($library, $library['libraryId'] === FALSE);
 
-      $library['path'] = $libraryPath;
+      $library['path'] = '/development/' . $contents[$i];
       $this->libraries[H5PDevelopment::libraryToString($library['machineName'], $library['majorVersion'], $library['minorVersion'])] = $library;
     }
 

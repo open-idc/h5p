@@ -118,14 +118,14 @@ function h5peditor_h5p_content_node_form_after_build($form) {
 
   // Add our own styles
   foreach (H5peditor::$styles as $style) {
-    $assets['css'][] = $h5peditor_module_path . '/h5peditor/' . $style . $cache_buster;
+    $assets['css'][] = base_path() . $h5peditor_module_path . '/h5peditor/' . $style . $cache_buster;
   }
 
   // Add our own scripts
   foreach (H5peditor::$scripts as $script) {
     // We do not want the creator of the iframe inside the iframe
     if ($script !== 'scripts/h5peditor-editor.js') {
-      $assets['js'][] = $h5peditor_module_path . '/h5peditor/' . $script . $cache_buster;
+      $assets['js'][] = base_path() . $h5peditor_module_path . '/h5peditor/' . $script . $cache_buster;
     }
   }
   drupal_add_js($h5peditor_module_path . '/h5peditor/scripts/h5peditor-editor.js');
