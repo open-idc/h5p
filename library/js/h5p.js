@@ -57,9 +57,33 @@ H5P.init = function (target) {
     if (contentData === undefined) {
       return H5P.error('No data for content id ' + contentId + '. Perhaps the library is gone?');
     }
+    if (contentData.contentUserDatas && contentData.contentUserDatas.state) {
+      if (contentData.contentUserDatas.state === 'RESET') {
+        // Content has been reset. Display dialog.
+        delete contentData.contentUserDatas;
+        var dialog = new H5P.Dialog('content-user-data-reset', 'Data Reset', '<p>' + H5P.t('contentChanged') + '</p><p>' + H5P.t('startingOver') + '</p><div class="h5p-dialog-ok-button" tabIndex="0" role="button">OK</div>', $container);
+        H5P.jQuery(dialog).on('dialog-opened', function (event, $dialog) {
+          $dialog.find('.h5p-dialog-ok-button').click(function () {
+            dialog.close();
+          }).keypress(function (event) {
+            if (event.which === 32) {
+              dialog.close();
+            }
+          });
+        });
+        dialog.open();
+      }
+      else {
+        try {
+          contentData.contentUserDatas.state = JSON.parse(contentData.contentUserDatas.state);
+        }
+        catch (err) {}
+      }
+    }
     var library = {
       library: contentData.library,
-      params: JSON.parse(contentData.jsonContent)
+      params: JSON.parse(contentData.jsonContent),
+      userDatas: contentData.contentUserDatas
     };
 
     // Create new instance.
@@ -112,6 +136,37 @@ H5P.init = function (target) {
     // Listen for xAPI events.
     H5P.on(instance, 'xAPI', H5P.xAPICompletedListener);
     H5P.on(instance, 'xAPI', H5P.externalDispatcher.trigger);
+
+    // Auto save current state if supported
+    if (H5PIntegration.saveFreq !== false && (
+        instance.getCurrentState instanceof Function ||
+        typeof instance.getCurrentState === 'function')) {
+
+      var saveTimer, save = function () {
+        var state = instance.getCurrentState();
+        if (state !== undefined) {
+          H5P.setUserData(contentId, 'state', state, true, true);
+        }
+        saveTimer = null;
+      };
+
+      if (H5PIntegration.saveFreq) {
+        // Only run the loop when there's stuff happening (reduces load)
+        H5P.$body.on('mousedown keydown touchstart', function () {
+          if (!saveTimer) {
+            saveTimer = setTimeout(save, H5PIntegration.saveFreq * 1000);
+          }
+        });
+      }
+
+      // xAPI events will schedule a save in three seconds.
+      H5P.on(instance, 'xAPI', function () {
+        if (saveTimer) {
+          clearTimeout(saveTimer);
+        }
+        saveTimer = setTimeout(save, 3000);
+      });
+    }
 
     if (H5P.isFramed) {
       var resizeDelay;
@@ -585,6 +640,10 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
     extras.uuid = library.uuid;
   }
   
+  if (library.userDatas && library.userDatas.state) {
+    extras.previousState = library.userDatas.state;
+  }
+  
   // Some old library versions have their own custom third parameter. Make sure we don't send them the extras. They'll interpret it as something else
   if (H5P.jQuery.inArray(library.library, ['H5P.CoursePresentation 1.0', 'H5P.CoursePresentation 1.1', 'H5P.CoursePresentation 1.2', 'H5P.CoursePresentation 1.3']) > -1) {
     var instance = new constructor(library.params, contentId);
@@ -592,6 +651,8 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
   else {
     var instance = new constructor(library.params, contentId, extras);
   }
+
+
 
   if (instance.$ === undefined) {
     instance.$ = H5P.jQuery(instance);
@@ -1413,6 +1474,7 @@ H5P.on = function(instance, eventType, handler) {
   }
 };
 
+<<<<<<< HEAD
 /**
  * Create UUID
  * 
@@ -1440,10 +1502,134 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
   }
   return title;
 };
+=======
+// Wrap in privates
+(function ($) {
 
-H5P.jQuery(document).ready(function () {
-  if (!H5P.preventInit) {
-    // Start script need to be an external resource to load in correct order for IE9.
-    H5P.init(document.body);
+  /**
+   * Creates ajax requests for inserting, updateing and deleteing
+   * content user data.
+   *
+   * @private
+   * @param {number} contentId What content to store the data for.
+   * @param {string} dataType Identifies the set of data for this content.
+   * @param {function} [done] Callback when ajax is done.
+   * @param {object} [data] To be stored for future use.
+   * @param {boolean} [preload=false] Data is loaded when content is loaded.
+   * @param {boolean} [invalidate=false] Data is invalidated when content changes.
+   * @param {boolean} [async=true]
+   */
+  function contentUserDataAjax(contentId, dataType, done, data, preload, invalidate, async) {
+    var options = {
+      url: H5PIntegration.ajaxPath + 'content-user-data/' + contentId + '/' + dataType,
+      dataType: 'json',
+      async: async === undefined ? true : async
+    };
+    if (data !== undefined) {
+      options.type = 'POST';
+      options.data = {
+        data: (data === null ? 0 : JSON.stringify(data)),
+        preload: (preload ? 1 : 0),
+        invalidate: (invalidate ? 1 : 0)
+      };
+    }
+    else {
+      options.type = 'GET';
+    }
+    if (done !== undefined) {
+      options.error = function (xhr, error) {
+        done(error);
+      };
+      options.success = function (response) {
+        if (!response.success) {
+          done(response.error);
+          return;
+        }
+
+        if (response.data === false || response.data === undefined) {
+          done();
+          return;
+        }
+
+        try {
+          done(undefined, JSON.parse(response.data));
+        }
+        catch (error) {
+          done('Unable to decode data.');
+        }
+      };
+    }
+>>>>>>> content-user-data
+
+    $.ajax(options);
   }
-});
+
+  /**
+   * Get user data for given content.
+   *
+   * @public
+   * @param {number} contentId What content to get data for.
+   * @param {string} dataId Identifies the set of data for this content.
+   * @param {function} [done] Callback with error and data parameters.
+   */
+  H5P.getUserData = function (contentId, dataId, done) {
+    contentUserDataAjax(contentId, dataId, done);
+  };
+
+  /**
+   * Set user data for given content.
+   *
+   * @public
+   * @param {number} contentId What content to get data for.
+   * @param {string} dataId Identifies the set of data for this content.
+   * @param {object} data The data that is to be stored.
+   * @param {boolean} [preloaded=false] If the data should be loaded when content is loaded.
+   * @param {boolean} [deleteOnChange=false] If the data should be invalidated when the content changes.
+   * @param {function} [errorCallback] Callback with error as parameters.
+   */
+  H5P.setUserData = function (contentId, dataId, data, preloaded, deleteOnChange, errorCallback) {
+    contentUserDataAjax(contentId, dataId, function (error, data) {
+      if (errorCallback && error) {
+        errorCallback(error);
+      }
+    }, data, preloaded, deleteOnChange);
+  };
+
+  /**
+   * Delete user data for given content.
+   *
+   * @public
+   * @param {number} contentId What content to remove data for.
+   * @param {string} dataId Identifies the set of data for this content.
+   */
+  H5P.deleteUserData = function (contentId, dataId) {
+    contentUserDataAjax(contentId, dataId, undefined, null);
+  };
+
+  // Init H5P when page is fully loadded
+  $(document).ready(function () {
+    if (!H5P.preventInit) {
+      // Note that this start script has to be an external resource for it to
+      // load in correct order in IE9.
+      H5P.init(document.body);
+    }
+
+    if (H5PIntegration.saveFreq !== false) {
+      // Store the current state of the H5P when leaving the page.
+      H5P.$window.on('unload', function () {
+        for (var i = 0; i < H5P.instances.length; i++) {
+          var instance = H5P.instances[i];
+          if (instance.getCurrentState instanceof Function ||
+              typeof instance.getCurrentState === 'function') {
+            var state = instance.getCurrentState();
+            if (state !== undefined) {
+              // Async is not used to prevent the request from being cancelled.
+              contentUserDataAjax(instance.contentId, 'state', undefined, state, true, true, false);
+            }
+          }
+        }
+      });
+    }
+  });
+
+})(H5P.jQuery);
