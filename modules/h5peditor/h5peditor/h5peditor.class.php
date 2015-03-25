@@ -324,15 +324,15 @@ class H5peditor {
     // Javascripts
     if (!empty($files['scripts'])) {
       foreach ($files['scripts'] as $script) {
-        $libraryData->javascript[$this->h5p->url . $script->path . $script->version] = "\n" . file_get_contents(/*$this->h5p->path .*/ $script->path);
+        $libraryData->javascript[$this->h5p->url . $script->path . $script->version] = "\n" . file_get_contents($this->h5p->path . $script->path);
       }
     }
 
     // Stylesheets
     if (!empty($files['styles'])) {
       foreach ($files['styles'] as $css) {
-        H5peditor::buildCssPath(NULL, $this->h5p->url . /*$prefix .*/ dirname($css->path) . '/');
-        $libraryData->css[$this->h5p->url . $css->path . $css->version] = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents(/*$this->h5p->path .*/ $css->path));
+        H5peditor::buildCssPath(NULL, $this->h5p->url . $prefix . dirname($css->path) . '/');
+        $libraryData->css[$this->h5p->url . $css->path . $css->version] = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', file_get_contents($this->h5p->path . $css->path));
       }
     }
 
@@ -363,6 +363,7 @@ class H5peditor {
     if (isset($base)) {
       $_base = $base;
     }
+
     // Prefix with base and remove '../' segments where possible.
     $path = $_base . $matches[1];
     $last = '';
