@@ -1614,7 +1614,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
 
     if (H5PIntegration.saveFreq !== false) {
       // Store the current state of the H5P when leaving the page.
-      H5P.$window.on('unload', function () {
+      H5P.$window.on('beforeunload', function () {
         for (var i = 0; i < H5P.instances.length; i++) {
           var instance = H5P.instances[i];
           if (instance.getCurrentState instanceof Function ||
