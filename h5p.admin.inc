@@ -94,7 +94,7 @@ function h5p_admin_settings($form, &$form_state) {
   $form['h5p_save_content_frequency'] = array(
     '#type' => 'textfield',
     '#title' => t('Save content state frequency'),
-    '#default_value' => variable_get('h5p_auto_save_frequency', 30),
+    '#default_value' => variable_get('h5p_save_content_frequency', 30),
     '#description' => t("In seconds, how often do you wish the user to auto save their progress. Increasee this number if you're having issues with many ajax request."),
   );
 
