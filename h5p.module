@@ -1070,7 +1070,7 @@ function h5p_access_user_points($account = NULL) {
 function h5p_content_user_data($content_id, $data_type) {
   global $user;
 
-  if (!$user->uid) {
+  if (!$user->uid || !node_access('view', 'h5p_content')) {
     drupal_access_denied();
     return;
   }
