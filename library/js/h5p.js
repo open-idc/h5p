@@ -57,10 +57,20 @@ H5P.init = function (target) {
     if (contentData === undefined) {
       return H5P.error('No data for content id ' + contentId + '. Perhaps the library is gone?');
     }
-    if (contentData.contentUserDatas && contentData.contentUserDatas.state) {
-      if (contentData.contentUserDatas.state === 'RESET') {
+    var library = {
+      library: contentData.library,
+      params: JSON.parse(contentData.jsonContent)
+    };
+
+    H5P.getUserData(contentId, 'state', function (err, previousState) {
+      if (previousState) {
+        library.userDatas = {
+          state: previousState
+        };
+      }
+      else if (previousState === null) {
         // Content has been reset. Display dialog.
-        delete contentData.contentUserDatas;
+        delete contentData.contentUserData;
         var dialog = new H5P.Dialog('content-user-data-reset', 'Data Reset', '<p>' + H5P.t('contentChanged') + '</p><p>' + H5P.t('startingOver') + '</p><div class="h5p-dialog-ok-button" tabIndex="0" role="button">OK</div>', $container);
         H5P.jQuery(dialog).on('dialog-opened', function (event, $dialog) {
           $dialog.find('.h5p-dialog-ok-button').click(function () {
@@ -73,18 +83,7 @@ H5P.init = function (target) {
         });
         dialog.open();
       }
-      else {
-        try {
-          contentData.contentUserDatas.state = JSON.parse(contentData.contentUserDatas.state);
-        }
-        catch (err) {}
-      }
-    }
-    var library = {
-      library: contentData.library,
-      params: JSON.parse(contentData.jsonContent),
-      userDatas: contentData.contentUserDatas
-    };
+    });
 
     // Create new instance.
     var instance = H5P.newRunnable(library, contentId, $container, true);
@@ -147,25 +146,22 @@ H5P.init = function (target) {
         if (state !== undefined) {
           H5P.setUserData(contentId, 'state', state, true, true);
         }
-        saveTimer = null;
+        if (H5PIntegration.saveFreq) {
+          // Continue autosave
+          saveTimer = setTimeout(save, H5PIntegration.saveFreq * 1000);
+        }
       };
 
       if (H5PIntegration.saveFreq) {
-        // Only run the loop when there's stuff happening (reduces load)
-        H5P.$body.on('mousedown keydown touchstart', function () {
-          if (!saveTimer) {
-            saveTimer = setTimeout(save, H5PIntegration.saveFreq * 1000);
-          }
-        });
+        // Start autosave
+        saveTimer = setTimeout(save, H5PIntegration.saveFreq * 1000);
       }
 
       // xAPI events will schedule a save in three seconds.
       H5P.on(instance, 'xAPI', function (event) {
         verb = event.getVerb();
         if (verb === 'completed' || verb === 'progressed') {
-          if (saveTimer) {
-            clearTimeout(saveTimer);
-          }
+          clearTimeout(saveTimer);
           saveTimer = setTimeout(save, 3000);
         }
       });
@@ -642,20 +638,21 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
   if (library.uuid) {
     extras.uuid = library.uuid;
   }
-  
+
   if (library.userDatas && library.userDatas.state) {
     extras.previousState = library.userDatas.state;
   }
-  
-  // Some old library versions have their own custom third parameter. Make sure we don't send them the extras. They'll interpret it as something else
-  if (H5P.jQuery.inArray(library.library, ['H5P.CoursePresentation 1.0', 'H5P.CoursePresentation 1.1', 'H5P.CoursePresentation 1.2', 'H5P.CoursePresentation 1.3']) > -1) {
-    var instance = new constructor(library.params, contentId);
+
+  var instance;
+  // Some old library versions have their own custom third parameter.
+  // Make sure we don't send them the extras.
+  // (they will interpret it as something else)
+  if (/^H5P\.CoursePresentation 1\.[0-3]$/.test(library.library)) {
+    instance = new constructor(library.params, contentId);
   }
   else {
-    var instance = new constructor(library.params, contentId, extras);
+    instance = new constructor(library.params, contentId, extras);
   }
-
-
 
   if (instance.$ === undefined) {
     instance.$ = H5P.jQuery(instance);
@@ -1479,7 +1476,7 @@ H5P.on = function(instance, eventType, handler) {
 
 /**
  * Create UUID
- * 
+ *
  * @returns {String} UUID
  */
 H5P.createUUID = function() {
@@ -1531,7 +1528,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
     if (data !== undefined) {
       options.type = 'POST';
       options.data = {
-        data: (data === null ? 0 : JSON.stringify(data)),
+        data: (data === null ? 0 : data),
         preload: (preload ? 1 : 0),
         invalidate: (invalidate ? 1 : 0)
       };
@@ -1554,12 +1551,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
           return;
         }
 
-        try {
-          done(undefined, JSON.parse(response.data));
-        }
-        catch (error) {
-          done('Unable to decode data.');
-        }
+        done(undefined, response.data);
       };
     }
 
@@ -1572,11 +1564,53 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @public
    * @param {number} contentId What content to get data for.
    * @param {string} dataId Identifies the set of data for this content.
+   * @param {function} done Callback with error and data parameters.
    * @param {string} [subContentId] Identifies which data belongs to sub content.
-   * @param {function} [done] Callback with error and data parameters.
    */
-  H5P.getUserData = function (contentId, dataId, subContentId, done) {
-    contentUserDataAjax(contentId, dataId, subContentId, done);
+  H5P.getUserData = function (contentId, dataId, done, subContentId) {
+    if (!subContentId) {
+      subContentId = 0; // Default
+    }
+
+    var content = H5PIntegration.contents['cid-' + contentId];
+    var preloadedData = content.contentUserData;
+    if (preloadedData && preloadedData[subContentId] && preloadedData[subContentId][dataId]) {
+      if (preloadedData[subContentId][dataId] === 'RESET') {
+        done(undefined, null);
+        return;
+      }
+      try {
+        done(undefined, JSON.parse(preloadedData[subContentId][dataId]));
+      }
+      catch (err) {
+        done(err);
+      }
+    }
+    else {
+      contentUserDataAjax(contentId, dataId, subContentId, function (err, data) {
+        if (err || data === undefined) {
+          done(err, data);
+          return; // Error or no data
+        }
+
+        // Cache in preloaded
+        if (content.contentUserData === undefined) {
+          content.contentUserData = preloaded = {};
+        }
+        if (preloadedData[subContentId] === undefined) {
+          preloadedData[subContentId] = {};
+        }
+        preloadedData[subContentId][dataId] = data;
+
+        // Done. Try to decode JSON
+        try {
+          done(undefined, JSON.parse(data));
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    }
   };
 
   /**
@@ -1586,17 +1620,42 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @param {number} contentId What content to get data for.
    * @param {string} dataId Identifies the set of data for this content.
    * @param {object} data The data that is to be stored.
-   * @param {string} [contentSubId] Identifies which data belongs to sub content.
+   * @param {string} [subContentId] Identifies which data belongs to sub content.
    * @param {boolean} [preloaded=false] If the data should be loaded when content is loaded.
    * @param {boolean} [deleteOnChange=false] If the data should be invalidated when the content changes.
    * @param {function} [errorCallback] Callback with error as parameters.
    */
-  H5P.setUserData = function (contentId, dataId, data, contentSubId, preloaded, deleteOnChange, errorCallback) {
+  H5P.setUserData = function (contentId, dataId, data, subContentId, preloaded, deleteOnChange, errorCallback, async) {
+    if (!subContentId) {
+      subContentId = 0; // Default
+    }
+
+    try {
+      data = JSON.stringify(data);
+    }
+    catch (err) {
+      errorCallback(err);
+      return; // Failed to serialize.
+    }
+
+    var content = H5PIntegration.contents['cid-' + contentId];
+    if (!content.contentUserData) {
+      content.contentUserData = {};
+    }
+    var preloadedData = content.contentUserData;
+    if (preloadedData[subContentId] === undefined) {
+      preloadedData[subContentId] = {};
+    }
+    if (data === preloadedData[subContentId][dataId]) {
+      return; // No need to save this twice.
+    }
+
+    preloadedData[subContentId][dataId] = data;
     contentUserDataAjax(contentId, dataId, subContentId, function (error, data) {
       if (errorCallback && error) {
         errorCallback(error);
       }
-    }, data, preloaded, deleteOnChange);
+    }, data, preloaded, deleteOnChange, async);
   };
 
   /**
@@ -1605,9 +1664,19 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @public
    * @param {number} contentId What content to remove data for.
    * @param {string} dataId Identifies the set of data for this content.
-   * @param {string} [contentSubId] Identifies which data belongs to sub content.
+   * @param {string} [subContentId] Identifies which data belongs to sub content.
    */
-  H5P.deleteUserData = function (contentId, dataId, contentSubId) {
+  H5P.deleteUserData = function (contentId, dataId, aubContentId) {
+    if (!subContentId) {
+      subContentId = 0; // Default
+    }
+
+    // Remove from preloaded/cache
+    var preloadedData = H5PIntegration.contents['cid-' + contentId].contentUserData;
+    if (preloadedData && preloadedData[subContentId] && preloadedData[subContentId][dataId]) {
+      delete preloadedData[subContentId][dataId];
+    }
+
     contentUserDataAjax(contentId, dataId, subContentId, undefined, null);
   };
 
@@ -1629,7 +1698,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
             var state = instance.getCurrentState();
             if (state !== undefined) {
               // Async is not used to prevent the request from being cancelled.
-              contentUserDataAjax(instance.contentId, 'state', undefined, undefined, state, true, true, false);
+              H5P.setUserData(instance.contentId, 'state', state, undefined, true, true, undefined, false);
             }
           }
         }

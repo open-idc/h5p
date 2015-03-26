@@ -711,8 +711,8 @@ function h5p_get_content_settings($content) {
     $filtered = json_encode($filtered);
   }
 
-  // Get preloaded user datas
-  $results = db_query("SELECT data_id, data
+  // Get preloaded user data
+  $results = db_query("SELECT sub_content_id, data_id, data
                         FROM {h5p_content_user_data}
                         WHERE user_id = :user_id
                         AND content_id = :content_id
@@ -722,9 +722,9 @@ function h5p_get_content_settings($content) {
                         ':content_id' => $content['id']
   ));
 
-  $content_user_datas = array();
+  $content_user_data = array();
   foreach ($results as $result) {
-    $content_user_datas[$result->data_id] = $result->data;
+    $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
 
   return array(
@@ -737,7 +737,7 @@ function h5p_get_content_settings($content) {
     'mainId' => $content['mainId'],
     'url' => $content['url'],
     'title' => $content['title'],
-    'contentUserDatas' => $content_user_datas
+    'contentUserData' => $content_user_data
   );
 }
 
