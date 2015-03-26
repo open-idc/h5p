@@ -706,20 +706,20 @@ function h5p_get_content_settings($content) {
     $filtered = json_encode($filtered);
   }
 
-  // Get preloaded user datas
-  $results = db_query("SELECT data_id, data
+  // Get preloaded user data
+  $results = db_query("SELECT sub_content_id, data_id, data
                         FROM {h5p_content_user_data}
                         WHERE user_id = :user_id
                         AND content_main_id = :content_id
                         AND preloaded = 1",
                       array(
                         ':user_id' => $user->uid,
-                        ':content_id' => $content['id']
+                        ':content_id' => $content['mainId']
   ));
 
-  $content_user_datas = array();
+  $content_user_data = array();
   foreach ($results as $result) {
-    $content_user_datas[$result->data_id] = $result->data;
+    $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
 
   return array(
@@ -732,7 +732,7 @@ function h5p_get_content_settings($content) {
     'mainId' => $content['mainId'],
     'url' => $content['url'],
     'title' => $content['title'],
-    'contentUserDatas' => $content_user_datas
+    'contentUserData' => $content_user_data
   );
 }
 
@@ -1091,6 +1091,11 @@ function h5p_content_user_data($content_id, $data_type) {
   $preload = filter_input(INPUT_POST, 'preload');
   $invalidate = filter_input(INPUT_POST, 'invalidate');
   if ($data !== NULL && $preload !== NULL && $invalidate !== NULL) {
+    if (variable_get('h5p_revisioning', 1)) {
+      // We got vid, but we need nid. Let's ask DB
+      $content_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();
+    }
+
     if ($data === '0') {
       // Remove data
       db_delete('h5p_content_user_data')

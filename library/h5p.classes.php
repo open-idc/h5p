@@ -1672,6 +1672,9 @@ class H5PCore {
       $content['id'] = $this->h5pF->insertContent($content, $contentMainId);
     }
 
+    // Some user data for content has to be reset when the content changes.
+    $this->h5pF->resetContentUserData($contentMainId ? $contentMainId : $content['id']);
+
     return $content['id'];
   }
 
