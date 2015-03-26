@@ -302,12 +302,18 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   public function lockDependencyStorage() {
-    // db_transaction often deadlocks, we do it more brutally...
-    db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
+    if (db_driver() === 'mysql') {
+      // Only works for mysql, other DBs will have to use transactions.
+
+      // db_transaction often deadlocks, we do it more brutally...
+      db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
+    }
   }
 
   public function unlockDependencyStorage() {
-    db_query('UNLOCK TABLES');
+    if (db_driver() === 'mysql') {
+      db_query('UNLOCK TABLES');
+    }
   }
 
   /**
