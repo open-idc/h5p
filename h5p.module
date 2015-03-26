@@ -121,7 +121,8 @@ function h5p_menu() {
     'title' => 'H5P Content User Data',
     'page callback' => 'h5p_content_user_data',
     'page arguments' => array(2, 3),
-    'access arguments' => array('access content'),
+    'access callback' => 'h5p_content_user_data_access',
+    'access arguments' => array(2),
     'type' => MENU_CALLBACK,
   );
 
@@ -510,14 +511,36 @@ function h5p_user_delete($account) {
  * Access callback for the setFinished feature
  */
 function h5p_access_set_finished() {
-  if (!isset($_POST['contentId'])) {
-    return FALSE;
-  }
-  $nid = $_POST['contentId'];
+  $id = filter_input(INPUT_POST, 'contentId', FILTER_VALIDATE_INT);
+  return $id ? h5p_content_access($id) : FALSE;
+}
+
+/**
+ * Determine user access to h5p content.
+ *
+ * @param {int} $id h5p content identifier
+ * @param {string} [$op='view'] node operation
+ * @return {boolean}
+ */
+function h5p_content_access($id, $op = 'view') {
   if (variable_get('h5p_revisioning', 1)) {
-    $nid = db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $nid))->fetchField();
+    // We got vid, but we need nid. Let's ask DB
+    $id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $id))->fetchField();
   }
-  return node_access('view', node_load((int) $nid));
+  return node_access($op, node_load($id));
+}
+
+/**
+ * Check current user's access to content user data.
+ *
+ * @param {int} $id
+ * @return {boolean}
+ */
+function h5p_content_user_data_access($id) {
+  global $user;
+
+  // Only logged in users can have user data
+  return ($user->uid ? h5p_content_access($id) : FALSE);
 }
 
 /**
@@ -1059,11 +1082,6 @@ function h5p_access_user_points($account = NULL) {
  */
 function h5p_content_user_data($content_id, $data_type) {
   global $user;
-
-  if (!$user->uid || !node_access('view', 'h5p_content')) {
-    drupal_access_denied();
-    return;
-  }
 
   $response = (object) array(
     'success' => TRUE
