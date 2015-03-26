@@ -1651,7 +1651,7 @@ class H5PCore {
     $this->development_mode = $development_mode;
 
     if ($development_mode & H5PDevelopment::MODE_LIBRARY) {
-      $this->h5pD = new H5PDevelopment($this->h5pF, $path, $language);
+      $this->h5pD = new H5PDevelopment($this->h5pF, $path . '/', $language);
     }
   }
 
@@ -1664,9 +1664,6 @@ class H5PCore {
   public function saveContent($content, $contentMainId = NULL) {
     if (isset($content['id'])) {
       $this->h5pF->updateContent($content, $contentMainId);
-
-      // Some user data for content has to be reset when the content changes.
-      $this->h5pF->resetContentUserData($content['id']);
     }
     else {
       $content['id'] = $this->h5pF->insertContent($content, $contentMainId);

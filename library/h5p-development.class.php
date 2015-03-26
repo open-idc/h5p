@@ -140,11 +140,9 @@ class H5PDevelopment {
    */
   public function getSemantics($name, $majorVersion, $minorVersion) {
     $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-
     if (isset($this->libraries[$library]) === FALSE) {
       return NULL;
     }
-
     return $this->getFileContents($this->filesPath . $this->libraries[$library]['path'] . '/semantics.json');
   }
 

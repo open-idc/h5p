@@ -399,7 +399,7 @@ function h5p_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'content_sub_id' => array(
+      'sub_content_id' => array(
         'description' => 'The sub identifier for the h5p content',
         'type' => 'int',
         'unsigned' => TRUE,
@@ -437,7 +437,7 @@ function h5p_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array('user_id', 'content_main_id', 'data_id'),
+    'primary key' => array('user_id', 'content_main_id', 'sub_content_id', 'data_id'),
   );
 
   return $schema;
@@ -811,7 +811,7 @@ function h5p_update_7107() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'content_sub_id' => array(
+      'sub_content_id' => array(
         'description' => 'The sub identifier for the h5p content',
         'type' => 'int',
         'unsigned' => TRUE,
@@ -849,7 +849,7 @@ function h5p_update_7107() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array('user_id', 'content_main_id', 'data_id'),
+    'primary key' => array('user_id', 'content_main_id', 'sub_content_id', 'data_id'),
   ));
 }
 

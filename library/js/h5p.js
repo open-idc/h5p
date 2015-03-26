@@ -648,7 +648,7 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
   // Some old library versions have their own custom third parameter.
   // Make sure we don't send them the extras.
   // (they will interpret it as something else)
-  if (/^H5P\.CoursePresentation 1\.[0-3]$/.test(library.library)) {
+  if (H5P.jQuery.inArray(library.library, ['H5P.CoursePresentation 1.0', 'H5P.CoursePresentation 1.1', 'H5P.CoursePresentation 1.2', 'H5P.CoursePresentation 1.3']) > -1) {
     instance = new constructor(library.params, contentId);
   }
   else {
@@ -1518,15 +1518,16 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @private
    * @param {number} contentId What content to store the data for.
    * @param {string} dataType Identifies the set of data for this content.
+   * @param {string} subContentId Identifies sub content
    * @param {function} [done] Callback when ajax is done.
    * @param {object} [data] To be stored for future use.
    * @param {boolean} [preload=false] Data is loaded when content is loaded.
    * @param {boolean} [invalidate=false] Data is invalidated when content changes.
    * @param {boolean} [async=true]
    */
-  function contentUserDataAjax(contentId, dataType, done, data, preload, invalidate, async) {
+  function contentUserDataAjax(contentId, dataType, subContentId, done, data, preload, invalidate, async) {
     var options = {
-      url: H5PIntegration.ajaxPath + 'content-user-data/' + contentId + '/' + dataType,
+      url: H5PIntegration.ajaxPath + 'content-user-data/' + contentId + '/' + dataType + '/' + (subContentId ? subContentId : 0),
       dataType: 'json',
       async: async === undefined ? true : async
     };
