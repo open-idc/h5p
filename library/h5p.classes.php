@@ -1670,7 +1670,7 @@ class H5PCore {
     }
 
     // Some user data for content has to be reset when the content changes.
-    $this->h5pF->resetContentUserData($content['id']);
+    $this->h5pF->resetContentUserData($contentMainId ? $contentMainId : $content['id']);
 
     return $content['id'];
   }

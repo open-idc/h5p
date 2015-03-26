@@ -719,7 +719,7 @@ function h5p_get_content_settings($content) {
                         AND preloaded = 1",
                       array(
                         ':user_id' => $user->uid,
-                        ':content_id' => $content['id']
+                        ':content_id' => $content['mainId']
   ));
 
   $content_user_data = array();
@@ -1096,6 +1096,11 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
   $preload = filter_input(INPUT_POST, 'preload');
   $invalidate = filter_input(INPUT_POST, 'invalidate');
   if ($data !== NULL && $preload !== NULL && $invalidate !== NULL) {
+    if (variable_get('h5p_revisioning', 1)) {
+      // We got vid, but we need nid. Let's ask DB
+      $content_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();
+    }
+
     if ($data === '0') {
       // Remove data
       db_delete('h5p_content_user_data')
