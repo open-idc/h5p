@@ -248,6 +248,13 @@ interface H5PFrameworkInterface {
   public function updateContent($content, $contentMainId = NULL);
 
   /**
+   * Resets marked user data for the given content.
+   *
+   * @param int $contentId
+   */
+  public function resetContentUserData($contentId);
+
+  /**
    * Save what libraries a library is dependending on
    *
    * @param int $libraryId
@@ -1657,6 +1664,9 @@ class H5PCore {
   public function saveContent($content, $contentMainId = NULL) {
     if (isset($content['id'])) {
       $this->h5pF->updateContent($content, $contentMainId);
+
+      // Some user data for content has to be reset when the content changes.
+      $this->h5pF->resetContentUserData($content['id']);
     }
     else {
       $content['id'] = $this->h5pF->insertContent($content, $contentMainId);

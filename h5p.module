@@ -388,16 +388,6 @@ function h5p_update($node) {
     else {
       h5p_insert($node);
     }
-
-    // Reset user datas for this content
-    db_update('h5p_content_user_data')
-      ->fields(array(
-        'timestamp' => time(),
-        'data' => 'RESET'
-      ))
-      ->condition('content_main_id', h5p_get_content_id($node))
-      ->condition('delete_on_content_change', 1)
-      ->execute();
   }
 }
 

@@ -376,6 +376,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       return;
     }
 
+    // Update content
     db_update('h5p_nodes')
       ->fields(array(
         'json_content' => $content['params'],
@@ -404,6 +405,21 @@ class H5PDrupal implements H5PFrameworkInterface {
       ->execute();
 
     return $content['id'];
+  }
+
+  /**
+   * Implements resetContentUserData
+   */
+  public function resetContentUserData($contentId) {
+    // Reset user datas for this content
+    db_update('h5p_content_user_data')
+      ->fields(array(
+        'timestamp' => time(),
+        'data' => 'RESET'
+      ))
+      ->condition('content_main_id', $contentId)
+      ->condition('delete_on_content_change', 1)
+      ->execute();
   }
 
   /**
