@@ -1089,9 +1089,14 @@ function h5p_content_user_data($content_id, $data_type) {
       // Determine if we should update or insert
       $content_main_id = db_query("SELECT content_main_id
                                    FROM {h5p_content_user_data}
-                                   WHERE content_main_id = :content_id",
-                                  array(':content_id' => $content_id)
-                                 )->fetchField();
+                                   WHERE content_main_id = :content_id
+                                     AND user_id = :user_id
+                                     AND data_id = :data_id",
+                                  array(
+                                    ':content_id' => $content_id,
+                                    ':user_id' => $user->uid,
+                                    ':data_id' => $data_type,
+                                  ))->fetchField();
 
       if ($content_main_id === FALSE) {
         // Insert new data
