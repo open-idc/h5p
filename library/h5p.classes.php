@@ -1787,7 +1787,7 @@ class H5PCore {
     }
     foreach ($dependency[$type] as $file) {
       $assets[] = (object) array(
-        'path' => $prefix . $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file),
+        'path' => $prefix . '/' . $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file),
         'version' => $dependency['version']
       );
     }
@@ -1835,7 +1835,7 @@ class H5PCore {
     );
     foreach ($dependencies as $dependency) {
       if (isset($dependency['path']) === FALSE) {
-        $dependency['path'] = '/libraries/' . H5PCore::libraryToString($dependency, TRUE);
+        $dependency['path'] = 'libraries/' . H5PCore::libraryToString($dependency, TRUE);
         $dependency['preloadedJs'] = explode(',', $dependency['preloadedJs']);
         $dependency['preloadedCss'] = explode(',', $dependency['preloadedCss']);
       }

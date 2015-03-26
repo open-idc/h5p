@@ -277,7 +277,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
 
   drupal_add_http_header('Cache-Control', 'no-cache');
   drupal_add_http_header('Content-type', 'application/json');
-  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $language->language, _h5p_get_h5p_path());
+  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $language->language, '', _h5p_get_h5p_path());
 }
 
 /**
