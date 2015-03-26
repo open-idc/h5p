@@ -606,9 +606,10 @@ H5P.classFromName = function (name) {
  * @return {Object} Instance.
  */
 H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
-  var nameSplit, versionSplit;
+  var nameSplit, versionSplit, machineName;
   try {
     nameSplit = library.library.split(' ', 2);
+    machineName = nameSplit[0];
     versionSplit = nameSplit[1].split('.', 2);
   }
   catch (err) {
@@ -673,6 +674,11 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
 
   if ($attachTo !== undefined) {
     instance.attach($attachTo);
+    H5P.trigger(instance, 'domChanged', {
+      '$target': $attachTo,
+      'library': machineName,
+      'key': 'newLibrary'
+    }, {'bubbles': true, 'external': true});
 
     if (skipResize === undefined || !skipResize) {
       // Resize content.
@@ -1442,10 +1448,10 @@ if (String.prototype.trim === undefined) {
  * @param {string} eventType
  *  The event type
  */
-H5P.trigger = function(instance, eventType) {
+H5P.trigger = function(instance, eventType, data, extras) {
   // Try new event system first
   if (instance.trigger !== undefined) {
-    instance.trigger(eventType);
+    instance.trigger(eventType, data, extras);
   }
   // Try deprecated event system
   else if (instance.$ !== undefined && instance.$.trigger !== undefined) {
