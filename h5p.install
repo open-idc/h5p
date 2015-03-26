@@ -393,14 +393,14 @@ function h5p_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'content_id' => array(
+      'content_main_id' => array(
         'description' => 'The main identifier for the h5p content',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'sub_content_id' => array(
-        'description' => 'Identifier for sub content',
+      'content_sub_id' => array(
+        'description' => 'The sub identifier for the h5p content',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -437,7 +437,7 @@ function h5p_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array('user_id', 'content_id', 'sub_content_id', 'data_id'),
+    'primary key' => array('user_id', 'content_main_id', 'data_id'),
   );
 
   return $schema;
@@ -805,16 +805,17 @@ function h5p_update_7107() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'content_id' => array(
+      'content_main_id' => array(
         'description' => 'The main identifier for the h5p content',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'sub_content_id' => array(
-        'description' => 'Identifier for sub content',
-        'type' => 'varchar',
-        'length' => 37,
+      'content_sub_id' => array(
+        'description' => 'The sub identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
       'data_id' => array(
         'description' => 'The data type identifier',
@@ -848,7 +849,7 @@ function h5p_update_7107() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array('user_id', 'content_id', 'sub_content_id', 'data_id'),
+    'primary key' => array('user_id', 'content_main_id', 'data_id'),
   ));
 }
 

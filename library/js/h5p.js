@@ -1515,16 +1515,15 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @private
    * @param {number} contentId What content to store the data for.
    * @param {string} dataType Identifies the set of data for this content.
-   * @param {string} [subContentId] Identifies which data belongs to sub content.
    * @param {function} [done] Callback when ajax is done.
    * @param {object} [data] To be stored for future use.
    * @param {boolean} [preload=false] Data is loaded when content is loaded.
    * @param {boolean} [invalidate=false] Data is invalidated when content changes.
    * @param {boolean} [async=true]
    */
-  function contentUserDataAjax(contentId, dataType, subContentId, done, data, preload, invalidate, async) {
+  function contentUserDataAjax(contentId, dataType, done, data, preload, invalidate, async) {
     var options = {
-      url: H5PIntegration.ajaxPath + 'content-user-data/' + contentId + '/' + dataType + '/' + (subContentId ? subContentId : 0),
+      url: H5PIntegration.ajaxPath + 'content-user-data/' + contentId + '/' + dataType,
       dataType: 'json',
       async: async === undefined ? true : async
     };
@@ -1572,11 +1571,10 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @public
    * @param {number} contentId What content to get data for.
    * @param {string} dataId Identifies the set of data for this content.
-   * @param {string} [subContentId] Identifies which data belongs to sub content.
    * @param {function} [done] Callback with error and data parameters.
    */
-  H5P.getUserData = function (contentId, dataId, subContentId, done) {
-    contentUserDataAjax(contentId, dataId, subContentId, done);
+  H5P.getUserData = function (contentId, dataId, done) {
+    contentUserDataAjax(contentId, dataId, done);
   };
 
   /**
@@ -1586,13 +1584,12 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @param {number} contentId What content to get data for.
    * @param {string} dataId Identifies the set of data for this content.
    * @param {object} data The data that is to be stored.
-   * @param {string} [contentSubId] Identifies which data belongs to sub content.
    * @param {boolean} [preloaded=false] If the data should be loaded when content is loaded.
    * @param {boolean} [deleteOnChange=false] If the data should be invalidated when the content changes.
    * @param {function} [errorCallback] Callback with error as parameters.
    */
-  H5P.setUserData = function (contentId, dataId, data, contentSubId, preloaded, deleteOnChange, errorCallback) {
-    contentUserDataAjax(contentId, dataId, subContentId, function (error, data) {
+  H5P.setUserData = function (contentId, dataId, data, preloaded, deleteOnChange, errorCallback) {
+    contentUserDataAjax(contentId, dataId, function (error, data) {
       if (errorCallback && error) {
         errorCallback(error);
       }
@@ -1605,10 +1602,9 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
    * @public
    * @param {number} contentId What content to remove data for.
    * @param {string} dataId Identifies the set of data for this content.
-   * @param {string} [contentSubId] Identifies which data belongs to sub content.
    */
-  H5P.deleteUserData = function (contentId, dataId, contentSubId) {
-    contentUserDataAjax(contentId, dataId, subContentId, undefined, null);
+  H5P.deleteUserData = function (contentId, dataId) {
+    contentUserDataAjax(contentId, dataId, undefined, null);
   };
 
   // Init H5P when page is fully loadded
@@ -1629,7 +1625,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
             var state = instance.getCurrentState();
             if (state !== undefined) {
               // Async is not used to prevent the request from being cancelled.
-              contentUserDataAjax(instance.contentId, 'state', undefined, undefined, state, true, true, false);
+              contentUserDataAjax(instance.contentId, 'state', undefined, state, true, true, false);
             }
           }
         }

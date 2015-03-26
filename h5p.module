@@ -117,10 +117,10 @@ function h5p_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['h5p-ajax/content-user-data/%/%/%'] = array(
+  $items['h5p-ajax/content-user-data/%/%'] = array(
     'title' => 'H5P Content User Data',
     'page callback' => 'h5p_content_user_data',
-    'page arguments' => array(2, 3, 4),
+    'page arguments' => array(2, 3),
     'access callback' => 'h5p_content_user_data_access',
     'access arguments' => array(2),
     'type' => MENU_CALLBACK,
@@ -404,18 +404,13 @@ function h5p_delete($node) {
     $h5p_core->deletePackage($content_id);
     $h5p_export->deleteExport($content_id);
   }
-
-  // Find content id
-  $content_id = h5p_get_content_id($node);
-
-  // Delete points
   db_delete('h5p_points')
-    ->condition('content_id', $content_id)
+    ->condition('content_id', h5p_get_content_id($node))
     ->execute();
 
   // Remove content user data
   db_delete('h5p_content_user_data')
-    ->condition('content_id', $content_id)
+    ->condition('content_sub_id', $node->nid)
     ->execute();
 }
 
@@ -715,7 +710,7 @@ function h5p_get_content_settings($content) {
   $results = db_query("SELECT data_id, data
                         FROM {h5p_content_user_data}
                         WHERE user_id = :user_id
-                        AND content_id = :content_id
+                        AND content_main_id = :content_id
                         AND preloaded = 1",
                       array(
                         ':user_id' => $user->uid,
@@ -1085,7 +1080,7 @@ function h5p_access_user_points($account = NULL) {
  * @param string $data_type
  * @return string JSON
  */
-function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
+function h5p_content_user_data($content_id, $data_type) {
   global $user;
 
   $response = (object) array(
@@ -1099,8 +1094,7 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
     if ($data === '0') {
       // Remove data
       db_delete('h5p_content_user_data')
-        ->condition('content_id', $content_id)
-        ->condition('sub_content_id', $content_id)
+        ->condition('content_main_id', $content_id)
         ->condition('data_id', $data_type)
         ->condition('user_id', $user->uid)
         ->execute();
@@ -1111,26 +1105,33 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
       $invalidate = ($invalidate === '0' ? 0 : 1);
 
       // Determine if we should update or insert
-      $stored_content_id = db_query("SELECT content_id
+      $content_main_id = db_query("SELECT content_main_id
                                    FROM {h5p_content_user_data}
-                                   WHERE content_id = :content_id
-                                     AND sub_content_id = :sub_content_id
+                                   WHERE content_main_id = :content_id
                                      AND user_id = :user_id
                                      AND data_id = :data_id",
                                   array(
                                     ':content_id' => $content_id,
-                                    ':sub_content_id' => $sub_content_id,
                                     ':user_id' => $user->uid,
                                     ':data_id' => $data_type,
                                   ))->fetchField();
 
-      if ($stored_content_id === FALSE) {
+      if ($content_main_id === FALSE) {
+        // Insert new data
+
+        // Get content sub id for new data
+        $content_sub_id = db_query("SELECT nid
+                                    FROM {h5p_nodes}
+                                    WHERE content_id = :content_id",
+                                   array(':content_id' => $content_id)
+                                  )->fetchField();
+
         // Insert new data
         db_insert('h5p_content_user_data')
           ->fields(array(
             'user_id' => $user->uid,
-            'content_id' => $content_id,
-            'sub_content_id' => $sub_content_id,
+            'content_main_id' => $content_id,
+            'content_sub_id' => $content_sub_id,
             'data_id' => $data_type,
             'timestamp' => time(),
             'data' => $data,
@@ -1149,8 +1150,7 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
             'delete_on_content_change' => $invalidate
           ))
           ->condition('user_id', $user->uid)
-          ->condition('content_id', $content_id)
-          ->condition('sub_content_id', $sub_content_id)
+          ->condition('content_main_id', $content_id)
           ->condition('data_id', $data_type)
           ->execute();
       }
@@ -1160,14 +1160,12 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
     // Fetch data
     $response->data = db_query("SELECT data FROM {h5p_content_user_data}
                                 WHERE user_id = :user_id
-                                  AND content_id = :content_id
-                                  AND sub_content_id = :sub_content_id
-                                  AND data_id = :data_id",
+                                  AND content_main_id = :content_id
+                                  AND data_id = :data_type",
                                array(
                                  ':user_id' => $user->uid,
                                  ':content_id' => $content_id,
-                                 ':sub_content_id' => $sub_content_id,
-                                 ':data_id' => $data_type,
+                                 ':data_type' => $data_type,
                                ))->fetchField();
   }
 
