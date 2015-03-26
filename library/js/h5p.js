@@ -160,11 +160,14 @@ H5P.init = function (target) {
       }
 
       // xAPI events will schedule a save in three seconds.
-      H5P.on(instance, 'xAPI', function () {
-        if (saveTimer) {
-          clearTimeout(saveTimer);
+      H5P.on(instance, 'xAPI', function (event) {
+        verb = event.getVerb();
+        if (verb === 'completed' || verb === 'progressed') {
+          if (saveTimer) {
+            clearTimeout(saveTimer);
+          }
+          saveTimer = setTimeout(save, 3000);
         }
-        saveTimer = setTimeout(save, 3000);
       });
     }
 
