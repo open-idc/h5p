@@ -1077,10 +1077,10 @@ function h5p_access_user_points($account = NULL) {
  * TODO: Use token to prevent false deletion of data?
  *
  * @param string $content_id
- * @param string $data_type
+ * @param string $data_id
  * @return string JSON
  */
-function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
+function h5p_content_user_data($content_id, $data_id, $sub_content_id) {
   global $user;
 
   $response = (object) array(
@@ -1093,14 +1093,17 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
   if ($data !== NULL && $preload !== NULL && $invalidate !== NULL) {
     if (variable_get('h5p_revisioning', 1)) {
       // We got vid, but we need nid. Let's ask DB
-      $content_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();
+      $content_main_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();
+    }
+    else {
+      $content_main_id = $content_id;
     }
 
     if ($data === '0') {
       // Remove data
       db_delete('h5p_content_user_data')
-        ->condition('content_main_id', $content_id)
-        ->condition('data_id', $data_type)
+        ->condition('content_main_id', $content_main_id)
+        ->condition('data_id', $data_id)
         ->condition('user_id', $user->uid)
         ->execute();
     }
@@ -1110,34 +1113,25 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
       $invalidate = ($invalidate === '0' ? 0 : 1);
 
       // Determine if we should update or insert
-      $content_main_id = db_query("SELECT content_main_id
+      $update = db_query("SELECT content_main_id
                                    FROM {h5p_content_user_data}
-                                   WHERE content_main_id = :content_id
+                                   WHERE content_main_id = :content_main_id
                                      AND user_id = :user_id
                                      AND data_id = :data_id",
                                   array(
-                                    ':content_id' => $content_id,
+                                    ':content_main_id' => $content_main_id,
                                     ':user_id' => $user->uid,
-                                    ':data_id' => $data_type,
+                                    ':data_id' => $data_id,
                                   ))->fetchField();
 
-      if ($content_main_id === FALSE) {
-        // Insert new data
-
-        // Get content sub id for new data
-        $main_id = db_query("SELECT nid
-                                    FROM {h5p_nodes}
-                                    WHERE content_id = :content_id",
-                                   array(':content_id' => $content_id)
-                                  )->fetchField();
-
+      if ($update === FALSE) {
         // Insert new data
         db_insert('h5p_content_user_data')
           ->fields(array(
             'user_id' => $user->uid,
-            'content_main_id' => $main_id,
+            'content_main_id' => $content_main_id,
             'sub_content_id' => $sub_content_id,
-            'data_id' => $data_type,
+            'data_id' => $data_id,
             'timestamp' => time(),
             'data' => $data,
             'preloaded' => $preload,
@@ -1156,7 +1150,7 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
           ))
           ->condition('user_id', $user->uid)
           ->condition('content_main_id', $content_main_id)
-          ->condition('data_id', $data_type)
+          ->condition('data_id', $data_id)
           ->execute();
       }
     }
@@ -1165,12 +1159,12 @@ function h5p_content_user_data($content_id, $data_type, $sub_content_id) {
     // Fetch data
     $response->data = db_query("SELECT data FROM {h5p_content_user_data}
                                 WHERE user_id = :user_id
-                                  AND content_main_id = :content_id
-                                  AND data_id = :data_type",
+                                  AND content_main_id = :content_main_id
+                                  AND data_id = :data_id",
                                array(
                                  ':user_id' => $user->uid,
-                                 ':content_id' => $content_id,
-                                 ':data_type' => $data_type,
+                                 ':content_main_id' => $content_main_id,
+                                 ':data_id' => $data_id,
                                ))->fetchField();
   }
 

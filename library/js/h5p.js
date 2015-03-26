@@ -134,7 +134,6 @@ H5P.init = function (target) {
 
     // Listen for xAPI events.
     H5P.on(instance, 'xAPI', H5P.xAPICompletedListener);
-    H5P.on(instance, 'xAPI', H5P.externalDispatcher.trigger);
 
     // Auto save current state if supported
     if (H5PIntegration.saveFreq !== false && (
@@ -144,7 +143,7 @@ H5P.init = function (target) {
       var saveTimer, save = function () {
         var state = instance.getCurrentState();
         if (state !== undefined) {
-          H5P.setUserData(contentId, 'state', state, true, true);
+          H5P.setUserData(contentId, 'state', state, undefined, true, true);
         }
         if (H5PIntegration.saveFreq) {
           // Continue autosave
@@ -159,7 +158,7 @@ H5P.init = function (target) {
 
       // xAPI events will schedule a save in three seconds.
       H5P.on(instance, 'xAPI', function (event) {
-        verb = event.getVerb();
+        var verb = event.getVerb();
         if (verb === 'completed' || verb === 'progressed') {
           clearTimeout(saveTimer);
           saveTimer = setTimeout(save, 3000);
@@ -636,8 +635,8 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
   if (extras === undefined) {
     extras = {};
   }
-  if (library.uuid) {
-    extras.uuid = library.uuid;
+  if (library.subContentId) {
+    extras.subContentId = library.subContentId;
   }
 
   if (library.userDatas && library.userDatas.state) {
@@ -662,8 +661,8 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
   if (instance.contentId === undefined) {
     instance.contentId = contentId;
   }
-  if (instance.uuid === undefined && library.uuid) {
-    instance.uuid = library.uuid;
+  if (instance.subContentId === undefined && library.subContentId) {
+    instance.subContentId = library.subContentId;
   }
   if (instance.parent === undefined && extras && extras.parent) {
     instance.parent = extras.parent;
@@ -1705,6 +1704,7 @@ H5P.createH5PTitle = function(rawTitle, maxLength) {
             if (state !== undefined) {
               // Async is not used to prevent the request from being cancelled.
               H5P.setUserData(instance.contentId, 'state', state, undefined, true, true, undefined, false);
+              
             }
           }
         }
