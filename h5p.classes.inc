@@ -417,7 +417,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'timestamp' => time(),
         'data' => 'RESET'
       ))
-      ->condition('content_main_id', $contentId)
+      ->condition('content_id', $contentId)
       ->condition('delete_on_content_change', 1)
       ->execute();
   }

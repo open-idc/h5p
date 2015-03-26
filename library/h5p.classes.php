@@ -1664,13 +1664,13 @@ class H5PCore {
   public function saveContent($content, $contentMainId = NULL) {
     if (isset($content['id'])) {
       $this->h5pF->updateContent($content, $contentMainId);
-
-      // Some user data for content has to be reset when the content changes.
-      $this->h5pF->resetContentUserData($content['id']);
     }
     else {
       $content['id'] = $this->h5pF->insertContent($content, $contentMainId);
     }
+
+    // Some user data for content has to be reset when the content changes.
+    $this->h5pF->resetContentUserData($content['id']);
 
     return $content['id'];
   }
