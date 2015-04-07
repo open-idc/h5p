@@ -531,12 +531,15 @@ function h5p_content_upgrade($library_id) {
       'errorData' => t('Could not load data for library %lib.'),
       'errorScript' => t('Could not load upgrades script for %lib.'),
       'errorContent' => t('Could not upgrade content %id:'),
+      'errorParamsBroken' => t('Parameters are broken.'),
       'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
       'library' => array(
         'name' => $library->name,
         'version' => $library->major_version . '.' . $library->minor_version,
       ),
       'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
+      'scriptBaseUrl' => base_path() . drupal_get_path('module', 'h5p') . '/library/js',
+      'buster' => '?' . variable_get('css_js_query_string', ''),
       'versions' => $upgrades,
       'contents' => $contents,
       'buttonLabel' => t('Upgrade'),
@@ -549,6 +552,7 @@ function h5p_content_upgrade($library_id) {
   // Add JavaScripts
   $module_path = drupal_get_path('module', 'h5p');
   _h5p_admin_add_generic_css_and_js($module_path, $settings);
+  drupal_add_js($module_path . '/library/js/h5p-version.js');
   drupal_add_js($module_path . '/library/js/h5p-content-upgrade.js');
 
   return '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';
@@ -607,7 +611,7 @@ function h5p_content_upgrade_progress($library_id) {
 
   if ($out->left) {
     // Find the 10 first contents using library and add to params
-    $contents = db_query('SELECT content_id AS id, json_content AS params FROM {h5p_nodes} WHERE main_library_id = :id LIMIT 10', array(':id' => $library_id));
+    $contents = db_query('SELECT content_id AS id, json_content AS params FROM {h5p_nodes} WHERE main_library_id = :id LIMIT 40', array(':id' => $library_id));
     foreach ($contents as $content) {
       $out->params[$content->id] = $content->params;
     }
