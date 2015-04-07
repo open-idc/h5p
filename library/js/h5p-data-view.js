@@ -32,9 +32,8 @@ var H5PDataView = (function ($) {
    *   search in column 2.
    * @param {Function} loaded
    *   Callback for when data has been loaded.
-   * @param {Object} order
    */
-  function H5PDataView(container, source, headers, l10n, classes, filters, loaded, order) {
+  function H5PDataView(container, source, headers, l10n, classes, filters, loaded) {
     var self = this;
 
     self.$container = $(container).addClass('h5p-data-view').html('');
@@ -45,7 +44,6 @@ var H5PDataView = (function ($) {
     self.classes = (classes === undefined ? {} : classes);
     self.filters = (filters === undefined ? [] : filters);
     self.loaded = loaded;
-    self.order = order;
 
     self.limit = 20;
     self.offset = 0;
@@ -70,8 +68,8 @@ var H5PDataView = (function ($) {
     url += (url.indexOf('?') === -1 ? '?' : '&') + 'offset=' + self.offset + '&limit=' + self.limit;
 
     // Add sorting
-    if (self.order !== undefined) {
-      url += '&sortBy=' + self.order.by + '&sortDir=' + self.order.dir;
+    if (self.sortBy !== undefined && self.sortDir !== undefined) {
+      url += '&sortBy=' + self.sortBy + '&sortDir=' + self.sortDir;
     }
 
     // Add filters
@@ -146,11 +144,12 @@ var H5PDataView = (function ($) {
 
       // Create new table
       self.table = new H5PUtils.Table(self.classes, self.headers);
-      self.table.setHeaders(self.headers, function (order) {
-        // Sorting column or direction has changed.
-        self.order = order;
+      self.table.setHeaders(self.headers, function (col, dir) {
+        // Sorting column or direction has changed callback.
+        self.sortBy = col;
+        self.sortDir = dir;
         self.loadData();
-      }, self.order);
+      });
       self.table.appendTo(self.$container);
     }
 

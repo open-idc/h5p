@@ -9,7 +9,7 @@ class H5PDevelopment {
   const MODE_CONTENT = 1;
   const MODE_LIBRARY = 2;
 
-  private $h5pF, $libraries, $language, $filesPath;
+  private $h5pF, $libraries, $language;
 
   /**
    * Constructor.
@@ -23,7 +23,6 @@ class H5PDevelopment {
   public function __construct($H5PFramework, $filesPath, $language, $libraries = NULL) {
     $this->h5pF = $H5PFramework;
     $this->language = $language;
-    $this->filesPath = $filesPath;
     if ($libraries !== NULL) {
       $this->libraries = $libraries;
     }
@@ -87,7 +86,7 @@ class H5PDevelopment {
       $library['libraryId'] = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
       $this->h5pF->saveLibraryData($library, $library['libraryId'] === FALSE);
 
-      $library['path'] = 'development/' . $contents[$i];
+      $library['path'] = $libraryPath;
       $this->libraries[H5PDevelopment::libraryToString($library['machineName'], $library['majorVersion'], $library['minorVersion'])] = $library;
     }
 
@@ -140,10 +139,12 @@ class H5PDevelopment {
    */
   public function getSemantics($name, $majorVersion, $minorVersion) {
     $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
+
     if (isset($this->libraries[$library]) === FALSE) {
       return NULL;
     }
-    return $this->getFileContents($this->filesPath . $this->libraries[$library]['path'] . '/semantics.json');
+
+    return $this->getFileContents($this->libraries[$library]['path'] . '/semantics.json');
   }
 
   /**
@@ -161,7 +162,7 @@ class H5PDevelopment {
       return NULL;
     }
 
-    return $this->getFileContents($this->filesPath . $this->libraries[$library]['path'] . '/language/' . $language . '.json');
+    return $this->getFileContents($this->libraries[$library]['path'] . '/language/' . $language . '.json');
   }
 
   /**

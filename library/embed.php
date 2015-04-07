@@ -14,6 +14,9 @@
   <div class="h5p-content" data-content-id="<?php print $content['id']; ?>"></div>
   <script>
     H5PIntegration = <?php print json_encode($integration); ?>;
+    H5P.jQuery(document).ready(function () {
+      H5P.init();
+    });
   </script>
 </body>
 </html>
