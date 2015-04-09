@@ -1105,6 +1105,7 @@ function h5p_content_user_data($content_id, $data_id, $sub_content_id) {
         ->condition('content_main_id', $content_main_id)
         ->condition('data_id', $data_id)
         ->condition('user_id', $user->uid)
+        ->condition('sub_content_id', $sub_content_id)
         ->execute();
     }
     else {
@@ -1117,11 +1118,13 @@ function h5p_content_user_data($content_id, $data_id, $sub_content_id) {
                                    FROM {h5p_content_user_data}
                                    WHERE content_main_id = :content_main_id
                                      AND user_id = :user_id
-                                     AND data_id = :data_id",
+                                     AND data_id = :data_id
+                                     AND sub_content_id = :sub_content_id",
                                   array(
                                     ':content_main_id' => $content_main_id,
                                     ':user_id' => $user->uid,
                                     ':data_id' => $data_id,
+                                    ':sub_content_id' => $sub_content_id,
                                   ))->fetchField();
 
       if ($update === FALSE) {
@@ -1151,6 +1154,7 @@ function h5p_content_user_data($content_id, $data_id, $sub_content_id) {
           ->condition('user_id', $user->uid)
           ->condition('content_main_id', $content_main_id)
           ->condition('data_id', $data_id)
+          ->condition('sub_content_id', $sub_content_id)
           ->execute();
       }
     }
@@ -1160,10 +1164,12 @@ function h5p_content_user_data($content_id, $data_id, $sub_content_id) {
     $response->data = db_query("SELECT data FROM {h5p_content_user_data}
                                 WHERE user_id = :user_id
                                   AND content_main_id = :content_main_id
-                                  AND data_id = :data_id",
+                                  AND data_id = :data_id
+                                  AND sub_content_id = :sub_content_id",
                                array(
                                  ':user_id' => $user->uid,
                                  ':content_main_id' => $content_main_id,
+                                 ':sub_content_id' => $sub_content_id,
                                  ':data_id' => $data_id,
                                ))->fetchField();
   }
