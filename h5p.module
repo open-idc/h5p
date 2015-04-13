@@ -729,6 +729,11 @@ function h5p_get_core_settings() {
 }
 
 function h5p_get_content($node) {
+  $core = _h5p_get_instance('core');
+  $node->disable |= $core->getGlobalDisable();
+  if (!variable_get('h5p_icon_in_action_bar', TRUE)) {
+    $node->disable |= H5PCore::DISABLE_ABOUT;
+  }
   return array(
     'id' => h5p_get_content_id($node),
     'mainId' => $node->nid,
@@ -738,7 +743,8 @@ function h5p_get_content($node) {
     'library' => $node->main_library,
     'embedType' => 'div',
     'filtered' => $node->filtered,
-    'url' => url('node/' . $node->nid, array('absolute' => TRUE))
+    'url' => url('node/' . $node->nid, array('absolute' => TRUE)),
+    'disable' => $node->disable,
   );
 }
 
@@ -762,10 +768,6 @@ function h5p_get_content_settings($content) {
     $filtered = json_encode($filtered);
   }
 
-  $node->disable |= $core->getGlobalDisable();
-  if (!variable_get('h5p_icon_in_action_bar', TRUE)) {
-    $node->disable |= H5PCore::DISABLE_ABOUT;
-  }
   // Get preloaded user data
   $results = db_query("SELECT sub_content_id, data_id, data
                         FROM {h5p_content_user_data}
@@ -793,7 +795,7 @@ function h5p_get_content_settings($content) {
     'url' => $content['url'],
     'title' => $content['title'],
     'contentUserData' => $content_user_data,
-    'disable' => $node->disable
+    'disable' => $content['disable']
   );
 }
 
