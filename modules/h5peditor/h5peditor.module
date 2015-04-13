@@ -61,6 +61,10 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $node = h5peditor_get_source_node($form['#node']);
   $library = isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0);
 
+  if (variable_get('h5p_first_runnable_saved', 0) === 0) {
+    drupal_set_message(t("If you don't have any H5P content types installed you may <a href=\"http://h5p.org/update-all-content-types\" target=\"_blank\">download them all at once</a> from H5P.org and upload them all at once on the <a href=\"!library_admin_url\" target=\"_blank\">library admin page</a>. Refresh this page when you've installed the libraries.", array('!library_admin_url' => url('admin/content/h5p'))));
+  }
+
   $form['h5p_type'] = array(
     '#type' => 'radios',
     '#title' => t('HTML5 Content'),
@@ -107,28 +111,21 @@ function h5peditor_h5p_content_node_form_after_build($form) {
 
   $node = h5peditor_get_source_node($form['#node']);
   $assets = h5p_add_core_assets();
+  h5p_add_files_and_settings(TRUE, TRUE); // Force integration
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
   $cache_buster = '?' . variable_get('css_js_query_string', '');
 
   // Add our own styles
   foreach (H5peditor::$styles as $style) {
-    $assets['css'][] = $h5peditor_module_path . '/h5peditor/' . $style . $cache_buster;
-  }
-
-  // Remove integration from the equation.
-  for ($i = 0, $s = count($assets['js']); $i < $s; $i++) {
-    if (preg_match('/\/h5pintegration\.js/', $assets['js'][$i])) {
-      array_splice($assets['js'], $i, 1);
-      break;
-    }
+    $assets['css'][] = base_path() . $h5peditor_module_path . '/h5peditor/' . $style . $cache_buster;
   }
 
   // Add our own scripts
   foreach (H5peditor::$scripts as $script) {
     // We do not want the creator of the iframe inside the iframe
     if ($script !== 'scripts/h5peditor-editor.js') {
-      $assets['js'][] = $h5peditor_module_path . '/h5peditor/' . $script . $cache_buster;
+      $assets['js'][] = base_path() . $h5peditor_module_path . '/h5peditor/' . $script . $cache_buster;
     }
   }
   drupal_add_js($h5peditor_module_path . '/h5peditor/scripts/h5peditor-editor.js');
@@ -280,7 +277,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
 
   drupal_add_http_header('Cache-Control', 'no-cache');
   drupal_add_http_header('Content-type', 'application/json');
-  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $language->language);
+  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $language->language, '', _h5p_get_h5p_path());
 }
 
 /**
@@ -309,7 +306,7 @@ function h5peditor_files_callback() {
     $editor->addTmpFile($file);
   }
 
-  header('Content-type: text/html');
+  header('Content-type: text/html; charset=utf-8');
   print $file->getResult();
 }
 

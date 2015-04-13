@@ -392,6 +392,63 @@ function h5p_schema() {
     ),
     'primary key' => array('content_id', 'uid'),
   );
+
+  $schema['h5p_content_user_data'] = array(
+    'description' => 'Stores user data about the content',
+    'fields' => array(
+      'user_id' => array(
+        'description' => 'The user identifier',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'content_main_id' => array(
+        'description' => 'The main identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'sub_content_id' => array(
+        'description' => 'The sub identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data_id' => array(
+        'description' => 'The data type identifier',
+        'type' => 'varchar',
+        'length' => 127,
+      ),
+      'timestamp' => array(
+        'description' => 'What the time is',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data' => array(
+        'description' => 'Contains the data saved',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'preloaded' => array(
+        'description' => 'Indicates if the is to be preloaded',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'delete_on_content_change' => array(
+        'description' => 'Indicates if the data is to be deleted when the content gets updated',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('user_id', 'content_main_id', 'sub_content_id', 'data_id'),
+  );
+
   return $schema;
 }
 
@@ -743,6 +800,85 @@ function h5p_update_7106() {
 }
 
 /**
+ * Implements hook_update_N().
+ *
+ * Adds a table for storing user data for each interactive content.
+ */
+function h5p_update_7107() {
+  db_create_table('h5p_content_user_data', array(
+    'description' => 'Stores user data about the content',
+    'fields' => array(
+      'user_id' => array(
+        'description' => 'The user identifier',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'content_main_id' => array(
+        'description' => 'The main identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'sub_content_id' => array(
+        'description' => 'The sub identifier for the h5p content',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data_id' => array(
+        'description' => 'The data type identifier',
+        'type' => 'varchar',
+        'length' => 127,
+      ),
+      'timestamp' => array(
+        'description' => 'What the time is',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data' => array(
+        'description' => 'Contains the data saved',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'preloaded' => array(
+        'description' => 'Indicates if the is to be preloaded',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'delete_on_content_change' => array(
+        'description' => 'Indicates if the data is to be deleted when the content gets updated',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('user_id', 'content_main_id', 'sub_content_id', 'data_id'),
+  ));
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Makes it possible to disable UI features per content.
+ */
+function h5p_update_7108() {
+  if (!db_field_exists('h5p_nodes', 'disable')) {
+    db_add_field('h5p_nodes', 'disable', array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0
+    ));
+  }
+}
+
+/**
  * Check if any library installed is unsupported by core
  */
 function h5p_validate_library_support() {
@@ -787,21 +923,5 @@ function h5p_save_content_dependencies($content) {
     ->key(array('content_id' => $content->id, 'library_id' => $dependency['library']['libraryId'], 'dependency_type' => $dependency['type']))
     ->fields(array('drop_css' => $dropCss))
     ->execute();
-  }
-}
-
-/**
- * Implements hook_update_N().
- *
- * Makes it possible to disable UI features per content.
- */
-function h5p_update_7107() {
-  if (!db_field_exists('h5p_nodes', 'disable')) {
-    db_add_field('h5p_nodes', 'disable', array(
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 0
-    ));
   }
 }

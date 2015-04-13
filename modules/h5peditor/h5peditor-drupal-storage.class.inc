@@ -156,4 +156,11 @@ class H5peditorDrupalStorage implements H5peditorStorage {
 
     return $libraries;
   }
+  
+  public function alterLibraryFiles(&$files, $libraries) {
+    $mode = 'editor';
+    $library_list = _h5p_dependencies_to_library_list($libraries);
+    drupal_alter('h5p_scripts', $files['scripts'], $library_list, $mode);
+    drupal_alter('h5p_styles', $files['styles'], $library_list, $mode);
+  }
 }

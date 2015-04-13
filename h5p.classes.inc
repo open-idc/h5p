@@ -70,7 +70,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements getH5PPath
    */
-  public function getH5pPath() {
+  private function getH5pPath() {
     return _h5p_get_h5p_path();
   }
 
@@ -302,12 +302,18 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   public function lockDependencyStorage() {
-    // db_transaction often deadlocks, we do it more brutally...
-    db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
+    if (db_driver() === 'mysql') {
+      // Only works for mysql, other DBs will have to use transactions.
+
+      // db_transaction often deadlocks, we do it more brutally...
+      db_query('LOCK TABLES {h5p_libraries_libraries} write, {h5p_libraries} as hl read');
+    }
   }
 
   public function unlockDependencyStorage() {
-    db_query('UNLOCK TABLES');
+    if (db_driver() === 'mysql') {
+      db_query('UNLOCK TABLES');
+    }
   }
 
   /**
@@ -370,6 +376,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       return;
     }
 
+    // Update content
     db_update('h5p_nodes')
       ->fields(array(
         'json_content' => $content['params'],
@@ -400,6 +407,21 @@ class H5PDrupal implements H5PFrameworkInterface {
       ->execute();
 
     return $content['id'];
+  }
+
+  /**
+   * Implements resetContentUserData
+   */
+  public function resetContentUserData($contentId) {
+    // Reset user datas for this content
+    db_update('h5p_content_user_data')
+      ->fields(array(
+        'timestamp' => time(),
+        'data' => 'RESET'
+      ))
+      ->condition('content_main_id', $contentId)
+      ->condition('delete_on_content_change', 1)
+      ->execute();
   }
 
   /**

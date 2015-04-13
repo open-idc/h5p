@@ -15,6 +15,7 @@ interface H5PFrameworkInterface {
    */
   public function getPlatformInfo();
 
+
   /**
    * Fetches a file from a remote server using HTTP GET
    *
@@ -72,12 +73,6 @@ interface H5PFrameworkInterface {
    *   Path to the folder where the last uploaded h5p for this session is located.
    */
   public function getUploadedH5pFolderPath();
-
-  /**
-   * @return string
-   *   Path to the folder where all h5p files are stored
-   */
-  public function getH5pPath();
 
   /**
    * Get the path to the last uploaded h5p file
@@ -251,6 +246,13 @@ interface H5PFrameworkInterface {
    *   Main id for the content if this is a system that supports versioning
    */
   public function updateContent($content, $contentMainId = NULL);
+
+  /**
+   * Resets marked user data for the given content.
+   *
+   * @param int $contentId
+   */
+  public function resetContentUserData($contentId);
 
   /**
    * Save what libraries a library is dependending on
@@ -770,15 +772,14 @@ class H5PValidator {
         // When upgrading, we opnly add allready installed libraries,
         // and new dependent libraries
         $upgrades = array();
-        foreach ($libraries as &$library) {
+        foreach ($libraries as $libString => &$library) {
           // Is this library already installed?
-          if ($this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']) !== FALSE) {
-            $upgrades[H5PCore::libraryToString($library)] = $library;
+          if ($this->h5pC->getLibraryId($library, $libString) !== FALSE) {
+            $upgrades[$libString] = $library;
           }
         }
         while ($missingLibraries = $this->getMissingLibraries($upgrades)) {
-          foreach ($missingLibraries as $missing) {
-            $libString = H5PCore::libraryToString($missing);
+          foreach ($missingLibraries as $libString => $missing) {
             $library = $libraries[$libString];
             if ($library) {
               $upgrades[$libString] = $library;
@@ -798,15 +799,15 @@ class H5PValidator {
       }
 
       $missingLibraries = $this->getMissingLibraries($libraries);
-      foreach ($missingLibraries as $missing) {
-        if ($this->h5pF->getLibraryId($missing['machineName'], $missing['majorVersion'], $missing['minorVersion'])) {
-          unset($missingLibraries[H5PCore::libraryToString($missing)]);
+      foreach ($missingLibraries as $libString => $missing) {
+        if ($this->h5pC->getLibraryId($missing, $libString)) {
+          unset($missingLibraries[$libString]);
         }
       }
 
       if (!empty($missingLibraries)) {
-        foreach ($missingLibraries as $library) {
-          $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => H5PCore::libraryToString($library))));
+        foreach ($missingLibraries as $libString => $library) {
+          $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => $libString)));
         }
         if (!$this->h5pF->mayUpdateLibraries()) {
           $this->h5pF->setInfoMessage($this->h5pF->t("Note that the libraries may exist in the file you uploaded, but you're not allowed to upload new libraries. Contact the site administrator about this."));
@@ -937,8 +938,9 @@ class H5PValidator {
   private function getMissingDependencies($dependencies, $libraries) {
     $missing = array();
     foreach ($dependencies as $dependency) {
-      if (!isset($libraries[H5PCore::libraryToString($dependency)])) {
-        $missing[H5PCore::libraryToString($dependency)] = $dependency;
+      $libString = H5PCore::libraryToString($dependency);
+      if (!isset($libraries[$libString])) {
+        $missing[$libString] = $dependency;
       }
     }
     return $missing;
@@ -1238,75 +1240,15 @@ class H5PStorage {
    *  TRUE if one or more libraries were updated
    *  FALSE otherwise
    */
-  public function savePackage($content = NULL, $contentMainId = NULL, $skipContent = FALSE, $upgradeOnly = FALSE) {
-    // Save the libraries we processed during validation
-    $library_saved = FALSE;
-    $upgradedLibsCount = 0;
-    $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
-
-    foreach ($this->h5pC->librariesJsonData as &$library) {
-      $libraryId = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      $library['saveDependencies'] = TRUE;
-
-      if (!$libraryId) {
-        $new = TRUE;
-      }
-      elseif ($this->h5pF->isPatchedLibrary($library)) {
-        $new = FALSE;
-        $library['libraryId'] = $libraryId;
-      }
-      else {
-        $library['libraryId'] = $libraryId;
-        // We already have the same or a newer version of this library
-        $library['saveDependencies'] = FALSE;
-        continue;
-      }
-
-      if (!$mayUpdateLibraries) {
-        // This shouldn't happen, but just to be safe...
-        continue;
-      }
-
-      $this->h5pF->saveLibraryData($library, $new);
-
-      $libraries_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries';
-      if (!is_dir($libraries_path)) {
-        mkdir($libraries_path, 0777, true);
-      }
-      $destination_path = $libraries_path . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE);
-      H5PCore::deleteFileTree($destination_path);
-      $this->h5pC->copyFileTree($library['uploadDirectory'], $destination_path);
-      H5PCore::deleteFileTree($library['uploadDirectory']);
-
-      $library_saved = TRUE;
-    }
-
-    foreach ($this->h5pC->librariesJsonData as &$library) {
-      if ($library['saveDependencies']) {
-        $this->h5pF->deleteLibraryDependencies($library['libraryId']);
-        if (isset($library['preloadedDependencies'])) {
-          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
-        }
-        if (isset($library['dynamicDependencies'])) {
-          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
-        }
-        if (isset($library['editorDependencies'])) {
-          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
-        }
-
-        // Make sure libraries dependencies, parameter filtering and export files gets regenerated for all content who uses this library.
-        $this->h5pF->clearFilteredParameters($library['libraryId']);
-
-        $upgradedLibsCount++;
-      }
+  public function savePackage($content = NULL, $contentMainId = NULL, $skipContent = FALSE) {
+    if ($this->h5pF->mayUpdateLibraries()) {
+      // Save the libraries we processed during validation
+      $this->saveLibraries();
     }
 
     if (!$skipContent) {
-      $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . 'content';
-
-      // Find out which libraries are used by this package/content
-      $librariesInUse = array();
-      $nextWeight = $this->h5pC->findLibraryDependencies($librariesInUse, $this->h5pC->mainJsonData);
+      $basePath = $this->h5pF->getUploadedH5pFolderPath();
+      $current_path = $basePath . DIRECTORY_SEPARATOR . 'content';
 
       // Save content
       if ($content === NULL) {
@@ -1315,12 +1257,21 @@ class H5PStorage {
       if (!is_array($content)) {
         $content = array('id' => $content);
       }
-      $content['library'] = $librariesInUse['preloaded-' . $this->h5pC->mainJsonData['mainLibrary']]['library'];
+
+      // Find main library version
+      foreach ($this->h5pC->mainJsonData['preloadedDependencies'] as $dep) {
+        if ($dep['machineName'] === $this->h5pC->mainJsonData['mainLibrary']) {
+          $dep['libraryId'] = $this->h5pC->getLibraryId($dep);
+          $content['library'] = $dep;
+          break;
+        }
+      }
+
       $content['params'] = file_get_contents($current_path . DIRECTORY_SEPARATOR . 'content.json');
       $contentId = $this->h5pC->saveContent($content, $contentMainId);
       $this->contentId = $contentId;
 
-      $contents_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content';
+      $contents_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'content';
       if (!is_dir($contents_path)) {
         mkdir($contents_path, 0777, true);
       }
@@ -1328,22 +1279,115 @@ class H5PStorage {
       // Move the content folder
       $destination_path = $contents_path . DIRECTORY_SEPARATOR . $contentId;
       $this->h5pC->copyFileTree($current_path, $destination_path);
-      H5PCore::deleteFileTree($current_path);
 
-      // Save the content library dependencies
-      $this->h5pF->saveLibraryUsage($contentId, $librariesInUse);
-      H5PCore::deleteFileTree($this->h5pF->getUploadedH5pFolderPath());
+      // Remove temp content folder
+      H5PCore::deleteFileTree($basePath);
     }
 
     // Update supported library list if neccessary:
     $this->h5pC->validateLibrarySupport(TRUE);
+  }
 
-    if ($upgradeOnly) {
-      // TODO - support translation
-      $this->h5pF->setInfoMessage($this->h5pF->t('@num libraries were upgraded!', array('@num' => $upgradedLibsCount)));
+  /**
+   * Helps savePackage.
+   *
+   * @return int Number of libraries saved
+   */
+  private function saveLibraries() {
+    // Keep track of the number of libraries that have been saved
+    $newOnes = 0;
+    $oldOnes = 0;
+
+    // Find libraries directory and make sure it exists
+    $libraries_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'libraries';
+    if (!is_dir($libraries_path)) {
+      mkdir($libraries_path, 0777, true);
     }
 
-    return $library_saved;
+    // Go through libraries that came with this package
+    foreach ($this->h5pC->librariesJsonData as $libString => &$library) {
+      // Find local library identifier
+      $libraryId = $this->h5pC->getLibraryId($library, $libString);
+
+      // Assume new library
+      $new = TRUE;
+      if ($libraryId) {
+        // Found old library
+        $library['libraryId'] = $libraryId;
+
+        if ($this->h5pF->isPatchedLibrary($library)) {
+          // This is a newer version than ours. Upgrade!
+          $new = FALSE;
+        }
+        else {
+          $library['saveDependencies'] = FALSE;
+          // This is an older version, no need to save.
+          continue;
+        }
+      }
+
+      // Indicate that the dependencies of this library should be saved.
+      $library['saveDependencies'] = TRUE;
+
+      // Save library meta data
+      $this->h5pF->saveLibraryData($library, $new);
+
+      // Make sure destination dir is free
+      $destination_path = $libraries_path . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE);
+      H5PCore::deleteFileTree($destination_path);
+
+      // Move library folder
+      $this->h5pC->copyFileTree($library['uploadDirectory'], $destination_path);
+      H5PCore::deleteFileTree($library['uploadDirectory']);
+
+      if ($new) {
+        $newOnes++;
+      }
+      else {
+        $oldOnes++;
+      }
+    }
+
+    // Go through the libraries again to save dependencies.
+    foreach ($this->h5pC->librariesJsonData as &$library) {
+      if (!$library['saveDependencies']) {
+        continue;
+      }
+
+      // TODO: Should the table be locked for this operation?
+
+      // Remove any old dependencies
+      $this->h5pF->deleteLibraryDependencies($library['libraryId']);
+
+      // Insert the different new ones
+      if (isset($library['preloadedDependencies'])) {
+        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
+      }
+      if (isset($library['dynamicDependencies'])) {
+        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
+      }
+      if (isset($library['editorDependencies'])) {
+        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
+      }
+
+      // Make sure libraries dependencies, parameter filtering and export files gets regenerated for all content who uses this library.
+      $this->h5pF->clearFilteredParameters($library['libraryId']);
+    }
+
+    // Tell the user what we've done.
+    if ($newOnes && $oldOnes) {
+      $message = $this->h5pF->t('Added %new new H5P libraries and updated %old old.', array('%new' => $newOnes, '%old' => $oldOnes));
+    }
+    elseif ($newOnes) {
+      $message = $this->h5pF->t('Added %new new H5P libraries.', array('%new' => $newOnes));
+    }
+    elseif ($oldOnes) {
+      $message = $this->h5pF->t('Updated %old H5P libraries.', array('%old' => $oldOnes));
+    }
+
+    if (isset($message)) {
+      $this->h5pF->setInfoMessage($message);
+    }
   }
 
   /**
@@ -1353,8 +1397,9 @@ class H5PStorage {
    *  The content id
    */
   public function deletePackage($contentId) {
-    H5PCore::deleteFileTree($this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
+    H5PCore::deleteFileTree($this->h5pC->path . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
     $this->h5pF->deleteContentData($contentId);
+    // TODO: Delete export?
   }
 
   /**
@@ -1387,8 +1432,8 @@ class H5PStorage {
    *  The main id of the new content (used in frameworks that support revisioning)
    */
   public function copyPackage($contentId, $copyFromId, $contentMainId = NULL) {
-    $source_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $copyFromId;
-    $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
+    $source_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $copyFromId;
+    $destination_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
     $this->h5pC->copyFileTree($source_path, $destination_path);
 
     $this->h5pF->copyLibraryUsage($contentId, $copyFromId, $contentMainId);
@@ -1424,7 +1469,7 @@ Class H5PExport {
    * @return string
    */
   public function createExportFile($content) {
-    $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
+    $h5pDir = $this->h5pC->path . DIRECTORY_SEPARATOR;
     $tempPath = $h5pDir . 'temp' . DIRECTORY_SEPARATOR . $content['id'];
     $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $content['id'] . '.h5p';
 
@@ -1444,8 +1489,6 @@ Class H5PExport {
     // Build h5p.json
     $h5pJson = array (
       'title' => $content['title'],
-      // TODO - stop using 'und', this is not the preferred way.
-      // Either remove language from the json if not existing, or use "language": null
       'language' => (isset($content['language']) && strlen(trim($content['language'])) !== 0) ? $content['language'] : 'und',
       'mainLibrary' => $content['library']['name'],
       'embedTypes' => $embedTypes,
@@ -1456,7 +1499,7 @@ Class H5PExport {
       $library = $dependency['library'];
 
       // Copy library to h5p
-      $source = isset($library['path']) ? $library['path'] : $h5pDir . 'libraries' . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE);
+      $source = $h5pDir . (isset($library['path']) ? $library['path'] : 'libraries' . DIRECTORY_SEPARATOR . H5PCore::libraryToString($library, TRUE));
       $destination = $tempPath . DIRECTORY_SEPARATOR . $library['machineName'];
       $this->h5pC->copyFileTree($source, $destination);
 
@@ -1476,26 +1519,50 @@ Class H5PExport {
     $results = print_r(json_encode($h5pJson), true);
     file_put_contents($tempPath . DIRECTORY_SEPARATOR . 'h5p.json', $results);
 
+    // Get a complete file list from our tmp dir
+    $files = array();
+    self::populateFileList($tempPath, $files);
+
     // Create new zip instance.
     $zip = new ZipArchive();
     $zip->open($zipPath, ZIPARCHIVE::CREATE | ZIPARCHIVE::OVERWRITE);
 
-    // Get all files and folders in $tempPath
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempPath . DIRECTORY_SEPARATOR));
-    // Add files to zip
-    foreach ($iterator as $key => $value) {
-      $test = '.';
-      // Do not add the folders '.' and '..' to the zip. This will make zip invalid.
-      if (substr_compare($key, $test, -strlen($test), strlen($test)) !== 0) {
-        // Get files path in $tempPath
-        $filePath = explode($tempPath . DIRECTORY_SEPARATOR, $key);
-        // Add files to the zip with the intended file-structure
-        $zip->addFile($key, $filePath[1]);
-      }
+    // Add all the files from the tmp dir.
+    foreach ($files as $file) {
+      // Please note that the zip format has no concept of folders, we must
+      // use forward slashes to separate our directories.
+      $zip->addFile($file->absolutePath, $file->relativePath);
     }
+
     // Close zip and remove temp dir
     $zip->close();
     H5PCore::deleteFileTree($tempPath);
+  }
+
+  /**
+   * Recursive function the will add the files of the given directory to the
+   * given files list. All files are objects with an absolute path and
+   * a relative path. The relative path is forward slashes only! Great for
+   * use in zip files and URLs.
+   *
+   * @param string $dir path
+   * @param array $files list
+   * @param string $relative prefix. Optional
+   */
+  private static function populateFileList($dir, &$files, $relative = '') {
+    $strip = strlen($dir) + 1;
+    foreach (glob($dir . DIRECTORY_SEPARATOR . '*') as $file) {
+      $rel = $relative . substr($file, $strip);
+      if (is_dir($file)) {
+        self::populateFileList($file, $files, $rel . '/');
+      }
+      else {
+        $files[] = (object) array(
+          'absolutePath' => $file,
+          'relativePath' => $rel
+        );
+      }
+    }
   }
 
   /**
@@ -1505,7 +1572,7 @@ Class H5PExport {
    *  Identifier for the H5P
    */
   public function deleteExport($contentId) {
-    $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
+    $h5pDir = $this->h5pC->path . DIRECTORY_SEPARATOR;
     $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $contentId . '.h5p';
     if (file_exists($zipPath)) {
       unlink($zipPath);
@@ -1539,7 +1606,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 4
+    'minorVersion' => 5
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -1548,6 +1615,8 @@ class H5PCore {
     'js/jquery.js',
     'js/h5p.js',
     'js/h5p-event-dispatcher.js',
+    'js/h5p-x-api-event.js',
+    'js/h5p-x-api.js',
   );
   public static $adminScripts = array(
     'js/jquery.js',
@@ -1588,16 +1657,17 @@ class H5PCore {
    * @param boolean $export enabled?
    * @param int $development_mode mode.
    */
-  public function __construct($H5PFramework, $path, $language = 'en', $export = FALSE, $development_mode = H5PDevelopment::MODE_NONE) {
+  public function __construct($H5PFramework, $path, $url, $language = 'en', $export = FALSE, $development_mode = H5PDevelopment::MODE_NONE) {
     $this->h5pF = $H5PFramework;
 
     $this->h5pF = $H5PFramework;
     $this->path = $path;
+    $this->url = $url;
     $this->exportEnabled = $export;
     $this->development_mode = $development_mode;
 
     if ($development_mode & H5PDevelopment::MODE_LIBRARY) {
-      $this->h5pD = new H5PDevelopment($this->h5pF, $path, $language);
+      $this->h5pD = new H5PDevelopment($this->h5pF, $path . '/', $language);
     }
   }
 
@@ -1614,6 +1684,9 @@ class H5PCore {
     else {
       $content['id'] = $this->h5pF->insertContent($content, $contentMainId);
     }
+
+    // Some user data for content has to be reset when the content changes.
+    $this->h5pF->resetContentUserData($contentMainId ? $contentMainId : $content['id']);
 
     return $content['id'];
   }
@@ -1688,8 +1761,6 @@ class H5PCore {
         // Recreate export file
         $exporter = new H5PExport($this->h5pF, $this);
         $exporter->createExportFile($content);
-
-        // TODO: Should we rather create the file once first accessed, like imagecache?
       }
 
       // Cache.
@@ -1728,8 +1799,9 @@ class H5PCore {
    * @param array $dependency
    * @param string $type
    * @param array $assets
+   * @param string $prefix Optional. Make paths relative to another dir.
    */
-  private function getDependencyAssets($dependency, $type, &$assets) {
+  private function getDependencyAssets($dependency, $type, &$assets, $prefix = '') {
     // Check if dependency has any files of this type
     if (empty($dependency[$type]) || $dependency[$type][0] === '') {
       return;
@@ -1739,10 +1811,9 @@ class H5PCore {
     if ($type === 'preloadedCss' && (isset($dependency['dropCss']) && $dependency['dropCss'] === '1')) {
       return;
     }
-
     foreach ($dependency[$type] as $file) {
       $assets[] = (object) array(
-        'path' => $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file),
+        'path' => $prefix . '/' . $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file),
         'version' => $dependency['version']
       );
     }
@@ -1758,7 +1829,19 @@ class H5PCore {
     $urls = array();
 
     foreach ($assets as $asset) {
-      $urls[] = $asset->path . $asset->version;
+      $url = $asset->path;
+
+      // Add URL prefix if not external
+      if (strpos($asset->path, '://') === FALSE) {
+        $url = $this->url . $url;
+      }
+
+      // Add version/cache buster if set
+      if (isset($asset->version)) {
+        $url .= $asset->version;
+      }
+
+      $urls[] = $url;
     }
 
     return $urls;
@@ -1768,23 +1851,23 @@ class H5PCore {
    * Return file paths for all dependecies files.
    *
    * @param array $dependencies
+   * @param string $prefix Optional. Make paths relative to another dir.
    * @return array files.
    */
-  public function getDependenciesFiles($dependencies) {
+  public function getDependenciesFiles($dependencies, $prefix = '') {
     $files = array(
       'scripts' => array(),
       'styles' => array()
     );
     foreach ($dependencies as $dependency) {
       if (isset($dependency['path']) === FALSE) {
-        $dependency['path'] = $this->path . '/libraries/' . H5PCore::libraryToString($dependency, TRUE);
+        $dependency['path'] = 'libraries/' . H5PCore::libraryToString($dependency, TRUE);
         $dependency['preloadedJs'] = explode(',', $dependency['preloadedJs']);
         $dependency['preloadedCss'] = explode(',', $dependency['preloadedCss']);
       }
-
       $dependency['version'] = "?ver={$dependency['majorVersion']}.{$dependency['minorVersion']}.{$dependency['patchVersion']}";
-      $this->getDependencyAssets($dependency, 'preloadedJs', $files['scripts']);
-      $this->getDependencyAssets($dependency, 'preloadedCss', $files['styles']);
+      $this->getDependencyAssets($dependency, 'preloadedJs', $files['scripts'], $prefix);
+      $this->getDependencyAssets($dependency, 'preloadedCss', $files['styles'], $prefix);
     }
     return $files;
   }
@@ -1959,7 +2042,7 @@ class H5PCore {
 
     @mkdir($destination);
     while (false !== ($file = readdir($dir))) {
-        if (($file != '.') && ($file != '..')) {
+        if (($file != '.') && ($file != '..') && $file != '.git' && $file != '.gitignore') {
             if (is_dir($source . DIRECTORY_SEPARATOR . $file)) {
               $this->copyFileTree($source . DIRECTORY_SEPARATOR . $file, $destination . DIRECTORY_SEPARATOR . $file);
             }
@@ -2194,8 +2277,6 @@ class H5PCore {
   /**
    * Helper function for creating markup for the unsupported libraries list
    *
-   * TODO: Make help text translatable
-   *
    * @return string Html
    * */
   public function createMarkupForUnsupportedLibraryList($libraries) {
@@ -2284,6 +2365,28 @@ class H5PCore {
     }
     return $disable;
   }
+
+  // Cache for getting library ids
+  private $libraryIdMap = array();
+
+  /**
+   * Small helper for getting the library's ID.
+   *
+   * @param array $library
+   * @param string [$libString]
+   * @return int Identifier, or FALSE if non-existent
+   */
+  public function getLibraryId($library, $libString = NULL) {
+    if (!$libString) {
+      $libString = self::libraryToString($library);
+    }
+
+    if (!isset($libraryIdMap[$libString])) {
+      $libraryIdMap[$libString] = $this->h5pF->getLibraryId($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+    }
+
+    return $libraryIdMap[$libString];
+  }
 }
 
 /**
@@ -2322,7 +2425,6 @@ class H5PContentValidator {
 
     // Keep track of the libraries we load to avoid loading it multiple times.
     $this->libraries = array();
-    // TODO: Should this possible be done in core's loadLibrary? This might be done multiple places.
 
     // Keep track of all dependencies for the given content.
     $this->dependencies = array();
@@ -2645,6 +2747,9 @@ class H5PContentValidator {
         $found = FALSE;
         foreach ($semantics->fields as $field) {
           if ($field->name == $key) {
+            if (isset($semantics->optional) && $semantics->optional) {
+              $field->optional = TRUE;
+            }
             $function = $this->typeMap[$field->type];
             $found = TRUE;
             break;
@@ -2664,16 +2769,18 @@ class H5PContentValidator {
         else {
           // If validator is not found, something exists in content that does
           // not have a corresponding semantics field. Remove it.
-          $this->h5pF->setErrorMessage($this->h5pF->t('H5P internal error: no validator exists for @key', array('@key' => $key)));
+          // $this->h5pF->setErrorMessage($this->h5pF->t('H5P internal error: no validator exists for @key', array('@key' => $key)));
           unset($group->$key);
         }
       }
     }
-    foreach ($semantics->fields as $field) {
-      if (!(isset($field->optional) && $field->optional)) {
-        // Check if field is in group.
-        if (! property_exists($group, $field->name)) {
-          $this->h5pF->setErrorMessage($this->h5pF->t('No value given for mandatory field ' . $field->name));
+    if (!(isset($semantics->optional) && $semantics->optional)) {
+      foreach ($semantics->fields as $field) {
+        if (!(isset($field->optional) && $field->optional)) {
+          // Check if field is in group.
+          if (! property_exists($group, $field->name)) {
+            //$this->h5pF->setErrorMessage($this->h5pF->t('No value given for mandatory field ' . $field->name));
+          }
         }
       }
     }
@@ -2697,18 +2804,6 @@ class H5PContentValidator {
       $library = $this->h5pC->loadLibrary($libspec['machineName'], $libspec['majorVersion'], $libspec['minorVersion']);
       $library['semantics'] = $this->h5pC->loadLibrarySemantics($libspec['machineName'], $libspec['majorVersion'], $libspec['minorVersion']);
       $this->libraries[$value->library] = $library;
-
-      // Find all dependencies for this library
-      $depkey = 'preloaded-' . $libspec['machineName'];
-      if (!isset($this->dependencies[$depkey])) {
-        $this->dependencies[$depkey] = array(
-          'library' => $library,
-          'type' => 'preloaded'
-        );
-
-        $this->nextWeight = $this->h5pC->findLibraryDependencies($this->dependencies, $library, $this->nextWeight);
-        $this->dependencies[$depkey]['weight'] = $this->nextWeight++;
-      }
     }
     else {
       $library = $this->libraries[$value->library];
@@ -2718,11 +2813,26 @@ class H5PContentValidator {
       'type' => 'group',
       'fields' => $library['semantics'],
     ), FALSE);
-    $validkeys = array('library', 'params');
+    $validkeys = array('library', 'params', 'subContentId');
     if (isset($semantics->extraAttributes)) {
       $validkeys = array_merge($validkeys, $semantics->extraAttributes);
     }
     $this->filterParams($value, $validkeys);
+    if (isset($value->subContentId) && ! preg_match('/^\{?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}?$/', $value->subContentId)) {
+      unset($value->subContentId);
+    }
+
+    // Find all dependencies for this library
+    $depkey = 'preloaded-' . $library['machineName'];
+    if (!isset($this->dependencies[$depkey])) {
+      $this->dependencies[$depkey] = array(
+        'library' => $library,
+        'type' => 'preloaded'
+      );
+
+      $this->nextWeight = $this->h5pC->findLibraryDependencies($this->dependencies, $library, $this->nextWeight);
+      $this->dependencies[$depkey]['weight'] = $this->nextWeight++;
+    }
   }
 
   /**
