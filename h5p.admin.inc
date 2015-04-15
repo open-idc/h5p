@@ -672,66 +672,6 @@ function h5p_content_upgrade_library($name, $major, $minor) {
   print json_encode($library);
 }
 
-/**
- * Selective upgrade off all installed libraries (with upgrades.h5p as input)
- */
-function h5p_upgrade_all_libraries() {
-  // Create form
-  return drupal_get_form('h5p_all_libraries_upgrade_upload_form');
-}
-
-/**
- * Create upload all libraries form
- */
-function h5p_all_libraries_upgrade_upload_form($form_state) {
-  $form['#attributes'] = array(
-    'enctype' => 'multipart/form-data',
-    'class' => 'h5p-admin-upload-libraries-form',
-  );
-
-  // TODO - support translation
-  $form['info-message'] = array(
-    '#markup' =>
-      '<div>
-        To upgrade all installed libraries, do the following:
-        <ol>
-          <li>Download <a href="http://h5p.org/sites/default/files/upgrades.h5p">upgrades.h5p</a>
-          <li>Click the <em>Select file</em> button below, and select the downloaded upgrades.h5p file
-          <li>Click the <em>Upload</em> button
-        </ol>
-      </div>',
-  );
-
-  $form['h5p'] = array(
-    '#title' => t('H5P'),
-    '#type' => 'file',
-    '#description' => t('Upload the upgrades.h5p (downloaded from h5p.org) here'),
-  );
-
-  $form['submit'] = array(
-    '#value' => t('Upload'),
-    '#type' => 'submit',
-  );
-
-  return $form;
-}
-
-function h5p_all_libraries_upgrade_upload_form_validate($form, &$form_state) {
-  h5p_validate_h5p_file_upload($form, $form_state, TRUE);
-}
-
-function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
-  // Save package
-  $h5p_core = _h5p_get_instance('storage');
-  $h5p_core->savePackage(NULL, NULL, TRUE, TRUE);
-
-  // Maintain session variables.
-  unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
-
-  // Redirect to libraries overview:
-  drupal_goto('admin/content/h5p');
-}
-
 function h5p_restrict_library_callback($library_id) {
   $restricted = filter_input(INPUT_GET, 'restrict');
   $restrict = ($restricted === '1');
