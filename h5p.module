@@ -394,7 +394,7 @@ function h5p_validate($node, &$form) {
 function h5p_insert($node) {
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
+    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid , FALSE, array('disable' => $node->disable));
   }
   else {
     $core = _h5p_get_instance('core');
@@ -419,7 +419,7 @@ function h5p_update($node) {
     $h5p_storage = _h5p_get_instance('storage');
     if (isset($_SESSION['h5p_upload'])) {
       // Use newly uploaded package
-      $h5p_storage->savePackage($node->vid, $node->nid);
+      $h5p_storage->savePackage($node->vid, $node->nid, FALSE, array('disable' => $node->disable));
     }
     else {
       // Copy old package
@@ -432,7 +432,7 @@ function h5p_update($node) {
     if (isset($_SESSION['h5p_upload'])) {
       // Replace old package
       $h5p_storage = _h5p_get_instance('storage');
-      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid);
+      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid, array('disable' => $node->disable));
     }
     else {
       h5p_insert($node);
