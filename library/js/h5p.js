@@ -126,7 +126,8 @@ H5P.init = function (target) {
         window.location.href = contentData.exportUrl;
       });
     }
-    if (!(contentData.disable & H5P.DISABLE_COPYRIGHT) && instance.getCopyrights !== undefined) {
+    if (!(contentData.disable & H5P.DISABLE_COPYRIGHT) &&
+        ((instance.getCopyrights !== undefined) || H5P.hasCopyrights(library.params, contentId))) {
       // Add copyrights button
       H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
         H5P.openCopyrightsDialog($actions, instance, library.params, contentId);
@@ -879,6 +880,47 @@ H5P.findCopyrights = function (info, parameters, contentId) {
   }
 };
 
+/**
+ * Recursive function for checking if content has copyrights
+ *
+ * @param {(Object|Arrray)} parameters To search for file objects in.
+ * @param {Number} contentId Used to insert thumbnails for images.
+ * @returns {boolean} Returns true if complete copyright information was found.
+ */
+H5P.hasCopyrights = function (parameters, contentId) {
+  // Cycle through parameters
+  for (var field in parameters) {
+    if (!parameters.hasOwnProperty(field)) {
+      continue; // Do not check
+    }
+    var value = parameters[field];
+
+    if (value instanceof Array) {
+      // Cycle through array
+      if (H5P.hasCopyrights(value, contentId)) {
+        return true;
+      }
+    }
+    else if (value instanceof Object) {
+      // Check if object is a file with copyrights
+      if (value.copyright === undefined ||
+        value.copyright.license === undefined ||
+        value.path === undefined ||
+        value.mime === undefined) {
+
+        // Nope, cycle throught object
+        if (H5P.hasCopyrights(value, contentId)) {
+          return true;
+        }
+      }
+      else {
+        // Found file, return true
+        return true;
+      }
+    }
+  }
+  return false;
+};
 
 /**
  * Display a dialog containing the embed code.
@@ -1680,7 +1722,7 @@ H5P.createTitle = function(rawTitle, maxLength) {
       data = JSON.stringify(data);
     }
     catch (err) {
-      if (options.errorCallback) { 
+      if (options.errorCallback) {
         options.errorCallback(err);
       }
       return; // Failed to serialize.
@@ -1747,7 +1789,7 @@ H5P.createTitle = function(rawTitle, maxLength) {
             if (state !== undefined) {
               // Async is not used to prevent the request from being cancelled.
               H5P.setUserData(instance.contentId, 'state', state, {deleteOnChange: true, async: false});
-              
+
             }
           }
         }
