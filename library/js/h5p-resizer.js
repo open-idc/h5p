@@ -48,7 +48,7 @@
     responseData = {};
 
     // Reset iframe height, in case content has shrinked.
-    iframe.style.height = '1px';
+    // iframe.style.height = '1px';
 
     respond('resizePrepared');
   };
