@@ -67,7 +67,11 @@ H5P.init = function (target) {
 
   // Determine if we can use full screen
   if (H5P.canHasFullScreen === undefined) {
-    H5P.canHasFullScreen = (H5P.isFramed && H5P.externalEmbed !== false) ? (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) : true;
+    // Restricts fullscreen when embedded.
+    // (embedded doesn't support semi-fullscreen solution)
+    H5P.canHasFullScreen = (H5P.isFramed && H5P.externalEmbed !== false) ? ((document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled) ? true : false) : true;
+    // We should consider document.msFullscreenEnabled when they get their
+    // element sizing corrected. Ref. https://connect.microsoft.com/IE/feedback/details/838286/ie-11-incorrectly-reports-dom-element-sizes-in-fullscreen-mode-when-fullscreened-element-is-within-an-iframe
   }
 
   // H5Ps added in normal DIV.
@@ -111,7 +115,7 @@ H5P.init = function (target) {
     var instance = H5P.newRunnable(library, contentId, $container, true);
 
     // Check if we should add and display a fullscreen button for this H5P.
-    if (contentData.fullScreen == 1) {
+    if (contentData.fullScreen == 1 && H5P.canHasFullScreen) {
       H5P.jQuery('<div class="h5p-content-controls"><div role="button" tabindex="1" class="h5p-enable-fullscreen" title="' + H5P.t('fullscreen') + '"></div></div>').prependTo($container).children().click(function () {
         H5P.fullScreen($container, instance);
       });
@@ -1437,7 +1441,7 @@ H5P.cssLoaded = function (path) {
  * @returns {array} The passed array is returned for chaining.
  */
 H5P.shuffleArray = function (array) {
-  if (! array instanceof Array) {
+  if (!(array instanceof Array)) {
     return;
   }
 
@@ -1604,7 +1608,7 @@ H5P.createTitle = function(rawTitle, maxLength) {
    */
   function contentUserDataAjax(contentId, dataType, subContentId, done, data, preload, invalidate, async) {
     var options = {
-      url: H5PIntegration.ajaxPath + 'content-user-data/' + contentId + '/' + dataType + '/' + (subContentId ? subContentId : 0),
+      url: H5PIntegration.ajax.contentUserData.replace(':contentId', contentId).replace(':dataType', dataType).replace(':subContentId', subContentId ? subContentId : 0),
       dataType: 'json',
       async: async === undefined ? true : async
     };
@@ -1678,7 +1682,7 @@ H5P.createTitle = function(rawTitle, maxLength) {
 
         // Cache in preloaded
         if (content.contentUserData === undefined) {
-          content.contentUserData = preloaded = {};
+          content.contentUserData = preloadedData = {};
         }
         if (preloadedData[subContentId] === undefined) {
           preloadedData[subContentId] = {};
@@ -1789,11 +1793,15 @@ H5P.createTitle = function(rawTitle, maxLength) {
             if (state !== undefined) {
               // Async is not used to prevent the request from being cancelled.
               H5P.setUserData(instance.contentId, 'state', state, {deleteOnChange: true, async: false});
-
             }
           }
         }
       });
+    }
+
+    // Relay events to top window.
+    if (H5P.isFramed && H5P.externalEmbed === false) {
+      H5P.externalDispatcher.on('*', window.top.H5P.externalDispatcher.trigger);
     }
   });
 
