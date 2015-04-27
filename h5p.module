@@ -439,19 +439,21 @@ function h5p_delete($node) {
   $h5p_core = _h5p_get_instance('storage');
   $h5p_export = _h5p_get_instance('export');
 
-  $res = db_query("SELECT content_id FROM {h5p_nodes} WHERE nid = :nid", array(':nid' => $node->nid));
-  while ($content_id = $res->fetchField()) {
-    $h5p_core->deletePackage($content_id);
-    $h5p_export->deleteExport($content_id);
-  }
-  db_delete('h5p_points')
-    ->condition('content_id', h5p_get_content_id($node))
-    ->execute();
+  $res = db_query("SELECT content_id AS id, slug FROM {h5p_nodes} WHERE nid = :nid", array(':nid' => $node->nid));
+  while($content = $res->fetchAssoc()) {
+    $h5p_core->deletePackage($content['id']);
+    $h5p_export->deleteExport($content);
 
-  // Remove content user data
-  db_delete('h5p_content_user_data')
-    ->condition('content_main_id', $node->nid)
-    ->execute();
+    // Remove content points
+    db_delete('h5p_points')
+      ->condition('content_id', $content['id'])
+      ->execute();
+
+    // Remove content user data
+    db_delete('h5p_content_user_data')
+      ->condition('content_main_id', $content['id'])
+      ->execute();
+  }
 }
 
 /**
