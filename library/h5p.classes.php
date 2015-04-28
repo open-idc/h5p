@@ -1268,7 +1268,7 @@ class H5PStorage {
       }
 
       $content['params'] = file_get_contents($current_path . DIRECTORY_SEPARATOR . 'content.json');
-      
+
       if (isset($options['disable'])) {
         $content['disable'] = $options['disable'];
       }
@@ -2305,7 +2305,7 @@ class H5PCore {
   public function fetchLibrariesMetadata($fetchingDisabled = FALSE) {
     $platformInfo = $this->h5pF->getPlatformInfo();
     $platformInfo['autoFetchingDisabled'] = $fetchingDisabled;
-    $platformInfo['uuid'] = $this->h5pF->getOption('h5p_site_uuid', '');
+    $platformInfo['uuid'] = $this->h5pF->getOption('site_uuid', '');
     // Adding random string to GET to be sure nothing is cached
     $random = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 5);
     $json = $this->h5pF->fetchExternalData('http://h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
@@ -2652,10 +2652,17 @@ class H5PContentValidator {
     // Validate each element in list.
     foreach ($list as $key => &$value) {
       if (!is_int($key)) {
-        unset($list[$key]);
+        array_splice($list, $key, 1);
         continue;
       }
       $this->$function($value, $field);
+      if ($value === NULL) {
+        array_splice($list, $key, 1);
+      }
+    }
+
+    if (count($list) === 0) {
+      $list = NULL;
     }
   }
 
@@ -2765,6 +2772,9 @@ class H5PContentValidator {
         if ($found) {
           if ($function) {
             $this->$function($value, $field);
+            if ($value === NULL) {
+              unset($group->$key);
+            }
           }
           else {
             // We have a field type in semantics for which we don't have a
@@ -2800,9 +2810,13 @@ class H5PContentValidator {
    * Will recurse into validating the library's semantics too.
    */
   public function validateLibrary(&$value, $semantics) {
-    if (!isset($value->library) || !in_array($value->library, $semantics->options)) {
+    if (!isset($value->library)) {
+      $value = NULL;
+      return;
+    }
+    if (!in_array($value->library, $semantics->options)) {
       $this->h5pF->setErrorMessage($this->h5pF->t('Library used in content is not a valid library according to semantics'));
-      $value = new stdClass();
+      $value = NULL;
       return;
     }
 
