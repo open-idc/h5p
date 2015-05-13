@@ -345,6 +345,12 @@ function h5p_schema() {
         'size' => 'big',
         'not null' => TRUE
       ),
+      'slug' => array(
+        'description' => 'Human readable content identifier that is unique',
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE
+      )
     ),
     'primary key' => array('content_id'),
   );
@@ -877,6 +883,23 @@ function h5p_update_7108() {
     ));
   }
 }
+
+/**
+ * Add unique human readable content identifier. Useful for creating human
+ * readable file names, URLs and SEO.
+ */
+function h5p_update_7109() {
+  if (!db_field_exists('h5p_nodes', 'slug')) {
+    db_add_field('h5p_nodes', 'slug', array(
+      'description' => 'Human readable content identifier that is unique',
+      'type' => 'varchar',
+      'length' => 127,
+      'not null' => TRUE,
+      'default' => ''
+    ));
+  }
+}
+
 
 /**
  * Check if any library installed is unsupported by core

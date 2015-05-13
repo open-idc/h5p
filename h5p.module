@@ -174,8 +174,8 @@ function _h5p_make_urls_absolute($urls, $remove = NULL) {
  * @param int $content_id
  * @return string
  */
-function h5p_get_export_path($content_id) {
-  return variable_get('h5p_export', 1) ? file_create_url(_h5p_get_h5p_path() . '/exports/' . $content_id . '.h5p') : '';
+function h5p_get_export_path($content) {
+  return variable_get('h5p_export', 1) ? file_create_url(_h5p_get_h5p_path() . '/exports/' . ($content['slug'] ? $content['slug'] . '-' : '') . $content['id'] . '.h5p') : '';
 }
 
 /**
@@ -257,15 +257,7 @@ function h5p_form(&$node, $form_state) {
   );
 
   if (isset($node->json_content) || isset($node->translation_source) && isset($node->translation_source->json_content)) {
-    $source = isset($node->translation_source) ? $node->translation_source : $node;
-    $content = array(
-      'id' => h5p_get_content_id($node),
-      'title' => $source->title,
-      'params' => $source->json_content,
-      'language' => $source->language,
-      'library' => $source->main_library,
-      'embedType' => 'div',
-    );
+    $content = h5p_get_content(isset($node->translation_source) ? $node->translation_source : $node);
     $core = _h5p_get_instance('core');
     $filtered_params = $core->filterParameters($content);
   }
@@ -447,19 +439,21 @@ function h5p_delete($node) {
   $h5p_core = _h5p_get_instance('storage');
   $h5p_export = _h5p_get_instance('export');
 
-  $res = db_query("SELECT content_id FROM {h5p_nodes} WHERE nid = :nid", array(':nid' => $node->nid));
-  while ($content_id = $res->fetchField()) {
-    $h5p_core->deletePackage($content_id);
-    $h5p_export->deleteExport($content_id);
-  }
-  db_delete('h5p_points')
-    ->condition('content_id', h5p_get_content_id($node))
-    ->execute();
+  $res = db_query("SELECT content_id AS id, slug FROM {h5p_nodes} WHERE nid = :nid", array(':nid' => $node->nid));
+  while($content = $res->fetchAssoc()) {
+    $h5p_core->deletePackage($content['id']);
+    $h5p_export->deleteExport($content);
 
-  // Remove content user data
-  db_delete('h5p_content_user_data')
-    ->condition('content_main_id', $node->nid)
-    ->execute();
+    // Remove content points
+    db_delete('h5p_points')
+      ->condition('content_id', $content['id'])
+      ->execute();
+
+    // Remove content user data
+    db_delete('h5p_content_user_data')
+      ->condition('content_main_id', $content['id'])
+      ->execute();
+  }
 }
 
 /**
@@ -477,6 +471,7 @@ function h5p_load($nodes) {
       $node->main_library = $content['library'];
       $node->filtered = $content['filtered'];
       $node->disable = $content['disable'];
+      $node->h5p_slug = $content['slug'];
     }
   }
 }
@@ -741,6 +736,7 @@ function h5p_get_content($node) {
     'filtered' => $node->filtered,
     'url' => url('node/' . $node->nid, array('absolute' => TRUE)),
     'disable' => $node->disable,
+    'slug' => $node->h5p_slug
   );
 }
 
@@ -784,7 +780,7 @@ function h5p_get_content_settings($content) {
     'library' => H5PCore::libraryToString($content['library']),
     'jsonContent' => $filtered,
     'fullScreen' => $content['library']['fullscreen'],
-    'exportUrl' => h5p_get_export_path($content['id']),
+    'exportUrl' => h5p_get_export_path($content),
     'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
     'mainId' => $content['mainId'],
