@@ -662,7 +662,7 @@ function h5p_content_upgrade_library($name, $major, $minor) {
     $dev_lib = $core->h5pD->getLibrary($library->name, $library->version->major, $library->version->minor);
   }
 
-  $upgrades_script = (isset($dev_lib) ? $dev_lib['path'] : _h5p_get_h5p_path() . '/libraries/' . $library->name . '-' . $library->version->major . '.' . $library->version->minor) . '/upgrades.js';
+  $upgrades_script = _h5p_get_h5p_path() . (isset($dev_lib) ? '/'. $dev_lib['path'] : '/libraries/' . $library->name . '-' . $library->version->major . '.' . $library->version->minor) . '/upgrades.js';
   if (file_exists($upgrades_script)) {
     $library->upgradesScript = base_path() . $upgrades_script;
   }
