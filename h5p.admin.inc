@@ -616,7 +616,9 @@ function h5p_content_upgrade_progress($library_id) {
         ->execute();
 
       // Clear content cache
-      $interface->setFilteredParameters($id);
+      $interface->updateContentFields($content['id'], array(
+        'filtered' => ''
+      ));
     }
   }
 

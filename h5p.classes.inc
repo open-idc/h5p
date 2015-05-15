@@ -693,7 +693,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
-   * Implements setFilteredParameters().
+   * Implements updateContentFields().
    */
   public function updateContentFields($id, $fields) {
     $processedFields = array();
