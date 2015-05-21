@@ -106,7 +106,7 @@ function h5p_schema() {
       'dependency_type' => array(
         'description' => "dynamic, preloaded or editor",
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 31,
         'not null' => TRUE,
         'default' => 'preloaded',
       ),
@@ -141,7 +141,7 @@ function h5p_schema() {
       'machine_name' => array(
         'description' => 'The library machine name',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 127,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -245,7 +245,7 @@ function h5p_schema() {
       'dependency_type' => array(
         'description' => 'preloaded, dynamic, or editor',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 31,
         'not null' => TRUE,
       ),
     ),
@@ -264,7 +264,7 @@ function h5p_schema() {
       'language_code' => array(
         'description' => 'Primary Key: The language code.',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 31,
         'not null' => TRUE,
       ),
       'language_json' => array(
