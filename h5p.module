@@ -288,6 +288,16 @@ function h5p_form(&$node, $form_state) {
     '#default_value' => isset($node->embed_type) ? $node->embed_type : 'div',
   );
 
+  if (!isset($node->disable)) {
+    $node->disable = H5PCore::DISABLE_NONE;
+  }
+
+  // Keep track of the old disable value
+  $form['disable'] = array(
+    '#type' => 'value',
+    '#value' => $node->disable
+  );
+
   // Display options
   if (variable_get('h5p_frame', TRUE)) {
     $form['h5p_options'] = array(
@@ -304,10 +314,6 @@ function h5p_form(&$node, $form_state) {
       )
     );
 
-    if (!isset($node->disable)) {
-      $node->disable = H5PCore::DISABLE_NONE;
-    }
-
     $labels = _h5p_get_disable_labels();
     foreach (H5PCore::$disable as $bit => $name) {
       if (variable_get('h5p_' . ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
@@ -321,10 +327,6 @@ function h5p_form(&$node, $form_state) {
 
     $form['#submit'][] = '_h5p_form_submit';
   }
-  
-  else {
-    $node->disable = H5PCore::DISABLE_ALL;
-  }
 
   return $form;
 }
@@ -333,9 +335,8 @@ function h5p_form(&$node, $form_state) {
  * Handle h5p node form submission
  */
 function _h5p_form_submit($form, &$form_state) {
-  if (variable_get('h5p_frame', TRUE)) {
-    $form_state['values']['disable'] = H5PCore::getDisable($form_state['values']);
-  }
+  $core = _h5p_get_instance('core');
+  $form_state['values']['disable'] = $core->getDisable($form_state['values'], $form_state['values']['disable']);
 }
 
 /**
