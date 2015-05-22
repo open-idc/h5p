@@ -1649,7 +1649,6 @@ class H5PCore {
   const DISABLE_EMBED = 4;
   const DISABLE_COPYRIGHT = 8;
   const DISABLE_ABOUT = 16;
-  const DISABLE_ALL = 31;
 
   // Map flags to string
   public static $disable = array(
@@ -2414,9 +2413,6 @@ class H5PCore {
     }
     if (!isset($sources['embed']) || !$sources['embed']) {
       $disable |= H5PCore::DISABLE_EMBED;
-    }
-    if (!isset($sources['about']) || !$sources['about']) {
-      $disable |= H5PCore::DISABLE_ABOUT;
     }
     return $disable;
   }

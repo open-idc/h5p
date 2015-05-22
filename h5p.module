@@ -313,9 +313,8 @@ function h5p_form(&$node, $form_state) {
 
     $form['#submit'][] = '_h5p_form_submit';
   }
-  
   else {
-    $node->disable = H5PCore::DISABLE_ALL;
+    $node->disable = H5PCore::DISABLE_NONE;
   }
 
   return $form;
