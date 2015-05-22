@@ -1642,7 +1642,6 @@ class H5PCore {
   const DISABLE_EMBED = 4;
   const DISABLE_COPYRIGHT = 8;
   const DISABLE_ABOUT = 16;
-  const DISABLE_ALL = 31;
 
   // Map flags to string
   public static $disable = array(
@@ -2808,6 +2807,10 @@ class H5PContentValidator {
       }
     }
     if (!(isset($semantics->optional) && $semantics->optional)) {
+      if ($group === NULL) {
+        // Error no value. Errors aren't printed...
+        return;
+      }
       foreach ($semantics->fields as $field) {
         if (!(isset($field->optional) && $field->optional)) {
           // Check if field is in group.
