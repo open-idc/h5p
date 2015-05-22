@@ -1268,7 +1268,7 @@ class H5PStorage {
       }
 
       $content['params'] = file_get_contents($current_path . DIRECTORY_SEPARATOR . 'content.json');
-      
+
       if (isset($options['disable'])) {
         $content['disable'] = $options['disable'];
       }
@@ -2366,9 +2366,6 @@ class H5PCore {
     }
     if (!isset($sources['embed']) || !$sources['embed']) {
       $disable |= H5PCore::DISABLE_EMBED;
-    }
-    if (!isset($sources['about']) || !$sources['about']) {
-      $disable |= H5PCore::DISABLE_ABOUT;
     }
     return $disable;
   }
