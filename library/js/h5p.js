@@ -1,17 +1,34 @@
 /*jshint multistr: true */
 // TODO: Should we split up the generic parts needed by the editor(and others), and the parts needed to "run" H5Ps?
+
+/** @namespace */
 var H5P = H5P || {};
 
-// Determine if we're inside an iframe.
+/**
+ * Tells us if we're inside of an iframe.
+ * @member {boolean}
+ */
 H5P.isFramed = (window.self !== window.top);
 
-// Useful jQuery object.
+/**
+ * jQuery instance of current window.
+ * @member {H5P.jQuery}
+ */
 H5P.$window = H5P.jQuery(window);
 
+/**
+ * List over H5P instances on the current page.
+ * @member {Array}
+ */
 H5P.instances = [];
 
 // Detect if we support fullscreen, and what prefix to use.
 if (document.documentElement.requestFullScreen) {
+  /**
+   * Browser prefix to use when entering fullscreen mode.
+   * undefined means no fullscreen support.
+   * @member {string}
+   */
   H5P.fullScreenBrowserPrefix = '';
 }
 else if (document.documentElement.webkitRequestFullScreen) {
@@ -30,34 +47,36 @@ else if (document.documentElement.msRequestFullscreen) {
   H5P.fullScreenBrowserPrefix = 'ms';
 }
 
-/** @const {Number} */
+/** @const {number} */
 H5P.DISABLE_NONE = 0;
 
-/** @const {Number} */
+/** @const {number} */
 H5P.DISABLE_FRAME = 1;
 
-/** @const {Number} */
+/** @const {number} */
 H5P.DISABLE_DOWNLOAD = 2;
 
-/** @const {Number} */
+/** @const {number} */
 H5P.DISABLE_EMBED = 4;
 
-/** @const {Number} */
+/** @const {number} */
 H5P.DISABLE_COPYRIGHT = 8;
 
-/** @const {Number} */
+/** @const {number} */
 H5P.DISABLE_ABOUT = 16;
 
 /**
  * Keep track of when the H5Ps where started.
  *
- * @type {Array}
+ * @type {Object[]}
  */
 H5P.opened = {};
 
 /**
  * Initialize H5P content.
  * Scans for ".h5p-content" in the document and initializes H5P instances where found.
+ *
+ * @param {Object} target DOM Element
  */
 H5P.init = function (target) {
   // Useful jQuery object.
@@ -67,8 +86,12 @@ H5P.init = function (target) {
 
   // Determine if we can use full screen
   if (H5P.canHasFullScreen === undefined) {
-    // Restricts fullscreen when embedded.
-    // (embedded doesn't support semi-fullscreen solution)
+    /**
+     * Use this variable to check if fullscreen is supported. Fullscreen can be
+     * restricted when embedding since not all browsers support the native
+     * fullscreen, and the semi-fullscreen solution doesn't work when embedded.
+     * @type {boolean}
+     */
     H5P.canHasFullScreen = (H5P.isFramed && H5P.externalEmbed !== false) ? ((document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled) ? true : false) : true;
     // We should consider document.msFullscreenEnabled when they get their
     // element sizing corrected. Ref. https://connect.microsoft.com/IE/feedback/details/838286/ie-11-incorrectly-reports-dom-element-sizes-in-fullscreen-mode-when-fullscreened-element-is-within-an-iframe
@@ -123,25 +146,30 @@ H5P.init = function (target) {
 
     // Create action bar
     var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
-
     if (!(contentData.disable & H5P.DISABLE_DOWNLOAD)) {
       // Add export button
       H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1" title="' + H5P.t('downloadDescription') + '">' + H5P.t('download') + '</li>').appendTo($actions).click(function () {
         window.location.href = contentData.exportUrl;
       });
     }
-    if (!(contentData.disable & H5P.DISABLE_COPYRIGHT) && instance.getCopyrights !== undefined) {
-      // Add copyrights button
-      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
-        H5P.openCopyrightsDialog($actions, instance, library.params, contentId);
-      });
+    if (!(contentData.disable & H5P.DISABLE_COPYRIGHT)) {
+      var copyright = H5P.getCopyrights(instance, library.params, contentId);
+
+      if (copyright) {
+        // Add copyright dialog button
+        H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
+          // Open dialog with copyright information
+          var dialog = new H5P.Dialog('copyrights', H5P.t('copyrightInformation'), copyright, $container);
+          dialog.open();
+        });
+      }
     }
     if (!(contentData.disable & H5P.DISABLE_EMBED)) {
       // Add embed button
       H5P.jQuery('<li class="h5p-button h5p-embed" role="button" tabindex="1" title="' + H5P.t('embedDescription') + '">' + H5P.t('embed') + '</li>').appendTo($actions).click(function () {
         H5P.openEmbedDialog($actions, contentData.embedCode, contentData.resizeCode, {
-          width: $container.width(),
-          height: $container.height()
+          width: $element.width(),
+          height: $element.height()
         });
       });
     }
@@ -347,9 +375,15 @@ H5P.getHeadTags = function (contentId) {
          '<script>H5PIntegration = window.top.H5PIntegration; var H5P = H5P || {}; H5P.externalEmbed = false;</script>';
 };
 
+/**
+ * When embedded the communicator helps talk to the parent page.
+ *
+ * @type {Communicator}
+ */
 H5P.communicator = (function () {
   /**
    * @class
+   * @private
    */
   function Communicator() {
     var self = this;
@@ -372,9 +406,8 @@ H5P.communicator = (function () {
     /**
      * Register action listener.
      *
-     * @public
-     * @param {String} action What you are waiting for
-     * @param {Function} handler What you want done
+     * @param {string} action What you are waiting for
+     * @param {function} handler What you want done
      */
     self.on = function (action, handler) {
       actionHandlers[action] = handler;
@@ -383,8 +416,7 @@ H5P.communicator = (function () {
     /**
      * Send a message to the all mighty father.
      *
-     * @public
-     * @param {String} action
+     * @param {string} action
      * @param {Object} [data] payload
      */
     self.send = function (action, data) {
@@ -403,13 +435,12 @@ H5P.communicator = (function () {
 })();
 
 /**
- * Enable full screen for the given h5p.
+ * Enter fullscreen for the given H5P instance.
  *
- * @param {jQuery} $element Content container.
- * @param {object} instance
+ * @param {H5P.jQuery} $element Content container.
+ * @param {Object} instance
  * @param {function} exitCallback Callback function called when user exits fullscreen.
- * @param {jQuery} $body For internal use. Gives the body of the iframe.
- * @returns {undefined}
+ * @param {H5P.jQuery} $body For internal use. Gives the body of the iframe.
  */
 H5P.fullScreen = function ($element, instance, exitCallback, body) {
   if (H5P.exitFullScreen !== undefined) {
@@ -449,7 +480,8 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
   /**
    * Prepare for resize by setting the correct styles.
    *
-   * @param {String} classes CSS
+   * @private
+   * @param {string} classes CSS
    */
   var before = function (classes) {
     $classes.addClass(classes);
@@ -463,6 +495,8 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
   /**
    * Gets called when fullscreen mode has been entered.
    * Resizes and sets focus on content.
+   *
+   * @private
    */
   var entered = function () {
     // Do not rely on window resize events.
@@ -475,7 +509,8 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
    * Gets called when fullscreen mode has been exited.
    * Resizes and sets focus on content.
    *
-   * @param {String} classes CSS
+   * @private
+   * @param {string} classes CSS
    */
   var done = function (classes) {
     H5P.isFullscreen = false;
@@ -560,14 +595,15 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
 };
 
 /**
- * Find the path to the content files based on the id of the content
+ * Find the path to the content files based on the id of the content.
+ * Also identifies and returns absolute paths.
  *
- * Also identifies and returns absolute paths
- *
- * @param string path
- *  Absolute path to a file, or relative path to a file in the content folder
- * @param contentId
- *  Id of the content requesting a path
+ * @param {string} path
+ *   Relative to content folder or absolute.
+ * @param {number} contentId
+ *   ID of the content requesting the path.
+ * @returns {string}
+ *   Complete URL to path.
  */
 H5P.getPath = function (path, contentId) {
   var hasProtocol = function (path) {
@@ -600,10 +636,14 @@ H5P.getPath = function (path, contentId) {
  * THIS FUNCTION IS DEPRECATED, USE getPath INSTEAD
  * Will be remove march 2016.
  *
- *  Find the path to the content files folder based on the id of the content
+ * Find the path to the content files folder based on the id of the content
  *
- *  @param contentId
- *  Id of the content requesting a path
+ * @deprecated
+ *   Will be removed march 2016.
+ * @param contentId
+ *   Id of the content requesting the path
+ * @returns {string}
+ *   URL
  */
 H5P.getContentPath = function (contentId) {
   return H5PIntegration.url + '/content/' + contentId;
@@ -612,32 +652,38 @@ H5P.getContentPath = function (contentId) {
 /**
  * Get library class constructor from H5P by classname.
  * Note that this class will only work for resolve "H5P.NameWithoutDot".
- * Also check out: H5P.newRunnable
+ * Also check out {@link H5P.newRunnable}
  *
  * Used from libraries to construct instances of other libraries' objects by name.
  *
  * @param {string} name Name of library
- * @returns Class constructor
+ * @returns {Object} Class constructor
  */
 H5P.classFromName = function (name) {
   var arr = name.split(".");
-  return this[arr[arr.length-1]];
+  return this[arr[arr.length - 1]];
 };
 
 /**
  * A safe way of creating a new instance of a runnable H5P.
  *
- * TODO: Should we check if version matches the library?
- * TODO: Dynamically try to load libraries currently not loaded? That will require a callback.
- *
- * @param {Object} library Library/action object form params.
- * @param {Number} contentId
- * @param {jQuery} $attachTo An optional element to attach the instance to.
- * @param {Boolean} skipResize Optionally skip triggering of the resize event after attaching.
- * @param {Object} extras - extra params for the H5P content constructor
- * @return {Object} Instance.
+ * @param {Object} library
+ *   Library/action object form params.
+ * @param {number} contentId
+ *   Identifies the content.
+ * @param {H5P.jQuery} [$attachTo]
+ *   Element to attach the instance to.
+ * @param {boolean} [skipResize]
+ *   Skip triggering of the resize event after attaching.
+ * @param {Object} [extras]
+ *   Extra parameters for the H5P content constructor
+ * @returns {Object}
+ *   Instance.
  */
 H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
+  // TODO: Should we check if version matches the library?
+  // TODO: Dynamically try to load libraries currently not loaded? That will require a callback.
+
   var nameSplit, versionSplit, machineName;
   try {
     nameSplit = library.library.split(' ', 2);
@@ -722,24 +768,27 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
 };
 
 /**
- * Used to print useful error messages.
+ * Used to print useful error messages. (to JavaScript error console)
  *
- * @param {mixed} err Error to print.
- * @returns {undefined}
+ * @param {*} err Error to print.
  */
 H5P.error = function (err) {
   if (window.console !== undefined && console.error !== undefined) {
-    console.error(err);
+    console.error(err.stack ? err.stack : err);
   }
 };
 
 /**
  * Translate text strings.
  *
- * @param {String} key Translation identifier, may only contain a-zA-Z0-9. No spaces or special chars.
- * @param {Object} vars Data for placeholders.
- * @param {String} ns Translation namespace. Defaults to H5P.
- * @returns {String} Text
+ * @param {string} key
+ *   Translation identifier, may only contain a-zA-Z0-9. No spaces or special chars.
+ * @param {Object} vars
+ *   Data for placeholders.
+ * @param {string} ns
+ *   Translation namespace. Defaults to H5P.
+ * @returns {string}
+ *   Translated text
  */
 H5P.t = function (key, vars, ns) {
   if (ns === undefined) {
@@ -766,6 +815,19 @@ H5P.t = function (key, vars, ns) {
   return translation;
 };
 
+/**
+ * Creates a new popup dialog over the H5P content.
+ *
+ * @class
+ * @param {string} name
+ *   Used for html class.
+ * @param {string} title
+ *   Used for header.
+ * @param {string} content
+ *   Displayed inside the dialog.
+ * @param {H5P.jQuery} $element
+ *   Which DOM element the dialog should be inserted after.
+ */
 H5P.Dialog = function (name, title, content, $element) {
   var self = this;
   var $dialog = H5P.jQuery('<div class="h5p-popup-dialog h5p-' + name + '-dialog">\
@@ -807,19 +869,30 @@ H5P.Dialog = function (name, title, content, $element) {
 };
 
 /**
- * Gather copyright information and display in a dialog over the content.
+ * Gather copyright information for the given content.
  *
- * @param {jQuery} $element to insert dialog after.
- * @param {object} instance to get copyright information from.
- * @returns {undefined}
+ * @param {Object} instance
+ *   H5P instance to get copyright information for.
+ * @param {Object} parameters
+ *   Parameters of the content instance.
+ * @param {number} contentId
+ *   Identifies the H5P content
+ * @returns {string} Copyright information.
  */
-H5P.openCopyrightsDialog = function ($element, instance, parameters, contentId) {
+H5P.getCopyrights = function (instance, parameters, contentId) {
   var copyrights;
+
   if (instance.getCopyrights !== undefined) {
-    // Use the instance's own copyright generator
-    copyrights = instance.getCopyrights();
+    try {
+      // Use the instance's own copyright generator
+      copyrights = instance.getCopyrights();
+    }
+    catch (err) {
+      // Failed, prevent crashing page.
+    }
   }
-  else {
+
+  if (copyrights === undefined) {
     // Create a generic flat copyright list
     copyrights = new H5P.ContentCopyrights();
     H5P.findCopyrights(copyrights, parameters, contentId);
@@ -829,23 +902,18 @@ H5P.openCopyrightsDialog = function ($element, instance, parameters, contentId) 
     // Convert to string
     copyrights = copyrights.toString();
   }
-  if (copyrights === undefined || copyrights === '') {
-    // Use no copyrights default text
-    copyrights = H5P.t('noCopyrights');
-  }
-
-  // Open dialog with copyright information
-  var dialog = new H5P.Dialog('copyrights', H5P.t('copyrightInformation'), copyrights, $element);
-  dialog.open();
+  return copyrights;
 };
 
 /**
  * Gather a flat list of copyright information from the given parameters.
  *
- * @param {H5P.ContentCopyrights} info Used to collect all information in.
- * @param {(Object|Arrray)} parameters To search for file objects in.
- * @param {Number} contentId Used to insert thumbnails for images.
- * @returns {undefined}
+ * @param {H5P.ContentCopyrights} info
+ *   Used to collect all information in.
+ * @param {(Object|Array)} parameters
+ *   To search for file objects in.
+ * @param {number} contentId
+ *   Used to insert thumbnails for images.
  */
 H5P.findCopyrights = function (info, parameters, contentId) {
   // Cycle through parameters
@@ -883,17 +951,23 @@ H5P.findCopyrights = function (info, parameters, contentId) {
   }
 };
 
-
 /**
  * Display a dialog containing the embed code.
  *
- * @param {jQuery} $element to insert dialog after.
- * @param {string} embed code.
- * @returns {undefined}
+ * @param {H5P.jQuery} $element
+ *   Element to insert dialog after.
+ * @param {string} embedCode
+ *   The embed code.
+ * @param {string} resizeCode
+ *   The advanced resize code
+ * @param {Object} size
+ *   The content's size.
+ * @param {number} size.width
+ * @param {number} size.height
  */
 H5P.openEmbedDialog = function ($element, embedCode, resizeCode, size) {
   var fullEmbedCode = embedCode + resizeCode;
-  var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>' + H5P.t('size') + ': <input type="text" value="' + size.width + '" class="h5p-embed-size"/> × <input type="text" value="' + size.height + '" class="h5p-embed-size"/> px<div role="button" tabindex="0" class="h5p-expander">' + H5P.t('showAdvanced') + '</div><div class="h5p-expander-content"><p>' + H5P.t('advancedHelp') + '</p><textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false">' + resizeCode + '</textarea></div>', $element);
+  var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>' + H5P.t('size') + ': <input type="text" value="' + size.width + '" class="h5p-embed-size"/> × <input type="text" value="' + size.height + '" class="h5p-embed-size"/> px<br/><div role="button" tabindex="0" class="h5p-expander">' + H5P.t('showAdvanced') + '</div><div class="h5p-expander-content"><p>' + H5P.t('advancedHelp') + '</p><textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false">' + resizeCode + '</textarea></div>', $element);
 
   // Selecting embed code when dialog is opened
   H5P.jQuery(dialog).on('dialog-opened', function (event, $dialog) {
@@ -968,6 +1042,8 @@ H5P.openEmbedDialog = function ($element, embedCode, resizeCode, size) {
 
 /**
  * Copyrights for a H5P Content Library.
+ *
+ * @class
  */
 H5P.ContentCopyrights = function () {
   var label;
@@ -975,16 +1051,16 @@ H5P.ContentCopyrights = function () {
   var content = [];
 
   /**
-   * Public. Set label.
+   * Set label.
    *
-   * @param {String} newLabel
+   * @param {string} newLabel
    */
   this.setLabel = function (newLabel) {
     label = newLabel;
   };
 
   /**
-   * Public. Add sub content.
+   * Add sub content.
    *
    * @param {H5P.MediaCopyright} newMedia
    */
@@ -995,7 +1071,7 @@ H5P.ContentCopyrights = function () {
   };
 
   /**
-   * Public. Add sub content.
+   * Add sub content.
    *
    * @param {H5P.ContentCopyrights} newContent
    */
@@ -1006,9 +1082,9 @@ H5P.ContentCopyrights = function () {
   };
 
   /**
-   * Public. Print content copyright.
+   * Print content copyright.
    *
-   * @returns {String} HTML.
+   * @returns {string} HTML.
    */
   this.toString = function () {
     var html = '';
@@ -1041,20 +1117,26 @@ H5P.ContentCopyrights = function () {
 /**
  * A ordered list of copyright fields for media.
  *
- * @param {Object} copyright information fields.
- * @param {Object} labels translation.  Optional.
- * @param {Array} order of fields. Optional.
- * @param {Object} extraFields for copyright. Optional.
+ * @class
+ * @param {Object} copyright
+ *   Copyright information fields.
+ * @param {Object} [labels]
+ *   Translation of labels.
+ * @param {Array} [order]
+ *   Order of the fields.
+ * @param {Object} [extraFields]
+ *   Add extra copyright fields.
  */
 H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   var thumbnail;
   var list = new H5P.DefinitionList();
 
   /**
-   * Private. Get translated label for field.
+   * Get translated label for field.
    *
-   * @param {String} fieldName
-   * @return {String}
+   * @private
+   * @param {string} fieldName
+   * @returns {string}
    */
   var getLabel = function (fieldName) {
     if (labels === undefined || labels[fieldName] === undefined) {
@@ -1065,10 +1147,12 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   };
 
   /**
-   * Private. Get humanized value for field.
+   * Get humanized value for field.
    *
-   * @param {String} fieldName
-   * @return {String}
+   * @private
+   * @param {string} fieldName
+   * @param {string} value
+   * @returns {string}
    */
   var humanizeValue = function (fieldName, value) {
     if (fieldName === 'license') {
@@ -1100,7 +1184,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   }
 
   /**
-   * Public. Set thumbnail.
+   * Set thumbnail.
    *
    * @param {H5P.Thumbnail} newThumbnail
    */
@@ -1109,10 +1193,10 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   };
 
   /**
-   * Public. Checks if this copyright is undisclosed.
+   * Checks if this copyright is undisclosed.
    * I.e. only has the license attribute set, and it's undisclosed.
    *
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   this.undisclosed = function () {
     if (list.size() === 1) {
@@ -1125,9 +1209,9 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   };
 
   /**
-   * Public. Print media copyright.
+   * Print media copyright.
    *
-   * @returns {String} HTML.
+   * @returns {string} HTML.
    */
   this.toString = function () {
     var html = '';
@@ -1149,7 +1233,11 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   };
 };
 
-// Translate table for copyright license codes.
+/**
+ * Maps copyright license codes to their human readable counterpart.
+ *
+ * @type {Object}
+ */
 H5P.copyrightLicenses = {
   'U': 'Undisclosed',
   'CC BY': 'Attribution',
@@ -1166,11 +1254,12 @@ H5P.copyrightLicenses = {
 };
 
 /**
- * Simple class for creating thumbnails for images.
+ * A simple and elegant class for creating thumbnails of images.
  *
- * @param {String} source
- * @param {Number} width
- * @param {Number} height
+ * @class
+ * @param {string} source
+ * @param {number} width
+ * @param {number} height
  */
 H5P.Thumbnail = function (source, width, height) {
   var thumbWidth, thumbHeight = 100;
@@ -1179,9 +1268,9 @@ H5P.Thumbnail = function (source, width, height) {
   }
 
   /**
-   * Public. Print thumbnail.
+   * Print thumbnail.
    *
-   * @returns {String} HTML.
+   * @returns {string} HTML.
    */
   this.toString = function () {
     return '<img src="' + source + '" alt="' + H5P.t('thumbnail') + '" class="h5p-thumbnail" height="' + thumbHeight + '"' + (thumbWidth === undefined ? '' : ' width="' + thumbWidth + '"') + '/>';
@@ -1189,7 +1278,11 @@ H5P.Thumbnail = function (source, width, height) {
 };
 
 /**
- * Simple data class for storing a single field.
+ * Simple data structure class for storing a single field.
+ *
+ * @class
+ * @param {string} label
+ * @param {string} value
  */
 H5P.Field = function (label, value) {
   /**
@@ -1213,12 +1306,14 @@ H5P.Field = function (label, value) {
 
 /**
  * Simple class for creating a definition list.
+ *
+ * @class
  */
 H5P.DefinitionList = function () {
   var fields = [];
 
   /**
-   * Public. Add field to list.
+   * Add field to list.
    *
    * @param {H5P.Field} field
    */
@@ -1227,28 +1322,28 @@ H5P.DefinitionList = function () {
   };
 
   /**
-   * Public. Get Number of fields.
+   * Get Number of fields.
    *
-   * @returns {Number}
+   * @returns {number}
    */
   this.size = function () {
     return fields.length;
   };
 
   /**
-   * Public. Get field at given index.
+   * Get field at given index.
    *
-   * @param {Number} index
-   * @returns {Object}
+   * @param {number} index
+   * @returns {H5P.Field}
    */
   this.get = function (index) {
     return fields[index];
   };
 
   /**
-   * Public. Print definition list.
+   * Print definition list.
    *
-   * @returns {String} HTML.
+   * @returns {string} HTML.
    */
   this.toString = function () {
     var html = '';
@@ -1264,14 +1359,26 @@ H5P.DefinitionList = function () {
  * THIS FUNCTION/CLASS IS DEPRECATED AND WILL BE REMOVED.
  *
  * Helper object for keeping coordinates in the same format all over.
+ *
+ * @deprecated
+ *   Will be removed march 2016.
+ * @class
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
  */
 H5P.Coords = function (x, y, w, h) {
   if ( !(this instanceof H5P.Coords) )
     return new H5P.Coords(x, y, w, h);
 
+  /** @member {number} */
   this.x = 0;
+  /** @member {number} */
   this.y = 0;
+  /** @member {number} */
   this.w = 1;
+  /** @member {number} */
   this.h = 1;
 
   if (typeof(x) === 'object') {
@@ -1300,10 +1407,10 @@ H5P.Coords = function (x, y, w, h) {
  * Parse library string into values.
  *
  * @param {string} library
- *  library in the format "machineName majorVersion.minorVersion"
- * @returns
- *  library as an object with machineName, majorVersion and minorVersion properties
- *  return false if the library parameter is invalid
+ *   library in the format "machineName majorVersion.minorVersion"
+ * @returns {Object}
+ *   library as an object with machineName, majorVersion and minorVersion properties
+ *   return false if the library parameter is invalid
  */
 H5P.libraryFromString = function (library) {
   var regExp = /(.+)\s(\d)+\.(\d)$/g;
@@ -1323,9 +1430,10 @@ H5P.libraryFromString = function (library) {
 /**
  * Get the path to the library
  *
- * @param {String} library
+ * @param {string} library
  *   The library identifier in the format "machineName-majorVersion.minorVersion".
- * @returns {String} The full path to the library.
+ * @returns {string}
+ *   The full path to the library.
  */
 H5P.getLibraryPath = function (library) {
   return H5PIntegration.url + '/libraries/' + library;
@@ -1333,13 +1441,15 @@ H5P.getLibraryPath = function (library) {
 
 /**
  * Recursivly clone the given object.
- * TODO: Consider if this needs to be in core. Doesn't $.extend do the same?
  *
- * @param {object} object Object to clone.
- * @param {type} recursive
- * @returns {object} A clone of object.
+ * @param {Object|Array} object
+ *   Object to clone.
+ * @param {boolean} [recursive]
+ * @returns {Object|Array}
+ *   A clone of object.
  */
 H5P.cloneObject = function (object, recursive) {
+  // TODO: Consider if this needs to be in core. Doesn't $.extend do the same?
   var clone = object instanceof Array ? [] : {};
 
   for (var i in object) {
@@ -1358,22 +1468,23 @@ H5P.cloneObject = function (object, recursive) {
 
 /**
  * Remove all empty spaces before and after the value.
- * TODO: Only include this or String.trim(). What is best?
- * I'm leaning towards implementing the missing ones: http://kangax.github.io/compat-table/es5/
- * So should we make this function deprecated?
  *
- * @param {String} value
- * @returns {@exp;value@call;replace}
+ * @param {string} value
+ * @returns {string}
  */
 H5P.trim = function (value) {
   return value.replace(/^\s+|\s+$/g, '');
+
+  // TODO: Only include this or String.trim(). What is best?
+  // I'm leaning towards implementing the missing ones: http://kangax.github.io/compat-table/es5/
+  // So should we make this function deprecated?
 };
 
 /**
- * Check if javascript path/key is loaded.
+ * Check if JavaScript path/key is loaded.
  *
- * @param {String} path
- * @returns {Boolean}
+ * @param {string} path
+ * @returns {boolean}
  */
 H5P.jsLoaded = function (path) {
   H5PIntegration.loadedJs = H5PIntegration.loadedJs || [];
@@ -1383,8 +1494,8 @@ H5P.jsLoaded = function (path) {
 /**
  * Check if styles path/key is loaded.
  *
- * @param {String} path
- * @returns {Boolean}
+ * @param {string} path
+ * @returns {boolean}
  */
 H5P.cssLoaded = function (path) {
   H5PIntegration.loadedCss = H5PIntegration.loadedCss || [];
@@ -1393,12 +1504,14 @@ H5P.cssLoaded = function (path) {
 
 /**
  * Shuffle an array in place.
- * TODO: Consider if this should be a part of core. I'm guessing very few libraries are going to use it.
  *
- * @param {array} array Array to shuffle
- * @returns {array} The passed array is returned for chaining.
+ * @param {Array} array
+ *   Array to shuffle
+ * @returns {Array}
+ *   The passed array is returned for chaining.
  */
 H5P.shuffleArray = function (array) {
+  // TODO: Consider if this should be a part of core. I'm guessing very few libraries are going to use it.
   if (!(array instanceof Array)) {
     return;
   }
@@ -1416,21 +1529,26 @@ H5P.shuffleArray = function (array) {
 };
 
 /**
- * DEPRECATED! Do not use this function directly, trigger the finish event
- * instead.
- *
  * Post finished results for user.
  *
- * @param {Number} contentId
- * @param {Number} score achieved
- * @param {Number} maxScore that can be achieved
- * @param {Number} time optional reported time usage
+ * @deprecated
+ *   Do not use this function directly, trigger the finish event instead.
+ *   Will be removed march 2016
+ * @param {number} contentId
+ *   Identifies the content
+ * @param {number} score
+ *   Achieved score/points
+ * @param {number} maxScore
+ *   The maximum score/points that can be achieved
+ * @param {number} [time]
+ *   Reported time consumption/usage
  */
 H5P.setFinished = function (contentId, score, maxScore, time) {
   if (H5PIntegration.postUserStatistics === true) {
     /**
      * Return unix timestamp for the given JS Date.
      *
+     * @private
      * @param {Date} date
      * @returns {Number}
      */
@@ -1476,12 +1594,14 @@ if (String.prototype.trim === undefined) {
  *
  * Helper function that triggers an event if the instance supports event handling
  *
- * @param {function} instance
- *  An H5P instance
+ * @param {Object} instance
+ *   Instance of H5P content
  * @param {string} eventType
- *  The event type
+ *   Type of event to trigger
+ * @param {*} data
+ * @param {Object} extras
  */
-H5P.trigger = function(instance, eventType, data, extras) {
+H5P.trigger = function (instance, eventType, data, extras) {
   // Try new event system first
   if (instance.trigger !== undefined) {
     instance.trigger(eventType, data, extras);
@@ -1498,14 +1618,14 @@ H5P.trigger = function(instance, eventType, data, extras) {
  * Helper function that registers an event handler for an event type if
  * the instance supports event handling
  *
- * @param {function} instance
- *  An h5p instance
+ * @param {Object} instance
+ *   Instance of H5P content
  * @param {string} eventType
- *  The event type
- * @param {function} handler
- *  Callback that gets triggered for events of the specified type
+ *   Type of event to listen for
+ * @param {H5P.EventCallback} handler
+ *   Callback that gets triggered for events of the specified type
  */
-H5P.on = function(instance, eventType, handler) {
+H5P.on = function (instance, eventType, handler) {
   // Try new event system first
   if (instance.on !== undefined) {
     instance.on(eventType, handler);
@@ -1517,18 +1637,25 @@ H5P.on = function(instance, eventType, handler) {
 };
 
 /**
- * Create UUID
+ * Generate random UUID
  *
- * @returns {String} UUID
+ * @returns {string} UUID
  */
-H5P.createUUID = function() {
+H5P.createUUID = function () {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(char) {
     var random = Math.random()*16|0, newChar = char === 'x' ? random : (random&0x3|0x8);
     return newChar.toString(16);
   });
 };
 
-H5P.createTitle = function(rawTitle, maxLength) {
+/**
+ * Create title
+ *
+ * @param {string} rawTitle
+ * @param {number} maxLength
+ * @returns {string}
+ */
+H5P.createTitle = function (rawTitle, maxLength) {
   if (!rawTitle) {
     return '';
   }
@@ -1606,11 +1733,14 @@ H5P.createTitle = function(rawTitle, maxLength) {
   /**
    * Get user data for given content.
    *
-   * @public
-   * @param {number} contentId What content to get data for.
-   * @param {string} dataId Identifies the set of data for this content.
-   * @param {function} done Callback with error and data parameters.
-   * @param {string} [subContentId] Identifies which data belongs to sub content.
+   * @param {number} contentId
+   *   What content to get data for.
+   * @param {string} dataId
+   *   Identifies the set of data for this content.
+   * @param {function} done
+   *   Callback with error and data parameters.
+   * @param {string} [subContentId]
+   *   Identifies which data belongs to sub content.
    */
   H5P.getUserData = function (contentId, dataId, done, subContentId) {
     if (!subContentId) {
@@ -1659,18 +1789,32 @@ H5P.createTitle = function(rawTitle, maxLength) {
   };
 
   /**
+   * Async error handling.
+   *
+   * @callback H5P.ErrorCallback
+   * @param {*} error
+   */
+
+  /**
    * Set user data for given content.
    *
-   * @public
-   * @param {number} contentId What content to get data for.
-   * @param {string} dataId Identifies the set of data for this content.
-   * @param {object} data The data that is to be stored.
-   * @param {object} extras - object holding the following properties:
-   *  - {string} [subContentId] Identifies which data belongs to sub content.
-   *  - {boolean} [preloaded=true] If the data should be loaded when content is loaded.
-   *  - {boolean} [deleteOnChange=false] If the data should be invalidated when the content changes.
-   *  - {function} [errorCallback] Callback with error as parameters.
-   *  - {boolean} [async=true]
+   * @param {number} contentId
+   *   What content to get data for.
+   * @param {string} dataId
+   *   Identifies the set of data for this content.
+   * @param {Object} data
+   *   The data that is to be stored.
+   * @param {Object} [extras]
+   *   Extra properties
+   * @param {string} [extras.subContentId]
+   *   Identifies which data belongs to sub content.
+   * @param {boolean} [extras.preloaded=true]
+   *   If the data should be loaded when content is loaded.
+   * @param {boolean} [extras.deleteOnChange=false]
+   *   If the data should be invalidated when the content changes.
+   * @param {H5P.ErrorCallback} [extras.errorCallback]
+   *   Callback with error as parameters.
+   * @param {boolean} [extras.async=true]
    */
   H5P.setUserData = function (contentId, dataId, data, extras) {
     var options = H5P.jQuery.extend(true, {}, {
@@ -1713,10 +1857,12 @@ H5P.createTitle = function(rawTitle, maxLength) {
   /**
    * Delete user data for given content.
    *
-   * @public
-   * @param {number} contentId What content to remove data for.
-   * @param {string} dataId Identifies the set of data for this content.
-   * @param {string} [subContentId] Identifies which data belongs to sub content.
+   * @param {number} contentId
+   *   What content to remove data for.
+   * @param {string} dataId
+   *   Identifies the set of data for this content.
+   * @param {string} [subContentId]
+   *   Identifies which data belongs to sub content.
    */
   H5P.deleteUserData = function (contentId, dataId, subContentId) {
     if (!subContentId) {
@@ -1734,6 +1880,10 @@ H5P.createTitle = function(rawTitle, maxLength) {
 
   // Init H5P when page is fully loadded
   $(document).ready(function () {
+    /**
+     * Prevent H5P Core from initializing. Must be overriden before document ready.
+     * @member {boolean} H5P.preventInit
+     */
     if (!H5P.preventInit) {
       // Note that this start script has to be an external resource for it to
       // load in correct order in IE9.
@@ -1756,6 +1906,11 @@ H5P.createTitle = function(rawTitle, maxLength) {
         }
       });
     }
+
+    /**
+     * Indicates if H5P is embedded on an external page using iframe.
+     * @member {boolean} H5P.externalEmbed
+     */
 
     // Relay events to top window.
     if (H5P.isFramed && H5P.externalEmbed === false) {

@@ -321,6 +321,10 @@ function h5p_form(&$node, $form_state) {
 
     $form['#submit'][] = '_h5p_form_submit';
   }
+  
+  else {
+    $node->disable = H5PCore::DISABLE_ALL;
+  }
 
   return $form;
 }
@@ -1157,18 +1161,18 @@ function h5p_content_user_data($content_id, $data_id, $sub_content_id) {
     'success' => TRUE
   );
 
+  if (variable_get('h5p_revisioning', 1)) {
+    // We got vid, but we need nid. Let's ask DB
+    $content_main_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();
+  }
+  else {
+    $content_main_id = $content_id;
+  }
+
   $data = filter_input(INPUT_POST, 'data');
   $preload = filter_input(INPUT_POST, 'preload');
   $invalidate = filter_input(INPUT_POST, 'invalidate');
   if ($data !== NULL && $preload !== NULL && $invalidate !== NULL) {
-    if (variable_get('h5p_revisioning', 1)) {
-      // We got vid, but we need nid. Let's ask DB
-      $content_main_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();
-    }
-    else {
-      $content_main_id = $content_id;
-    }
-
     if ($data === '0') {
       // Remove data
       db_delete('h5p_content_user_data')
