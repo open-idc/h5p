@@ -1649,7 +1649,6 @@ class H5PCore {
   const DISABLE_EMBED = 4;
   const DISABLE_COPYRIGHT = 8;
   const DISABLE_ABOUT = 16;
-  const DISABLE_ALL = 31;
 
   // Map flags to string
   public static $disable = array(
@@ -2415,9 +2414,6 @@ class H5PCore {
     if (!isset($sources['embed']) || !$sources['embed']) {
       $disable |= H5PCore::DISABLE_EMBED;
     }
-    if (!isset($sources['about']) || !$sources['about']) {
-      $disable |= H5PCore::DISABLE_ABOUT;
-    }
     return $disable;
   }
 
@@ -2593,7 +2589,7 @@ class H5PContentValidator {
     }
 
     // Check if string is according to optional regexp in semantics
-    if (!($text === '' && $semantics->optional) && isset($semantics->regexp)) {
+    if (!($text === '' && isset($semantics->optional) && $semantics->optional) && isset($semantics->regexp)) {
       // Escaping '/' found in patterns, so that it does not break regexp fencing.
       $pattern = '/' . str_replace('/', '\\/', $semantics->regexp->pattern) . '/';
       $pattern .= isset($semantics->regexp->modifiers) ? $semantics->regexp->modifiers : '';
@@ -2897,6 +2893,10 @@ class H5PContentValidator {
       }
     }
     if (!(isset($semantics->optional) && $semantics->optional)) {
+      if ($group === NULL) {
+        // Error no value. Errors aren't printed...
+        return;
+      }
       foreach ($semantics->fields as $field) {
         if (!(isset($field->optional) && $field->optional)) {
           // Check if field is in group.

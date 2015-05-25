@@ -313,9 +313,8 @@ function h5p_form(&$node, $form_state) {
 
     $form['#submit'][] = '_h5p_form_submit';
   }
-  
   else {
-    $node->disable = H5PCore::DISABLE_ALL;
+    $node->disable = H5PCore::DISABLE_NONE;
   }
 
   return $form;
@@ -325,7 +324,9 @@ function h5p_form(&$node, $form_state) {
  * Handle h5p node form submission
  */
 function _h5p_form_submit($form, &$form_state) {
-  $form_state['values']['disable'] = H5PCore::getDisable($form_state['values']);
+  if (variable_get('h5p_frame', TRUE)) {
+    $form_state['values']['disable'] = H5PCore::getDisable($form_state['values']);
+  }
 }
 
 /**
@@ -726,7 +727,7 @@ function h5p_get_core_settings() {
 function h5p_get_content($node) {
   $core = _h5p_get_instance('core');
   $node->disable |= $core->getGlobalDisable();
-  if (!variable_get('h5p_icon_in_action_bar', TRUE)) {
+  if (!($node->disable & H5PCore::DISABLE_FRAME) && !variable_get('h5p_icon_in_action_bar', TRUE)) {
     $node->disable |= H5PCore::DISABLE_ABOUT;
   }
   return array(
