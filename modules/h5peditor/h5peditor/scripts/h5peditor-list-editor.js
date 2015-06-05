@@ -204,7 +204,7 @@ H5PEditor.ListEditor = (function ($) {
       // Append item to list
       $item.appendTo($list);
 
-      // Good UX: automatically expand groups
+      // Good UX: automatically expand groups if not explicitly disabled by semantics
       if (item instanceof H5PEditor.Group) {
         item.expand();
       }
