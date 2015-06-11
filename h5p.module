@@ -865,6 +865,16 @@ function h5p_add_files_and_settings($node, $embed_type) {
 }
 
 /**
+ * Checks to see if the path is external.
+ *
+ * @param string $path
+ * @return bool
+ */
+function h5p_is_external_asset($path) {
+  return preg_match('/^[a-z0-9]+:\/\//i', $path) ? TRUE : FALSE;
+}
+
+/**
  * Add the necessary assets for content to run in an iframe.
  *
  * @param array $integration
@@ -895,15 +905,23 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
   if ($is_writable && $preprocess_css) {
     // Refactor styles array to Drupal eatable format.
     $styles = array();
+    // Filters out external styles
+    $external_styles = array();
     foreach ($files['styles'] as $style) {
-      $styles[] = array(
-        'data' => $style->path,
-        'type' => 'file'
-      );
+      if (h5p_is_external_asset($style->path)) {
+        $external_styles[] = $style;
+      }
+      else {
+        // Aggregate
+        $styles[] = array(
+          'data' => $style->path,
+          'type' => 'file'
+        );
+      }
     }
 
-    $css_url = file_create_url(drupal_build_css_cache($styles));
-    $integration['contents']['cid-' . $content_id]['styles'] = array($css_url);
+    $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($external_styles);
+    $integration['contents']['cid-' . $content_id]['styles'][] = file_create_url(drupal_build_css_cache($styles));
   }
   else {
     $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($files['styles']);
@@ -912,16 +930,24 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
   if ($is_writable && $preprocess_js) {
     // Refactor scripts array to Drupal eatable format.
     $scripts = array();
+    // Filters out external scripts
+    $external_scripts = array();
     foreach ($files['scripts'] as $script) {
-      $scripts[$script->path] = array(
-        'data' => $script->path,
-        'type' => 'file',
-        'preprocess' => TRUE,
-      );
+      if (h5p_is_external_asset($script->path)) {
+        $external_scripts[] = $script;
+      }
+      else {
+        // Aggregate
+        $scripts[$script->path] = array(
+          'data' => $script->path,
+          'type' => 'file',
+          'preprocess' => TRUE,
+        );
+      }
     }
 
-    $js_url = file_create_url(drupal_build_js_cache($scripts));
-    $integration['contents']['cid-' . $content_id]['scripts'] = array($js_url);
+    $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($external_scripts);
+    $integration['contents']['cid-' . $content_id]['scripts'][] = file_create_url(drupal_build_js_cache($scripts));
   }
   else {
     $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($files['scripts']);
