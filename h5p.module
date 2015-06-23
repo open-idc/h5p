@@ -781,7 +781,11 @@ function h5p_get_content_settings($content) {
                         ':content_id' => $content['mainId']
   ));
 
-  $content_user_data = array();
+  $content_user_data = array(
+    0 => array(
+      'state' => '{}'
+    )
+  );
   foreach ($results as $result) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
