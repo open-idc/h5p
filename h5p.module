@@ -711,7 +711,11 @@ function h5p_get_core_settings() {
         'embedDescription' => t('View the embed code for this content.'),
         'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
         'contentChanged' => t('This content has changed since you last used it.'),
-        'startingOver' => t("You'll be starting over.")
+        'startingOver' => t("You'll be starting over."),
+        'by' => t('by'),
+        'showMore' => t('Show more'),
+        'showLess' => t('Show less'),
+        'subLevel' => t('Sublevel')
       )
     )
   );
@@ -920,11 +924,11 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
       }
       else {
         // Aggregate
-        $styles[] = array(
-          'data' => $style->path,
-          'type' => 'file'
-        );
-      }
+      $styles[] = array(
+        'data' => $style->path,
+        'type' => 'file'
+      );
+    }
     }
 
     $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($external_styles);
@@ -945,12 +949,12 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
       }
       else {
         // Aggregate
-        $scripts[$script->path] = array(
-          'data' => $script->path,
-          'type' => 'file',
-          'preprocess' => TRUE,
-        );
-      }
+      $scripts[$script->path] = array(
+        'data' => $script->path,
+        'type' => 'file',
+        'preprocess' => TRUE,
+      );
+    }
     }
 
     $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($external_scripts);
