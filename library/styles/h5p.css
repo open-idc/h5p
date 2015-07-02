@@ -297,16 +297,29 @@ div.h5p-fullscreen {
   overflow-y: auto;
   color: #555555;
 }
+
+/* Scrollbar styling */
 .h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar {
   width: 8px;
 }
+
 .h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar-track {
-  background: #e0e0e0;
+  background: #fff;
 }
+
 .h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar-thumb {
-  box-shadow: 0 0 10px #000 inset;
-  border-radius: 4px;
+  background: #ddd;
 }
+
+.h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+.h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar-thumb:active,
+.h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar-thumb:focus {
+  background: #888;
+}
+
 .h5p-popup-dialog .h5p-close {
   cursor: pointer;
   outline:none
@@ -438,14 +451,18 @@ div.h5p-fullscreen {
 }
 
 /* No indent for main header */
-/*.h5p-copyrights-dialog .h5p-scroll-content > .h5p-content-copyrights > .h5p-content-copyrights.sublevel {
+.h5p-copyrights-dialog .h5p-scroll-content > .h5p-content-copyrights > .h5p-content-copyrights.sublevel {
   margin-left: 0;
-}*/
+}
 
 /* Media copyright */
 .h5p-copyrights-dialog .h5p-media-copyright {
   padding: 10px;
   border-bottom: 1px solid #ddd;
+}
+
+.h5p-copyrights-dialog .h5p-media-copyright:last-child {
+  border-bottom: none;
 }
 
 /* Thumbnail styles */
