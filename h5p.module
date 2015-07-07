@@ -559,7 +559,7 @@ function h5p_user_delete($account) {
 function h5p_filter_info() {
   $filters['h5p_content'] = array(
     'title' => t('H5P Content'),
-    'description' => t('Provides shortcodes for adding H5P content to this text format.'),
+    'description' => t("Provides shortcodes for adding H5P content to this text format. Should be applied last so that other filters doesn't strip away tags added by this filter."),
     'process callback' => '_h5p_process_shortcodes',
     'tips callback' => '_h5p_filter_tips',
     'cache' => FALSE, // Needs to add its scripts every time. Will make the entire text format not cacheable
