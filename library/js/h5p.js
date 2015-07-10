@@ -154,14 +154,12 @@ H5P.init = function (target) {
     }
     if (!(contentData.disable & H5P.DISABLE_COPYRIGHT)) {
       var copyright = H5P.getCopyrights(instance, library.params, contentId);
-      copyright.removeSubLevel();
-      var copyrightString = copyright.toString();
 
-      if (copyrightString) {
+      if (copyright) {
         // Add copyright dialog button
         H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
           // Open dialog with copyright information
-          var dialog = new H5P.Dialog('copyrights', H5P.t('copyrightInformation'), copyrightString, $container);
+          var dialog = new H5P.Dialog('copyrights', H5P.t('copyrightInformation'), copyright, $container);
           dialog.open();
         });
       }
@@ -616,6 +614,7 @@ H5P.getPath = function (path, contentId) {
     return path;
   }
 
+  var prefix;
   if (contentId !== undefined) {
     prefix = H5PIntegration.url + '/content/' + contentId;
   }
@@ -854,32 +853,6 @@ H5P.Dialog = function (name, title, content, $element) {
         .end()
       .end();
 
-  // Find all expand buttons, add functionality.
-  H5P.jQuery('.h5p-copyrights-expand-button', $dialog).click(function () {
-    var $copyrightsExpandButton = H5P.jQuery(this);
-    var $buttonParent = $copyrightsExpandButton.parent();
-
-    // Update buttontext
-    if ($buttonParent.hasClass('expand')) {
-      $copyrightsExpandButton.html(H5P.t('showMore'));
-    } else {
-      $copyrightsExpandButton.html(H5P.t('showLess'));
-    }
-
-    // Expand or collapse copyright details
-    $buttonParent.toggleClass('expand');
-  });
-
-  // Make sure all links are opened outside of iframe
-  if (H5P.isFramed) {
-    H5P.jQuery('a', $dialog).click(function () {
-      var href = H5P.jQuery(this).attr('href');
-      window.parent.open(href, '_blank');
-      return false;
-    });
-  }
-
-
   this.open = function () {
     setTimeout(function () {
       $dialog.addClass('h5p-open'); // Fade in
@@ -905,7 +878,7 @@ H5P.Dialog = function (name, title, content, $element) {
  *   Parameters of the content instance.
  * @param {number} contentId
  *   Identifies the H5P content
- * @returns {H5P.ContentCopyrights} Copyright information.
+ * @returns {string} Copyright information.
  */
 H5P.getCopyrights = function (instance, parameters, contentId) {
   var copyrights;
@@ -926,7 +899,10 @@ H5P.getCopyrights = function (instance, parameters, contentId) {
     H5P.findCopyrights(copyrights, parameters, contentId);
   }
 
-
+  if (copyrights !== undefined) {
+    // Convert to string
+    copyrights = copyrights.toString();
+  }
   return copyrights;
 };
 
@@ -963,6 +939,7 @@ H5P.findCopyrights = function (info, parameters, contentId) {
         H5P.findCopyrights(info, value, contentId);
       }
       else {
+        // Found file, add copyrights
         var copyrights = new H5P.MediaCopyright(value.copyright);
         if (value.width !== undefined && value.height !== undefined) {
           copyrights.setThumbnail(new H5P.Thumbnail(H5P.getPath(value.path, contentId), value.width, value.height));
@@ -991,7 +968,7 @@ H5P.findCopyrights = function (info, parameters, contentId) {
  */
 H5P.openEmbedDialog = function ($element, embedCode, resizeCode, size) {
   var fullEmbedCode = embedCode + resizeCode;
-  var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>' + H5P.t('size') + ': <input type="text" value="' + size.width + '" class="h5p-embed-size"/> × <input type="text" value="' + size.height + '" class="h5p-embed-size"/> px<br/><div role="button" tabindex="0" class="h5p-expander">' + H5P.t('showAdvanced') + '</div><div class="h5p-expander-content"><p>' + H5P.t('advancedHelp') + '</p><textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false">' + resizeCode + '</textarea></div>', $element);
+  var dialog = new H5P.Dialog('embed', H5P.t('embed'), '<textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>' + H5P.t('size') + ': <input type="text" value="' + Math.ceil(size.width) + '" class="h5p-embed-size"/> × <input type="text" value="' + Math.ceil(size.height) + '" class="h5p-embed-size"/> px<br/><div role="button" tabindex="0" class="h5p-expander">' + H5P.t('showAdvanced') + '</div><div class="h5p-expander-content"><p>' + H5P.t('advancedHelp') + '</p><textarea class="h5p-embed-code-container" autocorrect="off" autocapitalize="off" spellcheck="false">' + resizeCode + '</textarea></div>', $element);
 
   // Selecting embed code when dialog is opened
   H5P.jQuery(dialog).on('dialog-opened', function (event, $dialog) {
@@ -1073,7 +1050,6 @@ H5P.ContentCopyrights = function () {
   var label;
   var media = [];
   var content = [];
-  var hasSubLevel = true;
 
   /**
    * Set label.
@@ -1107,13 +1083,6 @@ H5P.ContentCopyrights = function () {
   };
 
   /**
-   * Add sub level content.
-   */
-  this.removeSubLevel = function () {
-    hasSubLevel = false;
-  };
-
-  /**
    * Print content copyright.
    *
    * @returns {string} HTML.
@@ -1133,13 +1102,13 @@ H5P.ContentCopyrights = function () {
 
 
     if (html !== '') {
-      if (hasSubLevel) {
-        label = (label && label.length ? label : H5P.t('subLevel'));
-        html = '<div class="h5p-content-copyrights-label">' + label + '</div>' + html;
+      // Add a label to this info
+      if (label !== undefined) {
+        html = '<h3>' + label + '</h3>' + html;
       }
 
       // Add wrapper
-      html = '<div class="h5p-content-copyrights' + (hasSubLevel ? ' sublevel' : '') + '">' + html + '</div>';
+      html = '<div class="h5p-content-copyrights">' + html + '</div>';
     }
 
     return html;
@@ -1160,9 +1129,8 @@ H5P.ContentCopyrights = function () {
  *   Add extra copyright fields.
  */
 H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
-  var thumbnail = new H5P.Thumbnail();
+  var thumbnail;
   var list = new H5P.DefinitionList();
-  var mediaType = '';
 
   /**
    * Get translated label for field.
@@ -1226,15 +1194,6 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
   };
 
   /**
-   * Set media type.
-   *
-   * @param {H5P.MediaType} newMediaType new media type
-   */
-  this.setMediaType = function (newMediaType) {
-    mediaType = ' ' + newMediaType;
-  };
-
-  /**
    * Checks if this copyright is undisclosed.
    * I.e. only has the license attribute set, and it's undisclosed.
    *
@@ -1264,17 +1223,11 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
 
     if (thumbnail !== undefined) {
       html += thumbnail;
-
-      // Unable to determine media type, default to "file"
-      if (!thumbnail.hasImage() && mediaType === '') {
-        mediaType = ' file';
-      }
     }
-
     html += list;
 
     if (html !== '') {
-      html = '<div class="h5p-media-copyright' + mediaType + '">' + html + '</div>';
+      html = '<div class="h5p-media-copyright">' + html + '</div>';
     }
 
     return html;
@@ -1302,18 +1255,6 @@ H5P.copyrightLicenses = {
 };
 
 /**
- * Maps copyright type codes to their classes, made accessible to all content types implementing getCopyright
- *
- * @type {Object}
- */
-H5P.copyrightTypes = {
-  'image': 'image',
-  'video': 'video',
-  'audio': 'audio',
-  'file': 'file'
-};
-
-/**
  * A simple and elegant class for creating thumbnails of images.
  *
  * @class
@@ -1322,17 +1263,10 @@ H5P.copyrightTypes = {
  * @param {number} height
  */
 H5P.Thumbnail = function (source, width, height) {
-  // Deprecated width and height
-  var imageSource = source;
-
-  /**
-   * Check if thumbnail has an image source
-   *
-   * @returns {boolean}
-   */
-  this.hasImage = function () {
-    return !!imageSource;
-  };
+  var thumbWidth, thumbHeight = 100;
+  if (width !== undefined) {
+    thumbWidth = Math.round(thumbHeight * (width / height));
+  }
 
   /**
    * Print thumbnail.
@@ -1340,13 +1274,7 @@ H5P.Thumbnail = function (source, width, height) {
    * @returns {string} HTML.
    */
   this.toString = function () {
-    var html = '<div class="h5p-thumbnail-wrapper">';
-    if (source !== undefined) {
-      html += '<img src="' + imageSource + '" alt="' + H5P.t('thumbnail') + '" class="h5p-thumbnail"></img>';
-    }
-    html += '</div>';
-
-    return html;
+    return '<img src="' + source + '" alt="' + H5P.t('thumbnail') + '" class="h5p-thumbnail" height="' + thumbHeight + '"' + (thumbWidth === undefined ? '' : ' width="' + thumbWidth + '"') + '/>';
   };
 };
 
@@ -1419,53 +1347,12 @@ H5P.DefinitionList = function () {
    * @returns {string} HTML.
    */
   this.toString = function () {
-    // Return empty string if there are no fields
-    if (!fields.length) {
-      return '';
-    }
-    var previewHTML = '';
-    var detailsHTML = '';
-
-    // Separate preview and details html parts
+    var html = '';
     for (var i = 0; i < fields.length; i++) {
       var field = fields[i];
-      var entry = '<div class="h5p-copyright-entry">';
-      if (field.getLabel() === 'Title') {
-        entry += '<span class="h5p-copyright-title">' + field.getValue() + '</span></div>';
-        previewHTML += entry;
-      } else if (field.getLabel() === 'Author') {
-        entry += '<span class="h5p-copyright-label">' + H5P.t('by') + ' </span>' +
-          '<span class="h5p-copyright-value">' + field.getValue() + '</span></div>';
-        previewHTML += entry;
-      } else {
-        entry += '<span class="h5p-copyright-label">' + field.getLabel() + '</span>';
-
-        // Make urls clickable
-        if (field.getLabel() === 'Source') {
-          var urlValidator = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-          if (urlValidator.test(field.getValue())) {
-            entry += '<span class="h5p-copyright-value">' +
-                        '<a href="' + field.getValue() + '" target="_top">' + field.getValue() + '</a>' +
-                      '</span></div>';
-          }
-        } else {
-          entry += '<span class="h5p-copyright-value">' + field.getValue() + '</span></div>';
-        }
-        detailsHTML += entry;
-
-      }
+      html += '<dt>' + field.getLabel() + '</dt><dd>' + field.getValue() + '</dd>';
     }
-
-    // Generate copyright preview part
-    var html = '<div class="h5p-copyright-preview">' + previewHTML + '</div>';
-
-    // Generate copyright details part
-    html += '<div class="h5p-copyright-details">' + detailsHTML + '</div>';
-
-    // Add expand/collapse button
-    html += '<div role="button" tabindex="0" class="h5p-copyrights-expand-button">' + H5P.t('showMore') + '</div>';
-
-    return '<div class="h5p-copyright-information-wrapper">' + html + '</div>';
+    return (html === '' ? html : '<dl class="h5p-definition-list">' + html + '</dl>');
   };
 };
 
