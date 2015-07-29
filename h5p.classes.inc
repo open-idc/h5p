@@ -383,7 +383,8 @@ class H5PDrupal implements H5PFrameworkInterface {
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
-        'disable' => $content['disable']
+        'disable' => $content['disable'],
+        'slug' => 'ernst' // TODO: fix - this is just to make the module work again
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -402,7 +403,8 @@ class H5PDrupal implements H5PFrameworkInterface {
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
-        'disable' => $content['disable']
+        'disable' => $content['disable'],
+        'slug' => 'ernst' // TODO: fix - this is just to make the module work again
       ))
       ->execute();
 
