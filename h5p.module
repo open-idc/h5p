@@ -587,7 +587,7 @@ function _h5p_process_shortcodes($text, $filter) {
 
 /**
  * Adds H5P embed code and necessary files
- * 
+ *
  * @param object $node - H5P node
  * @return string - HTML code for embedding the H5P
  */
@@ -848,7 +848,7 @@ function h5p_get_content_settings($content) {
     'fullScreen' => $content['library']['fullscreen'],
     'exportUrl' => h5p_get_export_path($content),
     'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
-    'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
+    'resizeCode' => '<script src="' . h5p_get_resize_url() . '" charset="UTF-8"></script>',
     'mainId' => $content['mainId'],
     'url' => $content['url'],
     'title' => $content['title'],
