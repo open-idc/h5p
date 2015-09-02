@@ -1029,9 +1029,9 @@ class H5PValidator {
             ($h5pData['coreApi']['minorVersion'] > H5PCore::$coreApi['minorVersion'])))
       {
         $this->h5pF->setErrorMessage(
-          $this->h5pF->t('The library "%library_name" requires H5P %requiredVersion, but only H5P %coreApi is installed.',
+          $this->h5pF->t('The library "%libraryName" requires H5P %requiredVersion, but only H5P %coreApi is installed.',
           array(
-            '%library_name' => $library_name,
+            '%libraryName' => $library_name,
             '%requiredVersion' => $h5pData['coreApi']['majorVersion'] . '.' . $h5pData['coreApi']['minorVersion'],
             '%coreApi' => H5PCore::$coreApi['majorVersion'] . '.' . H5PCore::$coreApi['minorVersion']
           )));
@@ -2377,7 +2377,7 @@ class H5PCore {
     $platformInfo['uuid'] = $this->h5pF->getOption('site_uuid', '');
     // Adding random string to GET to be sure nothing is cached
     $random = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 5);
-    $json = $this->h5pF->fetchExternalData('http://h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
+    $json = $this->h5pF->fetchExternalData('https://h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
     if ($json !== NULL) {
       $json = json_decode($json);
       if (isset($json->libraries)) {
