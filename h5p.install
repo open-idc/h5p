@@ -48,6 +48,8 @@ function h5p_uninstall() {
 
   // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
   // the uuid should be the same
+  // variable_del('h5p_site_uuid');
+  // variable_del('h5p_allow_communication_with_h5p_org');
 }
 
 /**
