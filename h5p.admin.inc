@@ -520,7 +520,7 @@ function h5p_content_upgrade($library_id) {
     $versions[$result->id] = $result;
   }
   $library = $versions[$library_id];
-  $upgrades = $core->getUpgrades($versions[$library_id], $versions);
+  $upgrades = $core->getUpgrades($library, $versions);
 
   drupal_set_title(t('Upgrade @library content', array('@library' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')')));
   if (count($versions) < 2) {
