@@ -81,10 +81,10 @@ ns.Group.prototype.appendTo = function ($wrapper) {
     role: 'button',
     tabIndex: 0,
     on: {
-      click: function () {
+      click: function () {
         that.toggle();
       },
-      keypress: function (event) {
+      keypress: function (event) {
         if ((event.charCode || event.keyCode) === 32) {
           that.toggle();
         }
@@ -215,7 +215,7 @@ ns.Group.prototype.setSummary = function (summary) {
     summary = this.field.label;
   }
 
-  this.$group.children('.title').text(summary);
+  this.$group.children('.title').html(summary);
 };
 
 /**
