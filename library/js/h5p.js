@@ -132,6 +132,7 @@ H5P.init = function (target) {
         });
         dialog.open();
       }
+      // If previousState is false we don't have a previous state
     });
 
     // Create new instance.
@@ -1769,7 +1770,7 @@ H5P.createTitle = function (rawTitle, maxLength) {
 
     var content = H5PIntegration.contents['cid-' + contentId];
     var preloadedData = content.contentUserData;
-    if (preloadedData && preloadedData[subContentId] && preloadedData[subContentId][dataId]) {
+    if (preloadedData && preloadedData[subContentId] && preloadedData[subContentId][dataId] !== undefined) {
       if (preloadedData[subContentId][dataId] === 'RESET') {
         done(undefined, null);
         return;

@@ -835,7 +835,7 @@ function h5p_get_content_settings($content) {
 
   $content_user_data = array(
     0 => array(
-      'state' => '{}'
+      'state' => FALSE
     )
   );
   foreach ($results as $result) {
