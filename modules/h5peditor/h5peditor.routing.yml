@@ -1,0 +1,21 @@
+h5peditor.libraries_callback:
+  path: '/h5peditor/{node_id}/libraries'
+  defaults:
+    _title: 'H5peditor Libraries'
+    _controller: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_libraries_callback'
+  requirements:
+    _custom_access: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_access'
+h5peditor.library_callback:
+  path: '/h5peditor/{node_id}/libraries/{machine_name}/{major_version}/{minor_version}'
+  defaults:
+    _title: 'H5peditor Library'
+    _controller: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_library_callback'
+  requirements:
+    _custom_access: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_access'
+h5peditor.files_callback:
+  path: '/h5peditor/{node_id}/files'
+  defaults:
+    _title: 'H5peditor Files'
+    _controller: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_files_callback'
+  requirements:
+    _custom_access: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_access'

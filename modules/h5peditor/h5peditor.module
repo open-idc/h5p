@@ -50,7 +50,7 @@ function h5peditor_access($node_id) {
     return node_access('create', 'h5p_content');
   }
 
-  $node = node_load($node_id);
+  $node = \Drupal::entityManager()->getStorage('node')->load($node_id);
   return node_access('update', $node);
 }
 
@@ -61,20 +61,33 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
   $node = h5peditor_get_source_node($form['#node']);
   $library = isset($node->main_library) ? H5PCore::libraryToString($node->main_library) : (isset($node->h5p_library) ? $node->h5p_library : 0);
 
-  if (variable_get('h5p_first_runnable_saved', 0) === 0) {
-    drupal_set_message(t("If you don't have any H5P content types installed you may <a href=\"http://h5p.org/update-all-content-types\" target=\"_blank\">download them all at once</a> from H5P.org and upload them all at once on the <a href=\"!library_admin_url\" target=\"_blank\">library admin page</a>. Refresh this page when you've installed the libraries.", array('!library_admin_url' => url('admin/content/h5p'))));
-  }
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// if (variable_get('h5p_first_runnable_saved', 0) === 0) {
+//     // @FIXME
+// // url() expects a route name or an external URI.
+// // drupal_set_message(t("If you don't have any H5P content types installed you may <a href=\"http://h5p.org/update-all-content-types\" target=\"_blank\">download them all at once</a> from H5P.org and upload them all at once on the <a href=\"!library_admin_url\" target=\"_blank\">library admin page</a>. Refresh this page when you've installed the libraries.", array('!library_admin_url' => url('admin/content/h5p'))));
+// 
+//   }
 
-  $form['h5p_type'] = array(
-    '#type' => 'radios',
-    '#title' => t('HTML5 Content'),
-    '#options' => array(
-      'upload' => t('Upload'),
-      'create' => isset($node->nid) ? t('Edit') : t('Create'),
-    ),
-    '#default_value' => $library ? 'create' : (variable_get('h5p_first_runnable_saved', 0) ? 'create' : 'upload'),
-    '#weight' => $form['h5p']['#weight'] - 1,
-  );
+
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $form['h5p_type'] = array(
+//     '#type' => 'radios',
+//     '#title' => t('HTML5 Content'),
+//     '#options' => array(
+//       'upload' => t('Upload'),
+//       'create' => isset($node->nid) ? t('Edit') : t('Create'),
+//     ),
+//     '#default_value' => $library ? 'create' : (variable_get('h5p_first_runnable_saved', 0) ? 'create' : 'upload'),
+//     '#weight' => $form['h5p']['#weight'] - 1,
+//   );
+
 
   $form['h5p_editor'] = array(
     '#type' => 'item',
@@ -101,7 +114,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
  * Add scripts and styles to the h5p node form.
  */
 function h5peditor_h5p_content_node_form_after_build($form) {
-  global $language;
+  $language = \Drupal::languageManager()->getCurrentLanguage();
   static $done;
   if ($done === TRUE) {
     // Make sure we only add the js once.
@@ -114,7 +127,12 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   h5p_add_files_and_settings(TRUE, TRUE); // Force integration
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
-  $cache_buster = '?' . variable_get('css_js_query_string', '');
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $cache_buster = '?' . variable_get('css_js_query_string', '');
+
 
   // Add our own styles
   foreach (H5peditor::$styles as $style) {
@@ -128,40 +146,75 @@ function h5peditor_h5p_content_node_form_after_build($form) {
       $assets['js'][] = base_path() . $h5peditor_module_path . '/h5peditor/' . $script . $cache_buster;
     }
   }
-  drupal_add_js($h5peditor_module_path . '/h5peditor/scripts/h5peditor-editor.js');
-  drupal_add_js($h5peditor_module_path . '/scripts/application.js');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($h5peditor_module_path . '/h5peditor/scripts/h5peditor-editor.js');
+
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($h5peditor_module_path . '/scripts/application.js');
+
 
   // Add translation
   $language_file = $h5peditor_module_path . '/h5peditor/language/' . $language->language . '.js';
   if (!file_exists($language_file)) {
     $language_file = $h5peditor_module_path . '/h5peditor/language/en.js';
   }
-  drupal_add_js($language_file);
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($language_file);
+
 
   // TODO: If we're going to preprocess the assets one day, remember to skip ckeditor.
 
-  $file_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath();
-  $settings = array(
-    'h5peditor' => array(
-      'filesPath' => base_path() . $file_path . '/h5peditor',
-      'fileIcon' => array(
-        'path' => base_path() . $h5peditor_module_path . '/h5peditor/images/binary-file.png',
-        'width' => 50,
-        'height' => 50,
-      ),
-      'ajaxPath' => url('h5peditor/' . (isset($node->nid) ? $node->nid : 0) . '/'),
-      'modulePath' => $h5peditor_module_path,
-      'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
-      'copyrightSemantics' => H5PContentValidator::getCopyrightSemantics(),
-      'assets' => $assets,
-    ),
-  );
+  $file_path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath();
+  // @FIXME
+// url() expects a route name or an external URI.
+// $settings = array(
+//     'h5peditor' => array(
+//       'filesPath' => base_path() . $file_path . '/h5peditor',
+//       'fileIcon' => array(
+//         'path' => base_path() . $h5peditor_module_path . '/h5peditor/images/binary-file.png',
+//         'width' => 50,
+//         'height' => 50,
+//       ),
+//       'ajaxPath' => url('h5peditor/' . (isset($node->nid) ? $node->nid : 0) . '/'),
+//       'modulePath' => $h5peditor_module_path,
+//       'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
+//       'copyrightSemantics' => H5PContentValidator::getCopyrightSemantics(),
+//       'assets' => $assets,
+//     ),
+//   );
+
 
   if (isset($node->json_content)) {
     $settings['h5peditor']['nodeVersionId'] = h5p_get_content_id($node);
   }
 
-  drupal_add_js($settings, array('type' => 'setting', 'scope' => JS_DEFAULT));
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($settings, array('type' => 'setting', 'scope' => JS_DEFAULT));
+
 
   return $form;
 }
@@ -216,7 +269,7 @@ function h5peditor_h5p_content_node_form_submit($form, &$form_state) {
 /**
  * Implements hook_node_insert().
  */
-function h5peditor_node_insert($node) {
+function h5peditor_node_insert(\Drupal\node\NodeInterface $node) {
   _h5peditor_create_content($node);
 }
 
@@ -230,7 +283,7 @@ function h5peditor_node_update($node) {
 /**
  * Create or update H5P content.
  */
-function _h5peditor_create_content($node) {
+function _h5peditor_create_content(\Drupal\node\NodeInterface $node) {
   if (!isset($node->h5p_type) || $node->h5p_type == 'upload') {
     return;
   }
@@ -245,7 +298,7 @@ function _h5peditor_create_content($node) {
   if (isset($node->translation_source) || isset($node->clone_from_original_nid)) {
     $storage = _h5p_get_instance('storage');
     $source_node = h5peditor_get_source_node($node);
-    $storage->copyPackage(h5p_get_content_id($node), h5p_get_content_id($source_node), $node->nid);
+    $storage->copyPackage(h5p_get_content_id($node), h5p_get_content_id($source_node), $node->id());
   }
 
   // Move files.
@@ -269,7 +322,7 @@ function h5peditor_libraries_callback() {
  * @param string $library
  */
 function h5peditor_library_callback($machine_name, $major_version, $minor_version) {
-  global $language;
+  $language = \Drupal::languageManager()->getCurrentLanguage();
   $editor = h5peditor_get_instance();
 
   // TODO: Make Drupal cache result?
@@ -284,9 +337,14 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
  * Callback for file uploads.
  */
 function h5peditor_files_callback() {
-  $files_directory = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath();
+  $files_directory = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath();
   if (isset($_POST['contentId']) && $_POST['contentId']) {
-    $files_directory .= '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . $_POST['contentId'];
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $files_directory .= '/' . variable_get('h5p_default_path', 'h5p') . '/content/' . $_POST['contentId'];
+
   }
   else {
     $files_directory .= '/h5peditor';
@@ -320,15 +378,20 @@ function h5peditor_get_instance() {
   static $instance;
 
   if (!$instance) {
-    if (variable_get('h5p_library_development', 0) === 1) {
-      $development = _h5p_get_instance('development');
-    }
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// if (variable_get('h5p_library_development', 0) === 1) {
+//       $development = _h5p_get_instance('development');
+//     }
+
     $instance = new H5peditor(
       _h5p_get_instance('core'),
       new H5peditorDrupalStorage(),
       base_path(),
       _h5p_get_h5p_path(),
-      file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . DIRECTORY_SEPARATOR . 'h5peditor'
+      \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . DIRECTORY_SEPARATOR . 'h5peditor'
     );
   }
 
@@ -379,7 +442,7 @@ function h5peditor_get_library_property($library, $property = 'all') {
 function h5peditor_get_source_node($node) {
   $node = isset($node->translation_source) ? $node->translation_source : $node;
   if (isset($node->clone_from_original_nid)) {
-    $node = node_load($node->clone_from_original_nid);
+    $node = \Drupal::entityManager()->getStorage('node')->load($node->clone_from_original_nid);
   }
   return $node;
 }

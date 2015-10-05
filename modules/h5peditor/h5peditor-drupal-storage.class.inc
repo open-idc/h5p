@@ -36,8 +36,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    * TODO
    */
   public function addTmpFile($file) {
-    global $user;
-    $path = str_replace(file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/', 'public://', $file->path);
+    $user = \Drupal::currentUser();
+    $path = str_replace(\Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . '/', 'public://', $file->path);
     $filename = explode('/', $file->name);
     $file_managed = (object) array(
       'uid' => $user->uid,
@@ -58,7 +58,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
     $oldCleanedPath = str_replace(DIRECTORY_SEPARATOR, '/', $oldPath);
     $newCleanedPath = str_replace(DIRECTORY_SEPARATOR, '/', $newPath);
     // TODO: Add to file usage?
-    $path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/';
+    $path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . '/';
     db_update('file_managed')
     ->fields(array(
       'uri' => str_replace($path, 'public://', $newCleanedPath),
@@ -83,7 +83,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    * This does alot of the same as getLibraries in h5p-php-library. Should we just use that instead?
    */
   public function getLibraries($libraries = NULL) {
-    $super_user = user_access('create restricted h5p content types');
+    $super_user = \Drupal::currentUser()->hasPermission('create restricted h5p content types');
 
     if ($libraries !== NULL) {
       // Get details for the specified libraries only.
@@ -159,7 +159,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   public function alterLibraryFiles(&$files, $libraries) {
     $mode = 'editor';
     $library_list = _h5p_dependencies_to_library_list($libraries);
-    drupal_alter('h5p_scripts', $files['scripts'], $library_list, $mode);
-    drupal_alter('h5p_styles', $files['styles'], $library_list, $mode);
+    \Drupal::moduleHandler()->alter('h5p_scripts', $files['scripts'], $library_list, $mode);
+    \Drupal::moduleHandler()->alter('h5p_styles', $files['styles'], $library_list, $mode);
   }
 }

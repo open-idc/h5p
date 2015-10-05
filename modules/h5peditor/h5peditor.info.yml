@@ -1,0 +1,6 @@
+name: 'H5P Editor'
+description: 'Create and modify interactive HTML5 Packages on your Drupal site.'
+core: 8.x
+dependencies:
+  - h5p
+type: module

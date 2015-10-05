@@ -11,7 +11,7 @@
  */
 function h5peditor_requirements($phase) {
   $requirements = array();
-  $t = get_t();
+  $t = 't';
 
   //if ($phase === 'runtime') {
   if (!extension_loaded('fileinfo') || (!function_exists('mime_content_type') && !function_exists('finfo_file'))) {
@@ -31,7 +31,7 @@ function h5peditor_requirements($phase) {
  * Implements hook_uninstall().
  */
 function h5peditor_uninstall() {
-  _h5peditor_recursive_unlink(file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/h5peditor');
+  _h5peditor_recursive_unlink(\Drupal::service("stream_wrapper_manager")->getViaUri('public://')->realpath() . '/h5peditor');
 }
 
 /**
