@@ -18,11 +18,16 @@ function h5p_admin_settings($form, &$form_state) {
   $labels = _h5p_get_disable_labels();
   foreach (H5PCore::$disable as $bit => $name) {
     $name = ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name);
-    $form['h5p_display_options']['h5p_' . $name] = array(
-      '#type' => 'checkbox',
-      '#title' => $labels[$bit],
-      '#default_value' => variable_get('h5p_' . $name, TRUE)
-    );
+    // @FIXME
+// // @FIXME
+// // The correct configuration object could not be determined. You'll need to
+// // rewrite this call manually.
+// $form['h5p_display_options']['h5p_' . $name] = array(
+//       '#type' => 'checkbox',
+//       '#title' => $labels[$bit],
+//       '#default_value' => variable_get('h5p_' . $name, TRUE)
+//     );
+
   }
   // TODO: Should we remove existing H5P files when export gets disabled?
 
@@ -30,14 +35,14 @@ function h5p_admin_settings($form, &$form_state) {
   $form['h5p_display_options']['h5p_icon_in_action_bar'] = array(
     '#type' => 'checkbox',
     '#title' => t('About H5P button'),
-    '#default_value' => variable_get('h5p_icon_in_action_bar', TRUE)
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_icon_in_action_bar')
   );
 
   $form['h5p_default_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Default h5p package path'),
-    '#default_value' => variable_get('h5p_default_path', 'h5p'),
-    '#description' => t('Subdirectory in the directory %dir where files will be stored. Do not include trailing slash.', array('%dir' => file_stream_wrapper_get_instance_by_uri('public://')->realpath())),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_default_path'),
+    '#description' => t('Subdirectory in the directory %dir where files will be stored. Do not include trailing slash.', array('%dir' => \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->realpath())),
   );
 
   $h5p_nodes_exists = db_query("SELECT 1 FROM {node} WHERE type = :type", array(':type' => 'h5p_content'))->fetchField();
@@ -45,26 +50,34 @@ function h5p_admin_settings($form, &$form_state) {
   $form['h5p_revisioning'] = array(
     '#type' => 'checkbox',
     '#title' => t('Save content files for each revision'),
-    '#default_value' => variable_get('h5p_revisioning', '1'),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_revisioning'),
     '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
     '#disabled' => $h5p_nodes_exists,
   );
 
   // make sure core is loaded
   _h5p_get_instance('core');
-  $form['h5p_whitelist'] = array(
+  // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
+$form['h5p_whitelist'] = array(
     '#type' => 'textfield',
     '#maxlength' => 8192,
     '#title' => t('White list of accepted files.'),
-    '#default_value' => variable_get('h5p_whitelist', H5PCore::$defaultContentWhitelist),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_whitelist'),
     '#description' => t("List accepted content file extensions for uploaded H5Ps. List extensions separated by space, eg. 'png jpg jpeg gif webm mp4 ogg mp3'. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
   );
 
-  $form['h5p_library_whitelist_extras'] = array(
+  // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
+$form['h5p_library_whitelist_extras'] = array(
     '#type' => 'textfield',
     '#maxlength' => 8192,
     '#title' => t('White list of extra accepted files in libraries.'),
-    '#default_value' => variable_get('h5p_library_whitelist_extras', H5PCore::$defaultLibraryWhitelistExtras),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_library_whitelist_extras'),
     '#description' => t("Libraries might need to accept more files that should be allowed in normal contents. Add extra files here. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
   );
 
@@ -72,14 +85,14 @@ function h5p_admin_settings($form, &$form_state) {
   $form['h5p_dev_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable H5P development mode'),
-    '#default_value' => variable_get('h5p_dev_mode', '0'),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_dev_mode'),
     '#description' => t('Always update uploaded H5P libraries regardless of patch version. Read library data from file (semantics.json).')
   );
 
   $form['h5p_allow_communication_with_h5p_org'] = array(
     '#type' => 'checkbox',
     '#title' => t('Get updates from h5p.org'),
-    '#default_value' => variable_get('h5p_allow_communication_with_h5p_org', '1'),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_allow_communication_with_h5p_org'),
     '#description' => t('Currently only tutorials are being updated, but in the future notification about code updates and more will be fetched from H5P.org'),
   );
 
@@ -94,21 +107,21 @@ function h5p_admin_settings($form, &$form_state) {
   $form['h5p_library_development'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable library development directory (For programmers only)'),
-    '#default_value' => variable_get('h5p_library_development', 0),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_library_development'),
     '#description' => t('Check to enable development of libraries in the %dev folder. ONLY ENABLE THIS OPTION IF YOU KNOW WHAT YOU ARE DOING! YOUR SITES H5P DATA WILL BE RUINED BY ENABLING THIS OPTION', array('%dev' => _h5p_get_h5p_path() . '/development')),
   );
 
   $form['h5p_save_content_state'] = array(
     '#type' => 'checkbox',
     '#title' => t('Save content state'),
-    '#default_value' => variable_get('h5p_save_content_state', 0),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_save_content_state'),
     '#description' => t('Automatically save the current state of interactive content for each user. This means that the user may pick up where he left off.'),
   );
 
   $form['h5p_save_content_frequency'] = array(
     '#type' => 'textfield',
     '#title' => t('Save content state frequency'),
-    '#default_value' => variable_get('h5p_save_content_frequency', 30),
+    '#default_value' => \Drupal::config('h5p.settings')->get('h5p_save_content_frequency'),
     '#description' => t("In seconds, how often do you wish the user to auto save their progress. Increasee this number if you're having issues with many ajax request."),
   );
 
@@ -125,7 +138,7 @@ function h5p_admin_settings($form, &$form_state) {
 function h5p_admin_settings_validate($form, &$form_state) {
   // Try to create directories and warn the user of errors.
   $h5p_default_path = $form_state['values']['h5p_default_path'];
-  $path = file_stream_wrapper_get_instance_by_uri('public://')->realpath() . '/' . $h5p_default_path;
+  $path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->realpath() . '/' . $h5p_default_path;
   $temp_path = $path . '/' . 'temp';
 
   if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
@@ -174,16 +187,22 @@ function h5p_library_list() {
       $usage = $core->h5pF->getLibraryUsage($library->id, $numNotFiltered ? TRUE : FALSE);
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
-        $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+        // @FIXME
+// url() expects a route name or an external URI.
+// $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+
 
         $restricted = ($library->restricted === '1' ? TRUE : FALSE);
-        $restricted_url = url('admin/content/h5p/libraries/' . $library->id . '/restrict', array(
-          'query' => array(
-            'token' => h5p_get_token('library_' . $i),
-            'token_id' => $i,
-            'restrict' => ($library->restricted === '1' ? 0 : 1)
-          )
-        ));
+        // @FIXME
+// url() expects a route name or an external URI.
+// $restricted_url = url('admin/content/h5p/libraries/' . $library->id . '/restrict', array(
+//           'query' => array(
+//             'token' => h5p_get_token('library_' . $i),
+//             'token_id' => $i,
+//             'restrict' => ($library->restricted === '1' ? 0 : 1)
+//           )
+//         ));
+
       }
       else {
         $upgradeUrl = NULL;
@@ -191,17 +210,20 @@ function h5p_library_list() {
         $restricted_url = NULL;
       }
 
-      $settings['libraryList']['listData'][] = array(
-        'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
-        'restricted' => $restricted,
-        'restrictedUrl' => $restricted_url,
-        'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
-        'numLibraryDependencies' => $usage['libraries'],
-        'upgradeUrl' => $upgradeUrl,
-        'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
-        'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
-      );
+      // @FIXME
+// url() expects a route name or an external URI.
+// $settings['libraryList']['listData'][] = array(
+//         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
+//         'restricted' => $restricted,
+//         'restrictedUrl' => $restricted_url,
+//         'numContent' => $core->h5pF->getNumContent($library->id),
+//         'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
+//         'numLibraryDependencies' => $usage['libraries'],
+//         'upgradeUrl' => $upgradeUrl,
+//         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
+//         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
+//       );
+
 
       $i++;
     }
@@ -218,15 +240,26 @@ function h5p_library_list() {
   // Add the needed css and javascript
   $module_path = drupal_get_path('module', 'h5p');
   _h5p_admin_add_generic_css_and_js($module_path, $settings);
-  drupal_add_js($module_path . '/library/js/h5p-library-list.js');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($module_path . '/library/js/h5p-library-list.js');
 
-  $upgrade_all_libraries = variable_get('h5p_unsupported_libraries', NULL) === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
+
+  // @FIXME
+// url() expects a route name or an external URI.
+// $upgrade_all_libraries = variable_get('h5p_unsupported_libraries', NULL) === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
+
 
   // Create the container which all admin content
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content.
-  $upload_form = drupal_get_form('h5p_library_upload_form');
-  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . drupal_render($upload_form) . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>' . $upgrade_all_libraries . '<div id="h5p-admin-container"></div>';
+  $upload_form = \Drupal::formBuilder()->getForm('h5p_library_upload_form');
+  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . \Drupal::service("renderer")->render($upload_form) . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>' . $upgrade_all_libraries . '<div id="h5p-admin-container"></div>';
 }
 
 /**
@@ -236,13 +269,16 @@ function h5p_library_list() {
  * @return array
  */
 function h5p_get_not_cached_settings($num) {
-  return array(
-    'num' => $num,
-    'url' => url('admin/content/h5p/rebuild-cache'),
-    'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
-    'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
-    'button' => t('Rebuild cache')
-  );
+  // @FIXME
+// url() expects a route name or an external URI.
+// return array(
+//     'num' => $num,
+//     'url' => url('admin/content/h5p/rebuild-cache'),
+//     'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
+//     'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
+//     'button' => t('Rebuild cache')
+//   );
+
 }
 
 /**
@@ -285,16 +321,27 @@ function h5p_library_details($library_id) {
     // Build a list of the content using this library
     $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l join {h5p_nodes} hn on l.content_id = hn.content_id join {node} n on hn.nid = n.nid  where library_id = :id order by n.title', array(':id' => $library_id));
     foreach($nodes_res as $node) {
-      $settings['libraryInfo']['content'][] = array(
-        'title' => $node->title,
-        'url' => url('node/' . $node->nid),
-      );
+      // @FIXME
+// url() expects a route name or an external URI.
+// $settings['libraryInfo']['content'][] = array(
+//         'title' => $node->title,
+//         'url' => url('node/' . $node->nid),
+//       );
+
     }
   }
 
   $module_path = drupal_get_path('module', 'h5p');
   _h5p_admin_add_generic_css_and_js($module_path, $settings);
-  drupal_add_js($module_path . '/library/js/h5p-library-details.js');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($module_path . '/library/js/h5p-library-details.js');
+
 
   // Create the container which all admin content
   // will appends it's data to. This id is used by h5pintegration
@@ -315,7 +362,7 @@ function h5p_library_delete($library_id) {
   $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
   if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
     // Create form:
-    return drupal_get_form('h5p_library_delete_form', $library_id, _h5p_library_details_title($library_id));
+    return \Drupal::formBuilder()->getForm('h5p_library_delete_form', $library_id, _h5p_library_details_title($library_id));
   }
   else {
     // May not delete this one
@@ -359,7 +406,15 @@ function h5p_library_delete_form_submit($form, &$form_state) {
  */
 function _h5p_admin_add_generic_css_and_js($module_path, $settings = NULL) {
   foreach (H5PCore::$adminScripts as $script) {
-    drupal_add_js($module_path . '/library/' . $script);
+    // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($module_path . '/library/' . $script);
+
   }
 
   if ($settings === NULL) {
@@ -374,13 +429,45 @@ function _h5p_admin_add_generic_css_and_js($module_path, $settings = NULL) {
     'upgradeLibrary' => t('Upgrade library content')
   );
 
-  drupal_add_js('H5PAdminIntegration = ' . json_encode($settings) . ';', 'inline');
-  drupal_add_css($module_path . '/library/styles/h5p.css');
-  drupal_add_css($module_path . '/library/styles/h5p-admin.css');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js('H5PAdminIntegration = ' . json_encode($settings) . ';', 'inline');
 
-  drupal_add_js(array(
-    'h5p' => h5p_get_core_settings()
-  ), 'setting');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_css($module_path . '/library/styles/h5p.css');
+
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_css($module_path . '/library/styles/h5p-admin.css');
+
+
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js(array(
+//     'h5p' => h5p_get_core_settings()
+//   ), 'setting');
+
 }
 
 /**
@@ -419,13 +506,13 @@ function h5p_validate_h5p_file_upload($form, &$form_state, $upgradeOnly = FALSE)
   );
   // New uploads need to be saved in temp in order to be viewable
   // during node preview.
-  $temporary_file_path = 'public://' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-');
+  $temporary_file_path = 'public://' . \Drupal::config('h5p.settings')->get('h5p_default_path') . '/temp/' . uniqid('h5p-');
   file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
   if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
     // These has to be set instead of sending parameteres to the validation function.
-    $_SESSION['h5p_upload'] = drupal_realpath($file->uri);
-    $_SESSION['h5p_upload_folder'] = drupal_realpath($temporary_file_path);
+    $_SESSION['h5p_upload'] = \Drupal::service("file_system")->realpath($file->uri);
+    $_SESSION['h5p_upload_folder'] = \Drupal::service("file_system")->realpath($temporary_file_path);
 
     $validator = _h5p_get_instance('validator');
     if ($validator->isValidPackage(TRUE, $upgradeOnly) === FALSE) {
@@ -457,7 +544,14 @@ function h5p_library_upload_form_submit($form, &$form_state) {
 function h5p_rebuild_cache() {
   if (filter_input(INPUT_SERVER, 'REQUEST_METHOD') !== 'POST') {
     drupal_set_message(t('HTTP POST is required.'), 'error');
-    drupal_set_title(t('Error'));
+    // @FIXME
+// drupal_set_title() has been removed. There are now a few ways to set the title
+// dynamically, depending on the situation.
+// 
+// 
+// @see https://www.drupal.org/node/2067859
+// drupal_set_title(t('Error'));
+
     return '';
   }
 
@@ -522,7 +616,14 @@ function h5p_content_upgrade($library_id) {
   $library = $versions[$library_id];
   $upgrades = $core->getUpgrades($library, $versions);
 
-  drupal_set_title(t('Upgrade @library content', array('@library' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')')));
+  // @FIXME
+// drupal_set_title() has been removed. There are now a few ways to set the title
+// dynamically, depending on the situation.
+// 
+// 
+// @see https://www.drupal.org/node/2067859
+// drupal_set_title(t('Upgrade @library content', array('@library' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')')));
+
   if (count($versions) < 2) {
     return t("There are no available upgrades for this library.");
   }
@@ -533,41 +634,60 @@ function h5p_content_upgrade($library_id) {
     return t("There's no content instances to upgrade.");
   }
 
-  $contents_plural = format_plural($contents, '1 content instance', '@count content instances');
+  $contents_plural = \Drupal::translation()->formatPlural($contents, '1 content instance', '@count content instances');
 
   // Add JavaScript settings
   $return = filter_input(INPUT_GET, 'destination');
-  $settings = array(
-    'libraryInfo' => array(
-      'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
-      'inProgress' => t('Upgrading to %ver...'),
-      'error' => t('An error occurred while processing parameters:'),
-      'errorData' => t('Could not load data for library %lib.'),
-      'errorScript' => t('Could not load upgrades script for %lib.'),
-      'errorContent' => t('Could not upgrade content %id:'),
-      'errorParamsBroken' => t('Parameters are broken.'),
-      'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
-      'library' => array(
-        'name' => $library->name,
-        'version' => $library->major_version . '.' . $library->minor_version,
-      ),
-      'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
-      'scriptBaseUrl' => base_path() . drupal_get_path('module', 'h5p') . '/library/js',
-      'buster' => '?' . variable_get('css_js_query_string', ''),
-      'versions' => $upgrades,
-      'contents' => $contents,
-      'buttonLabel' => t('Upgrade'),
-      'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
-      'total' => $contents,
-      'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
-    )
-  );
+  // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $settings = array(
+//     'libraryInfo' => array(
+//       'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
+//       'inProgress' => t('Upgrading to %ver...'),
+//       'error' => t('An error occurred while processing parameters:'),
+//       'errorData' => t('Could not load data for library %lib.'),
+//       'errorScript' => t('Could not load upgrades script for %lib.'),
+//       'errorContent' => t('Could not upgrade content %id:'),
+//       'errorParamsBroken' => t('Parameters are broken.'),
+//       'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
+//       'library' => array(
+//         'name' => $library->name,
+//         'version' => $library->major_version . '.' . $library->minor_version,
+//       ),
+//       'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
+//       'scriptBaseUrl' => base_path() . drupal_get_path('module', 'h5p') . '/library/js',
+//       'buster' => '?' . variable_get('css_js_query_string', ''),
+//       'versions' => $upgrades,
+//       'contents' => $contents,
+//       'buttonLabel' => t('Upgrade'),
+//       'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
+//       'total' => $contents,
+//       'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
+//     )
+//   );
+
 
   // Add JavaScripts
   $module_path = drupal_get_path('module', 'h5p');
   _h5p_admin_add_generic_css_and_js($module_path, $settings);
-  drupal_add_js($module_path . '/library/js/h5p-version.js');
-  drupal_add_js($module_path . '/library/js/h5p-content-upgrade.js');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($module_path . '/library/js/h5p-version.js');
+
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js($module_path . '/library/js/h5p-content-upgrade.js');
+
 
   return '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';
 }
@@ -690,13 +810,16 @@ function h5p_restrict_library_callback($library_id) {
     ->condition('library_id', $library_id)
     ->execute();
 
-  print json_encode(array(
-    'url' => url('admin/content/h5p/libraries/' . $library_id . '/restrict', array(
-      'query' => array(
-        'token' => h5p_get_token('library_' . $token_id),
-        'token_id' => $token_id,
-        'restrict' => ($restrict ? 0 : 1),
-      )
-    )),
-  ));
+  // @FIXME
+// url() expects a route name or an external URI.
+// print json_encode(array(
+//     'url' => url('admin/content/h5p/libraries/' . $library_id . '/restrict', array(
+//       'query' => array(
+//         'token' => h5p_get_token('library_' . $token_id),
+//         'token_id' => $token_id,
+//         'restrict' => ($restrict ? 0 : 1),
+//       )
+//     )),
+//   ));
+
 }

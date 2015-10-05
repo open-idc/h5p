@@ -21,7 +21,15 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements fetchExternalData
    */
   public function fetchExternalData($url) {
-    $response = drupal_http_request($url);
+    // @FIXME
+// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
+// with Drupal core.
+// 
+// 
+// @see https://www.drupal.org/node/1862446
+// @see http://docs.guzzlephp.org/en/latest
+// $response = drupal_http_request($url);
+
     return isset($response->error) ? NULL : $response->data;
   }
 
@@ -46,7 +54,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements setErrorMessage
    */
   public function setErrorMessage($message) {
-    if (user_access('create h5p_content content')) {
+    if (\Drupal::currentUser()->hasPermission('create h5p_content content')) {
       drupal_set_message($message, 'error');
     }
   }
@@ -55,7 +63,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements setInfoMessage
    */
   public function setInfoMessage($message) {
-    if (user_access('create h5p_content content')) {
+    if (\Drupal::currentUser()->hasPermission('create h5p_content content')) {
       drupal_set_message($message);
     }
   }
@@ -106,21 +114,28 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implementation of getUnsupportedLibraries
    */
   public function getUnsupportedLibraries() {
-    return variable_get('h5p_unsupported_libraries');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
+return \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
   }
 
   /**
    * Implementation of setUnsupportedLibraries
    */
   public function setUnsupportedLibraries($libraries) {
-    variable_set('h5p_unsupported_libraries', $libraries);
+    \Drupal::configFactory()->getEditable('h5p.settings')->set('h5p_unsupported_libraries', $libraries)->save();
   }
 
   /**
    * Implements getAdminUrl
    */
   public function getAdminUrl() {
-    return url('admin/content/h5p');
+    // @FIXME
+// url() expects a route name or an external URI.
+// return url('admin/content/h5p');
+
   }
 
   /**
@@ -164,14 +179,14 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements isInDevMode
    */
   public function isInDevMode() {
-    return (bool) variable_get('h5p_dev_mode', '0');
+    return (bool) \Drupal::config('h5p.settings')->get('h5p_dev_mode');
   }
 
   /**
    * Implements mayUpdateLibraries
    */
   public function mayUpdateLibraries() {
-    return user_access('update h5p libraries');
+    return \Drupal::currentUser()->hasPermission('update h5p libraries');
   }
 
   /**
@@ -242,8 +257,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       ->execute();
       $libraryData['libraryId'] = $libraryId;
       if ($libraryData['runnable']) {
-        if (!variable_get('h5p_first_runnable_saved', 0)) {
-          variable_set('h5p_first_runnable_saved', 1);
+        if (!\Drupal::config('h5p.settings')->get('h5p_first_runnable_saved')) {
+          \Drupal::configFactory()->getEditable('h5p.settings')->set('h5p_first_runnable_saved', 1)->save();
         }
       }
     }
@@ -429,9 +444,17 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getWhitelist
    */
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
-    $whitelist = variable_get('h5p_whitelist', $defaultContentWhitelist);
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
+$whitelist = \Drupal::config('h5p.settings')->get('h5p_whitelist');
     if ($isLibrary) {
-      $whitelist .= ' ' . variable_get('h5p_library_whitelist_extras', $defaultLibraryWhitelist);
+      // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
+$whitelist .= ' ' . \Drupal::config('h5p.settings')->get('h5p_library_whitelist_extras');
     }
     return $whitelist;
   }
@@ -553,7 +576,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
-    $semanticsPath = drupal_realpath('public://' . variable_get('h5p_default_path', 'h5p') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
+    $semanticsPath = \Drupal::service("file_system")->realpath('public://' . \Drupal::config('h5p.settings')->get('h5p_default_path') . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
     if (file_exists($semanticsPath)) {
       $semantics = file_get_contents($semanticsPath);
       if (!json_decode($semantics, TRUE)) {
@@ -591,7 +614,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements alterLibrarySemantics().
    */
   public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion) {
-    drupal_alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
+    \Drupal::moduleHandler()->alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
   }
 
   /**
@@ -669,7 +692,12 @@ class H5PDrupal implements H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    return variable_get('h5p_' . $name, $default);
+    // @FIXME
+// // @FIXME
+// // The correct configuration object could not be determined. You'll need to
+// // rewrite this call manually.
+// return variable_get('h5p_' . $name, $default);
+
   }
 
   /**
@@ -682,7 +710,12 @@ class H5PDrupal implements H5PFrameworkInterface {
    *   Whatever we want to store as the setting
    */
   public function setOption($name, $value) {
-    variable_set('h5p_' . $name, $value);
+    // @FIXME
+// // @FIXME
+// // The correct configuration object could not be determined. You'll need to
+// // rewrite this call manually.
+// variable_set('h5p_' . $name, $value);
+
   }
 
   /**
@@ -724,8 +757,8 @@ class H5PDrupal implements H5PFrameworkInterface {
     ->execute();
 
     _drupal_flush_css_js();
-    drupal_clear_js_cache();
-    drupal_clear_css_cache();
+    \Drupal::service("asset.js.collection.optimizer")->deleteAll();
+    \Drupal::service("asset.css.collection_optimizer")->deleteAll();
   }
 
   /**

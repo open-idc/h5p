@@ -1,0 +1,12 @@
+h5p_dev_mode: '0'
+h5p_first_runnable_saved: 0
+h5p_default_path: h5p
+h5p_allow_communication_with_h5p_org: true
+h5p_fetched_library_metadata_on: 0
+h5p_export: '1'
+h5p_frame: true
+h5p_revisioning: '1'
+h5p_icon_in_action_bar: true
+h5p_library_development: 0
+h5p_save_content_state: 0
+h5p_save_content_frequency: 30

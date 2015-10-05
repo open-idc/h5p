@@ -1,0 +1,18 @@
+h5p.admin_settings:
+  route_name: h5p.admin_settings
+  title: H5P
+  description: 'Configure the location of h5p files.'
+  parent: system.admin_config_system
+h5p.library_details:
+  route_name: h5p.library_details
+  title: 'H5P Library Details'
+  description: "Get detailed\_info on a library"
+h5p.content_upgrade:
+  route_name: h5p.content_upgrade
+  title: 'Upgrade H5P Content'
+  parent: h5p.library_details
+h5p.library_delete:
+  route_name: h5p.library_delete
+  title: 'Delete H5P Library'
+  description: 'Delete an unused H5P library'
+  parent: h5p.library_details

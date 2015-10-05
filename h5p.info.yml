@@ -1,0 +1,4 @@
+name: H5P
+description: 'Upload interactive HTML5 Packages to your Druapl site.'
+core: 8.x
+type: module

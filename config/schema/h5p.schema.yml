@@ -1,0 +1,28 @@
+h5p.settings:
+  type: mapping
+  label: Settings
+  mapping:
+    h5p_dev_mode:
+      type: string
+    h5p_first_runnable_saved:
+      type: integer
+    h5p_default_path:
+      type: string
+    h5p_allow_communication_with_h5p_org:
+      type: boolean
+    h5p_fetched_library_metadata_on:
+      type: integer
+    h5p_export:
+      type: string
+    h5p_frame:
+      type: boolean
+    h5p_revisioning:
+      type: string
+    h5p_icon_in_action_bar:
+      type: boolean
+    h5p_library_development:
+      type: integer
+    h5p_save_content_state:
+      type: integer
+    h5p_save_content_frequency:
+      type: integer

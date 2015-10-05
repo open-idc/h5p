@@ -11,7 +11,7 @@
  */
 function h5p_uninstall() {
   // Clean out file dirs.
-  $h5p_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/' . variable_get('h5p_default_path', 'h5p');
+  $h5p_path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . '/' . \Drupal::config('h5p.settings')->get('h5p_default_path');
 
   // Remove these regardless of their content.
   foreach (array('temp', 'libraries', 'content', 'exports') as $directory) {
@@ -30,21 +30,21 @@ function h5p_uninstall() {
   }
 
   // Remove variables.
-  variable_del('h5p_frame');
-  variable_del('h5p_export');
-  variable_del('h5p_embed');
-  variable_del('h5p_copyright');
-  variable_del('h5p_icon_in_action_bar');
-  variable_del('h5p_revisioning');
-  variable_del('h5p_content_dev_mode');
-  variable_del('h5p_default_path');
-  variable_del('h5p_dev_mode');
-  variable_del('h5p_library_development');
-  variable_del('h5p_library_whitelist_extras');
-  variable_del('h5p_whitelist');
-  variable_del('h5p_unsupported_libraries');
-  variable_del('h5p_fetched_library_metadata_on');
-  variable_del('h5p_first_runnable_saved');
+  \Drupal::config('h5p.settings')->clear('h5p_frame')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_export')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_embed')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_copyright')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_icon_in_action_bar')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_revisioning')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_content_dev_mode')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_default_path')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_dev_mode')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_library_development')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_library_whitelist_extras')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_whitelist')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_unsupported_libraries')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_fetched_library_metadata_on')->save();
+  \Drupal::config('h5p.settings')->clear('h5p_first_runnable_saved')->save();
 
   // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
   // the uuid should be the same
@@ -81,8 +81,11 @@ function h5p_enable() {
 }
 
 function _h5p_inform_h5p_org_communication() {
-  if (variable_get('h5p_allow_communication_with_h5p_org', TRUE)) {
-    drupal_set_message(t('The H5P module fetches updates from H5P.org on cron. Currently tutorials are being updated. In the future you will be notified about library updates and more. Goto <a href="@url">the H5P settings page</a> if you want to disable this option.', array('@url' => url('admin/config/system/h5p'))));
+  if (\Drupal::config('h5p.settings')->get('h5p_allow_communication_with_h5p_org')) {
+    // @FIXME
+// url() expects a route name or an external URI.
+// drupal_set_message(t('The H5P module fetches updates from H5P.org on cron. Currently tutorials are being updated. In the future you will be notified about library updates and more. Goto <a href="@url">the H5P settings page</a> if you want to disable this option.', array('@url' => url('admin/config/system/h5p'))));
+
   }
 }
 
@@ -471,7 +474,7 @@ function h5p_requirements($phase) {
 
     // File paths
     // TODO: Merge over _h5p_check_settings from .module?
-    $h5p_path = file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/' . variable_get('h5p_default_path', 'h5p');
+    $h5p_path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . '/' . \Drupal::config('h5p.settings')->get('h5p_default_path');
     $temp_path = $h5p_path . '/temp';
     $export_path = $h5p_path . '/exports';
     if (!file_prepare_directory($h5p_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
@@ -787,7 +790,7 @@ function h5p_update_7104() {
  */
 function h5p_update_7105() {
   if (db_query('SELECT 1 FROM {h5p_libraries} WHERE runnable = 1')->fetchField()) {
-    variable_set('h5p_first_runnable_saved', 1);
+    \Drupal::configFactory()->getEditable('h5p.settings')->set('h5p_first_runnable_saved', 1)->save();
   }
 }
 

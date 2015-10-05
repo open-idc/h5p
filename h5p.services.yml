@@ -1,0 +1,6 @@
+services:
+  init_subscriber:
+    class: Drupal\h5p\EventSubscriber\InitSubscriber
+    tags:
+      -
+        name: event_subscriber

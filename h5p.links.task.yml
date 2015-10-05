@@ -1,0 +1,5 @@
+h5p.library_list:
+  route_name: h5p.library_list
+  title: 'H5P Libraries'
+h5p.set_finished:
+  route_name: h5p.set_finished
