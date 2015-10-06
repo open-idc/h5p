@@ -21,16 +21,18 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements fetchExternalData
    */
   public function fetchExternalData($url) {
-    // @FIXME
-// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
-// with Drupal core.
-// 
-// 
-// @see https://www.drupal.org/node/1862446
-// @see http://docs.guzzlephp.org/en/latest
-// $response = drupal_http_request($url);
+    $client = Drupal::httpClient();
+    $request = $client->createRequest('GET', $url);
 
-    return isset($response->error) ? NULL : $response->data;
+    try {
+      $response = $client->send($request);
+      // Expected result.
+      return $response->getBody(TRUE);
+    }
+    catch (RequestException $e) {
+      watchdog_exception('h5p', $e->getMessage());
+      return NULL;
+    }
   }
 
   /**
@@ -114,11 +116,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implementation of getUnsupportedLibraries
    */
   public function getUnsupportedLibraries() {
-    // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
-return \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
+    return \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
   }
 
   /**
@@ -132,10 +130,7 @@ return \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
    * Implements getAdminUrl
    */
   public function getAdminUrl() {
-    // @FIXME
-// url() expects a route name or an external URI.
-// return url('admin/content/h5p');
-
+    return Drupal::url('h5p.library_list');
   }
 
   /**
@@ -444,17 +439,9 @@ return \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
    * Implements getWhitelist
    */
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
-    // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
-$whitelist = \Drupal::config('h5p.settings')->get('h5p_whitelist');
+    $whitelist = \Drupal::config('h5p.settings')->get('h5p_whitelist');
     if ($isLibrary) {
-      // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
-$whitelist .= ' ' . \Drupal::config('h5p.settings')->get('h5p_library_whitelist_extras');
+      $whitelist .= ' ' . \Drupal::config('h5p.settings')->get('h5p_library_whitelist_extras');
     }
     return $whitelist;
   }
@@ -692,12 +679,7 @@ $whitelist .= ' ' . \Drupal::config('h5p.settings')->get('h5p_library_whitelist_
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// return variable_get('h5p_' . $name, $default);
-
+    return Drupal::config('h5p.settings')->get('h5p_' . $name);
   }
 
   /**
@@ -710,12 +692,7 @@ $whitelist .= ' ' . \Drupal::config('h5p.settings')->get('h5p_library_whitelist_
    *   Whatever we want to store as the setting
    */
   public function setOption($name, $value) {
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// variable_set('h5p_' . $name, $value);
-
+    return Drupal::config('h5p.settings')->set('h5p_' . $name, $value);
   }
 
   /**

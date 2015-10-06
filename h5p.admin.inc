@@ -57,11 +57,7 @@ function h5p_admin_settings($form, &$form_state) {
 
   // make sure core is loaded
   _h5p_get_instance('core');
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
-$form['h5p_whitelist'] = array(
+  $form['h5p_whitelist'] = array(
     '#type' => 'textfield',
     '#maxlength' => 8192,
     '#title' => t('White list of accepted files.'),
@@ -69,11 +65,7 @@ $form['h5p_whitelist'] = array(
     '#description' => t("List accepted content file extensions for uploaded H5Ps. List extensions separated by space, eg. 'png jpg jpeg gif webm mp4 ogg mp3'. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
   );
 
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
-$form['h5p_library_whitelist_extras'] = array(
+  $form['h5p_library_whitelist_extras'] = array(
     '#type' => 'textfield',
     '#maxlength' => 8192,
     '#title' => t('White list of extra accepted files in libraries.'),

@@ -18,7 +18,9 @@ class InitSubscriber implements EventSubscriberInterface {
   }
 
   public function onEvent() {
-    if (path_is_admin(\Drupal\Core\Url::fromRoute("<current>")->toString()) && empty($_POST) && \Drupal::currentUser()->hasPermission('access administration pages')) {
+    $route = \Drupal::routeMatch()->getRouteObject();
+    $is_admin = \Drupal::service('router.admin_context')->isAdminRoute($route);
+    if ($is_admin && empty($_POST) && \Drupal::currentUser()->hasPermission('access administration pages')) {
       $core = _h5p_get_instance('core');
       $core->validateLibrarySupport();
       _h5p_display_unsupported_libraries(arg(2) === 'h5p');

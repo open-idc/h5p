@@ -55,12 +55,16 @@ h5p.rebuild_cache:
   requirements:
     _permission: 'administer site configuration'
 h5p.embed:
-  path: /h5p/embed
+  path: /h5p/embed/{node}
   defaults:
     _title: 'H5P Embed'
     _controller: '\Drupal\h5p\Controller\DefaultController::h5p_embed'
   requirements:
     _permission: 'access content'
+h5p.ajax:
+  path: /h5p-ajax
+  defaults:
+    _controller: '\Drupal\h5p\Controller\DefaultController::h5p_set_finished'
 h5p.set_finished:
   path: /h5p-ajax/setFinished
   defaults:

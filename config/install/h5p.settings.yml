@@ -10,3 +10,6 @@ h5p_icon_in_action_bar: true
 h5p_library_development: 0
 h5p_save_content_state: 0
 h5p_save_content_frequency: 30
+h5p_unsupported_libraries: ''
+h5p_whitelist: 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf html md'
+h5p_library_whitelist_extras: 'js css'

@@ -26,3 +26,9 @@ h5p.settings:
       type: integer
     h5p_save_content_frequency:
       type: integer
+    h5p_unsupported_libraries:
+      type: string
+    h5p_whitelist:
+      type: string
+    h5p_library_whitelist_extras:
+      type: string

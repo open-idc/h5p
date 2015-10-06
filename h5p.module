@@ -308,20 +308,15 @@ function h5p_form(&$node, $form_state) {
 
     $labels = _h5p_get_disable_labels();
     foreach (H5PCore::$disable as $bit => $name) {
-      // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// if (variable_get('h5p_' . ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
-//         $form['h5p_options'][$name] = array(
-//           '#type' => 'checkbox',
-//           '#title' => $labels[$bit],
-//           '#default_value' => !($node->disable & $bit)
-//         );
-//       }
-
+      // @FIXED?
+      if (Drupal::config('h5p.settings')->get(($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
+        $form['h5p_options'][$name] = array(
+          '#type' => 'checkbox',
+          '#title' => $labels[$bit],
+          '#default_value' => !($node->disable & $bit)
+        );
+      }
     }
-
     $form['#submit'][] = '_h5p_form_submit';
   }
 
@@ -523,11 +518,7 @@ function h5p_view($node, $view_mode = 'full') {
  */
 function _h5p_display_unsupported_libraries($display_details = FALSE) {
   // Check if any unsupported libraries. Only users which may update this node will get the warning message
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/h5p.settings.yml and config/schema/h5p.schema.yml.
-$unsupported_libraries = \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
+  $unsupported_libraries = \Drupal::config('h5p.settings')->get('h5p_unsupported_libraries');
   if ($unsupported_libraries !== NULL) {
     if ($display_details) {
       $core = _h5p_get_instance('core');
@@ -537,9 +528,7 @@ $unsupported_libraries = \Drupal::config('h5p.settings')->get('h5p_unsupported_l
       $message = t('You have %num_libs H5P libraries with versions not supported anymore. ', array('%num_libs' => sizeof($unsupported_libraries)));
     }
 
-    // @FIXME
-// url() expects a route name or an external URI.
-// $message .= t('Please upgrade all H5P libraries <a href="@url">here</a>', array('@url' => url('admin/content/h5p/libraries/upgrade-all')));
+    $message .= t('Please upgrade all H5P libraries <a href="@url">here</a>', array('@url' => Drupal::url('h5p.library_list')));
 
 
     drupal_set_message($message, 'warning', FALSE);
@@ -711,11 +700,7 @@ function h5p_add_core_assets() {
   $user = \Drupal::currentUser();
 
   if ($assets === NULL) {
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $cache_buster = '?' . variable_get('css_js_query_string', '');
+    $cache_buster = '?' . Drupal::state()->get('system.css_js_query_string') ?: '0';
 
     $module_path = drupal_get_path('module', 'h5p');
     $assets = array(
@@ -725,29 +710,11 @@ function h5p_add_core_assets() {
 
     foreach (H5PCore::$styles as $style) {
       $css = $module_path . '/library/' . $style;
-      // @FIXME
-// The Assets API has totally changed. CSS, JavaScript, and libraries are now
-// attached directly to render arrays using the #attached property.
-// 
-// 
-// @see https://www.drupal.org/node/2169605
-// @see https://www.drupal.org/node/2408597
-// drupal_add_css($css);
-
       $assets['css'][] = base_path() . $css . $cache_buster;
     }
 
     foreach (H5PCore::$scripts as $script) {
       $js = $module_path . '/library/' . $script;
-      // @FIXME
-// The Assets API has totally changed. CSS, JavaScript, and libraries are now
-// attached directly to render arrays using the #attached property.
-// 
-// 
-// @see https://www.drupal.org/node/2169605
-// @see https://www.drupal.org/node/2408597
-// drupal_add_js($js);
-
       $assets['js'][] = base_path() . $js . $cache_buster;
     }
   }
@@ -758,50 +725,49 @@ function h5p_add_core_assets() {
 function h5p_get_core_settings() {
   global $user, $base_url;
 
-  // @FIXME
-// url() expects a route name or an external URI.
-// $settings = array(
-//     'baseUrl' => $base_url,
-//     'url' => base_path() . _h5p_get_h5p_path(),
-//     'postUserStatistics' =>  $user->uid > 0,
-//     'ajaxPath' => url('h5p-ajax') . '/',
-//     'ajax' => array(
-//       'contentUserData' => str_replace('%3A', ':', url('h5p-ajax/content-user-data/:contentId/:dataType/:subContentId'))
-//     ),
-//     'saveFreq' => variable_get('h5p_save_content_state', 0) ? variable_get('h5p_save_content_frequency', 30) : FALSE,
-//     'l10n' => array(
-//       'H5P' => array( // Could core provide this?
-//         'fullscreen' => t('Fullscreen'),
-//         'disableFullscreen' => t('Disable fullscreen'),
-//         'download' => t('Download'),
-//         'copyrights' => t('Rights of use'),
-//         'embed' => t('Embed'),
-//         'size' => t('Size'),
-//         'showAdvanced' => t('Show advanced'),
-//         'hideAdvanced' => t('Hide advanced'),
-//         'advancedHelp' => t('Include this script on your website if you want dynamic sizing of the embedded content:'),
-//         'copyrightInformation' => t('Rights of use'),
-//         'close' => t('Close'),
-//         'title' => t('Title'),
-//         'author' => t('Author'),
-//         'year' => t('Year'),
-//         'source' => t('Source'),
-//         'license' => t('License'),
-//         'thumbnail' => t('Thumbnail'),
-//         'noCopyrights' => t('No copyright information available for this content.'),
-//         'downloadDescription' => t('Download this content as a H5P file.'),
-//         'copyrightsDescription' => t('View copyright information for this content.'),
-//         'embedDescription' => t('View the embed code for this content.'),
-//         'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
-//         'contentChanged' => t('This content has changed since you last used it.'),
-//         'startingOver' => t("You'll be starting over."),
-//         'by' => t('by'),
-//         'showMore' => t('Show more'),
-//         'showLess' => t('Show less'),
-//         'subLevel' => t('Sublevel')
-//       )
-//     )
-//   );
+
+ $settings = array(
+     'baseUrl' => $base_url,
+     'url' => base_path() . _h5p_get_h5p_path(),
+     'postUserStatistics' =>  $user->uid > 0,
+     'ajaxPath' => Drupal::url('h5p.ajax') . '/',
+     'ajax' => array(
+       'contentUserData' => str_replace('%3A', ':', Drupal::url('h5p.content_user_data', array('content_id' => ':contentId', 'data_id' => ':dataType', 'sub_content_id' => ':subContentId')))
+     ),
+     'saveFreq' => Drupal::config('h5p.settings')->get('h5p_save_content_state') ? Drupal::config('h5p.settings')->get('h5p_save_content_frequency') : FALSE,
+     'l10n' => array(
+       'H5P' => array(
+         'fullscreen' => t('Fullscreen'),
+         'disableFullscreen' => t('Disable fullscreen'),
+         'download' => t('Download'),
+         'copyrights' => t('Rights of use'),
+         'embed' => t('Embed'),
+         'size' => t('Size'),
+         'showAdvanced' => t('Show advanced'),
+         'hideAdvanced' => t('Hide advanced'),
+         'advancedHelp' => t('Include this script on your website if you want dynamic sizing of the embedded content:'),
+         'copyrightInformation' => t('Rights of use'),
+         'close' => t('Close'),
+         'title' => t('Title'),
+         'author' => t('Author'),
+         'year' => t('Year'),
+         'source' => t('Source'),
+         'license' => t('License'),
+         'thumbnail' => t('Thumbnail'),
+         'noCopyrights' => t('No copyright information available for this content.'),
+         'downloadDescription' => t('Download this content as a H5P file.'),
+         'copyrightsDescription' => t('View copyright information for this content.'),
+         'embedDescription' => t('View the embed code for this content.'),
+         'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
+         'contentChanged' => t('This content has changed since you last used it.'),
+         'startingOver' => t("You'll be starting over."),
+         'by' => t('by'),
+         'showMore' => t('Show more'),
+         'showLess' => t('Show less'),
+         'subLevel' => t('Sublevel')
+       )
+     )
+   );
 
 
   if ($user->uid) {
@@ -811,9 +777,7 @@ function h5p_get_core_settings() {
     );
   }
   else {
-    // @FIXME
-// url() expects a route name or an external URI.
-// $settings['siteUrl'] = url('<front>', array('absolute' => TRUE));
+    $settings['siteUrl'] = Drupal::url('<front>');
 
   }
 
@@ -826,22 +790,20 @@ function h5p_get_content($node) {
   if (!($node->disable & H5PCore::DISABLE_FRAME) && !\Drupal::config('h5p.settings')->get('h5p_icon_in_action_bar')) {
     $node->disable |= H5PCore::DISABLE_ABOUT;
   }
-  // @FIXME
-// url() expects a route name or an external URI.
-// return array(
-//     'id' => h5p_get_content_id($node),
-//     'mainId' => $node->nid,
-//     'title' => $node->title,
-//     'params' => $node->json_content,
-//     'language' => $node->language,
-//     'library' => $node->main_library,
-//     'embedType' => 'div',
-//     'filtered' => $node->filtered,
-//     'url' => url('node/' . $node->nid, array('absolute' => TRUE)),
-//     'disable' => $node->disable,
-//     'slug' => $node->h5p_slug
-//   );
-
+  
+  return array(
+    'id' => h5p_get_content_id($node),
+    'mainId' => $node->nid,
+    'title' => $node->title,
+    'params' => $node->json_content,
+    'language' => $node->language,
+    'library' => $node->main_library,
+    'embedType' => 'div',
+    'filtered' => $node->filtered,
+    'url' => Drupal::url('entity.node.canonical', ['node' => $node->nid], ['absolute' => TRUE]),
+    'disable' => $node->disable,
+    'slug' => $node->h5p_slug
+  );
 }
 
 function h5p_get_content_settings($content) {
@@ -884,29 +846,24 @@ function h5p_get_content_settings($content) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
 
-  // @FIXME
-// url() expects a route name or an external URI.
-// return array(
-//     'library' => H5PCore::libraryToString($content['library']),
-//     'jsonContent' => $filtered,
-//     'fullScreen' => $content['library']['fullscreen'],
-//     'exportUrl' => h5p_get_export_path($content),
-//     'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
-//     'resizeCode' => '<script src="' . h5p_get_resize_url() . '" charset="UTF-8"></script>',
-//     'mainId' => $content['mainId'],
-//     'url' => $content['url'],
-//     'title' => $content['title'],
-//     'contentUserData' => $content_user_data,
-//     'disable' => $content['disable']
-//   );
 
+  return array(
+    'library' => H5PCore::libraryToString($content['library']),
+    'jsonContent' => $filtered,
+    'fullScreen' => $content['library']['fullscreen'],
+    'exportUrl' => h5p_get_export_path($content),
+    'embedCode' => '<iframe src="' . Drupal::url('h5p.embed', ['node' => $content['mainId']], ['absolute' => TRUE]) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+    'resizeCode' => '<script src="' . h5p_get_resize_url() . '" charset="UTF-8"></script>',
+    'mainId' => $content['mainId'],
+    'url' => $content['url'],
+    'title' => $content['title'],
+    'contentUserData' => $content_user_data,
+    'disable' => $content['disable']
+  );
 }
 
 function h5p_get_resize_url() {
-  // @FIXME
-// url() expects a route name or an external URI.
-// return url(drupal_get_path('module', 'h5p') . '/library/js/h5p-resizer.js', array('absolute' => TRUE, 'language' => (object)array('language' => FALSE)));
-
+  return file_create_url(drupal_get_path('module', 'h5p') . '/library/js/h5p-resizer.js');
 }
 
 /**
@@ -952,15 +909,6 @@ function h5p_add_files_and_settings($node, $embed_type) {
     foreach ($files['scripts'] as $script) {
       $url = base_path() . $script->path . $script->version;
       if (!isset($added_js[$url])) {
-        // @FIXME
-// The Assets API has totally changed. CSS, JavaScript, and libraries are now
-// attached directly to render arrays using the #attached property.
-// 
-// 
-// @see https://www.drupal.org/node/2169605
-// @see https://www.drupal.org/node/2408597
-// drupal_add_js($script->path);
-
         $integration['loadedJs'] = $url;
         $added_js[$url] = TRUE;
       }
@@ -968,15 +916,6 @@ function h5p_add_files_and_settings($node, $embed_type) {
     foreach ($files['styles'] as $style) {
       $url = base_path() . $style->path . $style->version;
       if (!isset($added_css[$url])) {
-        // @FIXME
-// The Assets API has totally changed. CSS, JavaScript, and libraries are now
-// attached directly to render arrays using the #attached property.
-// 
-// 
-// @see https://www.drupal.org/node/2169605
-// @see https://www.drupal.org/node/2408597
-// drupal_add_css($style->path);
-
         $integration['loadedCss'][] = $url;
         $added_css[$url] = TRUE;
       }
@@ -1015,17 +954,8 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
     $integration['core']['styles'] = $core_assets['css'];
   }
 
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $preprocess_css = (variable_get('preprocess_css', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
-
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $preprocess_js = (variable_get('preprocess_js', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
+  $preprocess_css = (Drupal::config('system.performance')->get('css.preprocess') && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
+  $preprocess_js = (Drupal::config('system.performance')->get('js.preprocess', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
 
   $directory = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->realpath();
   $is_writable = is_dir($directory) && is_writable($directory);
@@ -1139,6 +1069,10 @@ function _h5p_get_instance($type) {
   static $interface, $core;
   $language = \Drupal::languageManager()->getCurrentLanguage();
 
+  require_once 'library/h5p.classes.php';
+  require_once 'h5p.classes.inc';
+  require_once 'library/h5p-development.class.php';
+  
   if (!isset($interface)) {
     $interface = new H5PDrupal();
 
@@ -1149,17 +1083,9 @@ function _h5p_get_instance($type) {
 //    }
     if (\Drupal::config('h5p.settings')->get('h5p_library_development') === 1) {
       $development_mode |= H5PDevelopment::MODE_LIBRARY;
-      // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $preprocess_css_or_js = variable_get('preprocess_css', 0) === '1' || variable_get('preprocess_js', 0) === '1';
+      $preprocess_css_or_js = Drupal::context('system.performance')->get('css.preprocess') === '1' || Drupal::context('system.performance')->get('js.preprocess') === '1';
 
-
-      // @FIXME
-// url() expects a route name or an external URI.
-// $message = t('H5P library development directory is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/config/system/h5p')));
-
+      $message = t('H5P library development directory is enabled. Change <a href="@settings-page">settings</a>.', array('@settings-page' => url('admin/config/system/h5p')));
 
       if ($preprocess_css_or_js) {
         $message .= '<br/>' . t('Preprocessing of css and/or js files is enabled. This is not supported when using the development directory option. Please disable preprocessing, and clear the cache');
@@ -1437,17 +1363,10 @@ function h5p_embed($node) {
     return;
   }
 
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $cache_buster = '?' . variable_get('css_js_query_string', '');
-
+  $cache_buster = '?' . Drupal::state()->get('system.css_js_query_string') ?: '0';
 
   // Get core settings
   $settings = h5p_get_core_settings();
-  // TODO: The non-content specific settings could be apart of a combined
-  // h5p-core.js file to avoid sending the same data multiple times.
 
   $module_path = base_path() . drupal_get_path('module', 'h5p');
 
@@ -1498,7 +1417,6 @@ function h5p_preprocess_html(&$variables) {
     // @FIXME
 // The Assets API has totally changed. CSS, JavaScript, and libraries are now
 // attached directly to render arrays using the #attached property.
-// 
 // 
 // @see https://www.drupal.org/node/2169605
 // @see https://www.drupal.org/node/2408597

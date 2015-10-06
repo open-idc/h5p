@@ -82,10 +82,7 @@ function h5p_enable() {
 
 function _h5p_inform_h5p_org_communication() {
   if (\Drupal::config('h5p.settings')->get('h5p_allow_communication_with_h5p_org')) {
-    // @FIXME
-// url() expects a route name or an external URI.
-// drupal_set_message(t('The H5P module fetches updates from H5P.org on cron. Currently tutorials are being updated. In the future you will be notified about library updates and more. Goto <a href="@url">the H5P settings page</a> if you want to disable this option.', array('@url' => url('admin/config/system/h5p'))));
-
+    drupal_set_message(t('The H5P module fetches updates from H5P.org on cron. Currently tutorials are being updated. In the future you will be notified about library updates and more. Goto <a href="@url">the H5P settings page</a> if you want to disable this option.', array('@url' => Drupal::url('h5p.admin_settings'))));
   }
 }
 
