@@ -23,7 +23,7 @@ class InitSubscriber implements EventSubscriberInterface {
     if ($is_admin && empty($_POST) && \Drupal::currentUser()->hasPermission('access administration pages')) {
       $core = _h5p_get_instance('core');
       $core->validateLibrarySupport();
-      _h5p_display_unsupported_libraries(arg(2) === 'h5p');
+      _h5p_display_unsupported_libraries(\Drupal::routeMatch()->getRouteName() === 'h5p.library_details');
     }
   }
 

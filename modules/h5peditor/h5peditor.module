@@ -127,11 +127,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   h5p_add_files_and_settings(TRUE, TRUE); // Force integration
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $cache_buster = '?' . variable_get('css_js_query_string', '');
+  $cache_buster = '?' . Drupal::state()->get('system.css_js_query_string');
 
 
   // Add our own styles

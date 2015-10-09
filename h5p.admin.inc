@@ -18,18 +18,12 @@ function h5p_admin_settings($form, &$form_state) {
   $labels = _h5p_get_disable_labels();
   foreach (H5PCore::$disable as $bit => $name) {
     $name = ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name);
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// $form['h5p_display_options']['h5p_' . $name] = array(
-//       '#type' => 'checkbox',
-//       '#title' => $labels[$bit],
-//       '#default_value' => variable_get('h5p_' . $name, TRUE)
-//     );
-
+    $form['h5p_display_options']['h5p_' . $name] = array(
+      '#type' => 'checkbox',
+      '#title' => $labels[$bit],
+      '#default_value' => Drupal::config('h5p.settings')->get('h5p_' . $name)
+    );
   }
-  // TODO: Should we remove existing H5P files when export gets disabled?
 
   // Disable/enable the H5P icon below each H5P
   $form['h5p_display_options']['h5p_icon_in_action_bar'] = array(
@@ -179,22 +173,18 @@ function h5p_library_list() {
       $usage = $core->h5pF->getLibraryUsage($library->id, $numNotFiltered ? TRUE : FALSE);
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
-        // @FIXME
-// url() expects a route name or an external URI.
-// $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+        $upgradeUrl = empty($upgrades) ? FALSE : Drupal::url('h5p.content_upgrade', ['library_id' => $library->id], ['query' => drupal_get_destination()]);
 
 
         $restricted = ($library->restricted === '1' ? TRUE : FALSE);
-        // @FIXME
-// url() expects a route name or an external URI.
-// $restricted_url = url('admin/content/h5p/libraries/' . $library->id . '/restrict', array(
-//           'query' => array(
-//             'token' => h5p_get_token('library_' . $i),
-//             'token_id' => $i,
-//             'restrict' => ($library->restricted === '1' ? 0 : 1)
-//           )
-//         ));
 
+        $restricted_url = Drupal::url('h5p.restrict_library_callback', ['library_id' => $library->id], array(
+          'query' => array(
+            'token' => h5p_get_token('library_' . $i),
+            'token_id' => $i,
+            'restrict' => ($library->restricted === '1' ? 0 : 1)
+          )
+        ));
       }
       else {
         $upgradeUrl = NULL;
@@ -202,21 +192,17 @@ function h5p_library_list() {
         $restricted_url = NULL;
       }
 
-      // @FIXME
-// url() expects a route name or an external URI.
-// $settings['libraryList']['listData'][] = array(
-//         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
-//         'restricted' => $restricted,
-//         'restrictedUrl' => $restricted_url,
-//         'numContent' => $core->h5pF->getNumContent($library->id),
-//         'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
-//         'numLibraryDependencies' => $usage['libraries'],
-//         'upgradeUrl' => $upgradeUrl,
-//         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
-//         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
-//       );
-
-
+      $settings['libraryList']['listData'][] = array(
+        'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
+        'restricted' => $restricted,
+        'restrictedUrl' => $restricted_url,
+        'numContent' => $core->h5pF->getNumContent($library->id),
+        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
+        'numLibraryDependencies' => $usage['libraries'],
+        'upgradeUrl' => $upgradeUrl,
+        'detailsUrl' => Drupal::url('h5p.library_details', ['library_id' => $library->id]),
+        'deleteUrl' => Drupal::url('h5p.library_delete', ['library_id' => $library->id], array('query' => drupal_get_destination()))
+      );
       $i++;
     }
   }
@@ -241,10 +227,7 @@ function h5p_library_list() {
 // @see https://www.drupal.org/node/2408597
 // drupal_add_js($module_path . '/library/js/h5p-library-list.js');
 
-
-  // @FIXME
-// url() expects a route name or an external URI.
-// $upgrade_all_libraries = variable_get('h5p_unsupported_libraries', NULL) === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
+  $upgrade_all_libraries = Drupal::config('h5p.settings')->get('h5p_unsupported_libraries') === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => Drupal::url('h5p.library_list'))) . '</p>';
 
 
   // Create the container which all admin content
@@ -261,16 +244,13 @@ function h5p_library_list() {
  * @return array
  */
 function h5p_get_not_cached_settings($num) {
-  // @FIXME
-// url() expects a route name or an external URI.
-// return array(
-//     'num' => $num,
-//     'url' => url('admin/content/h5p/rebuild-cache'),
-//     'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
-//     'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
-//     'button' => t('Rebuild cache')
-//   );
-
+  return array(
+    'num' => $num,
+    'url' => url('h5p.rebuild_cache'),
+    'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
+    'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
+    'button' => t('Rebuild cache')
+  );
 }
 
 /**
@@ -313,13 +293,10 @@ function h5p_library_details($library_id) {
     // Build a list of the content using this library
     $nodes_res = db_query('SELECT DISTINCT n.nid, n.title FROM {h5p_nodes_libraries} l join {h5p_nodes} hn on l.content_id = hn.content_id join {node} n on hn.nid = n.nid  where library_id = :id order by n.title', array(':id' => $library_id));
     foreach($nodes_res as $node) {
-      // @FIXME
-// url() expects a route name or an external URI.
-// $settings['libraryInfo']['content'][] = array(
-//         'title' => $node->title,
-//         'url' => url('node/' . $node->nid),
-//       );
-
+      $settings['libraryInfo']['content'][] = array(
+        'title' => $node->title,
+        'url' => url('entity.node.canonical', ['node' => $node->nid]),
+      );
     }
   }
 
@@ -629,34 +606,32 @@ function h5p_content_upgrade($library_id) {
   $contents_plural = \Drupal::translation()->formatPlural($contents, '1 content instance', '@count content instances');
 
   // Add JavaScript settings
-  $return = filter_input(INPUT_GET, 'destination');
-  // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $settings = array(
-//     'libraryInfo' => array(
-//       'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
-//       'inProgress' => t('Upgrading to %ver...'),
-//       'error' => t('An error occurred while processing parameters:'),
-//       'errorData' => t('Could not load data for library %lib.'),
-//       'errorScript' => t('Could not load upgrades script for %lib.'),
-//       'errorContent' => t('Could not upgrade content %id:'),
-//       'errorParamsBroken' => t('Parameters are broken.'),
-//       'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
-//       'library' => array(
-//         'name' => $library->name,
-//         'version' => $library->major_version . '.' . $library->minor_version,
-//       ),
-//       'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
-//       'scriptBaseUrl' => base_path() . drupal_get_path('module', 'h5p') . '/library/js',
-//       'buster' => '?' . variable_get('css_js_query_string', ''),
-//       'versions' => $upgrades,
-//       'contents' => $contents,
-//       'buttonLabel' => t('Upgrade'),
-//       'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
-//       'total' => $contents,
-//       'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
-//     )
-//   );
+
+  $settings = array(
+    'libraryInfo' => array(
+      'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
+      'inProgress' => t('Upgrading to %ver...'),
+      'error' => t('An error occurred while processing parameters:'),
+      'errorData' => t('Could not load data for library %lib.'),
+      'errorScript' => t('Could not load upgrades script for %lib.'),
+      'errorContent' => t('Could not upgrade content %id:'),
+      'errorParamsBroken' => t('Parameters are broken.'),
+      'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . l(t('Back to library overview'), 'h5p.library_list'),
+      'library' => array(
+        'name' => $library->name,
+        'version' => $library->major_version . '.' . $library->minor_version,
+      ),
+      'libraryBaseUrl' => Drupal::url('h5p.content_upgrade_library_base'),
+      'scriptBaseUrl' => base_path() . drupal_get_path('module', 'h5p') . '/library/js',
+      'buster' => '?' . Drupal::state()->get('system.css_js_query_string'),
+      'versions' => $upgrades,
+      'contents' => $contents,
+      'buttonLabel' => t('Upgrade'),
+      'infoUrl' => url('h5p.content_upgrade', ['library_id' => $library_id]),
+      'total' => $contents,
+      'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
+    )
+  );
 
 
   // Add JavaScripts
@@ -802,16 +777,14 @@ function h5p_restrict_library_callback($library_id) {
     ->condition('library_id', $library_id)
     ->execute();
 
-  // @FIXME
-// url() expects a route name or an external URI.
-// print json_encode(array(
-//     'url' => url('admin/content/h5p/libraries/' . $library_id . '/restrict', array(
-//       'query' => array(
-//         'token' => h5p_get_token('library_' . $token_id),
-//         'token_id' => $token_id,
-//         'restrict' => ($restrict ? 0 : 1),
-//       )
-//     )),
-//   ));
+  print json_encode(array(
+    'url' => Drupal::url('h5p.restrict_library_callback', ['library_id' => $library_id], array(
+      'query' => array(
+        'token' => h5p_get_token('library_' . $token_id),
+        'token_id' => $token_id,
+        'restrict' => ($restrict ? 0 : 1),
+      )
+    )),
+  ));
 
 }

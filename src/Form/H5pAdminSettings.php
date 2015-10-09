@@ -65,16 +65,11 @@ class H5pAdminSettings extends ConfigFormBase {
     $labels = _h5p_get_disable_labels();
     foreach (H5PCore::$disable as $bit => $name) {
       $name = ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name);
-      // @FIXME
-      // // @FIXME
-      // // The correct configuration object could not be determined. You'll need to
-      // // rewrite this call manually.
-      // $form['h5p_display_options']['h5p_' . $name] = array(
-      //       '#type' => 'checkbox',
-      //       '#title' => $labels[$bit],
-      //       '#default_value' => variable_get('h5p_' . $name, TRUE)
-      //     );
-
+      $form['h5p_display_options']['h5p_' . $name] = array(
+        '#type' => 'checkbox',
+        '#title' => $labels[$bit],
+        '#default_value' => Drupal::config('h5p_settings')->get('h5p_' . $name)
+      );
     }
     // TODO: Should we remove existing H5P files when export gets disabled?
 

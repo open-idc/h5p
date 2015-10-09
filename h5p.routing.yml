@@ -47,6 +47,13 @@ h5p.content_upgrade_library:
     _controller: '\Drupal\h5p\Controller\DefaultController::h5p_content_upgrade_library'
   requirements:
     _permission: 'administer site configuration'
+h5p.content_upgrade_library_base:
+  path: '/admin/content/h5p/upgrade/library'
+  defaults:
+    _title: 'H5P Content Upgrade Library'
+    _controller: '\Drupal\h5p\Controller\DefaultController::h5p_content_upgrade_library'
+  requirements:
+    _permission: 'administer site configuration'
 h5p.rebuild_cache:
   path: /admin/content/h5p/rebuild-cache
   defaults:

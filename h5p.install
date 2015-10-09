@@ -30,6 +30,7 @@ function h5p_uninstall() {
   }
 
   // Remove variables.
+  /*
   \Drupal::config('h5p.settings')->clear('h5p_frame')->save();
   \Drupal::config('h5p.settings')->clear('h5p_export')->save();
   \Drupal::config('h5p.settings')->clear('h5p_embed')->save();
@@ -45,6 +46,7 @@ function h5p_uninstall() {
   \Drupal::config('h5p.settings')->clear('h5p_unsupported_libraries')->save();
   \Drupal::config('h5p.settings')->clear('h5p_fetched_library_metadata_on')->save();
   \Drupal::config('h5p.settings')->clear('h5p_first_runnable_saved')->save();
+  */
 
   // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
   // the uuid should be the same
