@@ -1,0 +1,8 @@
+type: h5p_content
+name: H5P
+description: 'Use <em>H5P</em> to create interactive xAPI enabled content.'
+help: ''
+new_revision: false
+display_submitted: true
+preview_mode: 1
+status: true

@@ -1,0 +1,14 @@
+h5p-core:
+  version: 1.x
+  css:
+    theme:
+      library/styles/h5p.css: {}
+  js:
+    library/js/jquery.js: {}
+    library/js/h5p.js: {}
+    library/js/h5p-event-dispatcher.js: {}
+    library/js/h5p-x-api-event.js: {}
+    library/js/h5p-x-api.js: {}
+    library/js/h5p-content-type.js: {}
+  dependencies:
+    - core/jquery

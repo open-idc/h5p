@@ -386,12 +386,10 @@ function h5p_node_insert($entity) {
   if ($entity->getType() != 'h5p_content') {
     return;
   }
-  $dummy_node = new stdClass();
-  $dummy_node->nid = $entity->nid->getValue()[0]['value'];
-  $dummy_node->vid = $entity->vid->getValue()[0]['value'];
+  $simple_node = _h5p_entity_to_simple_node($entity);
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $h5p_core->savePackage(h5p_get_content_id($dummy_node), $dummy_node->nid , FALSE, array('disable' => /*$node->disable*/0));
+    $h5p_core->savePackage(h5p_get_content_id($simple_node), $simple_node->nid , FALSE, array('disable' => /*$node->disable*/0));
   }
   else {
     $core = _h5p_get_instance('core');
@@ -464,21 +462,33 @@ function h5p_delete($node) {
 /**
  * Implements hook_load().
  */
-function h5p_load($nodes) {
+function h5p_node_load($entities) {
   $h5p = _h5p_get_instance('core');
-  foreach ($nodes as $nid => &$node) {
-    $content = $h5p->loadContent(h5p_get_content_id($node));
+  foreach ($entities as $key => &$entity) {
+    if ($entity->getType() != 'h5p_content') {
+      continue;
+    }
+    $simple_node = _h5p_entity_to_simple_node($entity);
+    $content = $h5p->loadContent(h5p_get_content_id($simple_node));
 
     if ($content !== NULL) {
-      $node->json_content = $content['params'];
-      $node->main_library_id = $content['library']['id'];
-      $node->embed_type = $content['embedType'];
-      $node->main_library = $content['library'];
-      $node->filtered = $content['filtered'];
-      $node->disable = $content['disable'];
-      $node->h5p_slug = $content['slug'];
+      $entity->json_content = $content['params'];
+      $entity->main_library_id = $content['library']['id'];
+      $entity->embed_type = $content['embedType'];
+      $entity->main_library = $content['library'];
+      $entity->filtered = $content['filtered'];
+      $entity->disable = $content['disable'];
+      $entity->h5p_slug = $content['slug'];
     }
   }
+}
+
+function _h5p_entity_to_simple_node($entity) {
+  $simple_node = new stdClass();
+  $simple_node->nid = $entity->nid->getValue()[0]['value'];
+  $simple_node->vid = $entity->vid->getValue()[0]['value'];
+  $simple_node->type = 'h5p_content';
+  return $simple_node;
 }
 
 /**
@@ -488,9 +498,9 @@ function h5p_node_view(&$build, $entity, $display, $view_mode = 'full') {
   if ($entity->getType() != 'h5p_content') {
     return;
   }
-  if (!isset($node->in_preview) && isset($node->main_library_id)) {
-    $html = _include_h5p($node);
-  }
+  //if (!isset($node->in_preview) && isset($node->main_library_id)) {
+    $html = _include_h5p($entity, $build);
+  //}
 
   if (!isset($html)) {
     $html = '<div>' . t('Sorry, preview of H5P content is not yet available.') . '</div>';
@@ -503,7 +513,6 @@ function h5p_node_view(&$build, $entity, $display, $view_mode = 'full') {
   /*if (node_access('update', $node)) {
     _h5p_display_unsupported_libraries();
   }*/
-
   $build['h5p'] = array(
     '#type' => 'markup',
     '#markup' => $html,
@@ -593,11 +602,12 @@ function _h5p_process_shortcodes($text, $filter) {
  * @return string - HTML code for embedding the H5P
  */
 
-function _include_h5p($node) {
-  $content_id = h5p_get_content_id($node);
-  $embed = H5PCore::determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
+function _include_h5p($entity, &$build) {
+  $simple_node = _h5p_entity_to_simple_node($entity);
+  $content_id = h5p_get_content_id($simple_node);
+  $embed = H5PCore::determineEmbedType($entity->embed_type, $entity->main_library['embedTypes']);
 
-  h5p_add_files_and_settings($node, $embed);
+  h5p_add_files_and_settings($entity, $embed, $build);
   if ($embed === 'div') {
     $html = '<div class="h5p-content" data-content-id="' .  $content_id . '"></div>';
   }
@@ -695,7 +705,7 @@ function h5p_set_finished() {
  *
  * @returns array Assets.
  */
-function h5p_add_core_assets() {
+function h5p_add_core_assets(&$build) {
   static $assets;
   $user = \Drupal::currentUser();
 
@@ -718,7 +728,7 @@ function h5p_add_core_assets() {
       $assets['js'][] = base_path() . $js . $cache_buster;
     }
   }
-
+  $build['#attached']['library'][] = 'h5p/h5p-core'; 
   return $assets;
 }
 
@@ -784,25 +794,27 @@ function h5p_get_core_settings() {
   return $settings;
 }
 
-function h5p_get_content($node) {
+function h5p_get_content($entity) {
   $core = _h5p_get_instance('core');
-  $node->disable |= $core->getGlobalDisable();
-  if (!($node->disable & H5PCore::DISABLE_FRAME) && !\Drupal::config('h5p.settings')->get('h5p_icon_in_action_bar')) {
-    $node->disable |= H5PCore::DISABLE_ABOUT;
+  $entity->disable |= $core->getGlobalDisable();
+  if (!($entity->disable & H5PCore::DISABLE_FRAME) && !\Drupal::config('h5p.settings')->get('h5p_icon_in_action_bar')) {
+    $entity->disable |= H5PCore::DISABLE_ABOUT;
   }
   
+  $simple_node = _h5p_entity_to_simple_node($entity);
+  
   return array(
-    'id' => h5p_get_content_id($node),
-    'mainId' => $node->nid,
-    'title' => $node->title,
-    'params' => $node->json_content,
-    'language' => $node->language,
-    'library' => $node->main_library,
+    'id' => h5p_get_content_id($simple_node),
+    'mainId' => $simple_node->nid,
+    'title' => $entity->title,
+    'params' => $entity->json_content,
+    'language' => $entity->language,
+    'library' => $entity->main_library,
     'embedType' => 'div',
-    'filtered' => $node->filtered,
-    'url' => Drupal::url('entity.node.canonical', ['node' => $node->nid], ['absolute' => TRUE]),
-    'disable' => $node->disable,
-    'slug' => $node->h5p_slug
+    'filtered' => $entity->filtered,
+    'url' => Drupal::url('entity.node.canonical', ['node' => $simple_node->nid], ['absolute' => TRUE]),
+    'disable' => $entity->disable,
+    'slug' => $entity->h5p_slug
   );
 }
 
@@ -871,26 +883,28 @@ function h5p_get_resize_url() {
  *
  * @param stdClass $node
  */
-function h5p_add_files_and_settings($node, $embed_type) {
+function h5p_add_files_and_settings($entity, $embed_type, &$build) {
   static $integration, $added_js, $added_css;
-
-  if ($node === NULL) {
+  
+  if ($entity === NULL) {
     return $integration; // For printing
   }
+  
+  $simple_node = _h5p_entity_to_simple_node($entity);
 
   if (is_null($integration)) {
     // Add integration object
     $integration = h5p_get_core_settings();
 
     // Add core scripts and styles
-    h5p_add_core_assets();
+    h5p_add_core_assets($build);
   }
 
-  if (!isset($node->json_content) || !isset($node->nid)) {
+  if (!isset($entity->json_content) || !isset($simple_node->nid)) {
     return; // Not content.
   }
 
-  $content = h5p_get_content($node);
+  $content = h5p_get_content($entity);
   if (isset($integration['contents'][$content['id']])) {
     return; // Already added.
   }
@@ -924,6 +938,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
   elseif ($embed_type === 'iframe') {
     h5p_add_iframe_assets($integration, $content['id'], $files);
   }
+  //$build['#attached']['drupalSettings'][] = $integration;
 }
 
 /**
