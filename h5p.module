@@ -228,24 +228,15 @@ function h5p_permission() {
   );
 }
 
-/**
- * Implements hook_form().
- */
-function h5p_form(&$node, $form_state) {
+function h5p_form_node_h5p_content_form_alter(&$form, $form_state) {
   _h5p_check_settings();
 
   _h5p_maintain_session_variables();
 
-  $type = node_type_get_type($node);
+  $node = $form['#node'];
+  $type = $node->type;
 
   $form['#validate'][] = 'h5p_form_validate';
-
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title' => \Drupal\Component\Utility\SafeMarkup::checkPlain($type->title_label),
-    '#required' => TRUE,
-    '#default_value' => $node->title,
-  );
 
   $form['#attributes'] = array('enctype' => "multipart/form-data");
 
@@ -256,9 +247,10 @@ function h5p_form(&$node, $form_state) {
     '#weight' => 2,
   );
 
+  $core = _h5p_get_instance('core');
+  
   if (isset($node->json_content) || isset($node->translation_source) && isset($node->translation_source->json_content)) {
     $content = h5p_get_content(isset($node->translation_source) ? $node->translation_source : $node);
-    $core = _h5p_get_instance('core');
     $filtered_params = $core->filterParameters($content);
   }
   else {
@@ -302,14 +294,16 @@ function h5p_form(&$node, $form_state) {
         'class' => array('h5p-action-bar-settings')
       ),
       '#attached' => array(
-        'js' => array(drupal_get_path('module', 'h5p') . '/library/js/disable.js')
-      )
+        'html_head' => array( 
+          'js' => array(drupal_get_path('module', 'h5p') . '/library/js/disable.js')
+        )
+      ),
+      '#weight' => 10
     );
 
     $labels = _h5p_get_disable_labels();
     foreach (H5PCore::$disable as $bit => $name) {
-      // @FIXED?
-      if (Drupal::config('h5p.settings')->get(($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
+      if (Drupal::config('h5p.settings')->get(($bit & H5PCore::DISABLE_DOWNLOAD ? 'h5p_export' : 'h5p_' . $name))) {
         $form['h5p_options'][$name] = array(
           '#type' => 'checkbox',
           '#title' => $labels[$bit],
@@ -349,7 +343,7 @@ function _h5p_get_disable_labels() {
  */
 function h5p_form_validate($form, &$form_state) {
   // Avoid blocking node deletion with missing files.
-  if ($form_state['values']['op'] == t('Delete')) {
+  if ($form_state->getValue('op') == t('Delete')) {
     return;
   }
 
@@ -362,25 +356,23 @@ function h5p_form_validate($form, &$form_state) {
   file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
   if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
+    $fileUri = $file[0]->getFileUri();
+    
     // We're good to go.
-    $form_state['values']['new_h5p'] = TRUE;
-    $_SESSION['h5p_upload'] = $form_state['values']['h5p'] = \Drupal::service("file_system")->realpath($file->uri);
+    $form_state->setValue('new_h5p', TRUE);
+    $path = Drupal::service("file_system")->realpath($fileUri);
+    $form_state->setValue('h5p', $path);
+    $_SESSION['h5p_upload'] = $path;
     $_SESSION['h5p_upload_folder'] = \Drupal::service("file_system")->realpath($temporary_file_path);
   }
-  elseif (!isset($form['#node']->nid) && empty($form_state['values']['h5p']) && empty($_SESSION['h5p_upload'])) {
-    form_set_error('h5p', t('You must upload a h5p file.'));
+  elseif (!isset($form['#node']->nid) && $form_state->getValue('h5p') && empty($_SESSION['h5p_upload'])) {
+    $form_state->setErrorByName('h5p', t('You must upload an H5P file.'));
   }
-}
-
-/**
- * Implements hook_validate().
- */
-function h5p_validate($node, &$form) {
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_validator = _h5p_get_instance('validator');
     $valid = $h5p_validator->isValidPackage();
     if (!$valid) {
-      form_set_error('h5p', t('The uploaded file was not a valid H5P package'));
+      $form_state->setErrorByName('h5p', t('The uploaded file was not a valid H5P package'));
       // Nothing is valid, nothing is kept.
       unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
     }
@@ -390,10 +382,13 @@ function h5p_validate($node, &$form) {
 /**
  * Implements hook_insert().
  */
-function h5p_insert($node) {
+function h5p_node_insert($node) {
+  $dummy_node = new stdClass();
+  $dummy_node->nid = $node->nid->getValue()[0]['value'];
+  $dummy_node->vid = $node->vid->getValue()[0]['value'];
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid , FALSE, array('disable' => $node->disable));
+    $h5p_core->savePackage(h5p_get_content_id($dummy_node), $dummy_node->nid , FALSE, array('disable' => /*$node->disable*/0));
   }
   else {
     $core = _h5p_get_instance('core');

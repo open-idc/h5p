@@ -734,7 +734,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     ->execute();
 
     _drupal_flush_css_js();
-    \Drupal::service("asset.js.collection.optimizer")->deleteAll();
+    \Drupal::service("asset.js.collection_optimizer")->deleteAll();
     \Drupal::service("asset.css.collection_optimizer")->deleteAll();
   }
 
