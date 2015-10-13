@@ -10,5 +10,3 @@ h5p-core:
     library/js/h5p-x-api-event.js: {}
     library/js/h5p-x-api.js: {}
     library/js/h5p-content-type.js: {}
-  dependencies:
-    - core/jquery

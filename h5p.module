@@ -516,6 +516,7 @@ function h5p_node_view(&$build, $entity, $display, $view_mode = 'full') {
   $build['h5p'] = array(
     '#type' => 'markup',
     '#markup' => $html,
+    '#allowed_tags' => ['iframe', 'div'],
     '#weight' => 1,
   );
 
@@ -605,7 +606,10 @@ function _h5p_process_shortcodes($text, $filter) {
 function _include_h5p($entity, &$build) {
   $simple_node = _h5p_entity_to_simple_node($entity);
   $content_id = h5p_get_content_id($simple_node);
-  $embed = H5PCore::determineEmbedType($entity->embed_type, $entity->main_library['embedTypes']);
+  
+  // TODO: Support div later. We need to be able to add those js files
+  //$embed = H5PCore::determineEmbedType($entity->embed_type, $entity->main_library['embedTypes']);
+  $embed = 'iframe';
 
   h5p_add_files_and_settings($entity, $embed, $build);
   if ($embed === 'div') {
@@ -938,7 +942,17 @@ function h5p_add_files_and_settings($entity, $embed_type, &$build) {
   elseif ($embed_type === 'iframe') {
     h5p_add_iframe_assets($integration, $content['id'], $files);
   }
-  //$build['#attached']['drupalSettings'][] = $integration;
+  $build['#attached']['html_head'][] = [
+    // The data.
+    [
+      // The HTML tag to add, in this case a <script> tag.
+      '#tag' => 'script',
+      // The value of the HTML tag, here we want to end up with <script>alert("Hello world!");</script>.
+      '#value' => 'H5PIntegration=' . json_encode($integration) . ';',
+    ],
+    // A key, to make it possible to recognize this HTML <HEAD> element when altering.
+    'h5p_integration'
+  ];
 }
 
 /**
