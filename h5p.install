@@ -3,20 +3,65 @@
 /**
  * @file
  *  h5p.install php file
- *  Install and upgrade instructions for the h5p Drupal module.
+ *  Install and upgrade db tables for the h5p Drupal module.
  */
+
+use Drupal\h5p\Helper;
+use Drupal\h5p\H5PDrupal;
+
+/**
+ * Implements hook_disable
+ */
+function h5p_disable() {
+  // Show link to h5p.org form
+  drupal_set_message('H5P has now been disabled. Answer the short survey below and get a chance to win a US$500 Amazon Gift Card.</br><iframe src="http://h5p.org/uninstall-form" width="100%" height="360px" style="border: 0;"></iframe>');
+
+  // Alternative text for drush uninstalls
+  drupal_set_message("Leaving because the H5P plugin isn’t working for you? Please share your feedback so we can improve. <a href=\"https://h5p.org/drupal-module-disabled\">https://h5p.org/drupal-module-disabled</a>");
+}
 
 /**
  * Implements hook_uninstall().
  */
 function h5p_uninstall() {
+
+  $language_id = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
   // Clean out file dirs.
-  $h5p_path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . '/' . \Drupal::config('h5p.settings')->get('h5p_default_path');
+  $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
+  $h5p_path = \Drupal::service('file_system')->realpath('public://') . '/' . $h5p_default_path;
+
+  // Load core
+  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p.classes.php');
+  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-development.class.php');
+  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-event-base.class.php');
+  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-file-storage.interface.php');
+  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-default-storage.class.php');
+
+  $interface = new H5PDrupal\H5PDrupal();
+
+  $h5p_export = \Drupal::state()->get('h5p_export') ?: 1;
+    $core = new H5PCore($interface, $h5p_path, base_path(), $language_id, ($h5p_export ? TRUE : FALSE), H5PDevelopment::MODE_NONE);
+
+  // Notify about uninstall
+  // todo $JM
+  /*
+  $core->fetchLibrariesMetadata();
+  */
 
   // Remove these regardless of their content.
   foreach (array('temp', 'libraries', 'content', 'exports') as $directory) {
     _h5p_recursive_unlink($h5p_path . '/' . $directory);
   }
+
+  // Delete remaining h5p entries in file_managed table
+  $h5p_uri = db_or()
+    ->condition('uri', '%' . db_like('//h5p/') . '%', 'LIKE')
+    ->condition('uri', '%' . db_like('//h5peditor/') . '%', 'LIKE');
+
+  db_delete('file_managed')
+    ->condition($h5p_uri)
+    ->execute();
 
   // Only remove development dir if it's empty.
   $dir = $h5p_path . '/development';
@@ -29,29 +74,47 @@ function h5p_uninstall() {
     }
   }
 
-  // Remove variables.
-  /*
-  \Drupal::config('h5p.settings')->clear('h5p_frame')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_export')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_embed')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_copyright')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_icon_in_action_bar')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_revisioning')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_content_dev_mode')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_default_path')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_dev_mode')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_library_development')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_library_whitelist_extras')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_whitelist')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_unsupported_libraries')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_fetched_library_metadata_on')->save();
-  \Drupal::config('h5p.settings')->clear('h5p_first_runnable_saved')->save();
-  */
+  // Remove state
+  \Drupal::state()->delete('h5p_frame');
+  \Drupal::state()->delete('h5p_export');
+  \Drupal::state()->delete('h5p_embed');
+  \Drupal::state()->delete('h5p_copyright');
+  \Drupal::state()->delete('h5p_icon');
+  \Drupal::state()->delete('h5p_revisioning');
+  \Drupal::state()->delete('h5p_content_dev_mode');
+  \Drupal::state()->delete('h5p_default_path');
+  \Drupal::state()->delete('h5p_dev_mode');
+  \Drupal::state()->delete('h5p_library_development');
+  \Drupal::state()->delete('h5p_library_whitelist_extras');
+  \Drupal::state()->delete('h5p_whitelist');
+  \Drupal::state()->delete('h5p_unsupported_libraries');
+  \Drupal::state()->delete('h5p_fetched_library_metadata_on');
+  \Drupal::state()->delete('h5p_first_runnable_saved');
+  \Drupal::state()->delete('h5p_save_content_frequency');
+  \Drupal::state()->delete('h5p_save_content_state');
+  \Drupal::state()->delete('h5p_update_available');
+  \Drupal::state()->delete('h5p_update_available_path');
+  \Drupal::state()->delete('h5p_site_type');
+  \Drupal::state()->delete('h5p_enable_lrs_content_types');
+  \Drupal::state()->delete('h5p_hub_is_enabled');
+  \Drupal::state()->delete('h5p_content_type_cache_updated_at');
+  \Drupal::state()->delete('h5p_allow_communication_with_h5p_org');
+  \Drupal::state()->delete('h5p_send_usage_statistics');
 
   // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
   // the uuid should be the same
-  // variable_del('h5p_site_uuid');
-  // variable_del('h5p_allow_communication_with_h5p_org');
+  // \Drupal::state()->delete(('h5p_site_uuid');
+}
+
+/**
+ * Implements hook_install()
+ */
+function h5p_install() {
+
+  // Notify of communication channels
+  drupal_set_message(
+    t('H5P fetches content types directly from the H5P Hub. In order to do this the H5P plugin will communicate with the Hub once a day to fetch information about new and updated content types. It will send in anonymous data to the Hub about H5P usage. Read more at <a href="https://h5p.org/tracking-the-usage-of-h5p">the plugin communication page at H5P.org</a>.')
+  );
 }
 
 /**
@@ -60,6 +123,7 @@ function h5p_uninstall() {
  * @param string $file
  */
 function _h5p_recursive_unlink($file) {
+
   if (is_dir($file)) {
     // Remove all files in dir.
     $subfiles = array_diff(scandir($file), array('.','..'));
@@ -67,9 +131,22 @@ function _h5p_recursive_unlink($file) {
       _h5p_recursive_unlink($file . '/' . $subfile);
     }
     rmdir($file);
-  }
-  elseif (file_exists($file)) {
-    unlink($file); // TODO: Remove from file_managed!!
+  } elseif (file_exists($file)) {
+
+    // Get file from file_managed if it exists
+    $file_uri = file_build_uri(substr($file, strpos($file, 'h5p/'), strlen($file)));
+    $fid = db_query("SELECT fid FROM {file_managed} WHERE uri = :path",
+      array(':path' => $file_uri))->fetchField();
+    if ($fid !== false) {
+
+      // If it was found delete file and database record
+      $file_object = file_load($fid);
+      file_delete($file_object);
+    } else {
+
+      // Delete locally
+      drupal_unlink($file);
+    }
   }
 }
 
@@ -77,15 +154,15 @@ function h5p_enable() {
   if (function_exists('views_invalidate_cache')) {
     views_invalidate_cache();
   }
-  h5p_validate_library_support();
 
-  _h5p_inform_h5p_org_communication();
-}
+  $helper = new Helper\H5PEnvironment();
+  $core = $helper->getInstance('core');
 
-function _h5p_inform_h5p_org_communication() {
-  if (\Drupal::config('h5p.settings')->get('h5p_allow_communication_with_h5p_org')) {
-    drupal_set_message(t('The H5P module fetches updates from H5P.org on cron. Currently tutorials are being updated. In the future you will be notified about library updates and more. Goto <a href="@url">the H5P settings page</a> if you want to disable this option.', array('@url' => Drupal::url('h5p.admin_settings'))));
-  }
+  // Check requirements
+  $core->checkSetupForRequirements();
+
+  // Update content type cache
+  $core->updateContentTypeCache();
 }
 
 /**
@@ -131,6 +208,9 @@ function h5p_schema() {
       ),
     ),
     'primary key' => array('content_id', 'library_id', 'dependency_type'),
+    'indexes' => array(
+      'weight' => array('weight')
+    )
   );
 
   $schema['h5p_libraries'] = array(
@@ -227,8 +307,159 @@ function h5p_schema() {
         'type' => 'varchar',
         'length' => 1000
       ),
+      'has_icon' => array(
+        'description' => 'Whether or not this library contains an icon.svg',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'primary key' => array('library_id'),
+    'indexes' => array(
+      'library' => array('machine_name', 'major_version', 'minor_version'),
+      'title' => array('title')
+    )
+  );
+
+  $schema['h5p_libraries_hub_cache'] = array(
+    'description' => 'Stores information about what h5p uses what libraries.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Primary Key: The id of the library.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => 'The library machine name',
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'major_version' => array(
+        'description' => 'The version of this library',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'minor_version' => array(
+        'description' => 'The minor version of this library',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'patch_version' => array(
+        'description' => 'The patch version of this library',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'h5p_major_version' => array(
+        'description' => 'The major version required of H5P core.',
+        'type' => 'int',
+        'unsigned' => TRUE
+      ),
+      'h5p_minor_version' => array(
+        'description' => 'The minor version required of H5P core.',
+        'type' => 'int',
+        'unsigned' => TRUE
+      ),
+      'title' => array(
+        'description' => 'The human readable name of this library',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'summary' => array(
+        'description' => 'Short description of library.',
+        'type' => 'text',
+        'size' => 'small',
+        'not null' => TRUE,
+      ),
+      'description' => array(
+        'description' => 'Long description of library.',
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => TRUE,
+      ),
+      'icon' => array(
+        'description' => 'URL to icon.',
+        'type' => 'varchar',
+        'length' => 511,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created_at' => array(
+        'description' => 'Time that the library was uploaded.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'updated_at' => array(
+        'description' => 'Time that the library had its latest update.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'is_recommended' => array(
+        'description' => 'Whether the library is recommended by the HUB moderators.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'popularity' => array(
+        'description' => 'How many times the library has been downloaded.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'screenshots' => array(
+        'description' => 'Screenshot URLs json encoded',
+        'type' => 'text',
+        'size' => 'medium'
+      ),
+      'license' => array(
+        'description' => 'Library license(s) json encoded',
+        'type' => 'text',
+        'size' => 'medium'
+      ),
+      'example' => array(
+        'description' => 'URL to example content for this library.',
+        'type' => 'varchar',
+        'length' => 511,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'tutorial' => array(
+        'description' => 'Tutorial URL',
+        'type' => 'varchar',
+        'length' => 511
+      ),
+      'keywords' => array(
+        'description' => 'Keywords for library json encoded',
+        'type' => 'text',
+        'size' => 'medium'
+      ),
+      'categories' => array(
+        'description' => 'Categories for library json encoded',
+        'type' => 'text',
+        'size' => 'medium'
+      ),
+      'owner' => array(
+        'description' => 'Owner of the library',
+        'type' => 'varchar',
+        'length' => 511
+      )
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'machine_name' => array('machine_name')
+    )
   );
 
   $schema['h5p_libraries_libraries'] = array(
@@ -357,6 +588,11 @@ function h5p_schema() {
       )
     ),
     'primary key' => array('content_id'),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'library' => array('main_library_id'),
+      'slug' => array('slug'),
+    )
   );
 
   $schema['h5p_points'] = array(
@@ -428,6 +664,7 @@ function h5p_schema() {
         'description' => 'The data type identifier',
         'type' => 'varchar',
         'length' => 127,
+        'not null' => TRUE,
       ),
       'timestamp' => array(
         'description' => 'What the time is',
@@ -459,6 +696,100 @@ function h5p_schema() {
     'primary key' => array('user_id', 'content_main_id', 'sub_content_id', 'data_id'),
   );
 
+  $schema['h5p_events'] = array(
+    'description' => 'Keeps track of what happens in the H5P system',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The unique event identifier',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'user_id' => array(
+        'description' => 'User id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'created_at' => array(
+        'description' => 'Time of the event',
+        'type' => 'int',
+        'not null' => TRUE
+      ),
+      'type' => array(
+        'description' => 'Type of event',
+        'type' => 'varchar',
+        'length' => 63,
+        'not null' => TRUE
+      ),
+      'sub_type' => array(
+        'description' => 'Sub type of event',
+        'type' => 'varchar',
+        'length' => 63,
+        'not null' => TRUE
+      ),
+      'content_id' => array(
+        'description' => 'Content id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'content_title' => array(
+        'description' => 'Content title',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE
+      ),
+      'library_name' => array(
+        'description' => 'Library name',
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE
+      ),
+      'library_version' => array(
+        'description' => 'Version of library',
+        'type' => 'varchar',
+        'length' => 31,
+        'not null' => TRUE
+      )
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'created_at' => array('created_at')
+    )
+  );
+
+  $schema['h5p_counters'] = array(
+    'description' => 'Global counters for the H5P system',
+    'fields' => array(
+      'type' => array(
+        'description' => 'Type of counter',
+        'type' => 'varchar',
+        'length' => 63,
+        'not null' => TRUE
+      ),
+      'library_name' => array(
+        'description' => 'Library',
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE
+      ),
+      'library_version' => array(
+        'description' => 'Version of library',
+        'type' => 'varchar',
+        'length' => 31,
+        'not null' => TRUE
+      ),
+      'num' => array(
+        'description' => 'Number value of counter',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+    ),
+    'primary key' => array('type', 'library_name', 'library_version')
+  );
+
   return $schema;
 }
 
@@ -466,6 +797,8 @@ function h5p_schema() {
  * Implements hook_requirements().
  */
 function h5p_requirements($phase) {
+
+  $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
   $requirements = array();
 
   if ($phase == 'runtime') {
@@ -473,7 +806,8 @@ function h5p_requirements($phase) {
 
     // File paths
     // TODO: Merge over _h5p_check_settings from .module?
-    $h5p_path = \Drupal::service("stream_wrapper_manager")->getViaUri('public://')->getDirectoryPath() . '/' . \Drupal::config('h5p.settings')->get('h5p_default_path');
+    $file_path = \Drupal::service('file_system')->realpath('public://');
+    $h5p_path = $file_path . '/' . $h5p_default_path ;
     $temp_path = $h5p_path . '/temp';
     $export_path = $h5p_path . '/exports';
     if (!file_prepare_directory($h5p_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
@@ -509,446 +843,3 @@ function h5p_requirements($phase) {
   return $requirements;
 }
 
-/**
- * Implements hook_update_N().
- */
-function h5p_update_6100() {
-  db_add_field('h5p_libraries', 'fullscreen', array(
-    'description' => 'Indicates if this library can be opened in fullscreen.',
-    'type' => 'int',
-    'size' => 'tiny',
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-    'default' => 0,
-  ));
-  return t('Fullscreen field added to h5p_libraries');
-}
-
-/**
- * Implements hook_update_N().
- */
-function h5p_update_6101() {
-  db_create_table('h5p_libraries_languages', array(
-    'description' => 'Stores translations for the languages.',
-    'fields' => array(
-      'library_id' => array(
-        'description' => 'Primary Key: The id of a h5p library.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'language_code' => array(
-        'description' => 'Primary Key: The language code.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-      ),
-      'language_json' => array(
-        'description' => 'The translations defined in json format',
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-    ),
-    'primary key' => array('library_id', 'language_code'),
-  ));
-  return t('Table for storing language information created');
-}
-
-/**
- * Implements hook_update_N().
- */
-function h5p_update_6102() {
-  db_add_field('h5p_nodes', 'content_type', array(
-    'description' => 'Content type as defined in h5p.json',
-    'type' => 'varchar',
-    'length' => 127,
-  ));
-  db_add_field('h5p_nodes', 'author', array(
-    'description' => 'Author as defined in h5p.json',
-    'type' => 'varchar',
-    'length' => 127,
-  ));
-  db_add_field('h5p_nodes', 'license', array(
-    'description' => 'License as defined in h5p.json',
-    'type' => 'varchar',
-    'length' => 7,
-  ));
-  db_add_field('h5p_nodes', 'meta_keywords', array(
-    'description' => 'Keywords as defined in h5p.json',
-    'type' => 'text',
-  ));
-  db_add_field('h5p_nodes', 'meta_description', array(
-    'description' => 'Meta description as defined in h5p.json',
-    'type' => 'text',
-  ));
-  return t('Fields for storing metadata about the H5P content added');
-}
-
-/**
- * Implements hook_update_N().
- */
-function h5p_update_6103() {
-  db_change_field('h5p_nodes', 'json_content', 'json_content', array(
-    'description' => 'The content in json format',
-    'type' => 'text',
-    'not null' => TRUE,
-    'size' => 'big',
-  ));
-
-  return t("Support for H5P's with lots of data added.");
-}
-
-/**
- * Implements hook_update_N().
- */
-function h5p_update_6104() {
-  db_add_index('files', 'filepath', array('filepath'));
-  return t('Add index to filepath in the files table');
-}
-
-/**
- * Implementation of hook_update_N().
- *
- * Renames the h5p_nodes_libraries.preloaded field to dependency_type,
- * and converts it to contain an integer.
- *
- * Updates h5p_nodes_libraries to get all dependencies.
- */
-function h5p_update_6105(&$sandbox) {
-  if (isset($sandbox['content']) === FALSE) {
-
-    if (db_field_exists('h5p_nodes_libraries', 'preloaded')) {
-      db_drop_primary_key('h5p_nodes_libraries');
-      db_change_field('h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
-        'description' => "dynamic, preloaded or editor",
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => 'preloaded',
-      ), array(
-        'primary key' => array('content_id', 'library_id', 'dependency_type')
-      ));
-    }
-
-    // Update h5p_nodes_libraries to get all dependencies.
-    $result = db_query("
-      SELECT hn.content_id AS id,
-             hl.machine_name AS libraryName,
-             hl.major_version AS libraryMajorVersion,
-             hl.minor_version AS libraryMinorVersion
-      FROM {h5p_nodes} hn
-      JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
-    ");
-
-    // Update h5p_nodes_libraries since column has changed type
-    db_query("UPDATE {h5p_nodes_libraries} set dependency_type='preloaded' where dependency_type='1'");
-    db_query("UPDATE {h5p_nodes_libraries} set dependency_type='dynamic' where dependency_type='0'");
-
-    $sandbox['content'] = array();
-    foreach ($result as $content) {
-      $sandbox['content'][] = $content;
-    }
-
-    $sandbox['current'] = 0;
-    $sandbox['max'] = count($sandbox['content']);
-  }
-
-  if ($sandbox['max'] === 0) {
-    $sandbox['#finished'] = 1;
-  }
-  else {
-    h5p_save_content_dependencies($sandbox['content'][$sandbox['current']]);
-    $sandbox['current']++;
-    $sandbox['#finished'] = ($sandbox['current'] / $sandbox['max']);
-  }
-}
-
-/**
- * Implementation of hook_update_N().
- *
- * Adds the h5p_points-table, which stores user statistics.
- *
- */
-function h5p_update_7100(&$sandbox) {
-  db_create_table('h5p_points', array(
-    'description' => 'Stores user statistics.',
-    'fields' => array(
-      'content_id' => array(
-        'description' => 'Primary Key: The unique identifier for this node.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'uid' => array(
-        'description' => 'Primary Key: The id for the user answering this H5P.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'started' => array(
-        'description' => 'When the user started on the interaction',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'finished' => array(
-        'description' => 'When the user submitted the result',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'points' => array(
-        'description' => 'The users score',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-      ),
-      'max_points' => array(
-        'description' => 'The maximum score for this test',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-      ),
-    ),
-    'primary key' => array('content_id', 'uid'),
-  ));
-}
-
-/**
- * Implementation of hook_update_N().
- *
- * Invalidates views cache so that the new default views will be installed
- *
- */
-function h5p_update_7101() {
-  if (function_exists('views_invalidate_cache')) {
-    views_invalidate_cache();
-  }
-}
-
-/**
- * Implementation of hook_update_N().
- *
- * Check if any of the installed H5P libraries are not supported by the current
- * H5P core version
- *
- */
-function h5p_update_7102() {
-  h5p_validate_library_support();
-}
-
-/**
- * Adds an option that makes it possible to restrict the creation of selected H5P content types to users with a specific role.
- */
-function h5p_update_7103() {
-  db_add_field('h5p_libraries', 'restricted', array(
-    'description' => 'Restricts the ability to create new content using this library.',
-    'type' => 'int',
-    'size' => 'tiny',
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-    'default' => 0,
-  ));
-}
-
-/**
- * Adds filtered column to h5p_nodes
- * Adds tutorial_url column to h5p_libraries
- */
-function h5p_update_7104() {
-  if (db_field_exists('h5p_nodes', 'filtered') === FALSE) {
-    db_add_field('h5p_nodes', 'filtered', array(
-      'description' => 'Filtered version of json_content',
-      'type' => 'text',
-      'size' => 'big',
-    ));
-
-    db_query("update {h5p_nodes} set filtered=''");
-    db_change_field('h5p_nodes', 'filtered', 'filtered', array(
-      'description' => 'Filtered version of json_content',
-      'type' => 'text',
-      'size' => 'big',
-      'not null' => TRUE,
-    ));
-  }
-
-  if (db_field_exists('h5p_libraries', 'tutorial_url') === FALSE) {
-    db_add_field('h5p_libraries', 'tutorial_url', array(
-      'description' => 'URL to a tutorial for this library',
-      'type' => 'varchar',
-      'length' => 1000
-    ));
-  }
-
-  _h5p_inform_h5p_org_communication();
-}
-
-/**
- * Store if or not we have runnable libraries
- */
-function h5p_update_7105() {
-  if (db_query('SELECT 1 FROM {h5p_libraries} WHERE runnable = 1')->fetchField()) {
-    \Drupal::configFactory()->getEditable('h5p.settings')->set('h5p_first_runnable_saved', 1)->save();
-  }
-}
-
-/**
- * Add weights to the library usage table so that libraries always get loaded in
- * the correct order
- */
-function h5p_update_7106() {
-  if (db_field_exists('h5p_nodes_libraries', 'weight') === FALSE) {
-    db_add_field('h5p_nodes_libraries', 'weight', array(
-      'description' => 'Determines the order in which the preloaded libraries will be loaded',
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 999999,
-    ));
-  }
-}
-
-/**
- * Implements hook_update_N().
- *
- * Adds a table for storing user data for each interactive content.
- */
-function h5p_update_7107() {
-  db_create_table('h5p_content_user_data', array(
-    'description' => 'Stores user data about the content',
-    'fields' => array(
-      'user_id' => array(
-        'description' => 'The user identifier',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'content_main_id' => array(
-        'description' => 'The main identifier for the h5p content',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'sub_content_id' => array(
-        'description' => 'The sub identifier for the h5p content',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'data_id' => array(
-        'description' => 'The data type identifier',
-        'type' => 'varchar',
-        'length' => 127,
-      ),
-      'timestamp' => array(
-        'description' => 'What the time is',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'data' => array(
-        'description' => 'Contains the data saved',
-        'type' => 'text',
-        'not null' => TRUE,
-        'size' => 'big',
-      ),
-      'preloaded' => array(
-        'description' => 'Indicates if the is to be preloaded',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-      ),
-      'delete_on_content_change' => array(
-        'description' => 'Indicates if the data is to be deleted when the content gets updated',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-      ),
-    ),
-    'primary key' => array('user_id', 'content_main_id', 'sub_content_id', 'data_id'),
-  ));
-}
-
-/**
- * Implements hook_update_N().
- *
- * Makes it possible to disable UI features per content.
- */
-function h5p_update_7108() {
-  if (!db_field_exists('h5p_nodes', 'disable')) {
-    db_add_field('h5p_nodes', 'disable', array(
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 0
-    ));
-  }
-}
-
-/**
- * Add unique human readable content identifier. Useful for creating human
- * readable file names, URLs and SEO.
- */
-function h5p_update_7109() {
-  if (!db_field_exists('h5p_nodes', 'slug')) {
-    db_add_field('h5p_nodes', 'slug', array(
-      'description' => 'Human readable content identifier that is unique',
-      'type' => 'varchar',
-      'length' => 127,
-      'not null' => TRUE,
-      'default' => ''
-    ));
-  }
-}
-
-
-/**
- * Check if any library installed is unsupported by core
- */
-function h5p_validate_library_support() {
-  require_once drupal_get_path('module', 'h5p') . '/library/h5p-development.class.php';
-  require_once drupal_get_path('module', 'h5p') . '/library/h5p.classes.php';
-  require_once drupal_get_path('module', 'h5p') . '/h5p.classes.inc';
-
-  $core = _h5p_get_instance('core');
-  // Force check
-  $core->validateLibrarySupport(true);
-}
-
-/**
- * (re)Save all dependencies for given content.
- * This will given content nodes a relation to all libraries used by it's main library.
- *
- * @param object $content
- */
-function h5p_save_content_dependencies($content) {
-  require_once drupal_get_path('module', 'h5p') . '/library/h5p-development.class.php';
-  require_once drupal_get_path('module', 'h5p') . '/library/h5p.classes.php';
-  require_once drupal_get_path('module', 'h5p') . '/h5p.classes.inc';
-
-  $i = _h5p_get_instance('interface');
-  $core = _h5p_get_instance('core');
-
-  $library = $i->loadLibrary($content->libraryName, $content->libraryMajorVersion, $content->libraryMinorVersion);
-
-  $dependencies = array();
-  $core->findLibraryDependencies($dependencies, $library);
-
-  $dropLibraryCssList = array();
-  foreach ($dependencies as $dependency) {
-    if (!empty($dependency['library']['dropLibraryCss'])) {
-      $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
-    }
-  }
-
-  foreach ($dependencies as $dependency) {
-    $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
-    db_merge('h5p_nodes_libraries')
-    ->key(array('content_id' => $content->id, 'library_id' => $dependency['library']['libraryId'], 'dependency_type' => $dependency['type']))
-    ->fields(array('drop_css' => $dropCss))
-    ->execute();
-  }
-}

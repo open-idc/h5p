@@ -1,21 +1,37 @@
-h5peditor.libraries_callback:
-  path: '/h5peditor/{node_id}/libraries'
+
+h5peditor.libraries:
+  path: '/h5peditor/{token}/{content_id}/libraries'
   defaults:
-    _title: 'H5peditor Libraries'
-    _controller: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_libraries_callback'
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::librariesCallback'
   requirements:
-    _custom_access: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_access'
-h5peditor.library_callback:
-  path: '/h5peditor/{node_id}/libraries/{machine_name}/{major_version}/{minor_version}'
+     _permission: 'h5peditor_access'
+
+h5peditor.content_type_cache:
+  path: '/h5peditor/{token}/{content_id}/content-type-cache'
   defaults:
-    _title: 'H5peditor Library'
-    _controller: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_library_callback'
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::contentTypeCacheCallback'
   requirements:
-    _custom_access: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_access'
-h5peditor.files_callback:
-  path: '/h5peditor/{node_id}/files'
+    _permission: 'h5peditor_access'
+
+h5peditor.library_install:
+  path: '/h5peditor/{token}/{content_id}/library-install/{machine_name}'
   defaults:
-    _title: 'H5peditor Files'
-    _controller: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_files_callback'
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::libraryInstallCallback'
+    _title: 'H5P Install Library'
   requirements:
-    _custom_access: '\Drupal\h5peditor\Controller\DefaultController::h5peditor_access'
+    _permission: 'h5peditor_access'
+
+h5peditor.library:
+  path: '/h5peditor/{token}/{content_id}/libraries/{machine_name}/{major_version}/{minor_version}'
+  defaults:
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::libraryCallback'
+  requirements:
+     _permission: 'h5peditor_access'
+
+h5peditor.files:
+  path: '/h5peditor/{token}/{content_id}/files'
+  defaults:
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::filesCallback'
+  requirements:
+    _permission: 'h5peditor_access'
+

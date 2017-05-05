@@ -1,10 +1,5 @@
-h5p.admin_settings:
-  route_name: h5p.admin_settings
-  title: H5P
-  description: 'Configure the location of h5p files.'
+h5p.admin.config.system.h5p:
+  title: 'H5P'
   parent: system.admin_config_system
-h5p.library_list:
-  route_name: h5p.library_list
-  title: 'H5P Library List'
-  description: "Administer the H5P libraries"
-
+  description: 'Configure the location of h5p files.'
+  route_name: h5p.admin.config.system.h5p

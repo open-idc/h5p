@@ -1,0 +1,55 @@
+
+update h5p libraries:
+  title: 'Update libraries'
+  description: 'The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing.'
+  restrict access: TRUE
+
+access all h5p results:
+  title: 'Access all H5P results'
+  description: 'Access all H5P results stored in the system'
+  restrict access: TRUE
+
+update h5p libraries:
+  title: 'Update libraries'
+  description: 'The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing.'
+  restrict access: TRUE
+    
+access all h5p results:
+  title: 'Access all H5P results'
+  description: 'Access all H5P results stored in the system'
+  restrict access: TRUE
+    
+access own h5p results:
+  title: 'Access own H5P results'
+  description: 'Access own H5P results from user profile.'
+  restrict access: TRUE
+    
+access h5p results for own content:
+  title: 'Access h5p results for own content'
+  description: 'The user is allowed to see all results for content he has created. Available as a tab on each node.'
+  restrict access: TRUE
+    
+create restricted h5p content types:
+  title: 'Create restricted H5P content types'
+  description: 'The user is allowed to create H5P content types that has been restricted in the library administration interface.'
+  restrict access: TRUE
+    
+download all h5ps:
+  title: 'Download enabled for all H5Ps'
+  description: "The download button will be available for all H5Ps even if download button is hidden by configuration settings. This won't have any effect if download button is globally disabled"
+  restrict access: TRUE
+
+download own h5ps:
+  title: 'Download enabled for own H5Ps'
+  description: "The download button will be available for H5Ps the user has access to edit even if download button is hidden by configuration settings. This won't have any effect if download button is globally disabled"
+  restrict access: TRUE
+
+embed all h5ps:
+  title: 'Embed enabled for all H5Ps'
+  description: "The embed button will be available for all H5Ps even if embed button is hidden by configuration settings. This won't have any effect if embed button is globally disabled"
+  restrict access: TRUE
+    
+embed own h5ps:
+  title: 'Embed enabled for own H5Ps'
+  description: "The embed button will be available for H5Ps the user has access to edit even even if embed button is hidden by configuration settings. This won't have any effect if embed button is globally disabled"
+  restrict access: TRUE

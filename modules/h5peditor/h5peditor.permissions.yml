@@ -1,0 +1,5 @@
+
+install recommended h5p libraries:
+  title: 'Install recommended H5P Libraries'
+  description: 'Install only recommended content types available at the Hub.'
+  restrict access: TRUE

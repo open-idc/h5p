@@ -1,6 +1,9 @@
-name: 'H5P Editor'
-description: 'Create and modify interactive HTML5 Packages on your Drupal site.'
-core: 8.x
-dependencies:
-  - h5p
+# @file
+#  h5peditor.info ini file
+#  Contains general information about the h5p Drupal module.
 type: module
+name: H5P Editor
+description: 'Create and modify interactive HTML5 Packages on your Drupal site.'
+package: H5P
+core: 8.x
+
