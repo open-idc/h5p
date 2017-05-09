@@ -1,8 +1,4 @@
 <?php
-/**
- * @file H5PLibraryUploadForm
- *
- */
 
 namespace Drupal\h5p\Form;
 

@@ -1,11 +1,6 @@
 <?php
-/**
- * Handles Ajax functions that must be implemented separately for each of the
- * H5P plugins
- */
 
 namespace Drupal\h5peditor\H5PEditor;
-
 
 class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
 

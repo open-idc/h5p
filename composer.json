@@ -1,12 +1,12 @@
 {
   "name": "drupal/h5p",
   "type": "drupal-module",
-  "description": "Drupal H5P Integration.",
+  "description": "Drupal H5P Module.",
   "homepage": "http://drupal.org/project/h5p",
   "license": "GPL-2.0+",
   "require": {
-    "h5p/h5p-core": "1.14.0",
-    "h5p/h5p-editor": "1.13.0"
+    "h5p/h5p-core": "1.15.0",
+    "h5p/h5p-editor": "1.14.0"
   },
   "minimum-stability": "dev"
 }

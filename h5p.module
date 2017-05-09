@@ -1,10 +1,7 @@
 <?php
 /**
  * @file
- * h5p library drupal integration.
- *
- * @author
- * Jörg Matheisen, drupalme.de
+ * Contains h5p.module
  */
 
 use Drupal\h5p\Helper;
@@ -22,10 +19,10 @@ require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-de
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-event-base.class.php');
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-file-storage.interface.php');
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-default-storage.class.php');
-
+// TODO: Leverage autoloading features of composer and Drupal
 
 /**
- * implements hook_page_attachments
+ * Implements hook_page_attachments().
  */
 function h5p_page_attachments(array &$attachments) {
 
@@ -66,7 +63,7 @@ function h5p_page_attachments(array &$attachments) {
 
 
 /**
- * implements hook_preprocess_node
+ * Implements hook_preprocess_node().
  */
 function h5p_preprocess_node(&$vars) {
 
@@ -81,7 +78,7 @@ function h5p_preprocess_node(&$vars) {
 
 
 /**
- * implements hook_library_info_build
+ * Implements hook_library_info_build().
  */
 function h5p_library_info_build() {
 
@@ -163,6 +160,7 @@ function h5p_cron() {
 
 /**
  * Remove any log messages older than the set limit.
+ * TODO: Not a hook, could be moved to some helper class?
  */
 function remove_old_log_events() {
   $older_than = (time() - \H5PEventBase::$log_time);
@@ -172,7 +170,9 @@ function remove_old_log_events() {
     ->execute();
 }
 
-
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_fetch_libraries_metadata($fetchingDisabled = FALSE) {
 
   // If fetching of libraries from h5p.org is enabled and
@@ -193,6 +193,7 @@ function h5p_fetch_libraries_metadata($fetchingDisabled = FALSE) {
 
 /**
  * Get path to HTML5 Package.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @param int $content_id
  * @return string
@@ -209,6 +210,7 @@ function h5p_get_export_path($content) {
 
 /**
  * Get url to HTML5 Package.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @param int $content_id
  * @return string
@@ -224,9 +226,9 @@ function h5p_get_export_url($content) {
   return $url;
 }
 
-
 /**
  * Creates the title for the library details page
+ * TODO: Not a hook, could be moved to some helper class? Only used in admin.inc...
  *
  * @param integer $library_id
  */
@@ -267,7 +269,6 @@ function h5p_entity_extra_field_info() {
 }
 
 
-
 /**
  * Implements hook_ENTITY_TYPE_prepare_form().
  */
@@ -297,7 +298,7 @@ function h5p_node_prepare_form(\Drupal\Core\Entity\EntityInterface $entity, $ope
 }
 
 /**
- * Implements hook_form_BASE_FORM_ID_alter(
+ * Implements hook_form_BASE_FORM_ID_alter().
  */
 function h5p_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
 
@@ -321,6 +322,7 @@ function h5p_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $
   _h5p_check_settings();
   _h5p_maintain_session_variables();
 
+  // TODO: Do we really need two functions for this?
   $form['#validate'][] = 'h5p_form_validate';
   $form['#validate'][] = 'h5p_validate';
 
@@ -424,7 +426,7 @@ function h5p_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $
  *                    these DOM elements will be hidden when this this checkbox
  *                    is unchecked
  */
-function _h5p_add_display_option (&$element, $name, $title, $value, $visibility_subject_id = null) {
+function _h5p_add_display_option(&$element, $name, $title, $value, $visibility_subject_id = null) {
   $element[$name] = array(
     '#type' => 'checkbox',
     '#title' => $title,
@@ -458,7 +460,6 @@ function _h5p_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $for
   $_SESSION['h5p']['node']['h5p_editor'] = $values['h5p_editor'];
   $_SESSION['h5p']['node']['h5p'] = $values['h5p'];
 }
-
 
 /**
  * Provide human readable labels for display options.
@@ -506,7 +507,9 @@ function h5p_form_validate(array &$form, FormStateInterface $form_state) {
   }
 }
 
-
+/**
+ * Validate the h5p file ?
+ */
 function h5p_validate(array &$form, FormStateInterface $form_state) {
   if (isset($_SESSION['h5p_upload'])) {
     $helper = new Helper\H5PEnvironment();
@@ -619,7 +622,6 @@ function h5p_node_update(Drupal\Core\Entity\EntityInterface $entity) {
   }
 }
 
-
 /**
  * Implements hook_ENTITY_TYPE_delete().
  */
@@ -678,7 +680,6 @@ function h5p_delete_h5p_content($content) {
     ->execute();
 }
 
-
 /**
  * Implements hook_ENTITY_TYPE_load().
  */
@@ -731,7 +732,8 @@ function h5p_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entit
 
   if (!isset($html)) {
     $html = '<div>' . t('Sorry, preview of H5P content is not yet available.') . '</div>';
-  } else {
+  }
+  else {
     h5p_set_started($entity->id());
   }
 
@@ -749,7 +751,7 @@ function h5p_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entit
 }
 
 /**
- * Implements hook_ENTITY_TYPE_delete
+ * Implements hook_ENTITY_TYPE_delete().
  */
 function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
   db_delete('h5p_points')
@@ -766,6 +768,8 @@ function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
  * Implements hook_filter_info().
  *
  * todo $JM D8 equivalent ??
+ * TODO: Consider if we need this after implementing H5P as a field instead of
+ * a content type – finding the field ID instead of NID would be difficult?
  */
 function h5p_filter_info() {
   $filters['h5p_content'] = array(
@@ -778,7 +782,6 @@ function h5p_filter_info() {
 
   return $filters;
 }
-
 
 /**
  * Provides filter tips callback.
@@ -804,6 +807,7 @@ function _h5p_process_shortcodes($text, $filter) {
 
 /**
  * Adds H5P embed code and necessary files
+ * TODO: Not a hook, could be moved to some helper class? Or perhaps Core?
  *
  * @param object $node - H5P node
  * @return string - HTML code for embedding the H5P
@@ -823,6 +827,7 @@ function _include_h5p($node) {
 
 /**
  * Set that the logged in user has started on an h5p
+ * TODO: Not a hook, could be moved to some helper class? Or Core?
  *
  * @param int $content_id
  *  The id for the H5P content (vid or nid depending on setting)
@@ -848,6 +853,7 @@ function h5p_set_started($content_id) {
 
 /**
  * Adds content independent scripts, styles and settings
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @returns array Assets.
  */
@@ -883,6 +889,9 @@ function h5p_add_core_assets() {
   return $assets;
 }
 
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_get_core_settings() {
 
   global $base_url;
@@ -953,11 +962,12 @@ function h5p_get_core_settings() {
     $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
   }
 
-
   return $settings;
-
 }
 
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_get_content($node) {
 
   $helper = new Helper\H5PEnvironment();
@@ -965,7 +975,6 @@ function h5p_get_content($node) {
 
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
   $url = Url::fromUri('internal:/node/' . $node->id(), ['absolute' => TRUE])->toString();
-
 
   return array(
     'id' => $node->id(),
@@ -982,7 +991,9 @@ function h5p_get_content($node) {
   );
 }
 
-
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_get_content_settings($content) {
   global $user;
 
@@ -1046,7 +1057,9 @@ function h5p_get_content_settings($content) {
   );
 }
 
-
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_get_resize_url() {
   $url = Url::fromUri('internal:/' . drupal_get_path('module', 'h5p') . '/vendor/h5p/h5p-core/js/h5p-resizer.js',
     ['absolute' => TRUE, 'language' => FALSE])->toString();
@@ -1055,6 +1068,7 @@ function h5p_get_resize_url() {
 
 /**
  * Adds h5p files and settings.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @param stdClass $node
  */
@@ -1094,6 +1108,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
   \Drupal::moduleHandler()->alter('h5p_scripts', $files['scripts'], $library_list, $embed_type);
   \Drupal::moduleHandler()->alter('h5p_styles', $files['styles'], $library_list, $embed_type);
 
+  // TODO: Not sure if it's a good idea to use the session storage for this
   unset($_SESSION['h5p']['h5p_libraries']);
 
   if ($embed_type === 'div') {
@@ -1127,6 +1142,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
 
 /**
  * Checks to see if the path is external.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @param string $path
  * @return bool
@@ -1137,6 +1153,7 @@ function h5p_is_external_asset($path) {
 
 /**
  * Add the necessary assets for content to run in an iframe.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @param array $integration
  * @param int $content_id
@@ -1223,10 +1240,9 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
 
 }
 
-
-
 /**
  * Verify that the libraries H5P needs exists
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @return boolean
  *  TRUE if the settings validate, FALSE otherwise
@@ -1246,9 +1262,11 @@ function _h5p_check_settings() {
   return TRUE;
 }
 
-
 /**
  * Deletes old session variables that aren't valid anymore
+ * TODO: Not a hook, could be moved to some helper class? Also, if there's some
+ * way we can avoid using session storage for this I think that would be smoother.
+ * I guess we'll have to address this when adding multiple H5P fields to a content type.
  *
  * We don't want to keep any session variables around if this
  * is a new form...
@@ -1259,9 +1277,9 @@ function _h5p_maintain_session_variables() {
   }
 }
 
-
 /**
  * Get the path to the h5p files folder.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @return string
  *  Path to the h5p files folder
@@ -1279,6 +1297,7 @@ function _h5p_get_h5p_path() {
 
 /**
  * Get the url to the h5p files folder.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @return string
  *  url to the h5p files folder
@@ -1292,6 +1311,7 @@ function _h5p_get_h5p_url() {
 
 /**
  * Get a list of libraries more suitable for inspection than the dependencies list
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @param array $dependencies
  *  List of dependencies on the format returned from H5P core
@@ -1313,6 +1333,7 @@ function _h5p_dependencies_to_library_list($dependencies) {
 /**
  * Checks if the variable has changed before setting it.
  * This is to avoid performance costly mistakes.
+ * TODO: Not a hook, could be moved to some helper class?
  */
 function h5p_variable_set($name, $value) {
   $state_value = \Drupal::state()->get($name);
@@ -1321,6 +1342,9 @@ function h5p_variable_set($name, $value) {
   }
 }
 
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_node_add_or_edit() {
 
   $result = FALSE;
@@ -1334,6 +1358,9 @@ function h5p_node_add_or_edit() {
   return $result;
 }
 
+/**
+ * TODO: Not a hook, could be moved to some helper class?
+ */
 function h5p_admin() {
 
   $result = FALSE;
@@ -1346,4 +1373,3 @@ function h5p_admin() {
 
   return $result;
 }
-

@@ -1,6 +1,6 @@
 # Download
 
-- git clone --branch 8.x-1.x https://git.drupal.org/sandbox/joergM/2853930.git h5p
+- git clone --branch 8.x-1.x https://git.drupal.org/project/h5p.git
 
 # Installation
 
@@ -24,5 +24,3 @@
 
 # Restrictions
 - embed type div not yet supported
-
-

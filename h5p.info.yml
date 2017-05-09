@@ -1,11 +1,5 @@
-# @file
-#  h5p.info ini file
-#  Contains general information about the h5p Drupal module.
 type: module
 name: H5P
 description: 'Upload interactive HTML5 Packages to your Drupal site.'
 package: H5P
 core: 8.x
-
-dependencies:
-  - h5p:h5peditor

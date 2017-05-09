@@ -1,9 +1,4 @@
 <?php
-/**
- * @file H5PLibraryDeleteForm
- *
- * @author Jörg Matheisen, drupalme.de
- */
 
 namespace Drupal\h5p\Form;
 

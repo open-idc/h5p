@@ -1,19 +1,13 @@
 <?php
 /**
  * @file
- * h5p editor integration.
- *
- * @author
- * Jörg Matheisen, drupalme.de
+ * Contains h5peditor.module
  */
 
-use Drupal\h5p\Helper;
-
-use Drupal\h5peditor\H5PEditor;
-
-use Drupal\Core\Url;
+use \Drupal\h5p\Helper;
+use \Drupal\h5peditor\H5PEditor;
+use \Drupal\Core\Url;
 use \Drupal\Core\Form\FormStateInterface;
-
 
 // load h5p editor classes
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor.class.php');
@@ -21,10 +15,11 @@ require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5pe
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-ajax.interface.php');
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-file.class.php');
 require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-storage.interface.php');
+// TODO: Use composer to autoload classes
 
 
 /**
- * implements hook_page_attachments
+ * Implements hook_page_attachments().
  */
 function h5peditor_page_attachments(array &$attachments) {
 
@@ -34,7 +29,7 @@ function h5peditor_page_attachments(array &$attachments) {
 }
 
 /**
- * implements hook_library_info_build
+ * Implements hook_library_info_build().
  */
 function h5peditor_library_info_build() {
 
@@ -62,11 +57,8 @@ function h5peditor_library_info_build() {
   return $libraries;
 }
 
-
-
-
 /**
- * Implements hook_form_BASE_FORM_ID_alter(
+ * Implements hook_form_BASE_FORM_ID_alter().
  */
 function h5peditor_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
 
@@ -148,7 +140,9 @@ function h5peditor_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInter
 }
 
 /**
- * Add scripts and styles to the h5p node form.
+ * Alter content type form to add h5peditor instead of upload field.
+ *
+ * TODO: This should probably be split up and moved to some helper class?
  */
 function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core\Form\FormState $form_state) {
 
@@ -282,6 +276,7 @@ function h5peditor_form_node_h5p_content_form_submit(array &$form, FormStateInte
   if (! $h5p_hub_is_enabled && $values['h5p_type'] == 'upload') {
     return;
   }
+  // TODO: Seems strange to use session storage for this, is there a better way?
   $_SESSION['h5p']['node']['h5p_type'] = $values['h5p_type'];
 
   // save extra field in session till hook_ENTITY_TYPE_presave()
@@ -296,7 +291,7 @@ function h5peditor_form_node_h5p_content_form_submit(array &$form, FormStateInte
 
 
 /**
- * Implements hook_ENTITY_TYPE_presave()
+ * Implements hook_ENTITY_TYPE_presave().
  */
 function h5peditor_node_presave(Drupal\Core\Entity\EntityInterface $entity) {
 
@@ -335,10 +330,9 @@ function _h5peditor_create_content($node) {
   );
 }
 
-
-
 /**
  * Keeps track of our editor instance, saving valuable resources.
+ * TODO: Not a hook, could be moved to some helper class?
  *
  * @staticvar H5peditor $instance
  * @return \H5peditor

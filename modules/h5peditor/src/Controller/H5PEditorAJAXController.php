@@ -1,13 +1,5 @@
 <?php
 
-/**
- * @file
- * h5p editor integration.
- *
- * @author
- * Jörg Matheisen, drupalme.de
- */
-
 namespace Drupal\h5peditor\Controller;
 
 use Drupal\h5p\H5PDrupal;
@@ -54,13 +46,11 @@ class H5PEditorAJAXController extends ControllerBase {
     exit();
   }
 
-
   /**
    * Callback that returns all library data
    *
    */
   function libraryCallback($machine_name, $major_version, $minor_version) {
-
 
     $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
@@ -90,6 +80,5 @@ class H5PEditorAJAXController extends ControllerBase {
     // ajax response is alread send h5peditor
     exit();
   }
-
 
 }

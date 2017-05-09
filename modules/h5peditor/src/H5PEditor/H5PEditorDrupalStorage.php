@@ -1,10 +1,6 @@
 <?php
-/**
- * Handles all communication with the database.
- */
 
 namespace Drupal\h5peditor\H5PEditor;
-
 
 class H5PEditorDrupalStorage implements \H5peditorStorage {
 

@@ -1,9 +1,7 @@
 <?php
-
 /**
  * @file
- *  h5p.install php file
- *  Install and upgrade db tables for the h5p Drupal module.
+ * Installation hooks for h5p module.
  */
 
 use Drupal\h5p\Helper;
@@ -842,4 +840,3 @@ function h5p_requirements($phase) {
 
   return $requirements;
 }
-
