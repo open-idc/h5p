@@ -9,15 +9,6 @@ use \Drupal\h5peditor\H5PEditor;
 use \Drupal\Core\Url;
 use \Drupal\Core\Form\FormStateInterface;
 
-// load h5p editor classes
-require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor.class.php');
-require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-ajax.class.php');
-require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-ajax.interface.php');
-require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-file.class.php');
-require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-editor/h5peditor-storage.interface.php');
-// TODO: Use composer to autoload classes
-
-
 /**
  * Implements hook_page_attachments().
  */

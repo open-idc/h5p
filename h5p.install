@@ -29,13 +29,6 @@ function h5p_uninstall() {
   $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
   $h5p_path = \Drupal::service('file_system')->realpath('public://') . '/' . $h5p_default_path;
 
-  // Load core
-  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p.classes.php');
-  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-development.class.php');
-  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-event-base.class.php');
-  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-file-storage.interface.php');
-  require_once (\Drupal::root() . '/modules/contrib/h5p/vendor/h5p/h5p-core/h5p-default-storage.class.php');
-
   $interface = new H5PDrupal\H5PDrupal();
 
   $h5p_export = \Drupal::state()->get('h5p_export') ?: 1;
