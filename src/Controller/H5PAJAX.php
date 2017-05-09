@@ -1,23 +1,13 @@
 <?php
 
-/**
- * @file
- * H5PAdmin
- *
- * @author
- * Jörg Matheisen, www.drupalme.de
- */
-
 namespace Drupal\h5p\Controller;
 
 use Drupal\h5p\Helper;
-
 use Drupal\Core\Url;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Database\Driver\mysql\Connection;
+use Drupal\Core\Database\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-
 
 class H5PAJAX  extends ControllerBase {
 
