@@ -18,6 +18,14 @@ use Drupal\Core\Entity\EntityInterface;
  */
 function h5p_page_attachments(array &$attachments) {
 
+  //$attachments['#attached']['library'][] = 'h5p/h5p.admin';
+  //$attachments['#attached']['library'][] = 'h5p/h5p.content';
+  //$attachments['#attached']['library'][] = 'h5p/h5p.dragquestion-1.10';
+
+//  $attachments['#attached']['library'][] = 'h5p/h5p.core';
+//  $attachments['#attached']['library'][] = 'h5p/h5p.core';
+
+/*
   if (h5p_node_add_or_edit()) {
     $attachments['#attached']['library'][] = 'h5p/h5pintegration_setting';
     $attachments['#attached']['library'][] = 'h5p/h5p_core';
@@ -26,7 +34,7 @@ function h5p_page_attachments(array &$attachments) {
   } elseif (h5p_admin()) {
     $attachments['#attached']['library'][] = 'h5p/h5padminintegration_setting';
     $attachments['#attached']['library'][] = 'h5p/h5p_admin';
-  }
+  }*/
 
 
   /*
@@ -68,79 +76,137 @@ function h5p_preprocess_node(&$vars) {
   }
 }
 
-
 /**
  * Implements hook_library_info_build().
  */
 function h5p_library_info_build() {
-
   $libraries = [];
 
-  if (! empty($_SESSION['h5p']['h5p_core'])) {
-    // h5p integration embed type iframe
+  // TODO: Add license to libraries? version?
 
-    $libraries['h5pintegration_setting']['js']['js/h5p-integration.js'] = [];
+  $libraries['h5p.jquery'] = [
+    'js' => [
+      '/vendor/h5p/h5p-core/js/jquery.js' => [],
+    ],
+  ];
 
-    // Add a library whose information changes depending on certain conditions.
-    $libraries['h5p_core'] = [
-      'dependencies' => [
-        'core/drupal',
-        'core/drupalSettings'
-      ],
-    ];
+  $libraries['h5p.content']['dependencies'] = [
+    'h5p/h5p.jquery',
+  ];
 
-    foreach ($_SESSION['h5p']['h5p_core']['js'] as $script) {
-      $libraries['h5p_core']['js'][$script] = [];
+  // Register core JS needed when viewing H5P content
+  foreach (\H5PCore::$scripts as $script) {
+    if ($script === 'js/jquery.js') {
+      continue;
     }
-    foreach ($_SESSION['h5p']['h5p_core']['css'] as $style) {
-      $libraries['h5p_core']['css']['theme'][$style] = [];
-    }
-    unset($_SESSION['h5p']['h5p_core']);
-
+    $js = "vendor/h5p/h5p-core/$script";
+    $libraries['h5p.content']['js']["/$js"] = [];
+    // TODO $assets['js'][] = base_path() . $js . $cache_buster;
   }
 
-  if (! empty($_SESSION['h5p']['h5p_libraries'])) {
-    // h5p intergration embed type div
-
-    // Add a library whose information changes depending on certain conditions.
-    $libraries['h5p_libraries'] = [
-      'dependencies' => [
-        'core/drupal',
-        'core/drupalSettings'
-      ],
-    ];
-    foreach ($_SESSION['h5p']['h5p_libraries']['js'] as $script) {
-      $libraries['h5p_libraries']['js'][$script] = [];
-    }
-    foreach ($_SESSION['h5p']['h5p_libraries']['css'] as $style) {
-      $libraries['h5p_libraries']['css']['theme'][$style] = [];
-    }
-    unset($_SESSION['h5p']['h5p_libraries']);
+  // Register core CSS needed when viewing H5P content
+  foreach (H5PCore::$styles as $style) {
+    $css = "vendor/h5p/h5p-core/$style";
+    $libraries['h5p.content']['css']['base']["/$css"] = [];
+    // TODO $assets['css'][] = base_path() . $css . $cache_buster;
   }
 
-  if (! empty($_SESSION['h5p']['h5p_admin'])) {
+  // Register H5P content dependent on jQuery
+  $libraries['h5p.admin'] = [
+    'css' => [
+      'base' => [
+        '/vendor/h5p/h5p-core/styles/h5p.css' => [],
+        '/vendor/h5p/h5p-core/styles/h5p-admin.css' => [],
+      ]
+    ],
+    'dependencies' => [
+      'h5p/h5p.jquery',
+    ]
+  ];
 
-    $libraries['h5padminintegration_setting']['js']['js/h5p-admin-integration.js'] = [];
-
-    // Add a library whose information changes depending on certain conditions.
-    $libraries['h5p_admin'] = [
-      'dependencies' => [
-        'core/drupal',
-        'core/drupalSettings'
-      ],
-    ];
-    foreach ($_SESSION['h5p']['h5p_admin']['js'] as $script) {
-      $libraries['h5p_admin']['js'][$script] = [];
+  // Register core JS needed when administrating H5P libraries
+  foreach (\H5PCore::$adminScripts as $script) {
+    if ($script === 'js/jquery.js') {
+      continue;
     }
-    foreach ($_SESSION['h5p']['h5p_admin']['css'] as $style) {
-      $libraries['h5p_admin']['css']['theme'][$style] = [];
-    }
-    unset($_SESSION['h5p']['h5p_admin']);
+    $js = "vendor/h5p/h5p-core/$script";
+    $libraries['h5p.admin']['js']["/$js"] = [];
+    // TODO $assets['js'][] = base_path() . $js . $cache_buster;
   }
+
+  // Load installed libraries
+  $h5p_libraries = db_query("SELECT library_id AS id,
+                                machine_name AS name,
+                                major_version AS major,
+                                minor_version AS minor,
+                                preloaded_js AS js_csv,
+                                preloaded_css AS css_csv,
+                                drop_library_css
+                           FROM {h5p_libraries}");
+
+  $libraries_prefix = '/' . \Drupal\Core\StreamWrapper\PublicStream::basePath() . '/h5p/libraries'; // TODO: Get from variable
+  foreach ($h5p_libraries as $h5p_library) {
+
+    $js = [];
+    $scripts = explode(',', $h5p_library->js_csv);
+    foreach ($scripts as &$script) {
+      $script = trim($script);
+      if ($script) {
+        $js["$libraries_prefix/{$h5p_library->name}-{$h5p_library->major}.{$h5p_library->minor}/$script"] = [];
+      }
+    }
+
+    $css = [];
+    $styles = explode(',', $h5p_library->css_csv);
+    foreach ($styles as &$style) {
+      $style = trim($style);
+      if ($style) {
+        $css["$libraries_prefix/{$h5p_library->name}-{$h5p_library->major}.{$h5p_library->minor}/$style"] = [];
+      }
+    }
+
+    // Load dependencies
+    $h5p_dependencies = db_query(
+        "SELECT hl.machine_name AS name,
+                hl.major_version AS major,
+                hl.minor_version AS minor
+           FROM {h5p_libraries_libraries} hll
+           JOIN {h5p_libraries} hl ON hll.required_library_id = hl.library_id
+          WHERE hll.library_id = :library_id
+            AND dependency_type = 'preloaded'",
+      array(':library_id' => $h5p_library->id));
+
+    $dependencies = [];
+    foreach ($h5p_dependencies as $h5p_dependency) {
+      $dependencies[] = 'h5p/' . _h5p_library_machine_to_id($h5p_dependency);
+    }
+
+    $libraries[_h5p_library_machine_to_id($h5p_library)] = [
+      'js' => $js,
+      'css' => [
+        'base' => $css,
+      ],
+      'dependencies' => $dependencies,
+    ];
+  }
+
+  // TODO: Invalid when saving library by:
+  // \Drupal::service('library.discovery.collector')->delete('h5p');
 
   return $libraries;
 }
 
+/**
+ * TODO: Helper?
+ */
+function _h5p_library_machine_to_id($h5p_library) {
+  $name = strtolower($h5p_library->name);
+  if (substr($name, 0, 4) !== 'h5p.') {
+    $name = "h5p.{$name}";
+  }
+  $name = "{$name}-{$h5p_library->major}.{$h5p_library->minor}";
+  return $name;
+}
 
 /**
  * Implements hook_cron().
@@ -867,14 +933,14 @@ function h5p_add_core_assets() {
 
     foreach (\H5PCore::$styles as $style) {
       $css = 'vendor/h5p/h5p-core/' . $style;
-      $_SESSION['h5p']['h5p_core']['css'][] = $style;
-      $assets['css'][] = base_path() . $module_path . '/' . $css . $cache_buster;
+      $_SESSION['h5p']['h5p_core']['css'][] = $css;
+      $assets['css'][] = base_path() . $css . $cache_buster;
     }
 
     foreach (\H5PCore::$scripts as $script) {
       $js = 'vendor/h5p/h5p-core/' . $script;
       $_SESSION['h5p']['h5p_core']['js'][] = $js;
-      $assets['js'][] = base_path() . $module_path . '/' . $js . $cache_buster;
+      $assets['js'][] = base_path() . $js . $cache_buster;
     }
   }
 
@@ -1053,7 +1119,7 @@ function h5p_get_content_settings($content) {
  * TODO: Not a hook, could be moved to some helper class?
  */
 function h5p_get_resize_url() {
-  $url = Url::fromUri('internal:/' . drupal_get_path('module', 'h5p') . '/vendor/h5p/h5p-core/js/h5p-resizer.js',
+  $url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js',
     ['absolute' => TRUE, 'language' => FALSE])->toString();
   return $url;
 }

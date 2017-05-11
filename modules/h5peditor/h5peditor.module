@@ -151,11 +151,11 @@ function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core
   $integration = h5p_add_files_and_settings(TRUE, TRUE); // Force integration
 
   unset($_SESSION['h5p']['h5p_editor']);
-  $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5p-hub-client.js';
+  /*$_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5p-hub-client.js';
   $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js';
   $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5peditor-editor.js';
   $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/language/en.js';
-  $_SESSION['h5p']['h5p_editor']['js'][] = 'scripts/application.js';
+  $_SESSION['h5p']['h5p_editor']['js'][] = 'scripts/application.js';*/
 
   $helper = new Helper\H5PEnvironment();
   $content_validator = $helper->getInstance('contentvalidator');
@@ -166,22 +166,22 @@ function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core
   $ajax_path = Url::fromUri('internal:/h5peditor/' . \H5PCore::createToken('editorajax') . '/' . ($content_id ? $content_id : 0) . '/')->toString();
 
   // Add translation
-  $language_file = base_path() . $module_path . '/vendor/h5p/h5p-editor/language/' . $language . '.js';
+  $language_file = base_path() . 'vendor/h5p/h5p-editor/language/' . $language . '.js';
   if (! file_exists($language_file)) {
-    $language_file = base_path() . $module_path . '/vendor/h5p/h5p-editor/language/en.js';
+    $language_file = base_path() . 'vendor/h5p/h5p-editor/language/en.js';
   }
 
   $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
   $cache_buster = ! empty($css_js_query_string) ? '?' . $css_js_query_string : '';
 
   foreach (\H5peditor::$styles as $style) {
-    $assets['css'][] = base_path() . $module_path . '/vendor/h5p/h5p-editor/' . $style . $cache_buster;
+    $assets['css'][] = base_path() . 'vendor/h5p/h5p-editor/' . $style . $cache_buster;
   }
   // Add our own scripts
   foreach (\H5peditor::$scripts as $script) {
     // We do not want the creator of the iframe inside the iframe
     if ($script !== 'scripts/h5peditor-editor.js') {
-      $assets['js'][] = base_path() . $module_path . '/vendor/h5p/h5p-editor/' . $script . $cache_buster;
+      $assets['js'][] = base_path() . 'vendor/h5p/h5p-editor/' . $script . $cache_buster;
     }
   }
   $assets['js'][] = $language_file . $cache_buster;
@@ -190,12 +190,11 @@ function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core
     'h5peditor' => array(
       'filesPath' => $file_path . '/h5peditor',
       'fileIcon' => array(
-        'path' => base_path() . $module_path . '/vendor/h5p/h5p-editor/images/binary-file.png',
+        'path' => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
         'width' => 50,
         'height' => 50,
       ),
       'ajaxPath' => $ajax_path,
-      'modulePath' => $module_path . '/vendor/h5p',
       'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
       'copyrightSemantics' => $content_validator->getCopyrightSemantics(),
       'assets' => $assets,
