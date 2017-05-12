@@ -13,6 +13,8 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "h5p",
  *   label = @Translation("Interactive Content"),
+ *   description = @Translation("This field stores the ID of an H5P Content as an integer value."),
+ *   category = @Translation("Reference"),
  *   default_formatter = "h5p_default",
  *   default_widget = "h5p_upload",
  * )
@@ -25,41 +27,15 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
-        'library_id' => array(
-          'description' => 'The library we instanciate using the parameters',
+        'h5p_content_id' => array(
+          'description' => 'Referance to the H5P Content entity ID',
           'type' => 'int',
           'unsigned' => TRUE,
           'not null' => TRUE,
-        ),
-        'parameters' => array(
-          'description' => 'The raw/unsafe parameters to use',
-          'type' => 'text',
-          'not null' => TRUE,
-          'size' => 'big',
-        ),
-        'filtered_parameters' => array(
-          'description' => 'The filtered parameters that is safe to use',
-          'type' => 'text',
-          'not null' => TRUE,
-          'size' => 'big',
-        ),
-        'disabled_features' => array(
-          'description' => 'Keeps track of which features has been disabled for the content',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0
-        ),
-        'slug' => array(
-          'description' => 'Human readable URL identifier used for the export filename',
-          'type' => 'varchar',
-          'length' => 127,
-          'not null' => TRUE
         ),
       ),
       'indexes' => array(
-        'library' => array('library_id'),
-        'slug' => array('slug'),
+        'h5p_content_id' => array('h5p_content_id'),
       )
     );
   }
@@ -68,11 +44,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties['library_id'] = DataDefinition::create('integer');
-    $properties['parameters'] = DataDefinition::create('string');
-    $properties['filtered_parameters'] = DataDefinition::create('string');
-    $properties['disabled_features'] = DataDefinition::create('integer');
-    $properties['slug'] = DataDefinition::create('string');
+    $properties['h5p_content_id'] = DataDefinition::create('integer');
 
     return $properties;
   }
@@ -81,8 +53,33 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $library_id = $this->get('library_id')->getValue();
-    return $library_id === NULL || $library_id === 0;
+    $content_id = $this->get('h5p_content_id')->getValue();
+    return $content_id === NULL || $content_id === 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave($update) {
+    //print 'Should we save the files now, master?'; exit;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function delete() {
+    parent::delete();
+
+    //print "Have you forgotten to implement this?"; exit;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteRevision() {
+    parent::deleteRevision();
+
+    //print "Have you forgotten to implement this?"; exit;
   }
 
 }

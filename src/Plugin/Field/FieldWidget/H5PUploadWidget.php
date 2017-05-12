@@ -32,10 +32,7 @@ class H5PUploadWidget extends WidgetBase {
       '#element_validate' => [
         [$this, 'validate'],
       ],
-    //  '#value_callback' => [$this, 'value'],
     ];
-
-    // TODO: Add disable settings or should we use nother field for that?  Which field belongs to which content then?
 
     return array('h5p_upload' => $element);
   }
@@ -78,24 +75,14 @@ class H5PUploadWidget extends WidgetBase {
         return;
       }
 
-      // TODO: Set value for all of our fields?
-      //$form_state->setValueForElement($element, '0');
     }
-/*
-    public static function value($element, $input, FormStateInterface $form_state) {
-
-      return [
-        'library_id' => 123,
-        'parameters' => '{}',
-        'filtered_parameters' => '',
-        'disabled_features' => 0,
-        'slug' => '',
-      ];
-    }*/
 
     public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-      // TODO: Prepare values for saving?
-      return $values;
+      $storage = H5PDrupal::getInstance('storage');
+      $storage->savePackage();
+      return [
+        'h5p_content_id' => $storage->contentId,
+      ];
     }
 
   }

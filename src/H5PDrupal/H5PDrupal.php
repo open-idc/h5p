@@ -2,6 +2,7 @@
 
 namespace Drupal\h5p\H5PDrupal;
 
+use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5peditor\H5PEditor;
 use Drupal\core\Url;
 use Drupal\Component\Utility\UrlHelper;
@@ -612,6 +613,17 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements insertContent
    */
   public function insertContent($content, $contentMainId = NULL) {
+
+    $content = H5PContent::create([
+      'library_id' => $content['library']['libraryId'],
+      'parameters' => $content['params'],
+    ]);
+
+    $content->save();
+
+    return $content->getID();
+
+    // TODO: Fix logging
 
     // Insert
     db_insert('h5p_nodes')
