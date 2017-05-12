@@ -3,11 +3,61 @@
 namespace Drupal\h5p\H5PDrupal;
 
 use Drupal\h5peditor\H5PEditor;
-
 use Drupal\core\Url;
 use Drupal\Component\Utility\UrlHelper;
 
 class H5PDrupal implements \H5PFrameworkInterface {
+
+  /**
+   * Get an instance of one of the h5p library classes
+   *
+   * This function stores the h5p core in a static variable so that the variables there will
+   * be kept between validating and saving the node for instance
+   *
+   * @staticvar H5PDrupal $interface
+   *  The interface between the H5P library and drupal
+   * @staticvar H5PCore $core
+   *  Core functions and storage in the h5p library
+   * @param string $type
+   *  Specifies the instance to be returned; validator, storage, interface or core
+   * @return object
+   *  The instance og h5p specified by type
+   */
+  public static function getInstance($type) {
+    static $interface, $core;
+
+    if (!isset($interface)) {
+      // Create new instance of self
+      $interface = new H5PDrupal();
+
+      // Determine language
+      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+      // Prepare file storage
+      $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
+      $fs = new \H5PDefaultStorage(\Drupal::service('file_system')->realpath("public://{$h5p_path}"));
+
+      // Determine if exports should be generated
+      $export_enabled = !!\Drupal::state()->get('h5p_export'); // TODO: Use \Drupal::config()->get() ?
+      $core = new \H5PCore($interface, $fs, base_path(), $language, $is_export_enabled);
+    }
+
+    switch ($type) {
+      case 'validator':
+        return new \H5PValidator($interface, $core);
+      case 'storage':
+        return new \H5PStorage($interface, $core);
+      case 'contentvalidator':
+        return new \H5PContentValidator($interface, $core);
+      case 'export':
+        return new \H5PExport($interface, $core);
+      default:
+      case 'interface':
+        return $interface;
+      case 'core':
+        return $core;
+    }
+  }
 
   /**
    * Implements getPlatformInfo
@@ -127,15 +177,27 @@ class H5PDrupal implements \H5PFrameworkInterface {
   /**
    * Implements getUploadedH5PFolderPath
    */
-  public function getUploadedH5pFolderPath() {
-    return $_SESSION['h5p_upload_folder'];
+  public function getUploadedH5pFolderPath($set = NULL) {
+    static $path;
+
+    if (!empty($set)) {
+      $path = $set;
+    }
+
+    return $path;
   }
 
   /**
    * Implements getUploadedH5PPath
    */
-  public function getUploadedH5pPath() {
-    return empty($_SESSION['h5p_upload']) ? NULL : $_SESSION['h5p_upload'];
+  public function getUploadedH5pPath($set = NULL) {
+    static $path;
+
+    if (!empty($set)) {
+      $path = $set;
+    }
+
+    return $path;
   }
 
   /**
