@@ -119,20 +119,41 @@ function h5p_library_info_build() {
         '/vendor/h5p/h5p-core/styles/h5p-admin.css' => [],
       ]
     ],
+    'js' => [
+      'js/h5p-admin-integration.js' => [],
+      '/vendor/h5p/h5p-core/js/h5p-utils.js' => [],
+    ],
     'dependencies' => [
       'h5p/h5p.jquery',
-    ]
+    ],
   ];
-
   // Register core JS needed when administrating H5P libraries
-  foreach (\H5PCore::$adminScripts as $script) {
+  /*foreach (\H5PCore::$adminScripts as $script) {
     if ($script === 'js/jquery.js') {
       continue;
     }
     $js = "vendor/h5p/h5p-core/$script";
     $libraries['h5p.admin']['js']["/$js"] = [];
     // TODO $assets['js'][] = base_path() . $js . $cache_buster;
-  }
+  }*/
+
+  $libraries['h5p.admin.library.list'] = [
+    'js' => [
+      '/vendor/h5p/h5p-core/js/h5p-library-list.js' => [],
+    ],
+    'dependencies' => [
+      'h5p/h5p.admin',
+    ],
+  ];
+
+  $libraries['h5p.admin.library.details'] = [
+    'js' => [
+      '/vendor/h5p/h5p-core/js/h5p-library-details.js' => [],
+    ],
+    'dependencies' => [
+      'h5p/h5p.admin',
+    ],
+  ];
 
   // Load installed libraries
   $h5p_libraries = db_query("SELECT library_id AS id,
