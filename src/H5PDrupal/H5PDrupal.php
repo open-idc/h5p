@@ -61,6 +61,118 @@ class H5PDrupal implements \H5PFrameworkInterface {
   }
 
   /**
+   * Prepares the generic H5PIntegration settings
+   */
+  public static function getGenericH5PIntegrationSettings() {
+    static $settings;
+
+    if (!empty($settings)) {
+      return $settings; // Only needs to be generated the first time
+    }
+
+    // Load current user
+    $user = \Drupal::currentUser();
+
+    // Load configuration settings
+    $h5p_save_content_state = \Drupal::state()->get('h5p_save_content_state') ?: 0;
+    $h5p_save_content_frequency = \Drupal::state()->get('h5p_save_content_frequency') ?: 30;
+    $h5p_hub_is_enabled = \Drupal::state()->get('h5p_hub_is_enabled') ?: FALSE;
+
+    // Create AJAX URLs
+    $set_finished_url = Url::fromUri('internal:/h5p-ajax/set-finished.json', ['query' => ['token' => \H5PCore::createToken('result')]])->toString();
+    $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString();
+
+    $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
+    $h5p_url = base_path() . \Drupal\Core\StreamWrapper\PublicStream::basePath() . "/{$h5p_path}/libraries";
+
+    // Define the generic H5PIntegration settings
+    $settings = array(
+      'baseUrl' => base_path(),
+      'url' => $h5p_url,
+      'postUserStatistics' => $user->id() > 0,
+      'ajax' => array(
+        'setFinished' => $set_finished_url,
+        'contentUserData' => str_replace('%3A', ':', $content_user_data_url),
+      ),
+      'saveFreq' => $h5p_save_content_state ? $h5p_save_content_frequency : FALSE,
+      'l10n' => array(
+        'H5P' => array( // TODO: Should be provided by Core function to avoid inconsistencies
+          'fullscreen' => t('Fullscreen'),
+          'disableFullscreen' => t('Disable fullscreen'),
+          'download' => t('Download'),
+          'copyrights' => t('Rights of use'),
+          'embed' => t('Embed'),
+          'size' => t('Size'),
+          'showAdvanced' => t('Show advanced'),
+          'hideAdvanced' => t('Hide advanced'),
+          'advancedHelp' => t('Include this script on your website if you want dynamic sizing of the embedded content:'),
+          'copyrightInformation' => t('Rights of use'),
+          'close' => t('Close'),
+          'title' => t('Title'),
+          'author' => t('Author'),
+          'year' => t('Year'),
+          'source' => t('Source'),
+          'license' => t('License'),
+          'thumbnail' => t('Thumbnail'),
+          'noCopyrights' => t('No copyright information available for this content.'),
+          'downloadDescription' => t('Download this content as a H5P file.'),
+          'copyrightsDescription' => t('View copyright information for this content.'),
+          'embedDescription' => t('View the embed code for this content.'),
+          'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
+          'contentChanged' => t('This content has changed since you last used it.'),
+          'startingOver' => t("You'll be starting over."),
+          'by' => t('by'),
+          'showMore' => t('Show more'),
+          'showLess' => t('Show less'),
+          'subLevel' => t('Sublevel'),
+          'confirmDialogHeader' => t('Confirm action'),
+          'confirmDialogBody' => t('Please confirm that you wish to proceed. This action is not reversible.'),
+          'cancelLabel' => t('Cancel'),
+          'confirmLabel' => t('Confirm')
+        ),
+      ),
+      'hubIsEnabled' => $h5p_hub_is_enabled,
+    );
+
+    if ($user->id()) {
+      $settings['user'] = [
+        'name' => $user->getAccountName(), // TODO: Check to make sure that these aren't cached between different users!
+        'mail' => $user->getEmail(),
+      ];
+    } else {
+      $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
+    }
+
+/*
+    $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
+    $cache_buster = '?' . $css_js_query_string;
+
+    $module_path = drupal_get_path('module', 'h5p');
+    $assets = array(
+      'css' => array(),
+      'js' => array()
+    );
+
+    foreach (\H5PCore::$styles as $style) {
+      $css = 'vendor/h5p/h5p-core/' . $style;
+      $_SESSION['h5p']['h5p_core']['css'][] = $css;
+      $assets['css'][] = base_path() . $css . $cache_buster;
+    }
+
+    foreach (\H5PCore::$scripts as $script) {
+      $js = 'vendor/h5p/h5p-core/' . $script;
+      $_SESSION['h5p']['h5p_core']['js'][] = $js;
+      $assets['js'][] = base_path() . $js . $cache_buster;
+    }
+
+    $integration['core']['scripts'] = $core_assets['js'];
+    $integration['core']['styles'] = $core_assets['css'];
+    */
+
+    return $settings;
+  }
+
+  /**
    * Implements getPlatformInfo
    */
   public function getPlatformInfo() {
@@ -621,7 +733,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $content->save();
 
-    return $content->getID();
+    return $content->id();
 
     // TODO: Fix logging
 
@@ -953,15 +1065,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements updateContentFields().
    */
   public function updateContentFields($id, $fields) {
-    $processedFields = array();
-    foreach ($fields as $name => $value) {
-      $processedFields[self::camelToString($name)] = $value;
+    if (!isset($fields['filtered'])) {
+      return;
     }
 
-    db_update('h5p_nodes')
-      ->fields($processedFields)
-      ->condition('content_id', $id)
-      ->execute();
+    $h5p_content = H5PContent::load($id);
+    $h5p_content->set('filtered_parameters', $fields['filtered']);
+    var_dump($h5p_content->isNew());
+    //$h5p_content->save();
   }
 
   /**

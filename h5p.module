@@ -84,13 +84,23 @@ function h5p_library_info_build() {
 
   // TODO: Add license to libraries? version?
 
+  // Register jQuery version that H5P depends on
   $libraries['h5p.jquery'] = [
     'js' => [
       '/vendor/h5p/h5p-core/js/jquery.js' => [],
     ],
   ];
 
+  // Register script for converting drupalSetting to H5PIntegration
+  $libraries['h5p.integration'] = [
+    'js' => [
+      'js/h5p-integration.js' => [],
+    ],
+  ];
+
+  // Add dependencies for content scripts
   $libraries['h5p.content']['dependencies'] = [
+    'h5p/h5p.integration',
     'h5p/h5p.jquery',
   ];
 
@@ -120,6 +130,7 @@ function h5p_library_info_build() {
       ]
     ],
     'dependencies' => [
+      'h5p/h5p.integration',
       'h5p/h5p.jquery',
     ]
   ];
@@ -144,7 +155,8 @@ function h5p_library_info_build() {
                                 drop_library_css
                            FROM {h5p_libraries}");
 
-  $libraries_prefix = '/' . \Drupal\Core\StreamWrapper\PublicStream::basePath() . '/h5p/libraries'; // TODO: Get from variable
+  $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
+  $libraries_prefix = '/' . \Drupal\Core\StreamWrapper\PublicStream::basePath() . "/{$h5p_path}/libraries";
   foreach ($h5p_libraries as $h5p_library) {
 
     $js = [];
