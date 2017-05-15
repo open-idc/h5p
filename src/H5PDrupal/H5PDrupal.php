@@ -677,6 +677,17 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements updateContent
    */
   public function updateContent($content, $contentMainId = NULL) {
+
+    $h5p_content = H5PContent::load($content['id']);
+
+    $h5p_content->set('library_id', $content['library']['libraryId']);
+    $h5p_content->set('parameters', $content['params']);
+    $h5p_content->set('filtered_parameters', '');
+
+    $h5p_content->save();
+
+    return;
+
     $content_id = db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = :content_id", array(':content_id' => $content['id']))->fetchField();
     if ($content_id === FALSE) {
       // This can happen in Drupal when module is reinstalled. (since the ID is predetermined)
@@ -1071,8 +1082,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $h5p_content = H5PContent::load($id);
     $h5p_content->set('filtered_parameters', $fields['filtered']);
-    var_dump($h5p_content->isNew());
-    //$h5p_content->save();
+    $h5p_content->save();
   }
 
   /**

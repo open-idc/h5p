@@ -43,6 +43,9 @@ class H5PDefaultFormatter extends FormatterBase {
 
       // Load H5P Content entity
       $h5p_content = H5PContent::load($value['h5p_content_id']);
+      if (empty($h5p_content)) {
+        continue;
+      }
 
       // Grab generic integration settings
       $h5p_integration = H5PDrupal::getGenericH5PIntegrationSettings();

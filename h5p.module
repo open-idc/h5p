@@ -598,6 +598,7 @@ function h5p_validate(array &$form, FormStateInterface $form_state) {
  * Implements hook_ENTITY_TYPE_insert().
  */
 function h5p_node_insert(Drupal\Core\Entity\EntityInterface $entity) {
+return;
 
   if ($entity->bundle() != 'h5p_content') {
     return;
@@ -658,7 +659,7 @@ function h5p_node_insert(Drupal\Core\Entity\EntityInterface $entity) {
  * Implements hook_ENTITY_TYPE_update().
  */
 function h5p_node_update(Drupal\Core\Entity\EntityInterface $entity) {
-
+return;
   $h5p_revisioning = \Drupal::state()->get('h5p_revisioning') ?: 1;
   if ($entity->getRevisionId() && $h5p_revisioning) {
     // Create new revision

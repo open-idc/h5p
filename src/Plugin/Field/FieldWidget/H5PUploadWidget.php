@@ -5,6 +5,7 @@ namespace Drupal\H5P\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\FormState;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 /**
@@ -26,12 +27,21 @@ class H5PUploadWidget extends WidgetBase {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
 
     $element += [
+      '#type' => 'fieldset',
+    ];
+
+    $element['h5p_file'] = [
       '#type' => 'file',
       '#title' => t('H5P Upload'),
       '#description' => t('Select a .h5p file to upload and create interactive content from. You can find <a href="http://h5p.org/content-types-and-applications" target="_blank">example files</a> on H5P.org'),
       '#element_validate' => [
         [$this, 'validate'],
       ],
+    ];
+
+    $element['h5p_content_id'] = [
+      '#type' => 'value',
+      '#value' => $items[$delta]->h5p_content_id
     ];
 
     return array('h5p_upload' => $element);
@@ -56,8 +66,8 @@ class H5PUploadWidget extends WidgetBase {
       file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
       // Validate file
-      $file = file_save_upload($element['#parents'][0], $validators, $temporary_file_path);
-      if (empty($file)) {
+      $files = file_save_upload($element['#parents'][0], $validators, $temporary_file_path);
+      if (empty($files[0])) {
         // Validation failed
         $form_state->setError($element, t("The uploaded file doesn't have the required '.h5p' extension"));
         return;
@@ -65,7 +75,7 @@ class H5PUploadWidget extends WidgetBase {
 
       // Tell H5P Core where to look for the files
       $interface = H5PDrupal::getInstance();
-      $interface->getUploadedH5pPath(\Drupal::service('file_system')->realpath($file[0]->getFileUri()));
+      $interface->getUploadedH5pPath(\Drupal::service('file_system')->realpath($files[0]->getFileUri()));
       $interface->getUploadedH5pFolderPath(\Drupal::service('file_system')->realpath($temporary_file_path));
 
       // Call upon H5P Core to validate the contents of the package
@@ -78,10 +88,17 @@ class H5PUploadWidget extends WidgetBase {
     }
 
     public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-      $storage = H5PDrupal::getInstance('storage');
-      $storage->savePackage();
+      static $saved;
+
+      $h5p_content_id = $values[0]['h5p_upload']['h5p_content_id'];
+      if (!FormState::hasAnyErrors() && empty($saved)) {
+        $storage = H5PDrupal::getInstance('storage');
+        $storage->savePackage($h5p_content_id);
+        $h5p_content_id = $storage->contentId;
+        $saved = TRUE;
+      }
       return [
-        'h5p_content_id' => $storage->contentId,
+        'h5p_content_id' => $h5p_content_id,
       ];
     }
 
