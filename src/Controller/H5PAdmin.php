@@ -10,8 +10,7 @@ use Drupal\Core\Database\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
-class H5PAdmin  extends ControllerBase {
-
+class H5PAdmin extends ControllerBase {
 
   protected $database;
 

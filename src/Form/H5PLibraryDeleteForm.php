@@ -50,13 +50,12 @@ class H5PLibraryDeleteForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
     // Save package
     $helper = new Helper\H5PEnvironment();
     $core = $helper->getInstance('core');
 
     // Do the actual deletion:
-    $library_id =$form_state->getValue('library_id');
-    $core->deleteLibrary($form_state['values']['library_id']);
+    $library_id = $form_state->getValue('library_id');
+    $core->deleteLibrary($library_id);
   }
 }
