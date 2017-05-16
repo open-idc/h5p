@@ -4,7 +4,6 @@
  * Installation hooks for h5p module.
  */
 
-use Drupal\h5p\Helper;
 use Drupal\h5p\H5PDrupal;
 
 /**
@@ -146,8 +145,7 @@ function h5p_enable() {
     views_invalidate_cache();
   }
 
-  $helper = new Helper\H5PEnvironment();
-  $core = $helper->getInstance('core');
+  $core = H5PDrupal::getInstance('core');
 
   // Check requirements
   $core->checkSetupForRequirements();

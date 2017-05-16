@@ -2,7 +2,7 @@
 
 namespace Drupal\h5p\Controller;
 
-use Drupal\h5p\Helper;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 use Drupal\Core\Url;
 use Drupal\Core\Controller\ControllerBase;
@@ -36,12 +36,7 @@ class H5PAdmin extends ControllerBase {
    */
   function libraryList() {
 
-    $helper = new Helper\H5PEnvironment();
-    if (! $helper->checkSettings() ) {
-      // error
-    }
-
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
     $numNotFiltered = $core->h5pF->getNumNotFiltered();
     $libraries = $core->h5pF->loadLibraries();
 
@@ -176,8 +171,7 @@ class H5PAdmin extends ControllerBase {
       'pageXOfY' => t('Page $x of $y'),
     );
 
-    $helper = new Helper\H5PEnvironment();
-    $h5p_drupal = $helper->getInstance('interface');
+    $h5p_drupal = H5PDrupal::getInstance('interface');
     $numNotFiltered = $h5p_drupal->getNumNotFiltered();
     if ($numNotFiltered) {
       $settings['libraryInfo']['notCached'] = $this->getNotCachedSettings($numNotFiltered);
@@ -226,8 +220,7 @@ class H5PAdmin extends ControllerBase {
       return;
     }
 
-    $helper = new Helper\H5PEnvironment();
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
 
     //$results = db_query('SELECT hl2.library_id as id, hl2.machine_name as name, hl2.title, hl2.major_version, hl2.minor_version, hl2.patch_version FROM {h5p_libraries} hl1
     // JOIN {h5p_libraries} hl2 ON hl1.machine_name = hl2.machine_name WHERE hl1.library_id = :id ORDER BY hl2.title ASC, hl2.major_version ASC, hl2.minor_version ASC', array(':id' => $library_id));
@@ -306,8 +299,7 @@ class H5PAdmin extends ControllerBase {
   function libraryDelete($library_id) {
 
     // Is library deletable ?
-    $helper = new Helper\H5PEnvironment();
-    $h5p_drupal = $helper->getInstance('interface');
+    $h5p_drupal = H5PDrupal::getInstance('interface');
     $notCached = $h5p_drupal->getNumNotFiltered();
     $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
     if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
@@ -335,8 +327,7 @@ class H5PAdmin extends ControllerBase {
     // Do as many as we can in ten seconds.
     $start = microtime(TRUE);
 
-    $helper = new Helper\H5PEnvironment();
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
 
     // $contents = db_query("SELECT content_id FROM {h5p_nodes} WHERE filtered = ''");
     $query = $this->database->select('h5p_nodes', 'n');

@@ -2,7 +2,7 @@
 
 namespace Drupal\h5p\Form;
 
-use Drupal\h5p\Helper;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -23,8 +23,7 @@ class H5PAdminSettingsForm extends FormBase {
   function buildForm(array $form, FormStateInterface $form_state) {
 
     // make sure core is loaded
-    $helper = new Helper\H5PEnvironment();
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
 
     $path = drupal_get_path('module', 'h5p');
 
