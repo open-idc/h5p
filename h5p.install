@@ -158,17 +158,17 @@ function h5p_enable() {
  * Implements hook_schema().
  */
 function h5p_schema() {
-  $schema['h5p_nodes_libraries'] = array(
+  $schema['h5p_content_libraries'] = array(
     'description' => 'Stores information about what h5p uses what libraries.',
     'fields' => array(
       'content_id' => array(
-        'description' => 'Primary Key: The unique identifier for a node(vid by default).',
+        'description' => 'The identifier of an H5P Content entity.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'library_id' => array(
-        'description' => 'The identifier of a h5p library this content uses.',
+        'description' => 'The identifier of an H5P Library used by the H5P Content',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -498,90 +498,6 @@ function h5p_schema() {
       ),
     ),
     'primary key' => array('library_id', 'language_code'),
-  );
-
-  $schema['h5p_nodes'] = array(
-    'description' => 'Stores information about where the h5p content is stored.',
-    'fields' => array(
-      'content_id' => array(
-        'description' => 'Primary Key: The unique identifier for this node(vid by default).',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'nid' => array(
-        'description' => 'The {node}.nid of the h5p node.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'json_content' => array(
-        'description' => 'The content in json format',
-        'type' => 'text',
-        'not null' => TRUE,
-        'size' => 'big',
-      ),
-      'embed_type' => array(
-        'description' => 'The embed type for this content',
-        'type' => 'varchar',
-        'length' => 127,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'disable' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0
-      ),
-      'main_library_id' => array(
-        'description' => 'The library we first instanciate for this node',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'content_type' => array(
-        'description' => 'Content type as defined in h5p.json',
-        'type' => 'varchar',
-        'length' => 127,
-      ),
-      'author' => array(
-        'description' => 'Author as defined in h5p.json',
-        'type' => 'varchar',
-        'length' => 127,
-      ),
-      'license' => array(
-        'description' => 'License as defined in h5p.json',
-        'type' => 'varchar',
-        'length' => 7,
-      ),
-      'meta_keywords' => array(
-        'description' => 'Keywords as defined in h5p.json',
-        'type' => 'text',
-      ),
-      'meta_description' => array(
-        'description' => 'Meta description as defined in h5p.json',
-        'type' => 'text',
-      ),
-      'filtered' => array(
-        'description' => 'Filtered version of json_content',
-        'type' => 'text',
-        'size' => 'big',
-        'not null' => TRUE
-      ),
-      'slug' => array(
-        'description' => 'Human readable content identifier that is unique',
-        'type' => 'varchar',
-        'length' => 127,
-        'not null' => TRUE
-      )
-    ),
-    'primary key' => array('content_id'),
-    'indexes' => array(
-      'nid' => array('nid'),
-      'library' => array('main_library_id'),
-      'slug' => array('slug'),
-    )
   );
 
   $schema['h5p_points'] = array(

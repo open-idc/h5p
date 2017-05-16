@@ -179,7 +179,7 @@ class H5PAdmin extends ControllerBase {
     } else {
 
       // Build a list of the content using this library
-      $query = $this->database->select('h5p_nodes_libraries', 'l');
+      $query = $this->database->select('h5p_content_libraries', 'l');
       $query->distinct();
       $query->fields('n', array('nid', 'title'));
       $query->join('h5p_nodes', 'hn', 'l.content_id = hn.content_id');
@@ -330,7 +330,7 @@ class H5PAdmin extends ControllerBase {
     $core = H5PDrupal::getInstance('core');
 
     // $contents = db_query("SELECT content_id FROM {h5p_nodes} WHERE filtered = ''");
-    $query = $this->database->select('h5p_nodes', 'n');
+    $query = $this->database->select('h5p_nodes', 'n'); // TODO: Use H5PContent entity
     $query->fields('n', array('content_id'));
     $query->condition('n.filtered', '', '=');
     $num_rows = $query->countQuery()->execute()->fetchField();

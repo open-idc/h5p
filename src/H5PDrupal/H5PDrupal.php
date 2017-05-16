@@ -12,9 +12,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
   /**
    * Get an instance of one of the h5p library classes
    *
-   * This function stores the h5p core in a static variable so that the variables there will
-   * be kept between validating and saving the node for instance
-   *
    * @staticvar H5PDrupal $interface
    *  The interface between the H5P library and drupal
    * @staticvar H5PCore $core
@@ -83,7 +80,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString();
 
     $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
-    $h5p_url = base_path() . \Drupal\Core\StreamWrapper\PublicStream::basePath() . "/{$h5p_path}/libraries";
+    $h5p_url = base_path() . \Drupal\Core\StreamWrapper\PublicStream::basePath() . "/{$h5p_path}";
 
     // Define the generic H5PIntegration settings
     $settings = array(
@@ -394,7 +391,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
   /**
    * Implements getLibraryUsage
    *
-   * Get number of content/nodes using a library, and the number of
+   * Get number of content using a library, and the number of
    * dependencies to other libraries
    *
    * @param int $libraryId
@@ -405,8 +402,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $usage = array();
 
     $usage['content'] = $skipContent ? -1 : intval(db_query(
-      'SELECT COUNT(distinct nfd.nid)
-      FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} nfd ON nl.content_id = nfd.nid
+      'SELECT COUNT(distinct nfd.id)
+      FROM {h5p_libraries} l JOIN {h5p_content_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_content} nfd ON nl.content_id = nfd.id
       WHERE l.library_id = :id', array(':id' => $libraryId))->fetchField());
 
     $usage['libraries'] = intval(db_query("SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = :id", array(':id' => $libraryId))->fetchField());
@@ -429,10 +426,10 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Count content with same machine name, major and minor version
     $res = db_query(
-      'SELECT machine_name, major_version, minor_version, count(*) as count
-        FROM {h5p_nodes}, {h5p_libraries}
-        WHERE main_library_id = library_id
-        GROUP BY machine_name, major_version, minor_version'
+      'SELECT l.machine_name, l.major_version, l.minor_version, count(*) as count
+        FROM {h5p_content} c, {h5p_libraries} l
+        WHERE c.library_id = l.library_id
+        GROUP BY l.machine_name, l.major_version, l.minor_version'
     );
 
     // Extract results
@@ -471,6 +468,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements getNumAuthors
    */
   public function getNumAuthors() {
+    return 0;
+    // TODO: Figure out a nice way to do this ?
+    /*
     $numAuthors = db_query("
       SELECT COUNT(DISTINCT uid)
       FROM {node_field_data}
@@ -480,6 +480,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     ))->fetchField();
 
     return $numAuthors;
+    */
   }
 
   /**
@@ -689,27 +690,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $h5p_content->save();
 
-    return;
-
-    $content_id = db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = :content_id", array(':content_id' => $content['id']))->fetchField();
-    if ($content_id === FALSE) {
-      // This can happen in Drupal when module is reinstalled. (since the ID is predetermined)
-      $this->insertContent($content, $contentMainId);
-      return;
-    }
-
-    // Update content
-    db_update('h5p_nodes')
-      ->fields(array(
-        'json_content' => $content['params'],
-        'embed_type' => 'div', // TODO: Determine from library?
-        'main_library_id' => $content['library']['libraryId'],
-        'filtered' => '',
-        'disable' => $content['disable']
-      ))
-      ->condition('content_id', $content_id)
-      ->execute();
-
+    /*
     // Derive library data from string
     if (isset($content['h5p_library'])) {
       $libraryData = explode(' ', $content['h5p_library']);
@@ -733,6 +714,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $content['library']['machineName'],
       $content['library']['majorVersion'] . '.' . $content['library']['minorVersion']
     );
+    */
+
+    // TODO: Move the logging to the field widget?
   }
 
   /**
@@ -749,22 +733,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     return $content->id();
 
-    // TODO: Fix logging
-
-    // Insert
-    db_insert('h5p_nodes')
-      ->fields(array(
-        'content_id' => $content['id'],
-        'nid' => $contentMainId,
-        'json_content' => $content['params'],
-        'embed_type' => 'div', // TODO: Determine from library?
-        'main_library_id' => $content['library']['libraryId'],
-        'disable' => $content['disable'],
-        'filtered' => '',
-        'slug' => ''
-      ))
-      ->execute();
-
+    // TODO: Fix logging – move to field widget?
+    /*
     // Log update event
     $event_type = 'create';
     if (isset($_SESSION['h5p_upload'])) {
@@ -776,8 +746,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $content['library']['machineName'],
       $content['library']['majorVersion'] . '.' . $content['library']['minorVersion']
     );
-
-    return $content['id'];
+    */
   }
 
   /**
@@ -815,9 +784,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
     db_query(
-      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css, weight)
+      "INSERT INTO {h5p_content_libraries} (content_id, library_id, dependency_type, drop_css, weight)
       SELECT :toId, hnl.library_id, hnl.dependency_type, hnl.drop_css, hnl.weight
-      FROM {h5p_nodes_libraries} hnl
+      FROM {h5p_content_libraries} hnl
       WHERE hnl.content_id = :fromId", array(':toId' => $contentId, ':fromId' => $copyFromId)
     );
   }
@@ -826,9 +795,11 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements deleteContentData
    */
   public function deleteContentData($contentId) {
-    db_delete('h5p_nodes')
-      ->condition('content_id', $contentId)
-      ->execute();
+
+    // TODO: Is it better to handle this through the entity's pre/postDelete() ?
+    $h5p_content = H5PContent::load($contentId);
+    $h5p_content->delete();
+
     $this->deleteLibraryUsage($contentId);
   }
 
@@ -836,7 +807,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements deleteLibraryUsage
    */
   public function deleteLibraryUsage($contentId) {
-    db_delete('h5p_nodes_libraries')
+    db_delete('h5p_content_libraries')
       ->condition('content_id', $contentId)
       ->execute();
   }
@@ -853,7 +824,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     }
     foreach ($librariesInUse as $dependency) {
       $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
-      db_insert('h5p_nodes_libraries')
+      db_insert('h5p_content_libraries')
         ->fields(array(
           'content_id' => $contentId,
           'library_id' => $dependency['library']['libraryId'],
@@ -973,34 +944,10 @@ class H5PDrupal implements \H5PFrameworkInterface {
   /**
    * Implements loadContent().
    */
-  /**
-   * Implements loadContent().
-   */
   public function loadContent($id) {
-    $content = db_query(
-      "SELECT hn.content_id AS id,
-                hn.json_content AS params,
-                hn.embed_type,
-                n.title,
-                n.langcode,
-                hl.library_id,
-                hl.machine_name AS library_name,
-                hl.major_version AS library_major_version,
-                hl.minor_version AS library_minor_version,
-                hl.embed_types AS library_embed_types,
-                hl.fullscreen AS library_fullscreen,
-                hn.filtered,
-                hn.disable,
-                hn.slug
-          FROM {h5p_nodes} hn
-          JOIN {node_field_data} n ON n.nid = hn.nid
-          JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
-          WHERE content_id = :id",
-      array(
-        ':id' => $id
-      ))
-      ->fetchObject();
-    return ($content === FALSE ? NULL : \H5PCore::snakeToCamel($content));
+
+    // TODO: Are we using this?
+
   }
 
 
@@ -1018,7 +965,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
                 hl.preloaded_js,
                 hnl.drop_css,
                 hnl.dependency_type
-          FROM {h5p_nodes_libraries} hnl
+          FROM {h5p_content_libraries} hnl
           JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
           WHERE hnl.content_id = :id";
     $queryArgs = array(':id' => $id);
@@ -1096,16 +1043,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @param int $library_id
    */
   public function clearFilteredParameters($library_id) {
-    db_update('h5p_nodes')
-      ->fields(array(
-        'filtered' => '',
-      ))
-      ->condition('main_library_id', $library_id)
-      ->execute();
 
-    _drupal_flush_css_js();
-    drupal_clear_js_cache();
-    drupal_clear_css_cache();
+    // TODO: We update all entities that uses the library + invalidate cache
+
   }
 
   /**
@@ -1115,21 +1055,21 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return int
    */
   public function getNumNotFiltered() {
-    return intval(db_query("SELECT COUNT(content_id) FROM {h5p_nodes} WHERE filtered = '' AND main_library_id > 0")->fetchField());
+    return intval(db_query("SELECT COUNT(id) FROM {h5p_content} WHERE filtered = '' AND library_id > 0")->fetchField());
   }
 
   /**
    * Implements getNumContent.
    */
   public function getNumContent($library_id) {
-    return intval(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = :id', array(':id' => $library_id))->fetchField());
+    return intval(db_query('SELECT COUNT(id) FROM {h5p_content} WHERE library_id = :id', array(':id' => $library_id))->fetchField());
   }
 
   /**
    * Implements isContentSlugAvailable
    */
   public function isContentSlugAvailable($slug) {
-    return !db_query('SELECT slug FROM {h5p_nodes} WHERE slug = :slug', array(':slug' => $slug))->fetchField();
+    return !db_query('SELECT slug FROM {h5p_content} WHERE slug = :slug', array(':slug' => $slug))->fetchField();
   }
 
   /**
@@ -1157,7 +1097,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return boolean
    */
   private static function mayCurrentUserUpdateNode($nid) {
-    return node_access('update', node_load($nid));
+    return node_access('update', node_load($nid)); // TODO: Field access instead ?
   }
 
   /**
