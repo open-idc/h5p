@@ -72,7 +72,7 @@ class H5PDefaultFormatter extends FormatterBase {
 
         // Load dependencies
         foreach ($preloaded_dependencies as $dependency) {
-          $loadpackages[] = "h5p/{$dependency['machine_name']}-{$dependency['major_version']}.{$dependency['minor_version']}";
+          $loadpackages[] = 'h5p/' . _h5p_library_machine_to_id($dependency);
         }
       }
       else {

@@ -233,6 +233,14 @@ function h5p_library_info_build() {
  * TODO: Helper?
  */
 function _h5p_library_machine_to_id($h5p_library) {
+  if (is_array($h5p_library)) {
+    $h5p_library = (object) [
+      'name' => $h5p_library['machineName'],
+      'major' => $h5p_library['majorVersion'],
+      'minor' => $h5p_library['minorVersion'],
+    ];
+  }
+
   $name = strtolower($h5p_library->name);
   if (substr($name, 0, 4) !== 'h5p.') {
     $name = "h5p.{$name}";
