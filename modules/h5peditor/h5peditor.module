@@ -14,38 +14,9 @@ use \Drupal\Core\Form\FormStateInterface;
  */
 function h5peditor_page_attachments(array &$attachments) {
 
-  if (h5p_node_add_or_edit()) {
-    $attachments['#attached']['library'][] = 'h5peditor/h5p_editor';
-  }
-}
-
-/**
- * Implements hook_library_info_build().
- */
-function h5peditor_library_info_build() {
-
-  $libraries = [];
-
-  if (! empty($_SESSION['h5p']['h5p_editor'])) {
-    // h5p node add/edit form
-
-    // Add a library whose information changes depending on certain conditions.
-    $libraries['h5p_editor'] = [
-      'dependencies' => [
-        'core/drupal',
-        'core/drupalSettings'
-      ],
-    ];
-
-    foreach ($_SESSION['h5p']['h5p_editor']['js'] as $script) {
-      $libraries['h5p_editor']['js'][$script] = [];
-    }
-    foreach ($_SESSION['h5p']['h5p_editor']['css'] as $style) {
-      $libraries['h5p_editor']['css']['theme'][$style] = [];
-    }
-
-  }
-  return $libraries;
+//  if (h5p_node_add_or_edit()) {
+//    $attachments['#attached']['library'][] = 'h5peditor/h5p_editor';
+//  }
 }
 
 /**
@@ -221,6 +192,70 @@ function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core
   return $element;
 }
 
+function h5p_get_editor_settings() {
+  // TODO: Clean up h5peditor_h5p_content_node_form_after_build
+  // TODO: Make sure this is only added once
+  $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+  $assets = h5p_add_core_assets();
+  $helper = new Helper\H5PEnvironment();
+  $content_validator = $helper->getInstance('contentvalidator');
+  $file_path = \Drupal::service('file_system')->realpath('public://');
+  // TODO: Get node id from field
+  //  $content_id = $node->id();
+  $content_id = 0;
+
+  $module_path = drupal_get_path('module', 'h5p');
+  $ajax_path = Url::fromUri(
+    'internal:/h5peditor/' . \H5PCore::createToken('editorajax') . "/{$content_id}/"
+  )->toString();
+
+  // Add translation
+  $language_file = base_path() . 'vendor/h5p/h5p-editor/language/' . $language . '.js';
+  if (! file_exists($language_file)) {
+    $language_file = base_path() . 'vendor/h5p/h5p-editor/language/en.js';
+  }
+
+  $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
+  $cache_buster = ! empty($css_js_query_string) ? '?' . $css_js_query_string : '';
+
+  foreach (\H5peditor::$styles as $style) {
+    $assets['css'][] = base_path() . 'vendor/h5p/h5p-editor/' . $style . $cache_buster;
+  }
+  // Add our own scripts
+  foreach (\H5peditor::$scripts as $script) {
+    // We do not want the creator of the iframe inside the iframe
+    if ($script !== 'scripts/h5peditor-editor.js') {
+      $assets['js'][] = base_path() . 'vendor/h5p/h5p-editor/' . $script . $cache_buster;
+    }
+  }
+  $assets['js'][] = $language_file . $cache_buster;
+
+  $settings = array(
+    'h5peditor' => array(
+      'filesPath' => $file_path . '/h5peditor',
+      'fileIcon' => array(
+        'path' => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
+        'width' => 50,
+        'height' => 50,
+      ),
+      'ajaxPath' => $ajax_path,
+      'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
+      'copyrightSemantics' => $content_validator->getCopyrightSemantics(),
+      'assets' => $assets,
+      'contentRelUrl' => '../h5p/content/',
+      'editorRelUrl' => '../../../vendor/h5p/h5p-editor',
+      'apiVersion' => \H5PCore::$coreApi,
+    ),
+  );
+
+  if (isset($_SESSION['h5p']['node']['json_content'])) {
+    $settings['h5peditor']['nodeVersionId'] = $content_id;
+  }
+
+  return $settings;
+}
+
 /**
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
@@ -344,7 +379,7 @@ function h5peditor_get_instance() {
     $core = $helper->getInstance('core');
     $instance = new \H5peditor(
       $core,
-      new H5pEditor\H5PEditorDrupalStorage(),
+      new H5PEditor\H5PEditorDrupalStorage(),
       new H5PEditor\H5PEditorDrupalAjax()
     );
   }
