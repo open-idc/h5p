@@ -22,7 +22,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return object
    *  The instance og h5p specified by type
    */
-  public static function getInstance($type) {
+  public static function getInstance($type='interface') {
     static $interface, $core;
 
     if (!isset($interface)) {
@@ -584,7 +584,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       if ($libraryData['runnable']) {
         $h5p_first_runnable_saved = $this->getOption('first_runnable_saved', FALSE);
         if (! $h5p_first_runnable_saved) {
-          h5p_variable_set('h5p_first_runnable_saved', 1);
+          $this->setOption('h5p_first_runnable_saved', 1);
         }
       }
     }
