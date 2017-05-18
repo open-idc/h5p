@@ -4,7 +4,7 @@ namespace Drupal\h5p\H5PDrupal;
 
 use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5peditor\H5PEditor;
-use Drupal\core\Url;
+use Drupal\Core\Url;
 use Drupal\Component\Utility\UrlHelper;
 
 class H5PDrupal implements \H5PFrameworkInterface {

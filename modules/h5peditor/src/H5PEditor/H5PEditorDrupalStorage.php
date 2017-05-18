@@ -151,7 +151,14 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    */
   public function alterLibraryFiles(&$files, $libraries) {
     $mode = 'editor';
-    $library_list = _h5p_dependencies_to_library_list($libraries);
+    $library_list = [];
+    foreach ($libraries as $dependency) {
+      $library_list[$dependency['machineName']] = [
+        'majorVersion' => $dependency['majorVersion'],
+        'minorVersion' => $dependency['minorVersion'],
+      ];
+    }
+
     \Drupal::moduleHandler()->alter('h5p_scripts', $files['scripts'], $library_list, $mode);
     \Drupal::moduleHandler()->alter('h5p_styles', $files['styles'], $library_list, $mode);
   }

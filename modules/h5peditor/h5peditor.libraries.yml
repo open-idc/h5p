@@ -1,0 +1,7 @@
+h5peditor:
+  version: 1.0
+  js:
+    scripts/application.js: {}
+  dependencies:
+    - core/jquery
+    - h5p/editorAssets

@@ -1,0 +1,60 @@
+allEditorAssets:
+  version: 1.0
+  js:
+    vendor/h5p/h5p-editor/scripts/h5p-hub-client.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-semantic-structure.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-editor.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-library-selector.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-form.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-text.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-html.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-number.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-textarea.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-file-uploader.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-file.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-image.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-image-popup.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-av.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-group.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-boolean.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-list.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-list-editor.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-library.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-library-list-cache.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-select.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-selector-legacy.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-dimensions.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-coordinates.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-none.js: {}
+  dependencies:
+    - h5p/coreAssets
+
+editorAssets:
+  version: 1.0
+  js:
+    vendor/h5p/h5p-editor/scripts/h5p-hub-client.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js: {}
+    vendor/h5p/h5p-editor/scripts/h5peditor-editor.js: {}
+  dependencies:
+    - h5p/coreAssets
+
+coreAssets:
+  version: 1.0
+  js:
+    vendor/h5p/h5p-core/js/jquery.js: {}
+    vendor/h5p/h5p-core/js/h5p.js: {}
+    vendor/h5p/h5p-core/js/h5p-event-dispatcher.js: {}
+    vendor/h5p/h5p-core/js/h5p-x-api-event.js: {}
+    vendor/h5p/h5p-core/js/h5p-x-api.js: {}
+    vendor/h5p/h5p-core/js/h5p-content-type.js: {}
+    vendor/h5p/h5p-core/js/h5p-confirmation-dialog.js: {}
+    vendor/h5p/h5p-core/js/h5p-action-bar.js: {}
+  dependencies:
+    - h5p/integrationMapping
+
+integrationMapping:
+  version: 1.0
+  js:
+    js/h5p-integration.js: {}
