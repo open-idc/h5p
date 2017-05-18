@@ -6,6 +6,7 @@ use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 /**
  * Provides a field type of H5P.
@@ -53,8 +54,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $content_id = $this->get('h5p_content_id')->getValue();
-    return $content_id === NULL || $content_id === 0;
+    return empty($this->get('h5p_content_id')->getValue());
   }
 
   /**
@@ -69,40 +69,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    */
   public function delete() {
     parent::delete();
-
-    /*
-    $res = db_query("SELECT content_id AS id, slug FROM {h5p_nodes} WHERE nid = :nid", array(':nid' => $entity->id()));
-    while ($content = $res->fetchAssoc()) {
-      h5p_delete_h5p_content($content);
-    }
-
-    if (isset($_SESSION['h5p']['node']['main_library'])) {
-      // Log content delete
-      new H5PDrupal\H5PEvent('content', 'delete',
-        $entity->id(),
-        $entity->label(),
-        $_SESSION['h5p']['node']['main_library']['name'],
-        $_SESSION['h5p']['node']['main_library']['majorVersion'] . '.' . $_SESSION['h5p']['node']['main_library']['minorVersion']
-      );
-    }
-    */
-
-    /*
-    $helper = new Helper\H5PEnvironment();
-    $h5p_core = $helper->getInstance('storage');
-
-    $h5p_core->deletePackage($content);
-
-    // Remove content points
-    db_delete('h5p_points')
-      ->condition('content_id', $content['id'])
-      ->execute();
-
-    // Remove content user data
-    db_delete('h5p_content_user_data')
-      ->condition('content_main_id', $content['id'])
-      ->execute();
-    */
+    $this->deleteH5PContent();
   }
 
   /**
@@ -111,16 +78,22 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   public function deleteRevision() {
     parent::deleteRevision();
 
-    /*
-    $h5p_revisioning = Drupal::state('h5p_revisioning')->get() ?: 1;
-
-    if ($h5p_revisioning) {
-      h5p_delete_h5p_content(array(
-        'id' => $entity->id(),
-        'slug' => $_SESSION['h5p']['node']['h5p_slug'],
-      ));
+    if (Drupal::state('h5p_revisioning')->get() ?: 1) {
+      $this->deleteH5PContent();
     }
-    */
   }
 
+  /**
+   * Delete the H5P Content referenced by this field
+   */
+  private function deleteH5PContent() {
+    $content_id = $this->get('h5p_content_id')->getValue();
+    if (!empty($content_id)) {
+      $storage = H5PDrupal::getInstance('storage');
+      $storage->deletePackage([
+        'id' => $content_id,
+        'slug' => 'interactive-content',
+      ]);
+    }
+  }
 }

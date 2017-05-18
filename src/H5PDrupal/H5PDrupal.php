@@ -351,14 +351,17 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements isPatchedLibrary
    */
   public function isPatchedLibrary($library) {
-    $operator = $this->isInDevMode() ? '<=' : '<';
+    if (\Drupal::state()->get('h5p_dev_mode')) {
+      return TRUE;
+    }
+
     $result = db_query(
       "SELECT 1
       FROM {h5p_libraries}
       WHERE machine_name = :machineName
       AND major_version = :majorVersion
       AND minor_version = :minorVersion
-      AND patch_version $operator :patchVersion",
+      AND patch_version < :patchVersion",
       array(
         ':machineName' => $library['machineName'],
         ':majorVersion' => $library['majorVersion'],
@@ -587,9 +590,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
           ->execute();
       }
     }
-
-    // Clear library JS cache
-    \Drupal::service('library.discovery.collector')->delete('h5p');
   }
 
   /**
@@ -797,10 +797,34 @@ class H5PDrupal implements \H5PFrameworkInterface {
   public function deleteContentData($contentId) {
 
     // TODO: Is it better to handle this through the entity's pre/postDelete() ?
+
     $h5p_content = H5PContent::load($contentId);
     $h5p_content->delete();
 
     $this->deleteLibraryUsage($contentId);
+
+    // Remove content points
+    db_delete('h5p_points')
+      ->condition('content_id', $contentId)
+      ->execute();
+
+    // Remove content user data
+    db_delete('h5p_content_user_data')
+      ->condition('content_main_id', $contentId)
+      ->execute();
+
+    // TODO: Log delete
+    /*
+    if (isset($_SESSION['h5p']['node']['main_library'])) {
+      // Log content delete
+      new H5PDrupal\H5PEvent('content', 'delete',
+        $entity->id(),
+        $entity->label(),
+        $_SESSION['h5p']['node']['main_library']['name'],
+        $_SESSION['h5p']['node']['main_library']['majorVersion'] . '.' . $_SESSION['h5p']['node']['main_library']['minorVersion']
+      );
+    }
+    */
   }
 
   /**
@@ -1043,6 +1067,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @param int $library_id
    */
   public function clearFilteredParameters($library_id) {
+    // Clear library JS cache
+    \Drupal::service('library.discovery.collector')->delete('h5p');
 
     // TODO: We update all entities that uses the library + invalidate cache
 
