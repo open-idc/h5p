@@ -186,15 +186,13 @@ function h5p_get_editor_settings() {
   // TODO: Make sure this is only added once
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-  $assets = h5p_add_core_assets();
-  $helper = new Helper\H5PEnvironment();
-  $content_validator = $helper->getInstance('contentvalidator');
+  $assets = [];
+  $content_validator = H5PDrupal::getInstance('contentvalidator');
   $file_path = \Drupal::service('file_system')->realpath('public://');
   // TODO: Get node id from field
   //  $content_id = $node->id();
   $content_id = 0;
 
-  $module_path = drupal_get_path('module', 'h5p');
   $ajax_path = Url::fromUri(
     'internal:/h5peditor/' . \H5PCore::createToken('editorajax') . "/{$content_id}/"
   )->toString();
@@ -207,6 +205,22 @@ function h5p_get_editor_settings() {
 
   $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
   $cache_buster = ! empty($css_js_query_string) ? '?' . $css_js_query_string : '';
+
+  $module_path = drupal_get_path('module', 'h5p');
+  $assets = array(
+    'css' => array(),
+    'js' => array()
+  );
+
+  foreach (\H5PCore::$styles as $style) {
+    $css = 'vendor/h5p/h5p-core/' . $style;
+    $assets['css'][] = base_path() . $css . $cache_buster;
+  }
+
+  foreach (\H5PCore::$scripts as $script) {
+    $js = 'vendor/h5p/h5p-core/' . $script;
+    $assets['js'][] = base_path() . $js . $cache_buster;
+  }
 
   foreach (\H5peditor::$styles as $style) {
     $assets['css'][] = base_path() . 'vendor/h5p/h5p-editor/' . $style . $cache_buster;
@@ -229,7 +243,7 @@ function h5p_get_editor_settings() {
         'height' => 50,
       ),
       'ajaxPath' => $ajax_path,
-      'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
+      'libraryPath' => $module_path . '/libraries/',
       'copyrightSemantics' => $content_validator->getCopyrightSemantics(),
       'assets' => $assets,
       'contentRelUrl' => '../h5p/content/',

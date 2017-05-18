@@ -55,8 +55,9 @@ class H5PEditorAJAXController extends ControllerBase {
     $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
     $editor = h5peditor_get_instance();
+    $module_path = drupal_get_path('module', 'h5p');
     $editor->ajax->action(\H5PEditorEndpoints::SINGLE_LIBRARY, $machine_name,
-      $major_version, $minor_version, $language, _h5p_get_h5p_path()
+      $major_version, $minor_version, $language, $module_path
     );
 
     // Log library loaded
@@ -75,7 +76,7 @@ class H5PEditorAJAXController extends ControllerBase {
   function filesCallback($token, $content_id) {
 
     $editor = h5peditor_get_instance();
-    $editor->ajax->action(H5PEditorEndpoints::FILES, $token, $content_id);
+    $editor->ajax->action(\H5PEditorEndpoints::FILES, $token, $content_id);
 
     // ajax response is alread send h5peditor
     exit();

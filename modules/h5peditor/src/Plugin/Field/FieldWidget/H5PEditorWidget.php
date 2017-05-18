@@ -5,6 +5,7 @@ namespace Drupal\H5PEditor\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 /**
  * Plugin implementation of the 'h5p_editor' widget.
@@ -31,7 +32,8 @@ class H5PEditorWidget extends WidgetBase {
       $form['h5p_type']['#type'] = 'hidden';
     }
 
-    $integration = h5p_add_files_and_settings(TRUE, TRUE); // Force integration
+
+    $integration = H5PDrupal::getGenericH5PIntegrationSettings();
     $settings = h5p_get_editor_settings();
 
     $element += array(
