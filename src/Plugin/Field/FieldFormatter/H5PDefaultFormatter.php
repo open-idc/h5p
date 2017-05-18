@@ -78,6 +78,9 @@ class H5PDefaultFormatter extends FormatterBase {
       else {
         $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no"></iframe></div>';
 
+        // Get core components needed to display content
+        $h5p_integration['core'] = H5PDrupal::getCoreAssets();
+
         // Load dependencies
         $files = $core->getDependenciesFiles($preloaded_dependencies);
         $h5p_integration['contents'][$content_id_string]['scripts'] = $core->getAssetsUrls($files['scripts']);

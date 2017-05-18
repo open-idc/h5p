@@ -140,33 +140,41 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
     }
 
-/*
-    $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
-    $cache_buster = '?' . $css_js_query_string;
+    return $settings;
+  }
 
-    $module_path = drupal_get_path('module', 'h5p');
-    $assets = array(
-      'css' => array(),
-      'js' => array()
-    );
-
-    foreach (\H5PCore::$styles as $style) {
-      $css = 'vendor/h5p/h5p-core/' . $style;
-      $_SESSION['h5p']['h5p_core']['css'][] = $css;
-      $assets['css'][] = base_path() . $css . $cache_buster;
+  /**
+   * Get a list with prepared asset links that is used when JS loads components.
+   *
+   * @param array [$keys] Optional keys, first for JS second for CSS.
+   * @return array
+   */
+  public static function getCoreAssets($keys = NULL) {
+    if (empty($keys)) {
+      $key = ['scripts', 'styles'];
     }
 
+    // Prepare arrays
+    $assets = [
+      $keys[0] => [],
+      $keys[1] => [],
+    ];
+
+    // Determine cache buster
+    $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
+    $cache_buster = "?{$css_js_query_string}";
+
+    // Add all core scripts
     foreach (\H5PCore::$scripts as $script) {
       $js = 'vendor/h5p/h5p-core/' . $script;
-      $_SESSION['h5p']['h5p_core']['js'][] = $js;
-      $assets['js'][] = base_path() . $js . $cache_buster;
+      $assets[$keys[0]][] = base_path() . $js . $cache_buster;
     }
 
-    $integration['core']['scripts'] = $core_assets['js'];
-    $integration['core']['styles'] = $core_assets['css'];
-    */
-
-    return $settings;
+    // and styles
+    foreach (\H5PCore::$styles as $style) {
+      $css = 'vendor/h5p/h5p-core/' . $style;
+      $assets[$keys[1]][] = base_path() . $css . $cache_buster;
+    }
   }
 
   /**
