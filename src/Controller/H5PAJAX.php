@@ -52,7 +52,8 @@ class H5PAJAX extends ControllerBase {
       'success' => TRUE
     );
 
-    $h5p_revisioning = \Drupal::state()->get('h5p_revisioning') ?: 1;
+    $interface = H5PDrupal::getInstance();
+    $h5p_revisioning = $interface->getOption('revisioning', TRUE);
     if ($h5p_revisioning) {
       // We got vid, but we need nid. Let's ask DB
       $content_main_id = (int) db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $content_id))->fetchField();

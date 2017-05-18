@@ -5,6 +5,7 @@ namespace Drupal\h5p\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5peditor\H5PEditor;
 use Drupal\Core\Url;
+use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Component\Utility\UrlHelper;
 
 class H5PDrupal implements \H5PFrameworkInterface {
@@ -32,11 +33,11 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
       // Prepare file storage
-      $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
+      $h5p_path = $interface->getOption('default_path', 'h5p');
       $fs = new \H5PDefaultStorage(\Drupal::service('file_system')->realpath("public://{$h5p_path}"));
 
       // Determine if exports should be generated
-      $export_enabled = !!\Drupal::state()->get('h5p_export'); // TODO: Use \Drupal::config()->get() ?
+      $export_enabled = !!$interface->getOption('export', TRUE);
       $core = new \H5PCore($interface, $fs, base_path(), $language, $is_export_enabled);
     }
 
@@ -58,6 +59,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
   }
 
   /**
+   * Grabs the relative URL to H5P files folder.
+   *
+   * @return string
+   */
+  public static function getRelativeH5PPath() {
+    $interface = self::getInstance();
+    return PublicStream::basePath() . '/' . $interface->getOption('default_path', 'h5p');
+  }
+
+  /**
    * Prepares the generic H5PIntegration settings
    */
   public static function getGenericH5PIntegrationSettings() {
@@ -71,16 +82,15 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $user = \Drupal::currentUser();
 
     // Load configuration settings
-    $h5p_save_content_state = \Drupal::state()->get('h5p_save_content_state') ?: 0;
-    $h5p_save_content_frequency = \Drupal::state()->get('h5p_save_content_frequency') ?: 30;
-    $h5p_hub_is_enabled = \Drupal::state()->get('h5p_hub_is_enabled') ?: FALSE;
+    $interface = self::getInstance();
+    $h5p_save_content_state = $interface->getOption('save_content_state', FALSE);
+    $h5p_save_content_frequency = $interface->getOption('save_content_frequency', 30);
+    $h5p_hub_is_enabled = $interface->getOption('hub_is_enabled', TRUE);
 
     // Create AJAX URLs
     $set_finished_url = Url::fromUri('internal:/h5p-ajax/set-finished.json', ['query' => ['token' => \H5PCore::createToken('result')]])->toString();
     $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString();
-
-    $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
-    $h5p_url = base_path() . \Drupal\Core\StreamWrapper\PublicStream::basePath() . "/{$h5p_path}";
+    $h5p_url = base_path() . self::getRelativeH5PPath();
 
     // Define the generic H5PIntegration settings
     $settings = array(
@@ -93,7 +103,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       ),
       'saveFreq' => $h5p_save_content_state ? $h5p_save_content_frequency : FALSE,
       'l10n' => array(
-        'H5P' => array( // TODO: Should be provided by Core function to avoid inconsistencies
+        'H5P' => array(
           'fullscreen' => t('Fullscreen'),
           'disableFullscreen' => t('Disable fullscreen'),
           'download' => t('Download'),
@@ -174,6 +184,35 @@ class H5PDrupal implements \H5PFrameworkInterface {
     foreach (\H5PCore::$styles as $style) {
       $css = 'vendor/h5p/h5p-core/' . $style;
       $assets[$keys[1]][] = base_path() . $css . $cache_buster;
+    }
+  }
+
+  /**
+   * Clean up outdated events.
+   */
+  public function removeOldLogEvents() {
+    $older_than = (time() - \H5PEventBase::$log_time);
+
+    db_delete('h5p_events')
+      ->condition('created_at', $older_than, '<')
+      ->execute();
+  }
+
+  /**
+   * Keeps the libraries metadata cache up-to-date.
+   */
+  public function fetchLibrariesMetadata($fetchingDisabled = FALSE) {
+
+    $hub_is_enabled = $this->getOption('hub_is_enabled', TRUE);
+    $send_usage_statistics = $this->getOption('send_usage_statistics', TRUE);
+    $last_fetched_at = $this->getOption('fetched_library_metadata_on', 0);
+
+    if ($fetchingDisabled || (($hub_is_enabled) || $send_usage_statistics) &&
+        (intval($last_fetched_at) < (time() - 86400))) {
+      // Fetch the library-metadata:
+      $core = H5PDrupal::getInstance('core');
+      $core->fetchLibrariesMetadata($fetchingDisabled);
+      $this->setOption('fetched_library_metadata_on', time());
     }
   }
 
@@ -359,7 +398,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements isPatchedLibrary
    */
   public function isPatchedLibrary($library) {
-    if (\Drupal::state()->get('h5p_dev_mode')) {
+    if ($this->getOption('dev_mode', FALSE)) {
       return TRUE;
     }
 
@@ -384,7 +423,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements isInDevMode
    */
   public function isInDevMode() {
-    $h5p_dev_mode = \Drupal::state()->get('h5p_dev_mode') ?: 0;
+    $h5p_dev_mode = $this->getOption('dev_mode', FALSE);
     return (bool) $h5p_dev_mode;
   }
 
@@ -543,7 +582,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
         ->execute();
       $libraryData['libraryId'] = $libraryId;
       if ($libraryData['runnable']) {
-        $h5p_first_runnable_saved = \Drupal::state()->get('h5p_first_runnable_saved') ?: 0;
+        $h5p_first_runnable_saved = $this->getOption('first_runnable_saved', FALSE);
         if (! $h5p_first_runnable_saved) {
           h5p_variable_set('h5p_first_runnable_saved', 1);
         }
@@ -777,10 +816,10 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
 
-    $h5p_whitelist = \Drupal::state()->get('h5p_whitelist') ?: $defaultContentWhitelist;
+    $h5p_whitelist = $this->getOption('whitelist', $defaultContentWhitelist);
     $whitelist = $h5p_whitelist;
     if ($isLibrary) {
-      $h5p_library_whitelist_extras = \Drupal::state()->get('h5p_library_whitelist_extras') ?: $defaultLibraryWhitelist;
+      $h5p_library_whitelist_extras = $this->getOption('library_whitelist_extras', $defaultLibraryWhitelist);
       $whitelist .= ' ' . $h5p_library_whitelist_extras;
     }
     return $whitelist;
@@ -931,7 +970,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
   }
 
   private function getSemanticsFromFile($machineName, $majorVersion, $minorVersion) {
-    $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
+    $h5p_default_path = $this->getOption('default_path', 'h5p');
     $semanticsPath = \Drupal::service('file_system')->realpath('public://' . $h5p_default_path . '/libraries/' . $machineName . '-' . $majorVersion . '.' . $minorVersion . '/semantics.json');
     if (file_exists($semanticsPath)) {
       $semantics = file_get_contents($semanticsPath);
@@ -1034,7 +1073,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
   /**
    * Stores the given setting.
-   * For example when did we last check h5p.org for updates to our libraries.
    *
    * @param string $name
    *   Identifier for the setting
@@ -1042,8 +1080,10 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *   Whatever we want to store as the setting
    */
   public function setOption($name, $value) {
-
-    h5p_variable_set('h5p_' . $name, $value);
+    // Only update the setting if it has infact changed.
+    if ($value !== \Drupal::state()->get("h5p_{$name}")) {
+      \Drupal::state()->set("h5p_{$name}", $value);
+    }
   }
 
   /**

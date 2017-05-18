@@ -4,7 +4,7 @@
  * Installation hooks for h5p module.
  */
 
-use Drupal\h5p\H5PDrupal;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 /**
  * Implements hook_disable
@@ -23,21 +23,12 @@ function h5p_disable() {
 function h5p_uninstall() {
 
   $language_id = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $core = H5PDrupal::getInstance('core');
 
   // Clean out file dirs.
-  $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
+  $h5p_default_path = $core->h5pF->getOption('default_path', 'h5p');
   $h5p_path = \Drupal::service('file_system')->realpath('public://') . '/' . $h5p_default_path;
-
-  $interface = new H5PDrupal\H5PDrupal();
-
-  $h5p_export = \Drupal::state()->get('h5p_export') ?: 1;
-    $core = new H5PCore($interface, $h5p_path, base_path(), $language_id, ($h5p_export ? TRUE : FALSE), H5PDevelopment::MODE_NONE);
-
-  // Notify about uninstall
-  // todo $JM
-  /*
   $core->fetchLibrariesMetadata();
-  */
 
   // Remove these regardless of their content.
   foreach (array('temp', 'libraries', 'content', 'exports') as $directory) {
@@ -696,54 +687,4 @@ function h5p_schema() {
   );
 
   return $schema;
-}
-
-/**
- * Implements hook_requirements().
- */
-function h5p_requirements($phase) {
-
-  $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
-  $requirements = array();
-
-  if ($phase == 'runtime') {
-    // TODO: Add check for zip library
-
-    // File paths
-    // TODO: Merge over _h5p_check_settings from .module?
-    $file_path = \Drupal::service('file_system')->realpath('public://');
-    $h5p_path = $file_path . '/' . $h5p_default_path ;
-    $temp_path = $h5p_path . '/temp';
-    $export_path = $h5p_path . '/exports';
-    if (!file_prepare_directory($h5p_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      $requirements['h5p_dirs'] = array(
-        'value' => t('Missing directory.'),
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t("The h5p module's package directory %h5p_path is missing.", array('%h5p_path' => $h5p_path)),
-      );
-    }
-    else if (!file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      $requirements['h5p_dirs'] = array(
-        'value' => t('Missing temp directory.'),
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t("The h5p module's temp directory %temp_path is missing.", array('%temp_path' => $temp_path)),
-      );
-    }
-    else if (!file_prepare_directory($export_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      $requirements['h5p_dirs'] = array(
-        'value' => t('Missing export directory.'),
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t("The h5p module's export directory %export_path is missing.", array('%export_path' => $export_path)),
-      );
-    }
-    else {
-      $requirements['h5p_dirs'] = array(
-        'value' => t('Exists (%path).', array('%path' => $h5p_path)),
-        'severity' => REQUIREMENT_OK,
-      );
-    }
-    $requirements['h5p_dirs']['title'] = t('h5p module directories');
-  }
-
-  return $requirements;
 }

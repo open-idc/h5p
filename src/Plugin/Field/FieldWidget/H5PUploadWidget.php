@@ -66,7 +66,8 @@ class H5PUploadWidget extends WidgetBase {
     );
 
     // Prepare temp folder
-    $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
+    $interface = H5PDrupal::getInstance();
+    $h5p_path = $interface->getOption('default_path', 'h5p');
     $temporary_file_path = "public://{$h5p_path}/temp/" . uniqid('h5p-');
     file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
@@ -79,7 +80,6 @@ class H5PUploadWidget extends WidgetBase {
     }
 
     // Tell H5P Core where to look for the files
-    $interface = H5PDrupal::getInstance();
     $interface->getUploadedH5pPath(\Drupal::service('file_system')->realpath($files[0]->getFileUri()));
     $interface->getUploadedH5pFolderPath(\Drupal::service('file_system')->realpath($temporary_file_path));
 

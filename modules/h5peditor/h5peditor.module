@@ -368,10 +368,6 @@ function _h5peditor_create_content($node) {
 function h5peditor_get_instance() {
   static $instance;
 
-  static $instance;
-
-  $h5p_library_development = \Drupal::state()->get('h5p_library_development') ?: 0;
-
   if (!$instance) {
 
     $core = H5PDrupal::getInstance('core');

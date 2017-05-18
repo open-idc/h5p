@@ -173,10 +173,11 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    */
   public static function saveFileTemporarily($data, $move_file = FALSE) {
 
+    $interface = H5PDrupal::getInstance();
+    $h5p_path = $interface->getOption('default_path', 'h5p');
     $temp_id = uniqid('h5p-');
-    $h5p_default_path =  \Drupal::state()->get('h5p_default_path') ?: 'h5p';
 
-    $temporary_file_path = 'public://' . $h5p_default_path . '/temp/' . $temp_id;
+    $temporary_file_path = "public://{$h5p_path}/temp/{$temp_id}";
     file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
     $name = $temp_id . '.h5p';
     $target = $temporary_file_path . DIRECTORY_SEPARATOR . $name;

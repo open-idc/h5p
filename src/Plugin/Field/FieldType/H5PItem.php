@@ -78,7 +78,8 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   public function deleteRevision() {
     parent::deleteRevision();
 
-    if (Drupal::state('h5p_revisioning')->get() ?: 1) {
+    $interface = H5PDrupal::getInstance();
+    if ($interface->getOption('revisioning', TRUE)) {
       $this->deleteH5PContent();
     }
   }

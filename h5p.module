@@ -4,7 +4,7 @@
  * Contains h5p.module
  */
 
-use Drupal\h5p\H5PDrupal;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -108,8 +108,7 @@ function h5p_library_info_build() {
                                 drop_library_css
                            FROM {h5p_libraries}");
 
-  $h5p_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p'; // TODO: Use \Drupal::config()->get() ?
-  $libraries_prefix = '/' . \Drupal\Core\StreamWrapper\PublicStream::basePath() . "/{$h5p_path}/libraries";
+  $libraries_prefix = '/' . H5PDrupal::getRelativeH5PPath() . '/libraries';
   foreach ($h5p_libraries as $h5p_library) {
 
     $js = [];
@@ -182,40 +181,13 @@ function _h5p_library_machine_to_id($h5p_library) {
  * Implements hook_cron().
  */
 function h5p_cron() {
-  h5p_fetch_libraries_metadata();
-  remove_old_log_events();
-}
+  $interface = H5PDrupal::getInstance();
 
-/**
- * Remove any log messages older than the set limit.
- * TODO: Not a hook, could be moved to some helper class?
- */
-function remove_old_log_events() {
-  $older_than = (time() - \H5PEventBase::$log_time);
+  // Fetch updates
+  $interface->fetchLibrariesMetadata();
 
-  db_delete('h5p_events')
-    ->condition('created_at', $older_than, '<')
-    ->execute();
-}
-
-/**
- * TODO: Not a hook, could be moved to some helper class?
- */
-function h5p_fetch_libraries_metadata($fetchingDisabled = FALSE) {
-
-  // If fetching of libraries from h5p.org is enabled and
-  // It has not been run the last 24 hours, let's do it
-  $h5p_hub_is_enabled = \Drupal::state()->get('h5p_hub_is_enabled') ?: FALSE;
-  $h5p_send_usage_statistics = \Drupal::state()->get('h5p_send_usage_statistics') ?: TRUE;
-  $h5p_fetched_library_metadata_on = \Drupal::state()->get('h5p_fetched_library_metadata_on') ?: 0;
-
-  if ($fetchingDisabled || (($h5p_hub_is_enabled) || $h5p_send_usage_statistics) &&
-      (intval($h5p_fetched_library_metadata_on) < (time() - 86400))) {
-    // Fetch the library-metadata:
-    $core = H5PDrupal::getInstance('core');
-    $core->fetchLibrariesMetadata($fetchingDisabled);
-    h5p_variable_set('h5p_fetched_library_metadata_on', time());
-  }
+  // Clean up H5P log table
+  $interface->removeOldLogEvents();
 }
 
 /**
@@ -230,16 +202,4 @@ function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
   db_delete('h5p_content_user_data')
     ->condition('user_id', $entity->id())
     ->execute();
-}
-
-/**
- * Checks if the variable has changed before setting it.
- * This is to avoid performance costly mistakes.
- * TODO: Not a hook, could be moved to some helper class?
- */
-function h5p_variable_set($name, $value) {
-  $state_value = \Drupal::state()->get($name);
-  if ($state_value !== $value) {
-    \Drupal::state()->set($name, $value);
-  }
 }
