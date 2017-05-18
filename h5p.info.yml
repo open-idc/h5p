@@ -3,3 +3,6 @@ name: H5P
 description: 'Upload interactive HTML5 Packages to your Drupal site.'
 package: H5P
 core: 8.x
+
+dependencies:
+  - field
