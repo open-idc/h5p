@@ -2,7 +2,6 @@
 
 namespace Drupal\h5p\Controller;
 
-use Drupal\h5p\Helper;
 use Drupal\Core\Url;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;

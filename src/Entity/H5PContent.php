@@ -113,7 +113,11 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $content = [
       'id' => $this->id(),
       'slug' => 'interactive-content', // TODO: Add a title or something?
-      'library' => (array) $this->library,
+      'library' => [
+        'machineName' => $this->library->name,
+        'majorVersion' => $this->library->major,
+        'minorVersion' => $this->library->minor,
+      ],
       'params' => $this->get('parameters')->value,
       'filtered' => $this->get('filtered_parameters')->value,
     ];

@@ -43,6 +43,9 @@ class H5PDefaultFormatter extends FormatterBase {
 
       // Load H5P Content entity
       $h5p_content = H5PContent::load($value['h5p_content_id']);
+      if (empty($h5p_content)) {
+        continue;
+      }
 
       // Grab generic integration settings
       $h5p_integration = H5PDrupal::getGenericH5PIntegrationSettings();
@@ -69,7 +72,7 @@ class H5PDefaultFormatter extends FormatterBase {
 
         // Load dependencies
         foreach ($preloaded_dependencies as $dependency) {
-          $loadpackages[] = "h5p/{$dependency['machine_name']}-{$dependency['major_version']}.{$dependency['minor_version']}";
+          $loadpackages[] = 'h5p/' . _h5p_library_machine_to_id($dependency);
         }
       }
       else {

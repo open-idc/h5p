@@ -61,7 +61,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function postSave($update) {
-    //print 'Should we save the files now, master?'; exit;
+    // TODO: Figure out if we need to do something here. Guess: Log content creation?
   }
 
   /**
@@ -70,7 +70,39 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   public function delete() {
     parent::delete();
 
-    //print "Have you forgotten to implement this?"; exit;
+    /*
+    $res = db_query("SELECT content_id AS id, slug FROM {h5p_nodes} WHERE nid = :nid", array(':nid' => $entity->id()));
+    while ($content = $res->fetchAssoc()) {
+      h5p_delete_h5p_content($content);
+    }
+
+    if (isset($_SESSION['h5p']['node']['main_library'])) {
+      // Log content delete
+      new H5PDrupal\H5PEvent('content', 'delete',
+        $entity->id(),
+        $entity->label(),
+        $_SESSION['h5p']['node']['main_library']['name'],
+        $_SESSION['h5p']['node']['main_library']['majorVersion'] . '.' . $_SESSION['h5p']['node']['main_library']['minorVersion']
+      );
+    }
+    */
+
+    /*
+    $helper = new Helper\H5PEnvironment();
+    $h5p_core = $helper->getInstance('storage');
+
+    $h5p_core->deletePackage($content);
+
+    // Remove content points
+    db_delete('h5p_points')
+      ->condition('content_id', $content['id'])
+      ->execute();
+
+    // Remove content user data
+    db_delete('h5p_content_user_data')
+      ->condition('content_main_id', $content['id'])
+      ->execute();
+    */
   }
 
   /**
@@ -79,7 +111,16 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   public function deleteRevision() {
     parent::deleteRevision();
 
-    //print "Have you forgotten to implement this?"; exit;
+    /*
+    $h5p_revisioning = Drupal::state('h5p_revisioning')->get() ?: 1;
+
+    if ($h5p_revisioning) {
+      h5p_delete_h5p_content(array(
+        'id' => $entity->id(),
+        'slug' => $_SESSION['h5p']['node']['h5p_slug'],
+      ));
+    }
+    */
   }
 
 }

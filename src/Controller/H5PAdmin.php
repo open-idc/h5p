@@ -2,7 +2,7 @@
 
 namespace Drupal\h5p\Controller;
 
-use Drupal\h5p\Helper;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 use Drupal\Core\Url;
 use Drupal\Core\Controller\ControllerBase;
@@ -10,8 +10,7 @@ use Drupal\Core\Database\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
-class H5PAdmin  extends ControllerBase {
-
+class H5PAdmin extends ControllerBase {
 
   protected $database;
 
@@ -37,13 +36,7 @@ class H5PAdmin  extends ControllerBase {
    */
   function libraryList() {
 
-    $helper = new Helper\H5PEnvironment();
-    if (! $helper->checkSettings() ) {
-
-      // error
-    }
-
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
     $numNotFiltered = $core->h5pF->getNumNotFiltered();
     $libraries = $core->h5pF->loadLibraries();
 
@@ -78,7 +71,6 @@ class H5PAdmin  extends ControllerBase {
           $restricted_url = NULL;
         }
 
-
         $option = array(
           'query' => drupal_get_destination(),
         );
@@ -109,13 +101,13 @@ class H5PAdmin  extends ControllerBase {
       $settings['libraryList']['notCached'] = $this->getNotCachedSettings($numNotFiltered);
     }
 
-    // Add the needed css and javascript
-    unset($_SESSION['h5p']);
-    $module_path = drupal_get_path('module', 'h5p');
-    $build['#attached'] = $this->adminAddGenericCSSAndJS($module_path, $settings);
-    $_SESSION['h5p']['h5p_admin']['js'][] = 'vendor/h5p/h5p-core/js/h5p-library-list.js';
-
     $settings['containerSelector'] = '#h5p-admin-container';
+
+    // Add the needed css and javascript
+    $module_path = drupal_get_path('module', 'h5p');
+    $build['#attached'] = $this->addSettings($module_path, $settings);
+    $build['#attached']['library'][] = 'h5p/h5p.admin.library.list';
+
     $build['title_add'] =  array('#markup' => '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>');
     $build['form'] = \Drupal::formBuilder()->getForm('Drupal\h5p\Form\H5PLibraryUploadForm');
     $build['title_installed'] =  array('#markup' => '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>');
@@ -179,8 +171,7 @@ class H5PAdmin  extends ControllerBase {
       'pageXOfY' => t('Page $x of $y'),
     );
 
-    $helper = new Helper\H5PEnvironment();
-    $h5p_drupal = $helper->getInstance('interface');
+    $h5p_drupal = H5PDrupal::getInstance('interface');
     $numNotFiltered = $h5p_drupal->getNumNotFiltered();
     if ($numNotFiltered) {
       $settings['libraryInfo']['notCached'] = $this->getNotCachedSettings($numNotFiltered);
@@ -188,7 +179,7 @@ class H5PAdmin  extends ControllerBase {
     } else {
 
       // Build a list of the content using this library
-      $query = $this->database->select('h5p_nodes_libraries', 'l');
+      $query = $this->database->select('h5p_content_libraries', 'l');
       $query->distinct();
       $query->fields('n', array('nid', 'title'));
       $query->join('h5p_nodes', 'hn', 'l.content_id = hn.content_id');
@@ -207,14 +198,11 @@ class H5PAdmin  extends ControllerBase {
     }
 
     // Add the needed css and javascript
-    unset($_SESSION['h5p']);
     $module_path = drupal_get_path('module', 'h5p');
-    $build['#attached'] = $this->adminAddGenericCSSAndJS($module_path, $settings);
-    $_SESSION['h5p']['h5p_admin']['js'][] = 'vendor/h5p/h5p-core/js/h5p-library-details.js';
-
     $settings['containerSelector'] = '#h5p-admin-container';
+    $build['#attached'] = $this->addSettings($module_path, $settings);
+    $build['#attached']['library'][] = 'h5p/h5p.admin.library.details';
     $build['container'] = array('#markup' => '<div id="h5p-admin-container"></div>');
-
     $build['#cache']['max-age'] = 0;
 
     return $build;
@@ -232,8 +220,7 @@ class H5PAdmin  extends ControllerBase {
       return;
     }
 
-    $helper = new Helper\H5PEnvironment();
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
 
     //$results = db_query('SELECT hl2.library_id as id, hl2.machine_name as name, hl2.title, hl2.major_version, hl2.minor_version, hl2.patch_version FROM {h5p_libraries} hl1
     // JOIN {h5p_libraries} hl2 ON hl1.machine_name = hl2.machine_name WHERE hl1.library_id = :id ORDER BY hl2.title ASC, hl2.major_version ASC, hl2.minor_version ASC', array(':id' => $library_id));
@@ -312,8 +299,7 @@ class H5PAdmin  extends ControllerBase {
   function libraryDelete($library_id) {
 
     // Is library deletable ?
-    $helper = new Helper\H5PEnvironment();
-    $h5p_drupal = $helper->getInstance('interface');
+    $h5p_drupal = H5PDrupal::getInstance('interface');
     $notCached = $h5p_drupal->getNumNotFiltered();
     $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
     if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
@@ -341,11 +327,10 @@ class H5PAdmin  extends ControllerBase {
     // Do as many as we can in ten seconds.
     $start = microtime(TRUE);
 
-    $helper = new Helper\H5PEnvironment();
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
 
     // $contents = db_query("SELECT content_id FROM {h5p_nodes} WHERE filtered = ''");
-    $query = $this->database->select('h5p_nodes', 'n');
+    $query = $this->database->select('h5p_nodes', 'n'); // TODO: Use H5PContent entity
     $query->fields('n', array('content_id'));
     $query->condition('n.filtered', '', '=');
     $num_rows = $query->countQuery()->execute()->fetchField();
@@ -387,12 +372,7 @@ class H5PAdmin  extends ControllerBase {
    *
    * @param {string} $module_path The H5P path
    */
-  function adminAddGenericCSSAndJS($module_path, $settings = NULL) {
-
-    foreach (\H5PCore::$adminScripts as $script) {
-      $script_path = 'vendor/h5p/h5p-core/' . $script;
-      $_SESSION['h5p']['h5p_admin']['js'][] = $script_path;
-    }
+  function addSettings($module_path, $settings = NULL) {
 
     if ($settings === NULL) {
       $settings = array();
@@ -412,10 +392,6 @@ class H5PAdmin  extends ControllerBase {
     $build['drupalSettings']['h5p']['drupal_h5p'] = [
       'H5P' => h5p_get_core_settings(),
     ];
-
-    $_SESSION['h5p']['h5p_admin']['css'][] = 'vendor/h5p/h5p-core/styles/h5p.css';
-    $_SESSION['h5p']['h5p_admin']['css'][] = 'vendor/h5p/h5p-core/styles/h5p-admin.css';
-    $_SESSION['h5p']['h5p_admin']['css'][] = 'vendor/h5p/h5p-editor/styles/css/h5p-hub-client.css';
 
     return $build;
   }

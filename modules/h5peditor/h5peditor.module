@@ -4,20 +4,10 @@
  * Contains h5peditor.module
  */
 
-use \Drupal\h5p\Helper;
+use \Drupal\h5p\H5PDrupal\H5PDrupal;
 use \Drupal\h5peditor\H5PEditor;
 use \Drupal\Core\Url;
 use \Drupal\Core\Form\FormStateInterface;
-
-/**
- * Implements hook_page_attachments().
- */
-function h5peditor_page_attachments(array &$attachments) {
-
-//  if (h5p_node_add_or_edit()) {
-//    $attachments['#attached']['library'][] = 'h5peditor/h5p_editor';
-//  }
-}
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
@@ -128,8 +118,7 @@ function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core
   $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/language/en.js';
   $_SESSION['h5p']['h5p_editor']['js'][] = 'scripts/application.js';*/
 
-  $helper = new Helper\H5PEnvironment();
-  $content_validator = $helper->getInstance('contentvalidator');
+  $content_validator = H5PDrupal::getInstance('contentvalidator');
   $file_path = \Drupal::service('file_system')->realpath('public://');
   $content_id = $node->id();
 
@@ -181,7 +170,7 @@ function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core
 
   // js namespace magic never defined ??
   $element['#attached']['drupalSettings']['h5p']['drupal_h5p'] = [
-    'H5P' => $helper->getCoreSettings(),
+    'H5P' => [],
   ];
   // js namespace defined in h5peditor/scripts/application.js
   $element['#attached']['drupalSettings']['h5p']['drupal_h5p_editor'] = $settings;
@@ -371,12 +360,7 @@ function h5peditor_get_instance() {
 
   if (!$instance) {
 
-    $helper = new Helper\H5PEnvironment();
-
-    if ($h5p_library_development === 1) {
-      $development = $helper->getInstance('development');
-    }
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
     $instance = new \H5peditor(
       $core,
       new H5PEditor\H5PEditorDrupalStorage(),

@@ -2,7 +2,7 @@
 
 namespace Drupal\h5p\Form;
 
-use Drupal\h5p\Helper;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\H5PApi\H5PClasses;
 use Drupal\h5p\H5PApi\H5PFileStorageInterface;
 
@@ -59,11 +59,8 @@ class H5PLibraryUploadForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    // Save package
-    $helper = new Helper\H5PEnvironment();
-
-    $core = $helper->getInstance('storage');
-    $core->savePackage(NULL, NULL, TRUE);
+    $storage = H5PDrupal::getInstance('storage');
+    $storage->savePackage(NULL, NULL, TRUE);
 
     // Maintain session variables.
     unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
@@ -88,12 +85,11 @@ class H5PLibraryUploadForm extends FormBase {
       // These has to be set instead of sending parameteres to the validation function.
 
       $uri = $file[0]->getFileUri();
+      // TODO: Use same as field...
       $_SESSION['h5p_upload'] = \Drupal::service('file_system')->realpath($uri);
       $_SESSION['h5p_upload_folder'] = \Drupal::service('file_system')->realpath($temporary_file_path);
 
-      $helper = new Helper\H5PEnvironment();
-
-      $validator = $helper->getInstance('validator');
+      $validator = H5PDrupal::getInstance('validator');
       if ($validator->isValidPackage(TRUE, $upgradeOnly) === FALSE) {
         $form_state->setErrorByName('h5p', t('The uploaded file was not a valid h5p package'));
         // Maintain session variables.

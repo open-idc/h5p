@@ -2,7 +2,7 @@
 
 namespace Drupal\h5p\Form;
 
-use Drupal\h5p\Helper;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\H5PApi\H5PClasses;
 use Drupal\h5p\H5PApi\H5PFileStorageInterface;
 
@@ -50,13 +50,11 @@ class H5PLibraryDeleteForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
     // Save package
-    $helper = new Helper\H5PEnvironment();
-    $core = $helper->getInstance('core');
+    $core = H5PDrupal::getInstance('core');
 
     // Do the actual deletion:
-    $library_id =$form_state->getValue('library_id');
-    $core->deleteLibrary($form_state['values']['library_id']);
+    $library_id = $form_state->getValue('library_id');
+    $core->deleteLibrary($library_id);
   }
 }
