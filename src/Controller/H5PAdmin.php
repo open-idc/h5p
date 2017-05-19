@@ -52,7 +52,7 @@ class H5PAdmin extends ControllerBase {
           $option = array(
             'query' => drupal_get_destination(),
           );
-          $url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/upgrade', $option);
+          $url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/upgrade', $option)->toString();
           $upgradeUrl = empty($upgrades) ? FALSE : $url;
 
           $restricted = ($library->restricted === '1' ? TRUE : FALSE);
@@ -63,7 +63,7 @@ class H5PAdmin extends ControllerBase {
               'restrict' => ($library->restricted === '1' ? 0 : 1)
             )
           );
-          $restricted_url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/restrict', $option);
+          $restricted_url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/restrict', $option)->toString();
         }
         else {
           $upgradeUrl = NULL;
