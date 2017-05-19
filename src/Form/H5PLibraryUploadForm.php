@@ -64,7 +64,6 @@ class H5PLibraryUploadForm extends FormBase {
 
     // Maintain session variables.
     unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
-
   }
 
   function validateH5PFileUpload(array &$form, FormStateInterface $form_state, $upgradeOnly = FALSE) {
@@ -81,22 +80,21 @@ class H5PLibraryUploadForm extends FormBase {
     $temporary_file_path = 'public://' . $h5p_default_path . '/temp/' . uniqid('h5p-');
     file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
-    if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
+    $file = file_save_upload('h5p', $validators, $temporary_file_path);
+    if (sizeof($file) !== 0 && $file[0] !== FALSE) {
       // These has to be set instead of sending parameteres to the validation function.
-
       $uri = $file[0]->getFileUri();
-      // TODO: Use same as field...
-      $_SESSION['h5p_upload'] = \Drupal::service('file_system')->realpath($uri);
-      $_SESSION['h5p_upload_folder'] = \Drupal::service('file_system')->realpath($temporary_file_path);
+
+      $interface = H5PDrupal::getInstance();
+      $interface->getUploadedH5pPath(\Drupal::service('file_system')->realpath($uri));
+      $interface->getUploadedH5pFolderPath(\Drupal::service('file_system')->realpath($temporary_file_path));
 
       $validator = H5PDrupal::getInstance('validator');
       if ($validator->isValidPackage(TRUE, $upgradeOnly) === FALSE) {
         $form_state->setErrorByName('h5p', t('The uploaded file was not a valid h5p package'));
-        // Maintain session variables.
-        unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
       }
-    } elseif (! isset($SESSION['h5p']['node']['nid']) && empty($values['h5p']) && empty($_SESSION['h5p_upload'])) {
-      $form_state->setErrorByName('h5p', t('You must upload a h5p file.'));
+    } else {
+      $form_state->setErrorByName('h5p', t('You must upload an h5p file.'));
     }
   }
 }

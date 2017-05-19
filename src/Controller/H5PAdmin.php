@@ -390,7 +390,7 @@ class H5PAdmin extends ControllerBase {
       'H5PAdminIntegration' =>  $settings,
     ];
     $build['drupalSettings']['h5p']['drupal_h5p'] = [
-      'H5P' => h5p_get_core_settings(),
+      'H5P' => H5PDrupal::getGenericH5PIntegrationSettings(),
     ];
 
     return $build;
