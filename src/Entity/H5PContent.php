@@ -113,7 +113,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
 
     $content = [
       'id' => $this->id(),
-      'slug' => 'interactive-content', // TODO: Add a title or something?
+      'slug' => 'interactive-content',
       'library' => [
         'machineName' => $this->library->name,
         'majorVersion' => $this->library->major,
@@ -162,8 +162,8 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
-      'title' => 'Not Available', // TODO: Add title?
-//      'contentUserData' => $content_user_data,
+      'title' => 'Not Available',
+//      'contentUserData' => $content_user_data, TODO
       'displayOptions' => $display_options,
     );
   }

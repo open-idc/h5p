@@ -143,7 +143,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     if ($user->id()) {
       $settings['user'] = [
-        'name' => $user->getAccountName(), // TODO: Check to make sure that these aren't cached between different users!
+        'name' => $user->getAccountName(),
         'mail' => $user->getEmail(),
       ];
     } else {
