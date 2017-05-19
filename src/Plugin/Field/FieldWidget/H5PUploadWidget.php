@@ -107,7 +107,11 @@ class H5PUploadWidget extends WidgetBase {
 
       if (!FormState::hasAnyErrors() && $values[0]['h5p_upload']['h5p_file'] === 1) {
         $storage = H5PDrupal::getInstance('storage');
-        $storage->savePackage($h5p_content_id);
+        $content = ['uploaded' => TRUE]; // Used when logging event in insertContent or updateContent
+        if (!empty($h5p_content_id)) {
+          $content['id'] = $h5p_content_id;
+        }
+        $storage->savePackage($content);
         $h5p_content_id = $storage->contentId;
       }
 

@@ -773,41 +773,19 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function updateContent($content, $contentMainId = NULL) {
 
+    // Load existing entity
     $h5p_content = H5PContent::load($content['id']);
 
+    // Update properties
     $h5p_content->set('library_id', $content['library']['libraryId']);
     $h5p_content->set('parameters', $content['params']);
     $h5p_content->set('filtered_parameters', '');
 
+    // Save changes
     $h5p_content->save();
 
-    /*
-    // Derive library data from string
-    if (isset($content['h5p_library'])) {
-      $libraryData = explode(' ', $content['h5p_library']);
-      $content['library']['machineName'] = $libraryData[0];
-      $content['machineName'] = $libraryData[0];
-      $libraryVersions = explode('.', $libraryData[1]);
-      $content['library']['majorVersion'] = $libraryVersions[0];
-      $content['library']['minorVersion'] = $libraryVersions[1];
-    }
-
-    // Determine event type
-    $event_type = 'update';
-    if (isset($_SESSION['h5p_upload'])) {
-      $event_type .= ' upload';
-    }
-
     // Log update event
-    new H5PEvent('content', $event_type,
-      $content['id'],
-      $content['title'],
-      $content['library']['machineName'],
-      $content['library']['majorVersion'] . '.' . $content['library']['minorVersion']
-    );
-    */
-
-    // TODO: Move the logging to the field widget or entity? (postSave)
+    self::logContentEvent('update', $content);
   }
 
   /**
@@ -815,29 +793,40 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function insertContent($content, $contentMainId = NULL) {
 
-    $content = H5PContent::create([
+    // Create new entity for content
+    $h5p_content = H5PContent::create([
       'library_id' => $content['library']['libraryId'],
       'parameters' => $content['params'],
     ]);
 
-    $content->save();
+    // Save
+    $h5p_content->save();
 
-    return $content->id();
+    // Grab id of new entitu
+    $content['id'] = $h5p_content->id();
 
-    // TODO: Fix logging – move to field widget or entity? (postSave)
-    /*
-    // Log update event
-    $event_type = 'create';
-    if (isset($_SESSION['h5p_upload'])) {
-      $event_type .= ' upload';
+    // Log create event
+    self::logContentEvent('create', $content);
+
+    // Return content id of the new entity
+    return $content['id'];
+  }
+
+  /**
+   * Help log content events
+   *
+   * @param string $eventType
+   * @param array $content
+   */
+  private static function logContentEvent($eventType, $content) {
+    if (!empty($content['uploaded'])) {
+      $eventType .= ' upload';
     }
-    new H5PEvent('content', $event_type,
-      $content['id'],
-      (isset($content['title']) ? $content['title'] : ''),
+    new H5PEvent('content', $eventType,
+      $content['id'], '',
       $content['library']['machineName'],
       $content['library']['majorVersion'] . '.' . $content['library']['minorVersion']
     );
-    */
   }
 
   /**
