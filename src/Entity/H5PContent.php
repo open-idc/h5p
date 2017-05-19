@@ -82,6 +82,17 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
+  public function getLibrary() {
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    return $this->library;
+  }
+
+  /**
+   *
+   */
   public function isDivEmbeddable() {
     if (empty($this->library)) {
       $this->loadLibrary();

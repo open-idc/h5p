@@ -883,8 +883,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Would it be better if this is called from the entity's delete ? (in case the entity is delete from elsewhere(!= Field))
     $h5p_content = H5PContent::load($contentId);
+
+    // Load library
+    $h5p_library = $h5p_content->getLibrary();
+
+    // Delete entity
     $h5p_content->delete();
 
+    // Delete library usage
     $this->deleteLibraryUsage($contentId);
 
     // Remove content points
@@ -897,18 +903,11 @@ class H5PDrupal implements \H5PFrameworkInterface {
       ->condition('content_main_id', $contentId)
       ->execute();
 
-    // TODO: Log delete
-    /*
-    if (isset($_SESSION['h5p']['node']['main_library'])) {
-      // Log content delete
-      new H5PDrupal\H5PEvent('content', 'delete',
-        $entity->id(),
-        $entity->label(),
-        $_SESSION['h5p']['node']['main_library']['name'],
-        $_SESSION['h5p']['node']['main_library']['majorVersion'] . '.' . $_SESSION['h5p']['node']['main_library']['minorVersion']
-      );
-    }
-    */
+    // Log content delete
+    new H5PEvent('content', 'delete',
+      $contentId, '',
+      $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
+    );
   }
 
   /**
