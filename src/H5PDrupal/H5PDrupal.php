@@ -1129,7 +1129,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return int
    */
   public function getNumNotFiltered() {
-    return intval(db_query("SELECT COUNT(id) FROM {h5p_content} WHERE filtered = '' AND library_id > 0")->fetchField());
+    return intval(db_query("SELECT COUNT(id) FROM {h5p_content} WHERE filtered_parameters = '' AND library_id > 0")->fetchField());
   }
 
   /**
