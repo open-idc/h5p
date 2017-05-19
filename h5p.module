@@ -203,3 +203,32 @@ function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
     ->condition('user_id', $entity->id())
     ->execute();
 }
+
+/**
+ * Helper function for adding display options to form
+ * TODO: Move to some sort of form helper class? Not generally needed in the h5p.module
+ *
+ * @method _h5p_add_display_option
+ * @param  Array      $element               Reference to form element
+ * @param  String     $name                  Name of form element
+ * @param  String     $title
+ * @param  String     $value
+ * @param  [type]     $visibility_subject_id A jquery selector. If this is set,
+ *                    these DOM elements will be hidden when this this checkbox
+ *                    is unchecked
+ */
+function _h5p_add_display_option (&$element, $name, $title, $value, $visibility_subject_id = null) {
+  $element[$name] = array(
+    '#type' => 'checkbox',
+    '#title' => $title,
+    '#default_value' => $value,
+  );
+
+  if ($visibility_subject_id !== null) {
+    $classes = array('h5p-visibility-toggler');
+    $element[$name]['#attributes'] = array(
+      'class' => $classes,
+      'data-h5p-visibility-subject-selector' => $visibility_subject_id,
+    );
+  }
+}
