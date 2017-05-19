@@ -7,190 +7,12 @@
 use \Drupal\h5p\H5PDrupal\H5PDrupal;
 use \Drupal\h5peditor\H5PEditor;
 use \Drupal\Core\Url;
-use \Drupal\Core\Form\FormStateInterface;
-
-/**
- * Implements hook_form_BASE_FORM_ID_alter().
- */
-function h5peditor_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-
-  if ($form_id != 'node_h5p_content_form' && $form_id != 'node_h5p_content_edit_form') {
-    return;
-  }
-
-  if ($form_id == 'node_h5p_content_form') {
-    // node add
-    // save user input for later hook_node_insert
-    $input = $form_state->getUserInput();
-    if (! empty($input)) {
-      $_SESSION['h5p']['node']['h5p_library'] = $input['h5p_library'];
-      $_SESSION['h5p']['node']['h5p_type'] = $input['h5p_type'];
-    }
-  }
-
-  $node = $form_state->getFormObject()->getEntity();
-
-  // drupal 8 does not support new temporary fields, so use $_SESSION
-  $main_library = isset($_SESSION['h5p']['node']['main_library']) ? $_SESSION['h5p']['node']['main_library'] : NULL;
-  $h5p_library = isset($input['h5p_library']) ? $input['h5p_library'] : NULL;
-
-  $library = isset($main_library) ? \H5PCore::libraryToString($main_library) : (isset($h5p_library) ? $h5p_library : 0);
-
-  $h5p_first_runnable_saved = \Drupal::state()->get('h5p_first_runnable_saved') ?: 0;
-  if ($h5p_first_runnable_saved === 0) {
-    $url = Url::fromUri('internal:/admin/content/h5p')->toString();
-    $message =
-      'If you don\'t have any H5P content types installed you may <a href="http://h5p.org/update-all-content-types" target="_blank">' .
-      'download them all at once</a> from H5P.org and upload them all at once on the <a href="' . $url  . '" target="_blank">' .
-      'library admin page</a>. Refresh this page when you have installed the libraries.
-      ';
-    drupal_set_message(t($message));
-  }
-
-  $form['h5p_type'] = array(
-    '#type' => 'radios',
-    '#title' => t('HTML5 Content'),
-    '#options' => array(
-      'upload' => t('Upload'),
-      'create' => $node->id() ? t('Edit') : t('Create'),
-    ),
-    '#default_value' => $library ? 'create' : $h5p_first_runnable_saved ? 'create' : 'upload',
-    '#weight' => $form['h5p']['#weight'] - 1,
-  );
-
-  $h5p_hub_is_enabled = \Drupal::state()->get('h5p_hub_is_enabled');
-  if ($h5p_hub_is_enabled) {
-    $form['h5p_type']['#default_value'] = 'create';
-    $form['h5p_type']['#type'] = 'hidden';
-  }
-
-  $form['h5p_editor'] = array(
-    '#type' => 'item',
-    '#title' => t('Content type'),
-    '#markup' => '<div class="h5p-editor">' . t('Waiting for javascript...') . '</div>',
-    '#weight' => $form['h5p']['#weight'],
-  );
-  $form['#after_build'][] = 'h5peditor_h5p_content_node_form_after_build';
-
-  $form['h5p_library'] = array(
-    '#type' => 'hidden',
-    '#default_value' => $library,
-  );
-
-  for ($i = 0, $s = count($form['#validate']); $i < $s; $i++) {
-    if ($form['#validate'][$i] == 'h5p_form_validate') {
-      $form['#validate'][$i] = 'h5peditor_form_node_h5p_content_form_validate';
-    }
-  }
-
-  foreach (array_keys($form['actions']) as $action) {
-    if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
-      array_unshift($form['actions'][$action]['#submit'], 'h5peditor_form_node_h5p_content_form_submit');
-    }
-  }
-
-}
-
-/**
- * Alter content type form to add h5peditor instead of upload field.
- *
- * TODO: This should probably be split up and moved to some helper class?
- */
-function h5peditor_h5p_content_node_form_after_build(array $element, Drupal\Core\Form\FormState $form_state) {
-
-  static $done;
-  if ($done === TRUE) {
-    // Make sure we only add the js once.
-    return $element;
-  }
-  $done = TRUE;
-
-  $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
-  $node = $form_state->getFormObject()->getEntity();
-
-  $assets = h5p_add_core_assets();
-  $integration = h5p_add_files_and_settings(TRUE, TRUE); // Force integration
-
-  unset($_SESSION['h5p']['h5p_editor']);
-  /*$_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5p-hub-client.js';
-  $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js';
-  $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/scripts/h5peditor-editor.js';
-  $_SESSION['h5p']['h5p_editor']['js'][] = '../../vendor/h5p/h5p-editor/language/en.js';
-  $_SESSION['h5p']['h5p_editor']['js'][] = 'scripts/application.js';*/
-
-  $content_validator = H5PDrupal::getInstance('contentvalidator');
-  $file_path = \Drupal::service('file_system')->realpath('public://');
-  $content_id = $node->id();
-
-  $module_path = drupal_get_path('module', 'h5p');
-  $ajax_path = Url::fromUri('internal:/h5peditor/' . \H5PCore::createToken('editorajax') . '/' . ($content_id ? $content_id : 0) . '/')->toString();
-
-  // Add translation
-  $language_file = base_path() . 'vendor/h5p/h5p-editor/language/' . $language . '.js';
-  if (! file_exists($language_file)) {
-    $language_file = base_path() . 'vendor/h5p/h5p-editor/language/en.js';
-  }
-
-  $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
-  $cache_buster = ! empty($css_js_query_string) ? '?' . $css_js_query_string : '';
-
-  foreach (\H5peditor::$styles as $style) {
-    $assets['css'][] = base_path() . 'vendor/h5p/h5p-editor/' . $style . $cache_buster;
-  }
-  // Add our own scripts
-  foreach (\H5peditor::$scripts as $script) {
-    // We do not want the creator of the iframe inside the iframe
-    if ($script !== 'scripts/h5peditor-editor.js') {
-      $assets['js'][] = base_path() . 'vendor/h5p/h5p-editor/' . $script . $cache_buster;
-    }
-  }
-  $assets['js'][] = $language_file . $cache_buster;
-
-  $settings = array(
-    'h5peditor' => array(
-      'filesPath' => $file_path . '/h5peditor',
-      'fileIcon' => array(
-        'path' => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
-        'width' => 50,
-        'height' => 50,
-      ),
-      'ajaxPath' => $ajax_path,
-      'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
-      'copyrightSemantics' => $content_validator->getCopyrightSemantics(),
-      'assets' => $assets,
-      'contentRelUrl' => '../h5p/content/',
-      'editorRelUrl' => '../../../vendor/h5p/h5p-editor',
-      'apiVersion' => \H5PCore::$coreApi,
-    ),
-  );
-
-  if (isset($_SESSION['h5p']['node']['json_content'])) {
-    $settings['h5peditor']['nodeVersionId'] = $content_id;
-  }
-
-  // js namespace magic never defined ??
-  $element['#attached']['drupalSettings']['h5p']['drupal_h5p'] = [
-    'H5P' => [],
-  ];
-  // js namespace defined in h5peditor/scripts/application.js
-  $element['#attached']['drupalSettings']['h5p']['drupal_h5p_editor'] = $settings;
-  // js namespace defined in h5p/js/h5p-integration.js
-  $element['#attached']['drupalSettings']['h5p']['drupal_h5p_integration'] = [
-    'H5PIntegration' =>  $integration,
-  ];
-  return $element;
-}
 
 function h5p_get_editor_settings() {
-  // TODO: Clean up h5peditor_h5p_content_node_form_after_build
-  // TODO: Make sure this is only added once
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-  $assets = [];
   $content_validator = H5PDrupal::getInstance('contentvalidator');
   $file_path = \Drupal::service('file_system')->realpath('public://');
-  // TODO: Get node id from field
-  //  $content_id = $node->id();
   $content_id = 0;
 
   $ajax_path = Url::fromUri(
@@ -234,6 +56,9 @@ function h5p_get_editor_settings() {
   }
   $assets['js'][] = $language_file . $cache_buster;
 
+//  $h5p_default_path = $this->getOption('default_path', 'h5p');
+//  $library_path = \Drupal::service('file_system')->realpath('public://' . $h5p_default_path . '/libraries/');
+
   $settings = array(
     'h5peditor' => array(
       'filesPath' => $file_path . '/h5peditor',
@@ -243,6 +68,8 @@ function h5p_get_editor_settings() {
         'height' => 50,
       ),
       'ajaxPath' => $ajax_path,
+      // TODO: Test this properly with other composer configurations, find more robust solution
+      'modulePath' => 'vendor/h5p',
       'libraryPath' => $module_path . '/libraries/',
       'copyrightSemantics' => $content_validator->getCopyrightSemantics(),
       'assets' => $assets,
@@ -257,105 +84,6 @@ function h5p_get_editor_settings() {
   }
 
   return $settings;
-}
-
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
-function h5peditor_form_node_h5p_content_form_validate(array &$form, FormStateInterface $form_state) {
-
-  $values = $form_state->getValues();
-
-  $h5p_hub_is_enabled = \Drupal::state()->get('h5p_hub_is_enabled') ?: FALSE;
-  if (! $h5p_hub_is_enabled && $values['h5p_type'] == 'upload') {
-    h5p_form_validate($form, $form_state);
-    return;
-  } else {
-    $library_data = \H5PCore::libraryFromString($values['h5p_library']);
-    if ($library_data === FALSE) {
-      $form_state->setErrorByName('h5p_editor', t('You must choose an H5P content type or upload an H5P file.'));
-    } else {
-      $is_runnable = db_query(
-        "SELECT runnable
-        FROM {h5p_libraries}
-        WHERE machine_name = :machine_name
-        AND major_version = :major_version
-        AND minor_version = :minor_version", array(
-        ':machine_name' => $library_data['machineName'],
-        ':major_version' => $library_data['majorVersion'],
-        ':minor_version' => $library_data['minorVersion'],
-      ))->fetchField();
-      if (! $is_runnable) {
-        $form_state->setErrorByName('h5p_editor', t('Invalid H5P content type'));
-      }
-    }
-  }
-}
-
-/**
- * Node form submit handler.
- */
-function h5peditor_form_node_h5p_content_form_submit(array &$form, FormStateInterface $form_state) {
-
-  $values = $form_state->getValues();
-
-  $h5p_hub_is_enabled = \Drupal::state()->get('h5p_hub_is_enabled') ?: FALSE;
-  if (! $h5p_hub_is_enabled && $values['h5p_type'] == 'upload') {
-    return;
-  }
-  // TODO: Seems strange to use session storage for this, is there a better way?
-  $_SESSION['h5p']['node']['h5p_type'] = $values['h5p_type'];
-
-  // save extra field in session till hook_ENTITY_TYPE_presave()
-  if (isset($_SESSION['h5p']['node']['main_library_id'])) {
-    $_SESSION['h5p']['node']['h5p_library_old'] = isset($values['main_library']) ? $values['main_library']: NULL;
-    $_SESSION['h5p']['node']['json_content'] = $values['json_content'];
-    $_SESSION['h5p']['node']['h5p_library'] = $values['h5p_library'];
-    $_SESSION['h5p']['node']['save'] = TRUE;
-  }
-  $_SESSION['h5p']['node']['main_library_id'] = h5peditor_get_library_property($values['h5p_library'], 'libraryId');
-}
-
-
-/**
- * Implements hook_ENTITY_TYPE_presave().
- */
-function h5peditor_node_presave(Drupal\Core\Entity\EntityInterface $entity) {
-
-  if ($entity->getType() == 'h5p_content') {
-    _h5peditor_create_content($entity);
-  }
-}
-
-/**
- * Create or update H5P content.
- */
-function _h5peditor_create_content($node) {
-
-  if (! $_SESSION['h5p']['node']['h5p_type'] || $_SESSION['h5p']['node']['h5p_type'] == 'upload') {
-    return;
-  }
-
-
-  // todo $JM migrate this code to drupal 8
-  /*
-  if (isset($node->translation_source) || isset($node->clone_from_original_nid)) {
-    $storage = _h5p_get_instance('storage');
-    $source_node = h5peditor_get_source_node($node);
-    $storage->copyPackage(h5p_get_content_id($node), h5p_get_content_id($source_node), $node->nid);
-  }
-  */
-
-  $editor = h5peditor_get_instance();
-  // Move files.
-  $editor->processParameters(
-    $node->id(),
-    h5peditor_get_library_property( $_SESSION['h5p']['node']['h5p_library']),
-    json_decode($_SESSION['h5p']['node']['json_content']),
-    isset($_SESSION['h5p']['node']['h5p_library_old']) ?  $_SESSION['h5p']['node']['h5p_library_old'] : NULL,
-    isset($_SESSION['h5p']['node']['h5p_params_old']) ? json_decode( $_SESSION['h5p']['node']['h5p_params_old']) : NULL
-  );
 }
 
 /**

@@ -103,6 +103,19 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     return file_create_url("public://{$h5p_path}/exports/interactive-content-" . $this->id() . '.h5p');
   }
 
+  public function getLibrary() {
+    // TODO: Just return $this->library or change to getLibraryString, which should use core function
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    return array(
+      'machineName' => $this->library->name,
+      'majorVersion' => $this->library->major,
+      'minorVersion' => $this->library->minor,
+    );
+  }
+
   /**
    *
    */

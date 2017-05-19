@@ -13,8 +13,9 @@ var ns = H5PEditor;
         var $editor = $('.h5p-editor');
         var $create = $('#edit-h5p-editor').hide();
         var $type = $('input[name="h5p_type"]');
-        var $params = $('input[name="json_content"]');
-        var $library = $('input[name="h5p_library"]');
+        // TODO: Make it possible to have multiple fields
+        var $params = $('input[name="field_h5peditor[0][value][json_content]"]');
+        var $library = $('input[name="field_h5peditor[0][value][h5p_library]"]');
         var library = $library.val();
 
         ns.$ = H5P.jQuery;
@@ -51,7 +52,8 @@ var ns = H5PEditor;
           }
         }).change();
 
-        $('#node-h5p-content-form, #node-h5p-content-edit-form').submit(function () {
+        // TODO: Use something more robust than mousedown.
+        $('#edit-actions').find('input[type="submit"]').mousedown(function () {
           if (h5peditor !== undefined) {
             var params = h5peditor.getParams();
 
