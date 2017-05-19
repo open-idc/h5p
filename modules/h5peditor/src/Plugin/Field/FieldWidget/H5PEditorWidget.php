@@ -31,7 +31,12 @@ class H5PEditorWidget extends WidgetBase {
       $h5p_content = H5PContent::load((int) $values[$delta]['h5p_content_id']);
       $params = $h5p_content->get('parameters')->value;
       $library = $h5p_content->getLibrary();
-      $library_string = \H5PCore::libraryToString((array)$library);
+      $formatted_library = array(
+        'machineName' => $library->name,
+        'majorVersion' => $library->major,
+        'minorVersion' => $library->minor,
+      );
+      $library_string = \H5PCore::libraryToString($formatted_library);
     }
 
     $hub_is_enabled = TRUE;
