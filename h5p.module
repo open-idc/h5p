@@ -16,8 +16,6 @@ use Drupal\node\NodeInterface;
 function h5p_library_info_build() {
   $libraries = [];
 
-  // TODO: Add license to libraries? version?
-
   // Register jQuery version that H5P depends on
   $libraries['h5p.jquery'] = [
     'js' => [
@@ -77,7 +75,6 @@ function h5p_library_info_build() {
     }
     $js = "vendor/h5p/h5p-core/$script";
     $libraries['h5p.admin']['js']["/$js"] = [];
-    // TODO $assets['js'][] = base_path() . $js . $cache_buster;
   }*/
 
   $libraries['h5p.admin.library.list'] = [
@@ -89,14 +86,14 @@ function h5p_library_info_build() {
     ],
   ];
 
-  $libraries['h5p.admin.library.details'] = [
+  /*$libraries['h5p.admin.library.details'] = [
     'js' => [
       '/vendor/h5p/h5p-core/js/h5p-library-details.js' => [],
     ],
     'dependencies' => [
       'h5p/h5p.admin',
     ],
-  ];
+  ];*/
 
   // Load installed libraries
   $h5p_libraries = db_query("SELECT library_id AS id,
@@ -158,7 +155,10 @@ function h5p_library_info_build() {
 }
 
 /**
- * TODO: Helper?
+ * Convert library machine name into index key/id for hook_library_info_build().
+ *
+ * @param array|stdClass $h5p_library
+ * @return string
  */
 function _h5p_library_machine_to_id($h5p_library) {
   if (is_array($h5p_library)) {
@@ -202,4 +202,33 @@ function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
   db_delete('h5p_content_user_data')
     ->condition('user_id', $entity->id())
     ->execute();
+}
+
+/**
+ * Helper function for adding display options to form
+ * TODO: Move to some sort of form helper class? Not generally needed in the h5p.module
+ *
+ * @method _h5p_add_display_option
+ * @param  Array      $element               Reference to form element
+ * @param  String     $name                  Name of form element
+ * @param  String     $title
+ * @param  String     $value
+ * @param  [type]     $visibility_subject_id A jquery selector. If this is set,
+ *                    these DOM elements will be hidden when this this checkbox
+ *                    is unchecked
+ */
+function _h5p_add_display_option (&$element, $name, $title, $value, $visibility_subject_id = null) {
+  $element[$name] = array(
+    '#type' => 'checkbox',
+    '#title' => $title,
+    '#default_value' => $value,
+  );
+
+  if ($visibility_subject_id !== null) {
+    $classes = array('h5p-visibility-toggler');
+    $element[$name]['#attributes'] = array(
+      'class' => $classes,
+      'data-h5p-visibility-subject-selector' => $visibility_subject_id,
+    );
+  }
 }

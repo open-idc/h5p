@@ -116,7 +116,6 @@ class H5PAdminSettingsForm extends FormBase {
       '#disabled' => $h5p_nodes_exists,
     );
 
-
     $h5p_whitelist = \Drupal::state()->get('h5p_whitelist') ?: \H5PCore::$defaultContentWhitelist;
     $form['h5p_whitelist'] = array(
       '#type' => 'textfield',
@@ -133,23 +132,6 @@ class H5PAdminSettingsForm extends FormBase {
       '#title' => t('White list of extra accepted files in libraries.'),
       '#default_value' =>$h5p_library_whitelist_extras,
       '#description' => t("Libraries might need to accept more files that should be allowed in normal contents. Add extra files here. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
-    );
-
-    // TODO: Create a development section with multiple options?
-    $h5p_dev_mode = \Drupal::state()->get('h5p_dev_mode') ?: 0;
-    $form['h5p_dev_mode'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable H5P development mode'),
-      '#default_value' => $h5p_dev_mode,
-      '#description' => t('Always update uploaded H5P libraries regardless of patch version. Read library data from file (semantics.json).')
-    );
-
-    $h5p_library_development = \Drupal::state()->get('h5p_library_development') ?: 0;
-    $form['h5p_library_development'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable library development directory (For programmers only)'),
-      '#default_value' => $h5p_library_development,
-      '#description' => t('Check to enable development of libraries in the %dev folder. ONLY ENABLE THIS OPTION IF YOU KNOW WHAT YOU ARE DOING! YOUR SITES H5P DATA WILL BE RUINED BY ENABLING THIS OPTION', array('%dev' => _h5p_get_h5p_path() . '/development')),
     );
 
     $h5p_save_content_state = \Drupal::state()->get('h5p_save_content_state') ?: 0;

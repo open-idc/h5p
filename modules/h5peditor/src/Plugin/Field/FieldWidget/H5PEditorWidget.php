@@ -85,8 +85,6 @@ class H5PEditorWidget extends WidgetBase {
    */
   public function validate($element, FormStateInterface $form_state) {
 
-    // TODO: Skip if action === delete ?
-
   }
 
   /**

@@ -23,4 +23,4 @@
 - upload H5P Libraries from https://h5p.org/update-all-content-types
 
 # Restrictions
-- embed type div not yet supported
+- embed type div not yet supported.

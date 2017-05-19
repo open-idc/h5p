@@ -52,7 +52,7 @@ class H5PAdmin extends ControllerBase {
           $option = array(
             'query' => drupal_get_destination(),
           );
-          $url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/upgrade', $option);
+          $url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/upgrade', $option)->toString();
           $upgradeUrl = empty($upgrades) ? FALSE : $url;
 
           $restricted = ($library->restricted === '1' ? TRUE : FALSE);
@@ -63,7 +63,7 @@ class H5PAdmin extends ControllerBase {
               'restrict' => ($library->restricted === '1' ? 0 : 1)
             )
           );
-          $restricted_url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/restrict', $option);
+          $restricted_url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/restrict', $option)->toString();
         }
         else {
           $upgradeUrl = NULL;
@@ -75,7 +75,7 @@ class H5PAdmin extends ControllerBase {
           'query' => drupal_get_destination(),
         );
         $deleteUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/delete', $option);
-        $detailsUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id);
+        //$detailsUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id);
 
         $settings['libraryList']['listData'][] = array(
           'title' => $library->title . ' (' . \H5PCore::libraryVersion($library) . ')',
@@ -85,7 +85,7 @@ class H5PAdmin extends ControllerBase {
           'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
           'numLibraryDependencies' => $usage['libraries'],
           'upgradeUrl' => $upgradeUrl,
-          'detailsUrl' => $detailsUrl->toString(),
+          //'detailsUrl' => $detailsUrl->toString(),
           'deleteUrl' => $deleteUrl->toString(),
         );
 
@@ -143,7 +143,7 @@ class H5PAdmin extends ControllerBase {
    *
    * @return {string} Html string
    */
-  function libraryDetails($library_id) {
+  /*function libraryDetails($library_id) {
 
     $settings = [];
 
@@ -182,7 +182,8 @@ class H5PAdmin extends ControllerBase {
       $query = $this->database->select('h5p_content_libraries', 'l');
       $query->distinct();
       $query->fields('n', array('nid', 'title'));
-      $query->join('h5p_nodes', 'hn', 'l.content_id = hn.content_id');
+      //$query->join('h5p_nodes', 'hn', 'l.content_id = hn.content_id');
+
       $query->join('node_field_data', 'n', 'hn.nid = n.nid');
       $query->condition('l.library_id', $library_id, '=');
       $query->orderBy('n.title', 'ASC');
@@ -206,7 +207,7 @@ class H5PAdmin extends ControllerBase {
     $build['#cache']['max-age'] = 0;
 
     return $build;
-  }
+  }*/
 
   /**
    * Callback for the library content upgrade page.
@@ -381,7 +382,7 @@ class H5PAdmin extends ControllerBase {
     $settings['containerSelector'] = '#h5p-admin-container';
     $settings['l10n'] = array(
       'NA' => t('N/A'),
-      'viewLibrary' => t('View library details'),
+      /*'viewLibrary' => t('View library details'),*/
       'deleteLibrary' => t('Delete library'),
       'upgradeLibrary' => t('Upgrade library content')
     );
@@ -390,7 +391,7 @@ class H5PAdmin extends ControllerBase {
       'H5PAdminIntegration' =>  $settings,
     ];
     $build['drupalSettings']['h5p']['drupal_h5p'] = [
-      'H5P' => h5p_get_core_settings(),
+      'H5P' => H5PDrupal::getGenericH5PIntegrationSettings(),
     ];
 
     return $build;
