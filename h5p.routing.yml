@@ -14,15 +14,6 @@ h5p.admin.content.h5p:
   requirements:
     _permission: 'administer site configuration'
 
-h5p.admin.content.h5p.libraries.details:
-  path: '/admin/content/h5p/libraries/{library_id}'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
-    _title: 'H5P Library Details'
-  requirements:
-    _permission: 'administer site configuration'
-    id: \d+
-
 h5p.admin.content.h5p.libraries.upgrade:
   path: '/admin/content/h5p/libraries/{library_id}/upgrade'
   defaults:
