@@ -43,7 +43,6 @@ class H5PEditorWidget extends WidgetBase {
       );
       $library_string = \H5PCore::libraryToString($formatted_library);
     }
-
     // Always default to create for editor widget
     $form['h5p_type']['#default_value'] = 'create';
     $form['h5p_type']['#type'] = 'hidden';
@@ -116,6 +115,10 @@ class H5PEditorWidget extends WidgetBase {
       'params' => $params
     );
     $h5p_content_id = $core->saveContent($libraryData);
+
+    // Move files.
+    $editor = h5peditor_get_instance();
+    $editor->processParameters($h5p_content_id, $library, json_decode($params));
 
     return [
       'h5p_content_id' => (int) $h5p_content_id,

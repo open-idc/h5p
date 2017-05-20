@@ -2,6 +2,7 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
+use Drupal\file\Entity\File;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 class H5PEditorDrupalStorage implements \H5peditorStorage {
@@ -218,19 +219,20 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
       return;
     }
 
-    global $user;
+    $user = \Drupal::currentUser();
 
     // Keep track of temporary files so they can be cleaned up later by Drupal
-    $file_managed = (object) array(
-      'uid' => $user->uid,
+    $file_data = array(
+      'uid' => $user->id(),
       'filename' => $file->getName(),
-      'uri' => 'public://h5peditor/' . $file->getType() . 's/' . $file->getName(),
+      'uri' => 'public://h5p/editor/' . $file->getType() . 's/' . $file->getName(),
       'filemime' => $file->type,
       'filesize' => $file->size,
       'status' => 0,
       'timestamp' => REQUEST_TIME,
     );
-    file_save($file_managed);
+    $file_managed = File::create($file_data);
+    $file_managed->save();
   }
 
   /**

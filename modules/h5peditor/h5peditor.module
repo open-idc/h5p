@@ -12,7 +12,7 @@ function h5p_get_editor_settings() {
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   $content_validator = H5PDrupal::getInstance('contentvalidator');
-  $file_path = \Drupal::service('file_system')->realpath('public://');
+  $file_path = base_path() . H5PDrupal::getRelativeH5PPath() . '/editor';
   $content_id = 0;
 
   $ajax_path = Url::fromUri(
@@ -61,7 +61,7 @@ function h5p_get_editor_settings() {
 
   $settings = array(
     'h5peditor' => array(
-      'filesPath' => $file_path . '/h5peditor',
+      'filesPath' => $file_path,
       'fileIcon' => array(
         'path' => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
         'width' => 50,
