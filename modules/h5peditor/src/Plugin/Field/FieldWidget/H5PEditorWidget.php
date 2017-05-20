@@ -26,6 +26,11 @@ class H5PEditorWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    // Don't allow setting default values
+    if ($this->isDefaultValueWidget($form_state)) {
+      return array('value' => $element);
+    }
+
     $values = $items->getValue();
     if (isset($values) && isset($values[$delta]['h5p_content_id'])) {
       $h5p_content = H5PContent::load((int) $values[$delta]['h5p_content_id']);
@@ -39,12 +44,9 @@ class H5PEditorWidget extends WidgetBase {
       $library_string = \H5PCore::libraryToString($formatted_library);
     }
 
-    $hub_is_enabled = TRUE;
-    if ($hub_is_enabled) {
-      $form['h5p_type']['#default_value'] = 'create';
-      $form['h5p_type']['#type'] = 'hidden';
-    }
-
+    // Always default to create for editor widget
+    $form['h5p_type']['#default_value'] = 'create';
+    $form['h5p_type']['#type'] = 'hidden';
 
     $integration = H5PDrupal\H5PDrupal::getGenericH5PIntegrationSettings();
     $settings = h5p_get_editor_settings();

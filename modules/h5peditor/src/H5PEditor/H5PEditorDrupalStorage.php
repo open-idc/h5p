@@ -2,6 +2,8 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
+use Drupal\h5p\H5PDrupal\H5PDrupal;
+
 class H5PEditorDrupalStorage implements \H5peditorStorage {
 
   /**
@@ -166,8 +168,8 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
   /**
    * Saves a file temporarily with a given name
    *
-   * @param $data
-   * @param $move_file Only move the uploaded file
+   * @param string $data
+   * @param bool $move_file Only move the uploaded file
    *
    * @return bool|false|string Real absolute path of the temporary folder
    */
@@ -207,7 +209,7 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    * Marks a file for later cleanup, useful when files are not instantly cleaned
    * up. E.g. for files that are uploaded through the editor.
    *
-   * @param H5peditorFile $file
+   * @param \H5peditorFile $file
    * @param $contentId
    */
   public static function markFileForCleanup($file, $content_id = null) {

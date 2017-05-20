@@ -19,7 +19,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *  Core functions and storage in the h5p library
    * @param string $type
    *  Specifies the instance to be returned; validator, storage, interface or core
-   * @return object
+   * @return \H5PCore|\H5PValidator|\H5PStorage|\H5PContentValidator|\H5PExport|\Drupal\h5p\H5PDrupal\H5PDrupal
    *  The instance og h5p specified by type
    */
   public static function getInstance($type='interface') {
