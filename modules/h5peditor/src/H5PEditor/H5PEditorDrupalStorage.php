@@ -46,10 +46,14 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    */
   public function keepFile($path) {
     // Find URI
-    $uri = str_replace(file_stream_wrapper_get_instance_by_uri('public://')->getDirectoryPath() . '/', 'public://', $path);
+    $public_path = \Drupal::service('file_system')->realpath('public://');
+    $uri = str_replace($public_path . '/', 'public://', $path);
 
     // No longer mark the file as a tmp file
-    db_delete('file_managed')->condition('uri', $uri)->execute();
+    \Drupal::database()
+           ->delete('file_managed')
+           ->condition('uri', $uri)
+           ->execute();
   }
 
   /**
@@ -211,25 +215,32 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    * up. E.g. for files that are uploaded through the editor.
    *
    * @param \H5peditorFile $file
-   * @param $contentId
+   * @param int $content_id
    */
   public static function markFileForCleanup($file, $content_id = null) {
-    // H5P Core cleans up
-    if ($content_id) {
-      return;
-    }
+    // Determine URI
+    $file_type = $file->getType();
+    $file_name = $file->getName();
+    $interface = H5PDrupal::getInstance('interface');
+    $h5p_path = $interface->getOption('default_path', 'h5p');
+    $uri = "public://{$h5p_path}/";
 
-    $user = \Drupal::currentUser();
+    if ($content_id) {
+      $uri .= "content/{$content_id}/{$file_type}s/{$file_name}";
+    }
+    else {
+      $uri .= "editor/{$file_type}s/{$file_name}";
+    }
 
     // Keep track of temporary files so they can be cleaned up later by Drupal
     $file_data = array(
-      'uid' => $user->id(),
+      'uid' => \Drupal::currentUser()->id(),
       'filename' => $file->getName(),
-      'uri' => 'public://h5p/editor/' . $file->getType() . 's/' . $file->getName(),
+      'uri' => $uri,
       'filemime' => $file->type,
       'filesize' => $file->size,
       'status' => 0,
-      'timestamp' => REQUEST_TIME,
+      'timestamp' => \Drupal::time()->getRequestTime(),
     );
     $file_managed = File::create($file_data);
     $file_managed->save();

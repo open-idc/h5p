@@ -22,6 +22,9 @@ use Drupal\h5p\Entity\H5PContent;
  */
 class H5PEditorWidget extends WidgetBase {
 
+  private $content_id;
+  private $params;
+
   /**
    * {@inheritdoc}
    */
@@ -32,9 +35,17 @@ class H5PEditorWidget extends WidgetBase {
     }
 
     $values = $items->getValue();
+
+    // Get content id
+    $this->content_id = 0;
     if (isset($values) && isset($values[$delta]['h5p_content_id'])) {
-      $h5p_content = H5PContent::load((int) $values[$delta]['h5p_content_id']);
-      $params = $h5p_content->get('parameters')->value;
+      $this->content_id = (int) $values[$delta]['h5p_content_id'];
+    }
+
+    // Load existing content settings
+    if ($this->content_id) {
+      $h5p_content = H5PContent::load($this->content_id);
+      $this->params = $h5p_content->get('parameters')->value;
       $library = $h5p_content->getLibrary();
       $formatted_library = array(
         'machineName' => $library->name,
@@ -43,12 +54,13 @@ class H5PEditorWidget extends WidgetBase {
       );
       $library_string = \H5PCore::libraryToString($formatted_library);
     }
+
     // Always default to create for editor widget
     $form['h5p_type']['#default_value'] = 'create';
     $form['h5p_type']['#type'] = 'hidden';
 
     $integration = H5PDrupal\H5PDrupal::getGenericH5PIntegrationSettings();
-    $settings = h5p_get_editor_settings();
+    $settings = h5p_get_editor_settings($this->content_id);
 
     $element += array(
       '#type' => 'item',
@@ -69,13 +81,7 @@ class H5PEditorWidget extends WidgetBase {
 
     $element['json_content'] = array(
       '#type' => 'hidden',
-      '#default_value' => isset($params) ? $params : '',
-    );
-
-    // TODO: Are we using this ?
-    $element['main_library_id'] = array(
-      '#type' => 'value',
-      '#default_value' => '',
+      '#default_value' => isset($this->params) ? $this->params : '',
     );
 
     $element['h5p_library'] = array(
@@ -98,7 +104,6 @@ class H5PEditorWidget extends WidgetBase {
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
 
-    $content_id = 0;
     $library_string = $values[0]['value']['h5p_library'];
     $params = $values[0]['value']['json_content'];
 
@@ -110,7 +115,7 @@ class H5PEditorWidget extends WidgetBase {
     // Save to db
     $core = H5PDrupal\H5PDrupal::getInstance('core');
     $libraryData = array(
-      'id' => $content_id ? $content_id : NULL,
+      'id' => $this->content_id ? $this->content_id : NULL,
       'library' => $library,
       'params' => $params
     );
@@ -118,7 +123,27 @@ class H5PEditorWidget extends WidgetBase {
 
     // Move files.
     $editor = h5peditor_get_instance();
-    $editor->processParameters($h5p_content_id, $library, json_decode($params));
+
+    // Find old data for comparison
+    if ($this->content_id) {
+      $h5p_content = H5PContent::load($this->content_id);
+      $library_data = $h5p_content->getLibrary();
+      $old_library = array(
+        'name' => $library_data->name,
+        'majorVersion' => $library_data->major,
+        'minorVersion' => $library_data->minor
+      );
+      $old_params = $this->params;
+    }
+
+    // Keep new files, delete files from old parameters
+    $editor->processParameters(
+      $h5p_content_id,
+      $library,
+      json_decode($params),
+      isset($old_library) ? $old_library : NULL,
+      isset($old_params) ? json_decode($old_params) : NULL
+    );
 
     return [
       'h5p_content_id' => (int) $h5p_content_id,

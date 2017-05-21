@@ -8,13 +8,20 @@ use \Drupal\h5p\H5PDrupal\H5PDrupal;
 use \Drupal\h5peditor\H5PEditor;
 use \Drupal\Core\Url;
 
-function h5p_get_editor_settings() {
+function h5p_get_editor_settings($content_id=0) {
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   $content_validator = H5PDrupal::getInstance('contentvalidator');
-  $file_path = base_path() . H5PDrupal::getRelativeH5PPath() . '/editor';
-  $content_id = 0;
 
+  $file_path = base_path() . H5PDrupal::getRelativeH5PPath();
+  if ($content_id) {
+    // Files stored in content
+    $file_path .= "/content/{$content_id}";
+  }
+  else {
+    // Files stored in editor
+    $file_path .= "/editor";
+  }
   $ajax_path = Url::fromUri(
     'internal:/h5peditor/' . \H5PCore::createToken('editorajax') . "/{$content_id}/"
   )->toString();
