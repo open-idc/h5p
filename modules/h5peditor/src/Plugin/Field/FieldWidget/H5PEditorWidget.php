@@ -103,6 +103,10 @@ class H5PEditorWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    // Only save content when validation has completed
+    if (!$form_state->isValidationComplete()) {
+      return $values;
+    }
 
     $library_string = $values[0]['value']['h5p_library'];
     $params = $values[0]['value']['json_content'];
