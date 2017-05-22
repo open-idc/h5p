@@ -1,8 +1,10 @@
+# TODO Add descriptions as found in D7's /h5p.module file
+
 h5p.admin.config.system.h5p:
   path: '/admin/config/system/h5p'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAdminSettings::adminSettingsForm'
-    _title: 'H5P Library List'
+    _title: 'H5P Settings'
   requirements:
     _permission: 'administer site configuration'
 
@@ -13,6 +15,15 @@ h5p.admin.content.h5p:
     _title: 'H5P Library List'
   requirements:
     _permission: 'administer site configuration'
+
+h5p.admin.content.h5p.libraries.details:
+  path: '/admin/content/h5p/libraries/{library_id}'
+  defaults:
+    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
+    _title: 'H5P Library Details'
+  requirements:
+    _permission: 'administer site configuration'
+    id: \d+
 
 h5p.admin.content.h5p.libraries.upgrade:
   path: '/admin/content/h5p/libraries/{library_id}/upgrade'
@@ -32,13 +43,41 @@ h5p.admin.content.h5p.libraries.delete:
     _permission: 'administer site configuration'
     id: \d+
 
+h5p.admin.content.h5p.libraries.restrict:
+  path: '/admin/content/h5p/libraries/{library_id}/restrict'
+  defaults:
+    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryRestrict'
+    _title: 'Restrict H5P Library'
+  requirements:
+    _permission: 'administer site configuration'
+    id: \d+
+
+# TODO path requires 3 page arguments. See line 71 in D7's h5p.module
+h5p.admin.content.h5p.libraries.upgrade:
+  path: '/admin/content/h5p/upgrade/library/{library_id}'
+  defaults:
+    _controller: '\Drupal\h5p\Controller\H5PAdmin::contentUpgradeLibrary'
+    _title: 'H5P Content Upgrade Library'
+  requirements:
+    _permission: 'administer site configuration'
+    id: \d+
+
 h5p.admin.content.h5p.rebuild_cache:
   path: '/admin/content/h5p/rebuild-cache'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAdmin::rebuildCache'
-    _title: 'Delete H5P Library'
+    _title: 'H5P Rebuild Content Cache'
   requirements:
     _permission: 'administer site configuration'
+    id: \d+
+
+h5p.admin.content.h5p.embed:
+  path: '/admin/content/h5p/embed'
+  defaults:
+    _controller: '\Drupal\h5p\Controller\H5PAdmin::embed'
+    _title: 'H5P Embed'
+  requirements:
+    _permission: 'access content'
     id: \d+
 
 h5p.ajax.set_finished:

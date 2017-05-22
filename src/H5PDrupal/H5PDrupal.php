@@ -621,7 +621,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       if ($libraryData['runnable']) {
         $h5p_first_runnable_saved = $this->getOption('first_runnable_saved', FALSE);
         if (! $h5p_first_runnable_saved) {
-          $this->setOption('h5p_first_runnable_saved', 1);
+          $this->setOption('first_runnable_saved', 1);
         }
       }
     }
@@ -883,6 +883,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Would it be better if this is called from the entity's delete ? (in case the entity is delete from elsewhere(!= Field))
     $h5p_content = H5PContent::load($contentId);
+    if (empty($h5p_content)) {
+      return; // Nothing to delete
+    }
 
     // Load library
     $h5p_library = $h5p_content->getLibrary();
