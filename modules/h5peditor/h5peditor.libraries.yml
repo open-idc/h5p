@@ -4,4 +4,13 @@ h5peditor:
     scripts/application.js: {}
   dependencies:
     - core/jquery
-    - h5p/editorAssets
+    - h5peditor/h5peditorAssets
+
+h5peditorAssets:
+  verson: 1.0
+  js:
+    /vendor/h5p/h5p-editor/scripts/h5p-hub-client.js: {}
+    /vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js: {}
+    /vendor/h5p/h5p-editor/scripts/h5peditor-editor.js: {}
+  dependencies:
+    - h5p/h5p.content
