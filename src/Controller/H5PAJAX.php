@@ -122,6 +122,7 @@ class H5PAJAX extends ControllerBase {
         }
       }
 
+      \Drupal\Core\Cache\Cache::invalidateTags(['h5p_content:' . $content_main_id]);
       return new JsonResponse($response);
     } else {
       // Fetch data
