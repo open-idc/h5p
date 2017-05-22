@@ -621,7 +621,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       if ($libraryData['runnable']) {
         $h5p_first_runnable_saved = $this->getOption('first_runnable_saved', FALSE);
         if (! $h5p_first_runnable_saved) {
-          $this->setOption('h5p_first_runnable_saved', 1);
+          $this->setOption('first_runnable_saved', 1);
         }
       }
     }
