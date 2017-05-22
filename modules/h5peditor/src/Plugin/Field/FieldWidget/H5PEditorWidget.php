@@ -5,7 +5,7 @@ namespace Drupal\H5PEditor\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\h5p\H5PDrupal;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
 
 
@@ -117,7 +117,7 @@ class H5PEditorWidget extends WidgetBase {
     // TODO: Handle cloning, revisioning and translating
 
     // Save to db
-    $core = H5PDrupal\H5PDrupal::getInstance('core');
+    $core = H5PDrupal::getInstance('core');
     $libraryData = array(
       'id' => $this->content_id ? $this->content_id : NULL,
       'library' => $library,
