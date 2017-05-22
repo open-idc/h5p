@@ -208,7 +208,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $last_fetched_at = $this->getOption('fetched_library_metadata_on', 0);
 
     if ($fetchingDisabled || (($hub_is_enabled) || $send_usage_statistics) &&
-      (intval($last_fetched_at) < (time() - 86400))) {
+        (intval($last_fetched_at) < (time() - 86400))) {
       // Fetch the library-metadata:
       $core = H5PDrupal::getInstance('core');
       $core->fetchLibrariesMetadata($fetchingDisabled);
@@ -358,7 +358,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function loadLibraries() {
     $res = db_query(
-      "SELECT library_id AS id,
+        "SELECT library_id AS id,
                 machine_name AS name,
                 title,
                 major_version, minor_version, patch_version,
@@ -391,16 +391,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function getLibraryId($machineName, $majorVersion = NULL, $minorVersion = NULL) {
     $library_id = db_query(
-      "SELECT library_id
+        "SELECT library_id
            FROM {h5p_libraries}
           WHERE machine_name = :machine_name
             AND major_version = :major_version
             AND minor_version = :minor_version",
-      [
-        ':machine_name' => $machineName,
-        ':major_version' => $majorVersion,
-        ':minor_version' => $minorVersion
-      ]
+        [
+          ':machine_name' => $machineName,
+          ':major_version' => $majorVersion,
+          ':minor_version' => $minorVersion
+        ]
     )->fetchField();
 
     return $library_id;
@@ -415,18 +415,18 @@ class H5PDrupal implements \H5PFrameworkInterface {
     }
 
     $result = db_query(
-      "SELECT 1
+        "SELECT 1
            FROM {h5p_libraries}
           WHERE machine_name = :machineName
             AND major_version = :majorVersion
             AND minor_version = :minorVersion
             AND patch_version < :patchVersion",
-      [
-        ':machineName' => $library['machineName'],
-        ':majorVersion' => $library['majorVersion'],
-        ':minorVersion' => $library['minorVersion'],
-        ':patchVersion' => $library['patchVersion']
-      ]
+        [
+          ':machineName' => $library['machineName'],
+          ':majorVersion' => $library['majorVersion'],
+          ':minorVersion' => $library['minorVersion'],
+          ':patchVersion' => $library['patchVersion']
+        ]
     )->fetchField();
     return $result === '1';
   }
@@ -468,24 +468,24 @@ class H5PDrupal implements \H5PFrameworkInterface {
     }
     else {
       $usage['content'] = intval(db_query(
-        "SELECT COUNT(distinct nfd.id)
+          "SELECT COUNT(distinct nfd.id)
              FROM {h5p_libraries} l
              JOIN {h5p_content_libraries} nl
                ON l.library_id = nl.library_id
              JOIN {h5p_content} nfd
                ON nl.content_id = nfd.id
             WHERE l.library_id = :id",
-        [
-          ':id' => $libraryId
-        ]
+          [
+            ':id' => $libraryId
+          ]
       )->fetchField());
     }
 
     $usage['libraries'] = intval(db_query(
-      "SELECT COUNT(*)
+        "SELECT COUNT(*)
            FROM {h5p_libraries_libraries}
           WHERE required_library_id = :id",
-      [':id' => $libraryId]
+        [':id' => $libraryId]
     )->fetchField());
 
     return $usage;
@@ -506,7 +506,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Count content with same machine name, major and minor version
     $results = db_query(
-      "SELECT l.machine_name AS name,
+        "SELECT l.machine_name AS name,
                 l.major_version AS major,
                 l.minor_version AS minor,
                 count(*) AS count
@@ -533,14 +533,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $count = [];
 
     $results = db_query(
-      "SELECT library_name AS name,
+        "SELECT library_name AS name,
                 library_version AS version,
                 num
            FROM {h5p_counters}
           WHERE type = :type",
-      [
-        ':type' => $type
-      ]
+        [
+          ':type' => $type
+        ]
     )->fetchAll();
 
     // Extract results
@@ -726,12 +726,12 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function deleteLibrary($libraryId) {
     $library = db_query(
-      "SELECT *
+        "SELECT *
            FROM {h5p_libraries}
           WHERE library_id = :id",
-      [
-        ':id' => $libraryId
-      ]
+        [
+          ':id' => $libraryId
+        ]
     )->fetchObject();
 
     // Delete files
@@ -864,15 +864,15 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
     db_query(
-      "INSERT INTO {h5p_content_libraries}
+        "INSERT INTO {h5p_content_libraries}
                      (content_id, library_id, dependency_type, drop_css, weight)
               SELECT :toId, hnl.library_id, hnl.dependency_type, hnl.drop_css, hnl.weight
                 FROM {h5p_content_libraries} hnl
                WHERE hnl.content_id = :fromId",
-      [
-        ':toId' => $contentId,
-        ':fromId' => $copyFromId
-      ]
+        [
+          ':toId' => $contentId,
+          ':fromId' => $copyFromId
+        ]
     );
   }
 
@@ -883,33 +883,34 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Would it be better if this is called from the entity's delete ? (in case the entity is delete from elsewhere(!= Field))
     $h5p_content = H5PContent::load($contentId);
-
-    if($h5p_content) {
-      // Load library
-      $h5p_library = $h5p_content->getLibrary();
-
-      // Delete entity
-      $h5p_content->delete();
-
-      // Delete library usage
-      $this->deleteLibraryUsage($contentId);
-
-      // Remove content points
-      db_delete('h5p_points')
-        ->condition('content_id', $contentId)
-        ->execute();
-
-      // Remove content user data
-      db_delete('h5p_content_user_data')
-        ->condition('content_main_id', $contentId)
-        ->execute();
-
-      // Log content delete
-      new H5PEvent('content', 'delete',
-        $contentId, '',
-        $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
-      );
+    if (empty($h5p_content)) {
+      return; // Nothing to delete
     }
+
+    // Load library
+    $h5p_library = $h5p_content->getLibrary();
+
+    // Delete entity
+    $h5p_content->delete();
+
+    // Delete library usage
+    $this->deleteLibraryUsage($contentId);
+
+    // Remove content points
+    db_delete('h5p_points')
+      ->condition('content_id', $contentId)
+      ->execute();
+
+    // Remove content user data
+    db_delete('h5p_content_user_data')
+      ->condition('content_main_id', $contentId)
+      ->execute();
+
+    // Log content delete
+    new H5PEvent('content', 'delete',
+      $contentId, '',
+      $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
+    );
   }
 
   /**
@@ -950,7 +951,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function loadLibrary($machineName, $majorVersion, $minorVersion) {
     $library = db_query(
-      "SELECT library_id,
+        "SELECT library_id,
                 machine_name,
                 title,
                 major_version,
@@ -969,11 +970,11 @@ class H5PDrupal implements \H5PFrameworkInterface {
           WHERE machine_name = :machine_name
           AND major_version = :major_version
           AND minor_version = :minor_version",
-      [
-        ':machine_name' => $machineName,
-        ':major_version' => $majorVersion,
-        ':minor_version' => $minorVersion
-      ]
+        [
+          ':machine_name' => $machineName,
+          ':major_version' => $majorVersion,
+          ':minor_version' => $minorVersion
+        ]
     )->fetchObject();
 
     if ($library === FALSE) {
@@ -983,7 +984,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Load dependencies
     $result = db_query(
-      "SELECT hl.machine_name AS name,
+        "SELECT hl.machine_name AS name,
                 hl.major_version AS major,
                 hl.minor_version AS minor,
                 hll.dependency_type AS type
@@ -991,9 +992,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
            JOIN {h5p_libraries} hl
              ON hll.required_library_id = hl.library_id
           WHERE hll.library_id = :library_id",
-      [
-        ':library_id' => $library['libraryId']
-      ]
+        [
+          ':library_id' => $library['libraryId']
+        ]
     );
 
     foreach ($result as $dependency) {
@@ -1012,16 +1013,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function loadLibrarySemantics($machineName, $majorVersion, $minorVersion) {
     $semantics = db_query(
-      "SELECT semantics
+        "SELECT semantics
            FROM {h5p_libraries}
           WHERE machine_name = :machine_name
             AND major_version = :major_version
             AND minor_version = :minor_version",
-      [
-        ':machine_name' => $machineName,
-        ':major_version' => $majorVersion,
-        ':minor_version' => $minorVersion
-      ]
+        [
+          ':machine_name' => $machineName,
+          ':major_version' => $majorVersion,
+          ':minor_version' => $minorVersion
+        ]
     )->fetchField();
 
     return ($semantics === FALSE ? NULL : $semantics);
