@@ -141,26 +141,26 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     // TODO: Implement hook filtered_params ?
     //   \Drupal::moduleHandler()->alter('h5p_params', $files['scripts'], $library_list, $embed_type);
 
-    // TODO: Get preloaded user data
-/*    $results = db_query("SELECT sub_content_id, data_id, data
-                          FROM {h5p_content_user_data}
-                          WHERE user_id = :user_id
-                          AND content_main_id = :content_id
-                          AND preloaded = 1",
-      array(
-        ':user_id' => \Drupal::currentUser()->id(),
-        ':content_id' => $content['mainId']
-      ));
-
-    $content_user_data = array(
-      0 => array(
-        'state' => '{}'
-      )
+    $results = db_query(
+        "SELECT sub_content_id, data_id, data
+           FROM {h5p_content_user_data}
+          WHERE user_id = :user_id
+            AND content_main_id = :content_id
+            AND preloaded = 1",
+        [
+          ':user_id' => \Drupal::currentUser()->id(),
+          ':content_id' => $this->id(),
+        ]
     );
+
+    $content_user_data = [
+      0 => [
+        'state' => '{}',
+      ]
+    ];
     foreach ($results as $result) {
       $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
     }
-    */
 
     $embed_url = Url::fromUri('internal:/h5p/embed/' . $this->id(), ['absolute' => TRUE])->toString();
     $resizer_url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString();
@@ -174,7 +174,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
       'title' => 'Not Available',
-//      'contentUserData' => $content_user_data, TODO
+      'contentUserData' => $content_user_data,
       'displayOptions' => $display_options,
     );
   }

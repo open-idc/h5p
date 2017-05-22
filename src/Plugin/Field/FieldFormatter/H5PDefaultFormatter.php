@@ -98,7 +98,10 @@ class H5PDefaultFormatter extends FormatterBase {
             ]
           ],
           'library' => $loadpackages,
-        ]
+        ],
+        '#cache' => [
+          'max-age' => 0, // Avoid cache in case preloaded contentUserData changes.
+        ],
       );
     }
 
