@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 
 
 /**
- * Implements the H%P Admin Settings Form.
+ * Implements the H5P Admin Settings Form.
  */
 class H5PAdminSettingsForm extends FormBase {
 

@@ -185,6 +185,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $css = 'vendor/h5p/h5p-core/' . $style;
       $assets[$keys[1]][] = base_path() . $css . $cache_buster;
     }
+
+    return $assets;
   }
 
   /**
