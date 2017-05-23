@@ -16,14 +16,14 @@ h5p.admin.content.h5p:
   requirements:
     _permission: 'administer site configuration'
 
-h5p.admin.content.h5p.libraries.details:
-  path: '/admin/content/h5p/libraries/{library_id}'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
-    _title: 'H5P Library Details'
-  requirements:
-    _permission: 'administer site configuration'
-    id: \d+
+#h5p.admin.content.h5p.libraries.details:
+#  path: '/admin/content/h5p/libraries/{library_id}'
+#  defaults:
+#    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
+#    _title: 'H5P Library Details'
+#  requirements:
+#    _permission: 'administer site configuration'
+#    id: \d+
 
 h5p.admin.content.h5p.libraries.upgrade:
   path: '/admin/content/h5p/libraries/{library_id}/upgrade'
@@ -43,24 +43,24 @@ h5p.admin.content.h5p.libraries.delete:
     _permission: 'administer site configuration'
     id: \d+
 
-h5p.admin.content.h5p.libraries.restrict:
-  path: '/admin/content/h5p/libraries/{library_id}/restrict'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryRestrict'
-    _title: 'Restrict H5P Library'
-  requirements:
-    _permission: 'administer site configuration'
-    id: \d+
+#h5p.admin.content.h5p.libraries.restrict:
+#  path: '/admin/content/h5p/libraries/{library_id}/restrict'
+#  defaults:
+#    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryRestrict'
+#    _title: 'Restrict H5P Library'
+#  requirements:
+#    _permission: 'administer site configuration'
+#    id: \d+
 
-# TODO path requires 3 page arguments. See line 71 in D7's h5p.module
-h5p.admin.content.h5p.libraries.upgrade:
-  path: '/admin/content/h5p/upgrade/library/{library_id}'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::contentUpgradeLibrary'
-    _title: 'H5P Content Upgrade Library'
-  requirements:
-    _permission: 'administer site configuration'
-    id: \d+
+## TODO path requires 3 page arguments. See line 71 in D7's h5p.module
+#h5p.admin.content.h5p.libraries.upgrade:
+#  path: '/admin/content/h5p/upgrade/library/{library_id}'
+#  defaults:
+#    _controller: '\Drupal\h5p\Controller\H5PAdmin::contentUpgradeLibrary'
+#    _title: 'H5P Content Upgrade Library'
+#  requirements:
+#    _permission: 'administer site configuration'
+#    id: \d+
 
 h5p.admin.content.h5p.rebuild_cache:
   path: '/admin/content/h5p/rebuild-cache'
@@ -71,14 +71,15 @@ h5p.admin.content.h5p.rebuild_cache:
     _permission: 'administer site configuration'
     id: \d+
 
-h5p.admin.content.h5p.embed:
-  path: '/admin/content/h5p/embed'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::embed'
-    _title: 'H5P Embed'
-  requirements:
-    _permission: 'access content'
-    id: \d+
+#h5p.admin.content.h5p.embed:
+#  path: '/admin/content/h5p/embed'
+#  defaults:
+#    _controller: '\Drupal\h5p\Controller\H5PAdmin::embed'
+#    _title: 'H5P Embed'
+#  requirements:
+#    _permission: 'access content'
+#    id: \d+
+#
 
 h5p.ajax.set_finished:
   path: '/h5p-ajax/set-finished.json'
@@ -88,7 +89,7 @@ h5p.ajax.set_finished:
      _permission: 'access content'
 
 h5p.ajax.content_user_data:
-  path: 'h5p-ajax/content-user-data/{content_id}/{data_id}/{sub_content_id}'
+  path: 'h5p-ajax/content-user-data/{content_main_id}/{data_id}/{sub_content_id}'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAJAX::contentUserData'
   requirements:
