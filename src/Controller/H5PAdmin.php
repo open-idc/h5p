@@ -313,7 +313,37 @@ class H5PAdmin extends ControllerBase {
     }
   }
 
+  /**
+   * Restrict a library
+   *
+   * @param string $library_id
+   */
+  function libraryRestrict($library_id) {
+    $restricted = filter_input(INPUT_GET, 'restrict');
+    $restrict = ($restricted === '1');
 
+    $token_id = filter_input(INPUT_GET, 'token_id');
+    if (!\H5PCore::validToken('library_' . $token_id, filter_input(INPUT_GET, 'token')) || (!$restrict && $restricted !== '0')) {
+      return MENU_ACCESS_DENIED;
+    }
+
+    db_update('h5p_libraries')
+      ->fields(array(
+        'restricted' => $restricted
+      ))
+      ->condition('library_id', $library_id)
+      ->execute();
+
+    $restrictUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library_id . '/restrict', array(
+      'query' => array(
+        'token' => \H5PCore::createToken('library_' . $token_id),
+        'token_id' => $token_id,
+        'restrict' => ($restrict ? 0 : 1),
+      )
+    ));
+
+    return new JsonResponse(array('url' => $restrictUrl->toString()));
+  }
 
   /**
    * Callback for rebuilding all content cache.

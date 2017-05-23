@@ -34,6 +34,15 @@ h5p.admin.content.h5p.libraries.upgrade:
     _permission: 'administer site configuration'
     id: \d+
 
+h5p.admin.content.h5p.libraries.restrict:
+  path: '/admin/content/h5p/libraries/{library_id}/restrict'
+  defaults:
+    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryRestrict'
+    _title: 'Restrict H5P Content'
+  requirements:
+    _permission: 'administer site configuration'
+    id: \d+
+
 h5p.admin.content.h5p.libraries.delete:
   path: '/admin/content/h5p/libraries/{library_id}/delete'
   defaults:
