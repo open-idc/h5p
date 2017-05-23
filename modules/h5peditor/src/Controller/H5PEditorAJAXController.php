@@ -37,6 +37,19 @@ class H5PEditorAJAXController extends ControllerBase {
   }
 
   /**
+   * Callback for uploading a library
+   *
+   * @param string $token Editor security token
+   * @param int $content_id Id of content that is being edited
+   */
+  function libraryUploadCallback($token, $content_id) {
+    $editor = H5PEditorUtilities::getInstance();
+    $filePath = $_FILES['h5p']['tmp_name'];
+    $editor->ajax->action(\H5PEditorEndpoints::LIBRARY_UPLOAD, $token, $filePath, $content_id);
+    exit();
+  }
+
+  /**
    * Callback that returns all library data
    *
    */

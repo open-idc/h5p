@@ -5,6 +5,7 @@
  */
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\Core\Database\Query\Condition;
 
 /**
  * Implements hook_disable
@@ -21,8 +22,8 @@ function h5p_disable() {
  * Implements hook_uninstall().
  */
 function h5p_uninstall() {
-
   $language_id = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $connection = \Drupal::database();
   $core = H5PDrupal::getInstance('core');
 
   // Clean out file dirs.
@@ -32,15 +33,15 @@ function h5p_uninstall() {
 
   // Remove these regardless of their content.
   foreach (array('temp', 'libraries', 'content', 'exports') as $directory) {
-    _h5p_recursive_unlink($h5p_path . '/' . $directory);
+    _h5p_recursive_unlink($h5p_path . '/' . $directory, $connection);
   }
 
   // Delete remaining h5p entries in file_managed table
-  $h5p_uri = db_or()
-    ->condition('uri', '%' . db_like('//h5p/') . '%', 'LIKE')
-    ->condition('uri', '%' . db_like('//h5peditor/') . '%', 'LIKE');
+  $h5p_uri = new Condition('OR');
+  $h5p_uri->condition('uri', '%' . $connection->escapeLike('//h5p/') . '%', 'LIKE');
+  $h5p_uri->condition('uri', '%' . $connection->escapeLike('//h5peditor/') . '%', 'LIKE');
 
-  db_delete('file_managed')
+  $connection->delete('file_managed')
     ->condition($h5p_uri)
     ->execute();
 
@@ -56,31 +57,33 @@ function h5p_uninstall() {
   }
 
   // Remove state
-  \Drupal::state()->delete('h5p_frame');
-  \Drupal::state()->delete('h5p_export');
-  \Drupal::state()->delete('h5p_embed');
-  \Drupal::state()->delete('h5p_copyright');
-  \Drupal::state()->delete('h5p_icon');
-  \Drupal::state()->delete('h5p_revisioning');
-  \Drupal::state()->delete('h5p_content_dev_mode');
-  \Drupal::state()->delete('h5p_default_path');
-  \Drupal::state()->delete('h5p_dev_mode');
-  \Drupal::state()->delete('h5p_library_development');
-  \Drupal::state()->delete('h5p_library_whitelist_extras');
-  \Drupal::state()->delete('h5p_whitelist');
-  \Drupal::state()->delete('h5p_unsupported_libraries');
-  \Drupal::state()->delete('h5p_fetched_library_metadata_on');
-  \Drupal::state()->delete('h5p_first_runnable_saved');
-  \Drupal::state()->delete('h5p_save_content_frequency');
-  \Drupal::state()->delete('h5p_save_content_state');
-  \Drupal::state()->delete('h5p_update_available');
-  \Drupal::state()->delete('h5p_update_available_path');
-  \Drupal::state()->delete('h5p_site_type');
-  \Drupal::state()->delete('h5p_enable_lrs_content_types');
-  \Drupal::state()->delete('h5p_hub_is_enabled');
-  \Drupal::state()->delete('h5p_content_type_cache_updated_at');
-  \Drupal::state()->delete('h5p_allow_communication_with_h5p_org');
-  \Drupal::state()->delete('h5p_send_usage_statistics');
+  \Drupal::state()->deleteMultiple(array(
+    'h5p_frame',
+    'h5p_export',
+    'h5p_embed',
+    'h5p_copyright',
+    'h5p_icon',
+    'h5p_revisioning',
+    'h5p_content_dev_mode',
+    'h5p_default_path',
+    'h5p_dev_mode',
+    'h5p_library_development',
+    'h5p_library_whitelist_extras',
+    'h5p_whitelist',
+    'h5p_unsupported_libraries',
+    'h5p_fetched_library_metadata_on',
+    'h5p_first_runnable_saved',
+    'h5p_save_content_frequency',
+    'h5p_save_content_state',
+    'h5p_update_available',
+    'h5p_update_available_path',
+    'h5p_site_type',
+    'h5p_enable_lrs_content_types',
+    'h5p_hub_is_enabled',
+    'h5p_content_type_cache_updated_at',
+    'h5p_allow_communication_with_h5p_org',
+    'h5p_send_usage_statistics'
+  ));
 
   // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
   // the uuid should be the same
@@ -102,31 +105,33 @@ function h5p_install() {
  * Recursively remove file or directory.
  *
  * @param string $file
+ * @param \Drupal\Core\Database\Connection connection
  */
-function _h5p_recursive_unlink($file) {
+function _h5p_recursive_unlink($file, $connection) {
 
   if (is_dir($file)) {
     // Remove all files in dir.
     $subfiles = array_diff(scandir($file), array('.','..'));
     foreach ($subfiles as $subfile)  {
-      _h5p_recursive_unlink($file . '/' . $subfile);
+      _h5p_recursive_unlink($file . '/' . $subfile, $connection);
     }
     rmdir($file);
   } elseif (file_exists($file)) {
 
     // Get file from file_managed if it exists
     $file_uri = file_build_uri(substr($file, strpos($file, 'h5p/'), strlen($file)));
-    $fid = db_query("SELECT fid FROM {file_managed} WHERE uri = :path",
-      array(':path' => $file_uri))->fetchField();
+    $fid = $connection
+      ->query("SELECT fid FROM {file_managed} WHERE uri = :path", array(':path' => $file_uri))
+      ->fetchField();
     if ($fid !== false) {
 
       // If it was found delete file and database record
-      $file_object = file_load($fid);
+      $file_object = \Drupal::entityTypeManager()->getStorage('file')->resetCache([$fid]);
       file_delete($file_object);
     } else {
 
       // Delete locally
-      drupal_unlink($file);
+      \Drupal::service('file_system')->unlink($file);
     }
   }
 }
