@@ -15,6 +15,9 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
  * @ContentEntityType(
  *   id = "h5p_content",
  *   label = @Translation("H5P Content"),
+ *   handlers = {
+ *     "storage_schema" = "Drupal\h5p\H5PContentStorageSchema"
+ *   },
  *   base_table = "h5p_content",
  *   entity_keys = {
  *     "id" = "id"
