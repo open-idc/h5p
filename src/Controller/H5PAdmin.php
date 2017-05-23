@@ -44,7 +44,7 @@ class H5PAdmin extends ControllerBase {
     $libraries = $core->h5pF->loadLibraries();
 
     // Add settings for each library
-    $settings = array();
+    $settings = [];
     $i = 0;
     foreach ($libraries as $versions) {
       foreach ($versions as $library) {
@@ -56,13 +56,13 @@ class H5PAdmin extends ControllerBase {
           $upgradeUrl = empty($upgrades) ? FALSE : $url;
 
           $restricted = ($library->restricted === '1' ? TRUE : FALSE);
-          $option = array(
-            'query' => array(
+          $option = [
+            'query' => [
               'token' => \H5PCore::createToken('library_' . $i),
               'token_id' => $i,
               'restrict' => ($library->restricted === '1' ? 0 : 1)
-            )
-          );
+            ]
+          ];
           $restricted_url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/restrict', $option)->toString();
         }
         else {
@@ -71,13 +71,13 @@ class H5PAdmin extends ControllerBase {
           $restricted_url = NULL;
         }
 
-        $option = array(
+        $option = [
           'query' => drupal_get_destination(),
-        );
+        ];
         $deleteUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/delete', $option);
         //$detailsUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id);
 
-        $settings['libraryList']['listData'][] = array(
+        $settings['libraryList']['listData'][] = [
           'title' => $library->title . ' (' . \H5PCore::libraryVersion($library) . ')',
           'restricted' => $restricted,
           'restrictedUrl' => $restricted_url,
@@ -87,14 +87,14 @@ class H5PAdmin extends ControllerBase {
           'upgradeUrl' => $upgradeUrl,
           //'detailsUrl' => $detailsUrl->toString(),
           'deleteUrl' => $deleteUrl->toString(),
-        );
+        ];
 
         $i++;
       }
     }
 
     // All translations are made server side
-    $settings['libraryList']['listHeaders'] = array(t('Title'), t('Restricted'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions'));
+    $settings['libraryList']['listHeaders'] = [t('Title'), t('Restricted'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')];
 
     // Make it possible to rebuild all caches.
     if ($numNotFiltered) {
@@ -107,10 +107,10 @@ class H5PAdmin extends ControllerBase {
     $build['#attached'] = $this->addSettings($settings);
     $build['#attached']['library'][] = 'h5p/h5p.admin.library.list';
 
-    $build['title_add'] =  array('#markup' => '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>');
+    $build['title_add'] = ['#markup' => '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>'];
     $build['form'] = \Drupal::formBuilder()->getForm('Drupal\h5p\Form\H5PLibraryUploadForm');
-    $build['title_installed'] =  array('#markup' => '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>');
-    $build['container'] = array('#markup' => '<div id="h5p-admin-container"></div>');
+    $build['title_installed'] = ['#markup' => '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>'];
+    $build['container'] = ['#markup' => '<div id="h5p-admin-container"></div>'];
 
     return $build;
   }
@@ -123,13 +123,13 @@ class H5PAdmin extends ControllerBase {
    */
   function getNotCachedSettings($num) {
     $url = Url::fromUri('internal:/admin/content/h5p/rebuild-cache');
-    return array(
+    return [
       'num' => $num,
       'url' => $url->toString(),
       'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
       'progress' => \Drupal::translation()->formatPlural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
       'button' => t('Rebuild cache')
-    );
+    ];
   }
 
   /**
@@ -144,28 +144,28 @@ class H5PAdmin extends ControllerBase {
     $settings = [];
 
     $query = $this->database->select('h5p_libraries', 'l');
-    $query->fields('l', array('title', 'machine_name', 'major_version', 'minor_version', 'patch_version', 'runnable', 'fullscreen'));
+    $query->fields('l', ['title', 'machine_name', 'major_version', 'minor_version', 'patch_version', 'runnable', 'fullscreen']);
     $query->condition('l.library_id', $library_id, '=');
     $library = $query->execute()->fetchObject();
 
     // Build library info
-    $settings['libraryInfo']['info'] = array(
+    $settings['libraryInfo']['info'] = [
       'Name' => $library->title,
       'Machine name' => $library->machine_name,
       'Version' => \H5PCore::libraryVersion($library),
       'Runnable' => $library->runnable ? t('Yes') : t('No'),
       'Fullscreen' => $library->fullscreen ? t('Yes') : t('No'),
-    );
+    ];
 
     // Build the translations needed
-    $settings['libraryInfo']['translations'] = array(
+    $settings['libraryInfo']['translations'] = [
       'contentCount' => t('Content count'),
       'noContent' => t('No content is using this library'),
       'contentHeader' => t('Content using this library'),
       'pageSizeSelectorLabel' => t('Elements per page'),
       'filterPlaceholder' => t('Filter content'),
       'pageXOfY' => t('Page $x of $y'),
-    );
+    ];
 
     $h5p_drupal = H5PDrupal::getInstance('interface');
     $numNotFiltered = $h5p_drupal->getNumNotFiltered();
@@ -177,7 +177,7 @@ class H5PAdmin extends ControllerBase {
       // Build a list of the content using this library
       $query = $this->database->select('h5p_content_libraries', 'l');
       $query->distinct();
-      $query->fields('n', array('nid', 'title'));
+      $query->fields('n', ['nid', 'title']);
       //$query->join('h5p_nodes', 'hn', 'l.content_id = hn.content_id');
 
       $query->join('node_field_data', 'n', 'hn.nid = n.nid');
@@ -187,10 +187,10 @@ class H5PAdmin extends ControllerBase {
 
       foreach($nodes_res as $node) {
         $node_url = Url::fromUri('internal:/node/' . $node->nid);
-        $settings['libraryInfo']['content'][] = array(
+        $settings['libraryInfo']['content'][] = [
           'title' => $node->title,
           'url' => $node_url->toString(),
-        );
+        ];
       }
     }
 
@@ -198,7 +198,7 @@ class H5PAdmin extends ControllerBase {
     $settings['containerSelector'] = '#h5p-admin-container';
     $build['#attached'] = $this->addSettings($settings);
     $build['#attached']['library'][] = 'h5p/h5p.admin.library.details';
-    $build['container'] = array('#markup' => '<div id="h5p-admin-container"></div>');
+    $build['container'] = ['#markup' => '<div id="h5p-admin-container"></div>'];
     $build['#cache']['max-age'] = 0;
 
     return $build;
@@ -213,10 +213,10 @@ class H5PAdmin extends ControllerBase {
   function libraryUpgradePageTitle($library_id) {
     $query = $this->database->select('h5p_libraries', 'l');
     $query->condition('library_id', $library_id, '=');
-    $query->fields('l', array('title', 'major_version', 'minor_version', 'patch_version'));
+    $query->fields('l', ['title', 'major_version', 'minor_version', 'patch_version']);
     $library = $query->execute()->fetch();
 
-    return t('Upgrade @library content', array('@library' => $library->title . ' (' . \H5PCore::libraryVersion($library) . ')'));
+    return t('Upgrade @library content', ['@library' => $library->title . ' (' . \H5PCore::libraryVersion($library) . ')']);
   }
   /**
    * Callback for the library content upgrade page.
@@ -233,7 +233,7 @@ class H5PAdmin extends ControllerBase {
     $query->join('h5p_libraries', 'hl2', 'hl1.machine_name = hl2.machine_name');
     $query->condition('hl1.library_id', $library_id, '=');
     $query->addField('hl2', 'library_id', 'id');
-    $query->fields('hl2', array('machine_name', 'title', 'major_version', 'minor_version', 'patch_version'));
+    $query->fields('hl2', ['machine_name', 'title', 'major_version', 'minor_version', 'patch_version']);
     $query->orderBy('hl2.title', 'ASC');
     $query->orderBy('hl2.major_version', 'ASC');
     $query->orderBy('hl2.minor_version', 'ASC');
@@ -307,7 +307,7 @@ class H5PAdmin extends ControllerBase {
     }
 
     // Get the library we're upgrading to
-    $to_library = db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = :id', array(':id' => filter_input(INPUT_POST, 'libraryId')))->fetch();
+    $to_library = db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = :id', [':id' => filter_input(INPUT_POST, 'libraryId')])->fetch();
     if (!$to_library) {
       return ['#markup' => t('Error: Your library is missing!')];
     }
@@ -328,11 +328,11 @@ class H5PAdmin extends ControllerBase {
       $params = json_decode($params);
       foreach ($params as $id => $param) {
         db_update('h5p_content')
-          ->fields(array(
+          ->fields([
             'library_id' => $to_library->id,
             'parameters' => $param,
             'filtered_parameters' => ''
-          ))
+          ])
           ->condition('id', $id)
           ->execute();
 
@@ -344,9 +344,7 @@ class H5PAdmin extends ControllerBase {
           $to_library->major_version . '.' . $to_library->minor_version);
 
         // Clear content cache
-        $interface->updateContentFields($id, array(
-          'filtered' => ''
-        ));
+        $interface->updateContentFields($id, ['filtered' => '']);
       }
     }
 
@@ -355,7 +353,7 @@ class H5PAdmin extends ControllerBase {
 
     if ($out['left']) {
       // Find the 10 first contents using library and add to params
-      $contents = db_query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', array(':id' => $library_id));
+      $contents = db_query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', [':id' => $library_id]);
       foreach ($contents as $content) {
         $out['params'][$content->id] = $content->params;
       }
@@ -433,21 +431,19 @@ class H5PAdmin extends ControllerBase {
     }
 
     db_update('h5p_libraries')
-      ->fields(array(
-        'restricted' => $restricted
-      ))
+      ->fields(['restricted' => $restricted])
       ->condition('library_id', $library_id)
       ->execute();
 
-    $restrictUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library_id . '/restrict', array(
-      'query' => array(
+    $restrictUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library_id . '/restrict', [
+      'query' => [
         'token' => \H5PCore::createToken('library_' . $token_id),
         'token_id' => $token_id,
         'restrict' => ($restrict ? 0 : 1),
-      )
-    ));
+      ]
+    ]);
 
-    return new JsonResponse(array('url' => $restrictUrl->toString()));
+    return new JsonResponse(['url' => $restrictUrl->toString()]);
   }
 
   /**
@@ -464,7 +460,7 @@ class H5PAdmin extends ControllerBase {
     $core = H5PDrupal::getInstance('core');
 
     $query = $this->database->select('h5p_content', 'hc')
-      ->fields('hc', array('id'))
+      ->fields('hc', ['id'])
       ->isNull('hc.filtered_parameters');
     $num_rows = $query->countQuery()->execute()->fetchField();
     $result = $query->execute();
@@ -492,12 +488,9 @@ class H5PAdmin extends ControllerBase {
    * @param integer $library_id
    */
   function libraryDetailsTitle($library_id) {
-
-    // return db_query('SELECT title FROM {h5p_libraries} where library_id = :id', array(':id' => $library_id))->fetchField();
-
     $query = $this->database->select('h5p_libraries', 'l');
     $query->condition('l.library_id', $library_id, '=');
-    $query->fields('l', array('title'));
+    $query->fields('l', ['title']);
     return $query->execute()->fetchField();
   }
 
@@ -510,16 +503,16 @@ class H5PAdmin extends ControllerBase {
     $module_path = drupal_get_path('module', 'h5p');
 
     if ($settings === NULL) {
-      $settings = array();
+      $settings = [];
     }
 
     $settings['containerSelector'] = '#h5p-admin-container';
-    $settings['l10n'] = array(
+    $settings['l10n'] = [
       'NA' => t('N/A'),
       /*'viewLibrary' => t('View library details'),*/
       'deleteLibrary' => t('Delete library'),
       'upgradeLibrary' => t('Upgrade library content')
-    );
+    ];
 
     $build['drupalSettings']['h5p']['drupal_h5p_admin_integration'] = [
       'H5PAdminIntegration' =>  $settings,
