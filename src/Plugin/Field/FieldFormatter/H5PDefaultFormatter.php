@@ -15,6 +15,9 @@ use Drupal\h5p\Entity\H5PContent;
  *   label = @Translation("Interactive Content"),
  *   field_types = {
  *     "h5p"
+ *   },
+ *   quickedit = {
+ *     "editor" = "disabled"
  *   }
  * )
  */
@@ -91,6 +94,7 @@ class H5PDefaultFormatter extends FormatterBase {
       $element[$delta] = array(
         '#type' => 'markup',
         '#markup' => $html,
+        '#allowed_tags' => ['div','iframe'],
         '#attached' => [
           'drupalSettings' => [
             'h5p' => [

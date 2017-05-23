@@ -80,6 +80,24 @@ class H5PEditorWidget extends WidgetBase {
       ),
     );
 
+    $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
+    $element['h5p_file_options'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Display buttons (download, embed and copyright)'),
+      '#default_value' => 1
+    ];
+
+    $h5p_copyright = \Drupal::state()->get('h5p_copyright');
+    $element['h5p_file_options_copyright'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Copyright button'),
+      '#states' => [
+        'visible' => [
+          ':input[name="field_h5p[' . $delta  . '][value][h5p_file_options]"]' => array('checked' => TRUE)
+        ]
+      ]
+    ];
+
     $element['json_content'] = array(
       '#type' => 'hidden',
       '#default_value' => isset($this->params) ? $this->params : '',
