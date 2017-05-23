@@ -7,6 +7,7 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
+use Drupal\h5peditor\H5PEditor\H5PEditorUtilities;
 
 
 /**
@@ -59,8 +60,8 @@ class H5PEditorWidget extends WidgetBase {
     $form['h5p_type']['#default_value'] = 'create';
     $form['h5p_type']['#type'] = 'hidden';
 
-    $integration = H5PDrupal\H5PDrupal::getGenericH5PIntegrationSettings();
-    $settings = h5p_get_editor_settings($this->content_id);
+    $integration = H5PDrupal::getGenericH5PIntegrationSettings();
+    $settings = H5PEditorUtilities::getEditorSettings($this->content_id);
 
     $element += array(
       '#type' => 'item',
@@ -110,9 +111,7 @@ class H5PEditorWidget extends WidgetBase {
 
     $library_string = $values[0]['value']['h5p_library'];
     $params = $values[0]['value']['json_content'];
-
-    $library = h5peditor_get_library_property($library_string);
-    $library['libraryId'] = h5peditor_get_library_property($library_string, 'libraryId');
+    $library = H5PEditorUtilities::getLibraryProperty($library_string);
 
     // TODO: Handle cloning, revisioning and translating
 
@@ -126,7 +125,7 @@ class H5PEditorWidget extends WidgetBase {
     $h5p_content_id = $core->saveContent($libraryData);
 
     // Move files.
-    $editor = h5peditor_get_instance();
+    $editor = H5PEditorUtilities::getInstance();
 
     // Find old data for comparison
     if ($this->content_id) {

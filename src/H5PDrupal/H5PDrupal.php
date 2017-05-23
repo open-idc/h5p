@@ -410,6 +410,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements isPatchedLibrary
    */
   public function isPatchedLibrary($library) {
+    return TRUE;
     if ($this->getOption('dev_mode', FALSE)) {
       return TRUE;
     }
@@ -1133,11 +1134,20 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @param int $library_id
    */
   public function clearFilteredParameters($library_id) {
+
+    // Grab all H5PContent entities
+    $h5p_contents = \Drupal::entityTypeManager()
+        ->getStorage('h5p_content')
+        ->loadByProperties(['library_id' => $library_id]);
+
+    // Clear their filtered_parameters
+    foreach ($h5p_contents as $h5p_content) {
+      $h5p_content->set('filtered_parameters', '');
+      $h5p_content->save();
+    }
+
     // Clear library JS cache
     \Drupal::service('library.discovery.collector')->delete('h5p');
-
-    // TODO: We update all entities that uses the library + invalidate cache
-
   }
 
   /**
@@ -1147,7 +1157,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return int
    */
   public function getNumNotFiltered() {
-    return intval(db_query("SELECT COUNT(id) FROM {h5p_content} WHERE filtered_parameters = '' AND library_id > 0")->fetchField());
+    return intval(db_query("SELECT COUNT(id) FROM {h5p_content} WHERE filtered_parameters IS NULL AND library_id > 0")->fetchField());
   }
 
   /**

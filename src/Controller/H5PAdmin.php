@@ -3,11 +3,13 @@
 namespace Drupal\h5p\Controller;
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\h5p\Entity\H5PContent;
 
 use Drupal\Core\Url;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 
 class H5PAdmin extends ControllerBase {
@@ -127,11 +129,9 @@ class H5PAdmin extends ControllerBase {
     $url = Url::fromUri('internal:/admin/content/h5p/rebuild-cache');
     return array(
       'num' => $num,
-      'url' => $url,
+      'url' => $url->toString(),
       'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
-      // todo $JM format_plural
-      // 'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
-      'progress' => 'content need to get its cache rebuilt.',
+      'progress' => \Drupal::translation()->formatPlural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
       'button' => t('Rebuild cache')
     );
   }
@@ -313,16 +313,44 @@ class H5PAdmin extends ControllerBase {
     }
   }
 
+  /**
+   * Restrict a library
+   *
+   * @param string $library_id
+   */
+  function libraryRestrict($library_id) {
+    $restricted = filter_input(INPUT_GET, 'restrict');
+    $restrict = ($restricted === '1');
 
+    $token_id = filter_input(INPUT_GET, 'token_id');
+    if (!\H5PCore::validToken('library_' . $token_id, filter_input(INPUT_GET, 'token')) || (!$restrict && $restricted !== '0')) {
+      return MENU_ACCESS_DENIED;
+    }
+
+    db_update('h5p_libraries')
+      ->fields(array(
+        'restricted' => $restricted
+      ))
+      ->condition('library_id', $library_id)
+      ->execute();
+
+    $restrictUrl = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library_id . '/restrict', array(
+      'query' => array(
+        'token' => \H5PCore::createToken('library_' . $token_id),
+        'token_id' => $token_id,
+        'restrict' => ($restrict ? 0 : 1),
+      )
+    ));
+
+    return new JsonResponse(array('url' => $restrictUrl->toString()));
+  }
 
   /**
    * Callback for rebuilding all content cache.
    */
   function rebuildCache() {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-      drupal_set_message(t('HTTP POST is required.'), 'error');
-      drupal_set_title(t('Error'));
-      return '';
+      return new JsonResponse('What you want? This is not for you.');
     }
 
     // Do as many as we can in ten seconds.
@@ -330,17 +358,16 @@ class H5PAdmin extends ControllerBase {
 
     $core = H5PDrupal::getInstance('core');
 
-    // $contents = db_query("SELECT content_id FROM {h5p_nodes} WHERE filtered = ''");
-    $query = $this->database->select('h5p_nodes', 'n'); // TODO: Use H5PContent entity
-    $query->fields('n', array('content_id'));
-    $query->condition('n.filtered', '', '=');
+    $query = $this->database->select('h5p_content', 'hc')
+      ->fields('hc', array('id'))
+      ->isNull('hc.filtered_parameters');
     $num_rows = $query->countQuery()->execute()->fetchField();
     $result = $query->execute();
 
     $done = 0;
     foreach ($result as $row) {
-      $content = $core->loadContent($row->content_id);
-      $core->filterParameters($content);
+      $h5p_content = H5PContent::load($row->id);
+      $h5p_content->getFilteredParameters();
       $done++;
 
       if ((microtime(TRUE) - $start) > 10) {
@@ -349,7 +376,8 @@ class H5PAdmin extends ControllerBase {
     }
 
     $count = $num_rows - $done;
-    return array('#markup' =>  $count);
+
+    return new JsonResponse((string)$count);
   }
 
 

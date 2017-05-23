@@ -93,6 +93,13 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
+  public function getLibraryId() {
+    return $this->get('library_id')->value;
+  }
+
+  /**
+   *
+   */
   public function isDivEmbeddable() {
     if (empty($this->library)) {
       $this->loadLibrary();
@@ -117,7 +124,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
-  public function getH5PIntegrationSettings() {
+  public function getFilteredParameters() {
     if (empty($this->library)) {
       $this->loadLibrary();
     }
@@ -135,12 +142,21 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     ];
 
     $core = H5PDrupal::getInstance('core');
-    $filtered_parameters = $core->filterParameters($content);
-    $display_options = $core->getDisplayOptionsForEdit($this->get('disabled_features')->value);
+    return $core->filterParameters($content);
 
     // TODO: Implement hook filtered_params ?
     //   \Drupal::moduleHandler()->alter('h5p_params', $files['scripts'], $library_list, $embed_type);
+  }
 
+  /**
+   *
+   */
+  public function getH5PIntegrationSettings() {
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    // Load user data for content
     $results = db_query(
         "SELECT sub_content_id, data_id, data
            FROM {h5p_content_user_data}
@@ -161,6 +177,10 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     foreach ($results as $result) {
       $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
     }
+
+    $core = H5PDrupal::getInstance('core');
+    $filtered_parameters = $this->getFilteredParameters();
+    $display_options = $core->getDisplayOptionsForEdit($this->get('disabled_features')->value);
 
     $embed_url = Url::fromUri('internal:/h5p/embed/' . $this->id(), ['absolute' => TRUE])->toString();
     $resizer_url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString();
