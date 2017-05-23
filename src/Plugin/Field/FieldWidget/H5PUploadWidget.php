@@ -40,6 +40,24 @@ class H5PUploadWidget extends WidgetBase {
         [$this, 'validate'],
       ],
     ];
+    
+    $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
+    $element['h5p_file_options'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Display buttons (download, embed and copyright)'),
+      '#default_value' => 1
+    ];
+
+    $h5p_copyright = \Drupal::state()->get('h5p_copyright');
+    $element['h5p_file_options_copyright'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Copyright button'),
+      '#states' => [
+        'visible' => [
+          ':input[name="field_h5p[' . $delta  . '][h5p_upload][h5p_file_options]"]' => array('checked' => TRUE)
+        ]
+      ]
+    ];
 
     $element['h5p_content_id'] = [
       '#type' => 'value',
