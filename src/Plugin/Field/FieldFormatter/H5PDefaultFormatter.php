@@ -94,6 +94,7 @@ class H5PDefaultFormatter extends FormatterBase {
       $element[$delta] = array(
         '#type' => 'markup',
         '#markup' => $html,
+        '#allowed_tags' => ['div','iframe'],
         '#attached' => [
           'drupalSettings' => [
             'h5p' => [

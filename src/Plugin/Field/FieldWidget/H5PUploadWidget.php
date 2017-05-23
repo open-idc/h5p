@@ -7,6 +7,7 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\h5p\Entity\H5PContent;
 
 /**
  * Plugin implementation of the 'h5p_upload' widget.
@@ -39,6 +40,24 @@ class H5PUploadWidget extends WidgetBase {
       '#element_validate' => [
         [$this, 'validate'],
       ],
+    ];
+    
+    $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
+    $element['h5p_file_options'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Display buttons (download, embed and copyright)'),
+      '#default_value' => 1
+    ];
+
+    $h5p_copyright = \Drupal::state()->get('h5p_copyright');
+    $element['h5p_file_options_copyright'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Copyright button'),
+      '#states' => [
+        'visible' => [
+          ':input[name="field_h5p[' . $delta  . '][h5p_upload][h5p_file_options]"]' => array('checked' => TRUE)
+        ]
+      ]
     ];
 
     $element['h5p_content_id'] = [
@@ -99,28 +118,65 @@ class H5PUploadWidget extends WidgetBase {
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
 
-    // Only one message per widget
-    if (empty($this->massagedValues)) {
-
-      // Get value from form
-      $h5p_content_id = $values[0]['h5p_upload']['h5p_content_id'];
-
-      if (!FormState::hasAnyErrors() && $values[0]['h5p_upload']['h5p_file'] === 1) {
-        $storage = H5PDrupal::getInstance('storage');
-        $content = ['uploaded' => TRUE]; // Used when logging event in insertContent or updateContent
-        if (!empty($h5p_content_id)) {
-          $content['id'] = $h5p_content_id;
-        }
-        $storage->savePackage($content);
-        $h5p_content_id = $storage->contentId;
-      }
-
-      $this->massagedValues = [
-        'h5p_content_id' => (int) $h5p_content_id,
-      ];
+    // We only message after validation has completed
+    if (!$form_state->isValidationComplete()) {
+      return $values;
     }
 
-    return $this->massagedValues;
+    $form_object = $form_state->getFormObject();
+    $entity = $form_object->getEntity();
+
+    // Determine if this is a new revision
+    $is_new_revision = ($entity->getEntityType()->hasKey('revision') && $form_state->getValue('revision'));
+
+    // Determine if we do revisioning for H5P content
+    // (may be disabled to save disk space)
+    $interface = H5PDrupal::getInstance();
+    $do_new_revision = $interface->getOption('revisioning', TRUE) && $is_new_revision;
+
+    // Determine if a new file has been uploaded
+    $file_is_uploaded = ($values[0]['h5p_upload']['h5p_file'] === 1);
+
+    // Get value from form
+    $h5p_content_id = $values[0]['h5p_upload']['h5p_content_id'];
+    $has_content = !empty($h5p_content_id);
+
+    if ($file_is_uploaded) {
+      // Store the uploaded file
+      $storage = H5PDrupal::getInstance('storage');
+
+      $content = [
+        'uploaded' => TRUE, // Used when logging event in insertContent or updateContent
+      ];
+
+      if ($has_content && !$do_new_revision) {
+        // Use existing id = update existing content
+        $content['id'] = $h5p_content_id;
+      }
+
+      // Update content id
+      $storage->savePackage($content);
+      $h5p_content_id = $storage->contentId;
+    }
+    elseif ($do_new_revision && $has_content) {
+      // New revision, clone the existing content
+
+      $h5p_content = H5PContent::load($h5p_content_id);
+      $h5p_content->set('id', NULL);
+      $h5p_content->set('filtered_parameters', NULL);
+      $h5p_content->save();
+
+      // Clone content folder
+      $core = H5PDrupal::getInstance('core');
+      $core->fs->cloneContent($h5p_content_id, $h5p_content->id());
+
+      // Update field id
+      $h5p_content_id = $h5p_content->id();
+    }
+
+    return [
+      'h5p_content_id' => (int) $h5p_content_id,
+    ];
   }
 
 }

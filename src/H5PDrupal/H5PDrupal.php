@@ -161,7 +161,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public static function getCoreAssets($keys = NULL) {
     if (empty($keys)) {
-      $key = ['scripts', 'styles'];
+      $keys = ['scripts', 'styles'];
     }
 
     // Prepare arrays
@@ -185,6 +185,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $css = 'vendor/h5p/h5p-core/' . $style;
       $assets[$keys[1]][] = base_path() . $css . $cache_buster;
     }
+
+    return $assets;
   }
 
   /**
