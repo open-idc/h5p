@@ -15,6 +15,9 @@ use Drupal\h5p\Entity\H5PContent;
  *   label = @Translation("Interactive Content"),
  *   field_types = {
  *     "h5p"
+ *   },
+ *   quickedit = {
+ *     "editor" = "disabled"
  *   }
  * )
  */
