@@ -161,7 +161,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public static function getCoreAssets($keys = NULL) {
     if (empty($keys)) {
-      $key = ['scripts', 'styles'];
+      $keys = ['scripts', 'styles'];
     }
 
     // Prepare arrays
