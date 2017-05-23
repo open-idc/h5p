@@ -108,7 +108,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       $this->loadLibrary();
     }
 
-    return (strpos($this->library->embed_type, 'iframe') === FALSE);
+    return (strpos($this->library->embed_types, 'iframe') === FALSE);
   }
 
   /**
