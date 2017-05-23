@@ -16,20 +16,12 @@ h5p.admin.content.h5p:
   requirements:
     _permission: 'administer site configuration'
 
-h5p.admin.content.h5p.libraries.details:
-  path: '/admin/content/h5p/libraries/{library_id}'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
-    _title: 'H5P Library Details'
-  requirements:
-    _permission: 'administer site configuration'
-    id: \d+
-
 h5p.admin.content.h5p.libraries.upgrade:
   path: '/admin/content/h5p/libraries/{library_id}/upgrade'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryUpgrade'
-    _title: 'Upgrade H5P Content'
+    _title_callback: '\Drupal\h5p\Controller\H5PAdmin::libraryUpgradePageTitle'
+
   requirements:
     _permission: 'administer site configuration'
     id: \d+
@@ -61,9 +53,8 @@ h5p.admin.content.h5p.libraries.restrict:
     _permission: 'administer site configuration'
     id: \d+
 
-# TODO path requires 3 page arguments. See line 71 in D7's h5p.module
-h5p.admin.content.h5p.libraries.upgrade:
-  path: '/admin/content/h5p/upgrade/library/{library_id}'
+h5p.admin.content.h5p.upgrade.library:
+  path: '/admin/content/h5p/upgrade/library/{name}/{major}/{minor}'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAdmin::contentUpgradeLibrary'
     _title: 'H5P Content Upgrade Library'
