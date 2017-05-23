@@ -32,11 +32,13 @@ class H5PEditorUtilities {
   /**
    * Get editor settings needed for JS front-end
    *
-   * @param int $contentId Currently editing content. 0 for new content.
+   * @param string $fieldName Name of field that the editor uses
+   * @param int $fieldNumber The order of the field if multiple fields exists
+   * @param int $contentId Currently editing content. 0 for new content
    *
    * @return array Settings needed for view
    */
-  public static function getEditorSettings($contentId = 0) {
+  public static function getEditorSettings($fieldName, $fieldNumber = 0, $contentId = 0) {
     $contentValidator = H5PDrupal::getInstance('contentvalidator');
     $module_path      = drupal_get_path('module', 'h5p');
 
@@ -56,6 +58,8 @@ class H5PEditorUtilities {
         'contentRelUrl'      => '../h5p/content/',
         'editorRelUrl'       => '../../../vendor/h5p/h5p-editor',
         'apiVersion'         => \H5PCore::$coreApi,
+        'fieldName'          => $fieldName,
+        'fieldNumber'        => $fieldNumber,
       ],
     ];
 

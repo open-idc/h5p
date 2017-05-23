@@ -21,6 +21,13 @@ h5peditor.library_install:
   requirements:
     _permission: 'h5peditor_access'
 
+h5peditor.library_upload:
+  path: '/h5peditor/{token}/{content_id}/library-upload'
+  defaults:
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::libraryUploadCallback'
+  requirements:
+    _permission: 'h5peditor_access'
+
 h5peditor.library:
   path: '/h5peditor/{token}/{content_id}/libraries/{machine_name}/{major_version}/{minor_version}'
   defaults:

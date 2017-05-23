@@ -61,7 +61,7 @@ class H5PEditorWidget extends WidgetBase {
     $form['h5p_type']['#type'] = 'hidden';
 
     $integration = H5PDrupal::getGenericH5PIntegrationSettings();
-    $settings = H5PEditorUtilities::getEditorSettings($this->content_id);
+    $settings = H5PEditorUtilities::getEditorSettings($items->getName(), $delta, $this->content_id);
 
     $element += array(
       '#type' => 'item',

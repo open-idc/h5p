@@ -16,6 +16,15 @@ h5p.admin.content.h5p:
   requirements:
     _permission: 'administer site configuration'
 
+#h5p.admin.content.h5p.libraries.details:
+#  path: '/admin/content/h5p/libraries/{library_id}'
+#  defaults:
+#    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
+#    _title: 'H5P Library Details'
+#  requirements:
+#    _permission: 'administer site configuration'
+#    id: \d+
+
 h5p.admin.content.h5p.libraries.upgrade:
   path: '/admin/content/h5p/libraries/{library_id}/upgrade'
   defaults:
@@ -40,15 +49,6 @@ h5p.admin.content.h5p.libraries.delete:
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDelete'
     _title: 'Delete H5P Library'
-  requirements:
-    _permission: 'administer site configuration'
-    id: \d+
-
-h5p.admin.content.h5p.libraries.restrict:
-  path: '/admin/content/h5p/libraries/{library_id}/restrict'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryRestrict'
-    _title: 'Restrict H5P Library'
   requirements:
     _permission: 'administer site configuration'
     id: \d+
@@ -88,7 +88,7 @@ h5p.ajax.set_finished:
      _permission: 'access content'
 
 h5p.ajax.content_user_data:
-  path: 'h5p-ajax/content-user-data/{content_id}/{data_id}/{sub_content_id}'
+  path: 'h5p-ajax/content-user-data/{content_main_id}/{data_id}/{sub_content_id}'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAJAX::contentUserData'
   requirements:

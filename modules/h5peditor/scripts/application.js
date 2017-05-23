@@ -8,16 +8,7 @@ var ns = H5PEditor;
     attach: function (context, settings) {
 
       ns.init = function () {
-        var h5peditor;
-        var $upload = $('input[name="files[h5p]"]').parents('.form-item');
-        var $editor = $('.h5p-editor');
-        var $create = $('#edit-h5p-editor').hide();
-        var $type = $('input[name="h5p_type"]');
-        // TODO: Make it possible to have multiple fields
-        var $params = $('input[name="field_h5peditor[0][value][json_content]"]');
-        var $library = $('input[name="field_h5peditor[0][value][h5p_library]"]');
-        var library = $library.val();
-
+        // Setup
         ns.$ = H5P.jQuery;
         ns.basePath = drupalSettings.path.baseUrl + settings.h5p.drupal_h5p_editor.h5peditor.modulePath + '/h5p-editor';
         ns.contentId = settings.h5p.drupal_h5p_editor.h5peditor.nodeVersionId;
@@ -28,6 +19,19 @@ var ns = H5PEditor;
         ns.contentRelUrl = settings.h5p.drupal_h5p_editor.h5peditor.contentRelUrl;
         ns.editorRelUrl = settings.h5p.drupal_h5p_editor.h5peditor.editorRelUrl;
         ns.apiVersion = settings.h5p.drupal_h5p_editor.h5peditor.apiVersion;
+        var fieldName = settings.h5p.drupal_h5p_editor.h5peditor.fieldName;
+        var fieldNumber = settings.h5p.drupal_h5p_editor.h5peditor.fieldNumber;
+
+        // Elements
+        var h5peditor;
+        var $upload = $('input[name="files[h5p]"]').parents('.form-item');
+        var $editor = $('.h5p-editor');
+        var $create = $('#edit-h5p-editor').hide();
+        var $type = $('input[name="h5p_type"]');
+        var $params = $('input[name="' + fieldName + '[' + fieldNumber + '][value][json_content]"]');
+        var $library = $('input[name="' + fieldName + '[' + fieldNumber + '][value][h5p_library]"]');
+        var library = $library.val();
+
 
         // Semantics describing what copyright information can be stored for media.
         ns.copyrightSemantics = settings.h5p.drupal_h5p_editor.h5peditor.copyrightSemantics;
@@ -50,7 +54,7 @@ var ns = H5PEditor;
             }
             $create.show();
           }
-        }).change();
+        });
 
         // TODO: Use something more robust than mousedown.
         $('#edit-actions').find('input[type="submit"]').mousedown(function () {
@@ -71,6 +75,9 @@ var ns = H5PEditor;
             }
           }
         });
+
+        // Trigger editor load
+        $type.change();
       };
 
       ns.getAjaxUrl = function (action, parameters) {
