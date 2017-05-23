@@ -295,9 +295,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements setErrorMessage
    */
   public function setErrorMessage($message) {
-
-    $user = \Drupal::currentUser();
-    if ($user->hasPermission('create h5p_content content')) { // TODO: Permissing doesn't exist?
+    if (\Drupal::entityTypeManager()->getAccessControlHandler('node')->createAccess('h5p_content')) {
       drupal_set_message($message, 'error');
     }
   }
@@ -306,9 +304,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements setInfoMessage
    */
   public function setInfoMessage($message) {
-
-    $user = \Drupal::currentUser();
-    if ($user->hasPermission('create h5p_content content')) { // TODO: Permissing doesn't exist?
+    if (\Drupal::entityTypeManager()->getAccessControlHandler('node')->createAccess('h5p_content')) {
       drupal_set_message($message);
     }
   }
