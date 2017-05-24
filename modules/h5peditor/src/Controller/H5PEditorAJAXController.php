@@ -11,7 +11,7 @@ class H5PEditorAJAXController extends ControllerBase {
   /**
    * Callback that lists all h5p libraries.
    */
-  function librariesCallback($token, $content_id) {
+  function librariesCallback() {
     $editor = H5PEditorUtilities::getInstance();
     $editor->ajax->action(\H5PEditorEndpoints::LIBRARIES);
     exit();
