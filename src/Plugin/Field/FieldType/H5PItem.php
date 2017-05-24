@@ -63,6 +63,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function preSave() {
+
     // Handles the revisioning when there's no widget doing it
     $h5p_content_revisioning_handled = !empty($this->get('h5p_content_revisioning_handled')->getValue());
     if ($h5p_content_revisioning_handled || $this->isEmpty()) {
