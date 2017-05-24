@@ -1080,7 +1080,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    $h5p = \Drupal::state()->get('h5p_' . $name) ?: $default;
+    $h5p = \Drupal::state()->get('h5p_' . $name, $default);
     return $h5p;
   }
 
