@@ -79,21 +79,61 @@ class H5PEditorWidget extends WidgetBase {
         ),
       ),
     );
-
-    $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
-    $element['h5p_file_options'] = [
+    
+    $element['h5p_frame'] = [
       '#type' => 'checkbox',
       '#title' => t('Display buttons (download, embed and copyright)'),
       '#default_value' => 1
     ];
 
+    // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
+    $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
+    if ($h5p_export == 1 || $h5p_export == 0) {
+      $element['h5p_export'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Download button'),
+        '#default_value' => $h5p_export,
+        '#states' => [
+          'visible' => [
+            ':input[name="field_' . $element['#title'] . '[' . $delta  . '][value][h5p_frame]"]' => array('checked' => TRUE)
+          ]
+        ]
+      ];
+    } else {
+      $element['h5p_export'] = [
+        '#type' => 'value',
+        '#value' => $h5p_export
+      ];
+    }
+
+    // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
+    $h5p_embed = \Drupal::state()->get('h5p_embed') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
+    if ($h5p_embed == 1 || $h5p_embed == 0) {
+      $element['h5p_embed'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Embed button'),
+        '#default_value' => $h5p_embed,
+        '#states' => [
+          'visible' => [
+            ':input[name="field_' . $element['#title'] . '[' . $delta  . '][value][h5p_frame]"]' => array('checked' => TRUE)
+          ]
+        ]
+      ];
+    } else {
+      $element['h5p_embed'] = [
+        '#type' => 'value',
+        '#value' => $h5p_embed
+      ];
+    }
+
     $h5p_copyright = \Drupal::state()->get('h5p_copyright');
     $element['h5p_file_options_copyright'] = [
       '#type' => 'checkbox',
       '#title' => t('Copyright button'),
+      '#default_value' => $h5p_copyright,
       '#states' => [
         'visible' => [
-          ':input[name="field_h5p[' . $delta  . '][value][h5p_file_options]"]' => array('checked' => TRUE)
+          ':input[name="field_' . $element['#title'] . '[' . $delta  . '][value][h5p_frame]"]' => array('checked' => TRUE)
         ]
       ]
     ];
