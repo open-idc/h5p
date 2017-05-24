@@ -14,7 +14,7 @@ use Drupal\h5p\Entity\H5PContent;
  *
  * @FieldType(
  *   id = "h5p",
- *   label = @Translation("Interactive Content"),
+ *   label = @Translation("Interactive Content – H5P"),
  *   description = @Translation("This field stores the ID of an H5P Content as an integer value."),
  *   category = @Translation("Reference"),
  *   default_formatter = "h5p_default",

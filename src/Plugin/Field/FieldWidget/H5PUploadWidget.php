@@ -44,7 +44,7 @@ class H5PUploadWidget extends WidgetBase {
         [$this, 'validate'],
       ],
     ];
-    
+
     $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
     $element['h5p_file_options'] = [
       '#type' => 'checkbox',
