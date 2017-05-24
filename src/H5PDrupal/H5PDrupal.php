@@ -1145,7 +1145,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     }
 
     // Clear library JS cache
-    \Drupal::service('library.discovery.collector')->delete('h5p');
+    \Drupal::service('library.discovery.collector')->clear();
   }
 
   /**
