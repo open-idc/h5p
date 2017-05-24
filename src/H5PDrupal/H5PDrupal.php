@@ -295,18 +295,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements setErrorMessage
    */
   public function setErrorMessage($message) {
-    if (\Drupal::entityTypeManager()->getAccessControlHandler('node')->createAccess('h5p_content')) {
-      drupal_set_message($message, 'error');
-    }
+    drupal_set_message($message, 'error');
   }
 
   /**
    * Implements setInfoMessage
    */
   public function setInfoMessage($message) {
-    if (\Drupal::entityTypeManager()->getAccessControlHandler('node')->createAccess('h5p_content')) {
-      drupal_set_message($message);
-    }
+    drupal_set_message($message);
   }
 
 
