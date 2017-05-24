@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5peditor\H5PEditor\H5PEditorUtilities;
-
+use Drupal\h5p\Plugin\Field\FieldWidget\H5PUploadWidget;
 
 /**
  * Plugin implementation of the 'h5p_editor' widget.
@@ -32,6 +32,10 @@ class H5PEditorWidget extends WidgetBase {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     // Don't allow setting default values
     if ($this->isDefaultValueWidget($form_state)) {
+      $element += [
+        '#type' => 'markup',
+        '#markup' => '<p>' . t('Currently, not supported.'). '</p>',
+      ];
       return array('value' => $element);
     }
 
@@ -171,16 +175,23 @@ class H5PEditorWidget extends WidgetBase {
     $params = $values[0]['value']['json_content'];
     $library = H5PEditorUtilities::getLibraryProperty($library_string);
 
-    // TODO: Handle cloning, revisioning and translating
+    // Determine if we need to create a new revision of the content
+    $do_new_revision = H5PUploadWidget::doNewRevision($form_state);
 
     // Save to db
     $core = H5PDrupal::getInstance('core');
     $libraryData = array(
-      'id' => $this->content_id ? $this->content_id : NULL,
+      'id' => $this->content_id && !$do_new_revision ? $this->content_id : NULL,
       'library' => $library,
       'params' => $params
     );
     $h5p_content_id = $core->saveContent($libraryData);
+
+    if ($do_new_revision && $this->content_id) {
+      // Copy content folder of old revision to get the uploaded files
+      $core = H5PDrupal::getInstance('core');
+      $core->fs->cloneContent($this->content_id, $h5p_content_id);
+    }
 
     // Move files.
     $editor = H5PEditorUtilities::getInstance();
@@ -208,6 +219,7 @@ class H5PEditorWidget extends WidgetBase {
 
     return [
       'h5p_content_id' => (int) $h5p_content_id,
+      'h5p_content_revisioning_handled' => TRUE,
     ];
   }
 }

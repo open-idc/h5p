@@ -1,13 +1,12 @@
 <?php
 
-namespace Drupal\H5P\Plugin\Field\FieldWidget;
+namespace Drupal\h5p\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
-use Drupal\h5p\Entity\H5PContent;
 
 /**
  * Plugin implementation of the 'h5p_upload' widget.
@@ -28,12 +27,22 @@ class H5PUploadWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    // Prevent setting default value
+    if ($this->isDefaultValueWidget($form_state)) {
+      $element += [
+        '#type' => 'markup',
+        '#markup' => '<p>' . t('Currently, not supported.'). '</p>',
+      ];
+      return array('h5p_upload' => $element);
+    }
 
     $element += [
       '#type' => 'fieldset',
     ];
 
+    $field_name = $this->fieldDefinition->getName();
     $element['h5p_file'] = [
+      '#name' => "files[{$field_name}_{$delta}]",
       '#type' => 'file',
       '#title' => t('H5P Upload'),
       '#description' => t('Select a .h5p file to upload and create interactive content from. You can find <a href="http://h5p.org/content-types-and-applications" target="_blank">example files</a> on H5P.org'),
@@ -101,7 +110,7 @@ class H5PUploadWidget extends WidgetBase {
     ];
 
     $element['h5p_content_id'] = [
-      '#type' => 'value',
+      '#type' => 'hidden',
       '#value' => $items[$delta]->h5p_content_id
     ];
 
@@ -113,8 +122,8 @@ class H5PUploadWidget extends WidgetBase {
    */
   public function validate($element, FormStateInterface $form_state) {
 
-    $file_field = $element['#parents'][0];
-
+    list($field_name, $delta) = $element['#parents'];
+    $file_field = "{$field_name}_{$delta}";
     if (empty($_FILES['files']['name'][$file_field])) {
       return; // Only need to validate if the field actually has a file
     }
@@ -125,7 +134,7 @@ class H5PUploadWidget extends WidgetBase {
     );
 
     // Prepare temp folder
-    $interface = H5PDrupal::getInstance();
+    $interface = H5PDrupal::getInstance('interface', $file_field);
     $h5p_path = $interface->getOption('default_path', 'h5p');
     $temporary_file_path = "public://{$h5p_path}/temp/" . uniqid('h5p-');
     file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
@@ -143,7 +152,7 @@ class H5PUploadWidget extends WidgetBase {
     $interface->getUploadedH5pFolderPath(\Drupal::service('file_system')->realpath($temporary_file_path));
 
     // Call upon H5P Core to validate the contents of the package
-    $validator = H5PDrupal::getInstance('validator');
+    $validator = H5PDrupal::getInstance('validator', $file_field);
     if (!$validator->isValidPackage()) {
       $form_state->setError($element, t("The contents of the uploaded '.h5p' file was not valid."));
       return;
@@ -163,6 +172,68 @@ class H5PUploadWidget extends WidgetBase {
       return $values;
     }
 
+    // Determine if new revisions should be made
+    $do_new_revision = self::doNewRevision($form_state);
+
+    $return_values = [];
+    foreach ($values as $delta => $value) {
+      // Massage out each H5P Upload from the submitted form
+      $return_values[$delta] = $this->massageFormValue($value['h5p_upload'], $delta, $do_new_revision);
+    }
+
+    return $return_values;
+  }
+
+  /**
+   * Help message out each value from the submitted form
+   *
+   * @param array $value
+   * @param integer $delta
+   * @param boolean $do_new_revision
+   */
+  private function massageFormValue(array $value, $delta, $do_new_revision) {
+    // Prepare default messaged return values
+    $return_value = [
+      'h5p_content_id' => $value['h5p_content_id'],
+    ];
+
+    // Determine if a H5P file has been uploaded
+    $file_is_uploaded = ($value['h5p_file'] === 1);
+    if (!$file_is_uploaded) {
+      return $return_value; // No new file
+    }
+
+    // Store the uploaded file
+    $field_name = $this->fieldDefinition->getName();
+    $storage = H5PDrupal::getInstance('storage', "{$field_name}_{$delta}");
+
+    $content = [
+      'uploaded' => TRUE, // Used when logging event in insertContent or updateContent
+    ];
+
+    $has_content = !empty($return_value['h5p_content_id']);
+    if ($has_content && !$do_new_revision) {
+      // Use existing id = update existing content
+      $content['id'] = $return_value['h5p_content_id'];
+    }
+
+    // Save and update content id
+    $storage->savePackage($content);
+    $return_value['h5p_content_id'] = $storage->contentId;
+    $return_value['h5p_content_revisioning_handled'] = TRUE;
+
+    return $return_value;
+  }
+
+  /**
+   * Determine if the current entity is creating a new revision.
+   * This is useful to avoid changing the H5P content belonging to
+   * an older revision of the entity.
+   *
+   * @param FormStateInterface $form_state
+   * @return boolean
+   */
+  public static function doNewRevision(FormStateInterface $form_state) {
     $form_object = $form_state->getFormObject();
     $entity = $form_object->getEntity();
 
@@ -172,51 +243,7 @@ class H5PUploadWidget extends WidgetBase {
     // Determine if we do revisioning for H5P content
     // (may be disabled to save disk space)
     $interface = H5PDrupal::getInstance();
-    $do_new_revision = $interface->getOption('revisioning', TRUE) && $is_new_revision;
-
-    // Determine if a new file has been uploaded
-    $file_is_uploaded = ($values[0]['h5p_upload']['h5p_file'] === 1);
-
-    // Get value from form
-    $h5p_content_id = $values[0]['h5p_upload']['h5p_content_id'];
-    $has_content = !empty($h5p_content_id);
-
-    if ($file_is_uploaded) {
-      // Store the uploaded file
-      $storage = H5PDrupal::getInstance('storage');
-
-      $content = [
-        'uploaded' => TRUE, // Used when logging event in insertContent or updateContent
-      ];
-
-      if ($has_content && !$do_new_revision) {
-        // Use existing id = update existing content
-        $content['id'] = $h5p_content_id;
-      }
-
-      // Update content id
-      $storage->savePackage($content);
-      $h5p_content_id = $storage->contentId;
-    }
-    elseif ($do_new_revision && $has_content) {
-      // New revision, clone the existing content
-
-      $h5p_content = H5PContent::load($h5p_content_id);
-      $h5p_content->set('id', NULL);
-      $h5p_content->set('filtered_parameters', NULL);
-      $h5p_content->save();
-
-      // Clone content folder
-      $core = H5PDrupal::getInstance('core');
-      $core->fs->cloneContent($h5p_content_id, $h5p_content->id());
-
-      // Update field id
-      $h5p_content_id = $h5p_content->id();
-    }
-
-    return [
-      'h5p_content_id' => (int) $h5p_content_id,
-    ];
+    return $interface->getOption('revisioning', TRUE) && $is_new_revision;
   }
 
 }

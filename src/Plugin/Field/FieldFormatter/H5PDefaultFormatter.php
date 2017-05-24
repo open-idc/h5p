@@ -12,7 +12,7 @@ use Drupal\h5p\Entity\H5PContent;
  *
  * @FieldFormatter(
  *   id = "h5p_default",
- *   label = @Translation("Interactive Content"),
+ *   label = @Translation("Default"),
  *   field_types = {
  *     "h5p"
  *   },
@@ -28,9 +28,8 @@ class H5PDefaultFormatter extends FormatterBase {
    */
   public function settingsSummary() {
     $summary = array();
-    //$settings = $this->getSettings();
 
-    $summary[] = t('Displays interactive content.');
+    $summary[] = t('Displays interactive H5P content.');
 
     return $summary;
   }

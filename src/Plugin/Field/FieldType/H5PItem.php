@@ -7,13 +7,14 @@ use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\h5p\Entity\H5PContent;
 
 /**
  * Provides a field type of H5P.
  *
  * @FieldType(
  *   id = "h5p",
- *   label = @Translation("Interactive Content"),
+ *   label = @Translation("Interactive Content – H5P"),
  *   description = @Translation("This field stores the ID of an H5P Content as an integer value."),
  *   category = @Translation("Reference"),
  *   default_formatter = "h5p_default",
@@ -46,6 +47,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties['h5p_content_id'] = DataDefinition::create('integer');
+    $properties['h5p_content_revisioning_handled'] = DataDefinition::create('boolean');
 
     return $properties;
   }
@@ -60,8 +62,39 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function postSave($update) {
-    // TODO: Figure out if we need to do something here. Guess: Log content creation?
+  public function preSave() {
+
+    // Handles the revisioning when there's no widget doing it
+    $h5p_content_revisioning_handled = !empty($this->get('h5p_content_revisioning_handled')->getValue());
+    if ($h5p_content_revisioning_handled || $this->isEmpty()) {
+      return; // No need to do anything
+    }
+
+    // Determine if this is a new revision
+    $entity = $this->getEntity();
+    $is_new_revision = (!empty($entity->original) && $entity->getRevisionId() != $entity->original->getRevisionId());
+
+    // Determine if we do revisioning for H5P content
+    // (may be disabled to save disk space)
+    $interface = H5PDrupal::getInstance();
+    $do_new_revision = $interface->getOption('revisioning', TRUE) && $is_new_revision;
+    if (!$do_new_revision) {
+      return; // No need to do anything
+    }
+
+    // New revision, clone the existing content
+    $h5p_content_id = $this->get('h5p_content_id')->getValue();
+    $h5p_content = H5PContent::load($h5p_content_id);
+    $h5p_content->set('id', NULL);
+    $h5p_content->set('filtered_parameters', NULL);
+    $h5p_content->save();
+
+    // Clone content folder
+    $core = H5PDrupal::getInstance('core');
+    $core->fs->cloneContent($h5p_content_id, $h5p_content->id());
+
+    // Update field reference id
+    $this->set('h5p_content_id', $h5p_content->id());
   }
 
   /**
