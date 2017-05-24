@@ -32,6 +32,10 @@ class H5PEditorWidget extends WidgetBase {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     // Don't allow setting default values
     if ($this->isDefaultValueWidget($form_state)) {
+      $element += [
+        '#type' => 'markup',
+        '#markup' => '<p>' . t('Currently, not supported.'). '</p>',
+      ];
       return array('value' => $element);
     }
 

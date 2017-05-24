@@ -29,7 +29,11 @@ class H5PUploadWidget extends WidgetBase {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     // Prevent setting default value
     if ($this->isDefaultValueWidget($form_state)) {
-      return array('value' => $element);
+      $element += [
+        '#type' => 'markup',
+        '#markup' => '<p>' . t('Currently, not supported.'). '</p>',
+      ];
+      return array('h5p_upload' => $element);
     }
 
     $element += [
