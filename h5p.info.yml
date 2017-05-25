@@ -1,8 +1,7 @@
-type: module
 name: H5P
-description: 'Upload interactive HTML5 Packages to your Drupal site.'
+type: module
+description: 'Upload and view interactive HTML5 Packages to your site.'
 package: H5P
 core: 8.x
-
 dependencies:
   - field

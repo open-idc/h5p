@@ -76,7 +76,7 @@ class H5PLibraryUploadForm extends FormBase {
     // New uploads need to be saved in temp in order to be viewable
     // during node preview.
 
-    $h5p_default_path = \Drupal::state()->get('h5p_default_path') ?: 'h5p';
+    $h5p_default_path = \Drupal::state()->get('h5p_default_path', 'h5p');
     $temporary_file_path = 'public://' . $h5p_default_path . '/temp/' . uniqid('h5p-');
     file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 

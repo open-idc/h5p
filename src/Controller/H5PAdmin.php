@@ -35,7 +35,7 @@ class H5PAdmin extends ControllerBase {
   /**
    * Creates the library list page
    *
-   * @return {string} Html
+   * @return string Html
    */
   function libraryList() {
 
@@ -48,6 +48,7 @@ class H5PAdmin extends ControllerBase {
     $i = 0;
     foreach ($libraries as $versions) {
       foreach ($versions as $library) {
+        // TODO: Fix interface, getLibraryUsage only take 1 arg
         $usage = $core->h5pF->getLibraryUsage($library->id, $numNotFiltered ? TRUE : FALSE);
         if ($library->runnable) {
           $upgrades = $core->getUpgrades($library, $versions);
@@ -277,7 +278,7 @@ class H5PAdmin extends ControllerBase {
         ],
         'libraryBaseUrl' => Url::fromUri('internal:/admin/content/h5p/upgrade/library')->toString(),
         'scriptBaseUrl' => base_path() . 'vendor/h5p/h5p-core/js/',
-        'buster' => '?' . \Drupal::state()->get('css_js_query_string') ?: '',
+        'buster' => '?' . \Drupal::state()->get('css_js_query_string', ''),
         'versions' => $upgrades,
         'contents' => $contents,
         'buttonLabel' => t('Upgrade'),

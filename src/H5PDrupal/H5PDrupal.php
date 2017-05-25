@@ -9,6 +9,7 @@ use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Component\Utility\UrlHelper;
 
 class H5PDrupal implements \H5PFrameworkInterface {
+  private $h5pPath, $folderPath;
 
   /**
    * Get an instance of one of the h5p library classes
@@ -22,12 +23,12 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return \H5PCore|\H5PValidator|\H5PStorage|\H5PContentValidator|\H5PExport|\Drupal\h5p\H5PDrupal\H5PDrupal
    *  The instance og h5p specified by type
    */
-  public static function getInstance($type='interface') {
-    static $interface, $core;
+  public static function getInstance($type = 'interface', $instance = 'default') {
+    static $instances;
 
-    if (!isset($interface)) {
-      // Create new instance of self
-      $interface = new H5PDrupal();
+    if (!isset($instances) || !isset($instances[$instance])) {
+      // Not present in runtime cache – create new instances
+      $interface = new self();
 
       // Determine language
       $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
@@ -39,6 +40,13 @@ class H5PDrupal implements \H5PFrameworkInterface {
       // Determine if exports should be generated
       $export_enabled = !!$interface->getOption('export', TRUE);
       $core = new \H5PCore($interface, $fs, base_path(), $language, $is_export_enabled);
+
+      // Add to runtime cache
+      $instances[$instance] = [$interface, $core];
+    }
+    else {
+      // Get runtime cache
+      list($interface, $core) = $instances[$instance];
     }
 
     switch ($type) {
@@ -171,7 +179,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     ];
 
     // Determine cache buster
-    $css_js_query_string = \Drupal::state()->get('css_js_query_string') ?: '';
+    $css_js_query_string = \Drupal::state()->get('css_js_query_string', '');
     $cache_buster = "?{$css_js_query_string}";
 
     // Add all core scripts
@@ -325,26 +333,22 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements getUploadedH5PFolderPath
    */
   public function getUploadedH5pFolderPath($set = NULL) {
-    static $path;
-
     if (!empty($set)) {
-      $path = $set;
+      $this->folderPath = $set;
     }
 
-    return $path;
+    return $this->folderPath;
   }
 
   /**
    * Implements getUploadedH5PPath
    */
   public function getUploadedH5pPath($set = NULL) {
-    static $path;
-
     if (!empty($set)) {
-      $path = $set;
+      $this->h5pPath = $set;
     }
 
-    return $path;
+    return $this->h5pPath;
   }
 
   /**
@@ -1080,7 +1084,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    $h5p = \Drupal::state()->get('h5p_' . $name) ?: $default;
+    $h5p = \Drupal::state()->get('h5p_' . $name, $default);
     return $h5p;
   }
 
@@ -1141,7 +1145,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     }
 
     // Clear library JS cache
-    \Drupal::service('library.discovery.collector')->delete('h5p');
+    \Drupal::service('library.discovery.collector')->clear();
   }
 
   /**

@@ -1,17 +1,22 @@
 <?php
 /**
  * @file
- * Contains h5p.module
+ * H5P hooks that allows content to be submitted and viewed on the site.
  */
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
-use Drupal\Core\Url;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\node\NodeInterface;
 
 /**
- * Implements hook_library_info_build().
+ * Add dynamic library definitions.
+ *
+ * The static libraries from H5P Core are added here, so they don't have to
+ * be duplicated on every platform.
+ *
+ * @return array[]
+ *   An array of library definitions to register, keyed by library ID. The
+ *   library ID will be prefixed with the module name automatically.
+ *
+ * @see hook_library_info_build()
  */
 function h5p_library_info_build() {
   $libraries = [];
@@ -168,7 +173,7 @@ function h5p_library_info_build() {
  * Convert library machine name into index key/id for hook_library_info_build().
  *
  * @param array|stdClass $h5p_library
- * @return string
+ * @return string Unique library with version
  */
 function _h5p_library_machine_to_id($h5p_library) {
   if (is_array($h5p_library)) {
@@ -189,6 +194,8 @@ function _h5p_library_machine_to_id($h5p_library) {
 
 /**
  * Implements hook_cron().
+ *
+ * @see hook_cron()
  */
 function h5p_cron() {
   $interface = H5PDrupal::getInstance();
@@ -202,6 +209,8 @@ function h5p_cron() {
 
 /**
  * Implements hook_ENTITY_TYPE_delete().
+ *
+ * @see hook_ENTITY_TYPE_delete()
  */
 function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
   db_delete('h5p_points')
