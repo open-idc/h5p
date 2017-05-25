@@ -2,6 +2,7 @@ h5peditor.libraries:
   path: '/h5peditor/{token}/{content_id}/libraries'
   defaults:
     _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::librariesCallback'
+    _title: 'Get Libraries Info'
   requirements:
      _permission: 'access editor'
 
@@ -9,6 +10,7 @@ h5peditor.content_type_cache:
   path: '/h5peditor/{token}/{content_id}/content-type-cache'
   defaults:
     _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::contentTypeCacheCallback'
+    _title: 'Get Content Type Cache'
   requirements:
     _permission: 'access editor'
 
@@ -16,7 +18,7 @@ h5peditor.library_install:
   path: '/h5peditor/{token}/{content_id}/library-install/{machine_name}'
   defaults:
     _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::libraryInstallCallback'
-    _title: 'H5P Install Library'
+    _title: 'Install Library'
   requirements:
     _permission: 'access editor'
 
@@ -24,6 +26,7 @@ h5peditor.library_upload:
   path: '/h5peditor/{token}/{content_id}/library-upload'
   defaults:
     _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::libraryUploadCallback'
+    _title: 'Upload Library'
   requirements:
     _permission: 'access editor'
 
@@ -31,6 +34,7 @@ h5peditor.library:
   path: '/h5peditor/{token}/{content_id}/libraries/{machine_name}/{major_version}/{minor_version}'
   defaults:
     _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::libraryCallback'
+    _title: 'Get Library Info'
   requirements:
      _permission: 'access editor'
 
@@ -38,6 +42,7 @@ h5peditor.files:
   path: '/h5peditor/{token}/{content_id}/files'
   defaults:
     _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::filesCallback'
+    _title: 'Upload Files In Editor'
   requirements:
     _permission: 'access editor'
 

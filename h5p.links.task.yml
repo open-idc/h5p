@@ -1,6 +1,5 @@
-
 h5p.admin.library.list:
-  route_name: 'h5p.admin.content.h5p'
-  base_route: 'system.admin_content'
-  weight: 1
   title: 'H5P Libraries'
+  weight: 1
+  base_route: system.admin_content
+  route_name: h5p.admin.content.h5p
