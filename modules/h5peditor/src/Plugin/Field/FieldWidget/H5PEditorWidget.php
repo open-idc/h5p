@@ -97,7 +97,7 @@ class H5PEditorWidget extends WidgetBase {
       $element['h5p_export'] = [
         '#type' => 'checkbox',
         '#title' => t('Download button'),
-        '#default_value' => $h5p_export,
+        '#default_value' => $h5p_export_default_value,
         '#states' => [
           'visible' => [
             ':input[name="field_' . $element['#title'] . '[' . $delta  . '][value][h5p_frame]"]' => array('checked' => TRUE)
