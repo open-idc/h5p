@@ -14,7 +14,7 @@ use Drupal\h5p\Entity\H5PContent;
  *
  * @FieldType(
  *   id = "h5p",
- *   label = @Translation("Interactive Content"),
+ *   label = @Translation("Interactive Content – H5P"),
  *   description = @Translation("This field stores the ID of an H5P Content as an integer value."),
  *   category = @Translation("Reference"),
  *   default_formatter = "h5p_default",
@@ -63,6 +63,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function preSave() {
+
     // Handles the revisioning when there's no widget doing it
     $h5p_content_revisioning_handled = !empty($this->get('h5p_content_revisioning_handled')->getValue());
     if ($h5p_content_revisioning_handled || $this->isEmpty()) {

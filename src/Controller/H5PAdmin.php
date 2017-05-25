@@ -278,7 +278,7 @@ class H5PAdmin extends ControllerBase {
         ],
         'libraryBaseUrl' => Url::fromUri('internal:/admin/content/h5p/upgrade/library')->toString(),
         'scriptBaseUrl' => base_path() . 'vendor/h5p/h5p-core/js/',
-        'buster' => '?' . \Drupal::state()->get('css_js_query_string') ?: '',
+        'buster' => '?' . \Drupal::state()->get('css_js_query_string', ''),
         'versions' => $upgrades,
         'contents' => $contents,
         'buttonLabel' => t('Upgrade'),

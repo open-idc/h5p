@@ -2,6 +2,8 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
+require_once 'vendor/h5p/h5p-editor/h5peditor-ajax.interface.php';
+
 class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
 
   /**
@@ -19,11 +21,15 @@ class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
     $query->addExpression('MAX(hl.major_version)');
     $query->groupBy('hl.library_id');
     $result = $query->execute()->fetchAll();
+
+    if (empty($result)) {
+      return [];
+    }
+
     $major_ids = [];
     foreach ($result as $row) {
       $major_ids[] = $row->library_id;
     }
-
 
     $query = $connection->select('h5p_libraries', 'hl');
     $query->condition('hl.library_id', $major_ids, 'IN');
