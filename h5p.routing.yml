@@ -30,7 +30,6 @@ h5p.admin.content.h5p.libraries.upgrade:
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryUpgrade'
     _title_callback: '\Drupal\h5p\Controller\H5PAdmin::libraryUpgradePageTitle'
-
   requirements:
     _permission: 'administer site configuration'
     id: \d+
@@ -84,6 +83,7 @@ h5p.ajax.set_finished:
   path: '/h5p-ajax/set-finished.json'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAJAX::setFinished'
+    _title: 'Store Grades Information'
   requirements:
      _permission: 'access content'
 
@@ -91,5 +91,6 @@ h5p.ajax.content_user_data:
   path: 'h5p-ajax/content-user-data/{content_main_id}/{data_id}/{sub_content_id}'
   defaults:
     _controller: '\Drupal\h5p\Controller\H5PAJAX::contentUserData'
+    _title: 'Store Content User Data'
   requirements:
      _permission: 'access content'
