@@ -97,6 +97,7 @@ class H5PDefaultFormatter extends FormatterBase {
         $h5p_integration['contents'][$content_id_string]['styles'] = $this->createCachedPublicFiles($cssFilePaths, $cssOptimizer);
         $h5p_integration['contents'][$content_id_string]['scripts'] = $this->createCachedPublicFiles($jsFilePaths, $jsOptimizer);
 
+
         //$this->moduleHandler->alter('js', $javascript, $assets);
         //$this->themeManager->alter('js', $javascript, $assets);
       }
@@ -173,7 +174,8 @@ class H5PDefaultFormatter extends FormatterBase {
         'attributes' => [],
         'version' => NULL,
         'browsers' => [],
-        'data' => $path
+        'data' => $path,
+        'media' => 'css'
       ];
     }
 

@@ -38,7 +38,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $fs = new \H5PDefaultStorage(\Drupal::service('file_system')->realpath("public://{$h5p_path}"));
 
       // Determine if exports should be generated
-      $export_enabled = !!$interface->getOption('export', TRUE);
+      $is_export_enabled = !!$interface->getOption('export', TRUE);
       $core = new \H5PCore($interface, $fs, base_path(), $language, $is_export_enabled);
 
       // Add to runtime cache
