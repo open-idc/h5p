@@ -8,6 +8,8 @@
 
 /**
  * Implementation of hook_views_data().
+ *
+ * @see hook_views_data
  */
 function h5p_views_data() {
 

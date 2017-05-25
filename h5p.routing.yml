@@ -1,9 +1,7 @@
-# TODO Add descriptions as found in D7's /h5p.module file
-
 h5p.admin.config.system.h5p:
   path: '/admin/config/system/h5p'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdminSettings::adminSettingsForm'
+    _form: 'Drupal\h5p\Form\H5PAdminSettingsForm'
     _title: 'H5P Settings'
   requirements:
     _permission: 'administer site configuration'
