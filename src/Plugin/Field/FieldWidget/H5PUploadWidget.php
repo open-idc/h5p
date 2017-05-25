@@ -58,12 +58,13 @@ class H5PUploadWidget extends WidgetBase {
     ];
 
     // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
-    $h5p_export = \Drupal::state()->get('h5p_export') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
-    if ($h5p_export == 1 || $h5p_export == 0) {
+    $h5p_export = \Drupal::state()->get('h5p_export');
+    $h5p_export_default_value = ($h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON ? 1 : 0);
+    if ($h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON || $h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF) {
       $element['h5p_export'] = [
         '#type' => 'checkbox',
         '#title' => t('Download button'),
-        '#default_value' => $h5p_export,
+        '#default_value' => $h5p_export_default_value,
         '#states' => [
           'visible' => [
             ':input[name="field_' . $element['#title'] . '[' . $delta  . '][h5p_upload][h5p_frame]"]' => array('checked' => TRUE)
@@ -78,12 +79,13 @@ class H5PUploadWidget extends WidgetBase {
     }
 
     // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
-    $h5p_embed = \Drupal::state()->get('h5p_embed') ?: \H5PDisplayOptionBehaviour::ALWAYS_SHOW;
-    if ($h5p_embed == 1 || $h5p_embed == 0) {
+    $h5p_embed = \Drupal::state()->get('h5p_embed');
+    $h5p_embed_default_value = ($h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON ? 1 : 0);
+    if ($h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON || $h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF) {
       $element['h5p_embed'] = [
         '#type' => 'checkbox',
         '#title' => t('Embed button'),
-        '#default_value' => $h5p_embed,
+        '#default_value' => $h5p_embed_default_value,
         '#states' => [
           'visible' => [
             ':input[name="field_' . $element['#title'] . '[' . $delta  . '][h5p_upload][h5p_frame]"]' => array('checked' => TRUE)
