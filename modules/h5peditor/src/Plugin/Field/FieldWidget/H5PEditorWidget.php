@@ -179,7 +179,7 @@ class H5PEditorWidget extends WidgetBase {
     }
 
     // Skip saving content if no library
-    $library_string = $values[0]['value']['h5p_library'];
+    $library_string = $values[0]['value']['library'];
     if (!$library_string) {
       return [
         'h5p_content_id' => NULL,
@@ -226,6 +226,7 @@ class H5PEditorWidget extends WidgetBase {
     if ($value['h5p_content_id']) {
       $h5p_content = H5PContent::load($value['h5p_content_id']);
       $old_library = $h5p_content->getLibrary(TRUE);
+      $old_library['name'] = $old_library['machineName'];
       $old_params = $h5p_content->getParameters();
     }
     else {
