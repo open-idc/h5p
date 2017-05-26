@@ -30,6 +30,8 @@ class H5PAJAX extends ControllerBase {
 
   /**
    * Access callback for the setFinished feature
+   *
+   * @return JsonResponse
    */
   function setFinished() {
     // Inputs are found as POST parameters
@@ -92,10 +94,11 @@ class H5PAJAX extends ControllerBase {
   /**
    * Handles insert, updating and deleteing content user data through AJAX.
    *
-   * @param string $content_id
+   * @param string $content_main_id
    * @param string $data_id
-   * @param string $sub_coontent_id
-   * @return string JSON
+   * @param string $sub_content_id
+   *
+   * return JsonResponse
    */
   function contentUserData($content_main_id, $data_id, $sub_content_id) {
 
