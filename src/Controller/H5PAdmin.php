@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\h5p\H5PDrupal\H5PEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,16 +27,14 @@ class H5PAdmin extends ControllerBase {
 
   public static function create(ContainerInterface $container) {
 
-    $controller = new static(
-      $container->get('database')
-    );
+    $controller = new static(\Drupal::database());
     return $controller;
   }
 
   /**
    * Creates the library list page
    *
-   * @return {string} Html
+   * @return string Html
    */
   function libraryList() {
 
@@ -48,6 +47,7 @@ class H5PAdmin extends ControllerBase {
     $i = 0;
     foreach ($libraries as $versions) {
       foreach ($versions as $library) {
+        // TODO: Fix interface, getLibraryUsage only take 1 arg
         $usage = $core->h5pF->getLibraryUsage($library->id, $numNotFiltered ? TRUE : FALSE);
         if ($library->runnable) {
           $upgrades = $core->getUpgrades($library, $versions);
@@ -456,9 +456,6 @@ class H5PAdmin extends ControllerBase {
 
     // Do as many as we can in ten seconds.
     $start = microtime(TRUE);
-
-    $core = H5PDrupal::getInstance('core');
-
     $query = $this->database->select('h5p_content', 'hc')
       ->fields('hc', ['id'])
       ->isNull('hc.filtered_parameters');
@@ -497,11 +494,10 @@ class H5PAdmin extends ControllerBase {
   /**
    * Helper function - adds admin settings
    *
-   * @param {array} $settings
+   * @param array $settings
+   * @return array
    */
   function addSettings($settings = NULL) {
-    $module_path = drupal_get_path('module', 'h5p');
-
     if ($settings === NULL) {
       $settings = [];
     }

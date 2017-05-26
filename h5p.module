@@ -1,23 +1,34 @@
 <?php
 /**
  * @file
- * Contains h5p.module
+ * H5P hooks that allows content to be submitted and viewed on the site.
  */
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
-use Drupal\Core\Url;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\node\NodeInterface;
 
 /**
- * Implements hook_library_info_build().
+ * Add dynamic library definitions.
+ *
+ * The static libraries from H5P Core are added here, so they don't have to
+ * be duplicated on every platform.
+ *
+ * @return array[]
+ *   An array of library definitions to register, keyed by library ID. The
+ *   library ID will be prefixed with the module name automatically.
+ *
+ * @see hook_library_info_build()
  */
 function h5p_library_info_build() {
   $libraries = [];
 
   // Register jQuery version that H5P depends on
   $libraries['h5p.jquery'] = [
+    'version' => '1.9.1',
+    'license' => [
+      'name' => 'MIT',
+      'url' => 'https://jquery.org/license/',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       '/vendor/h5p/h5p-core/js/jquery.js' => [],
     ],
@@ -25,9 +36,24 @@ function h5p_library_info_build() {
 
   // Register script for converting drupalSetting to H5PIntegration
   $libraries['h5p.integration'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       'js/h5p-integration.js' => [],
     ],
+  ];
+
+  // Content libraries metadata
+  $libraries['h5p.content'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'GPL 3.0',
+      'url' => 'https://github.com/h5p/h5p-php-library/blob/master/LICENSE.txt',
+      'gpl-compatible' => TRUE,
+    ]
   ];
 
   // Add dependencies for content scripts
@@ -53,6 +79,11 @@ function h5p_library_info_build() {
 
   // Register H5P content dependent on jQuery
   $libraries['h5p.admin'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'css' => [
       'base' => [
         '/vendor/h5p/h5p-core/styles/h5p.css' => [],
@@ -78,6 +109,11 @@ function h5p_library_info_build() {
   }*/
 
   $libraries['h5p.admin.library.list'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       '/vendor/h5p/h5p-core/js/h5p-library-list.js' => [],
     ],
@@ -87,6 +123,11 @@ function h5p_library_info_build() {
   ];
 
   $libraries['h5p.admin.library.upgrade'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       '/vendor/h5p/h5p-core/js/h5p-version.js' => [],
       '/vendor/h5p/h5p-core/js/h5p-content-upgrade.js' => [],
@@ -168,7 +209,7 @@ function h5p_library_info_build() {
  * Convert library machine name into index key/id for hook_library_info_build().
  *
  * @param array|stdClass $h5p_library
- * @return string
+ * @return string Unique library with version
  */
 function _h5p_library_machine_to_id($h5p_library) {
   if (is_array($h5p_library)) {
@@ -189,6 +230,8 @@ function _h5p_library_machine_to_id($h5p_library) {
 
 /**
  * Implements hook_cron().
+ *
+ * @see hook_cron()
  */
 function h5p_cron() {
   $interface = H5PDrupal::getInstance();
@@ -202,6 +245,8 @@ function h5p_cron() {
 
 /**
  * Implements hook_ENTITY_TYPE_delete().
+ *
+ * @see hook_ENTITY_TYPE_delete()
  */
 function h5p_user_delete(Drupal\Core\Entity\EntityInterface $entity) {
   db_delete('h5p_points')

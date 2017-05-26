@@ -223,8 +223,9 @@ class H5PAdminSettingsForm extends FormBase {
     \Drupal::state()->set('h5p_revisioning', $values['h5p_revisioning']);
     \Drupal::state()->set('h5p_whitelist', $values['h5p_whitelist']);
     \Drupal::state()->set('h5p_library_whitelist_extras', $values['h5p_library_whitelist_extras']);
-    \Drupal::state()->set('h5p_dev_mode', $values['h5p_dev_mode']);
-    \Drupal::state()->set('h5p_library_development', $values['h5p_library_development']);
+    // TODO: These do not exist in the form
+    //    \Drupal::state()->set('h5p_dev_mode', $values['h5p_dev_mode']);
+//    \Drupal::state()->set('h5p_library_development', $values['h5p_library_development']);
     \Drupal::state()->set('h5p_save_content_state', $values['h5p_save_content_state']);
     \Drupal::state()->set('h5p_save_content_frequency', $values['h5p_save_content_frequency']);
     \Drupal::state()->set('h5p_enable_lrs_content_types', $values['h5p_enable_lrs_content_types']);

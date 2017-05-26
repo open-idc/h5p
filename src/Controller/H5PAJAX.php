@@ -30,20 +30,75 @@ class H5PAJAX extends ControllerBase {
 
   /**
    * Access callback for the setFinished feature
+   *
+   * @return JsonResponse
    */
   function setFinished() {
-    $id = filter_input(INPUT_POST, 'contentId', FILTER_VALIDATE_INT);
-    $response = [$id];
-    return new JsonResponse($response);
+    // Inputs are found as POST parameters
+    $content_id = filter_input(INPUT_POST, 'contentId', FILTER_VALIDATE_INT);
+    $score = filter_input(INPUT_POST, 'score', FILTER_VALIDATE_INT);
+    $max_score = filter_input(INPUT_POST, 'maxScore', FILTER_VALIDATE_INT);
+    $opened = filter_input(INPUT_POST, 'opened', FILTER_VALIDATE_INT);
+    $token = filter_input(INPUT_GET, 'token');
+
+    $uid = \Drupal::currentUser()->id();
+
+    // Validate input - all parameters needed
+    if (! ($content_id && $score !== NULL && $score !== FALSE && $max_score !== NULL && $max_score !== FALSE && $opened && $token && $uid)) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => t('Wrong usage'),
+      ]);
+    }
+
+    // Check token
+    if (! \H5PCore::validToken('result', $token)) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => t('Invalid security token'),
+      ]);
+    }
+
+    // Everything is OK - let's update db
+    // Check if it exists
+    $exists = $this->database->query('SELECT 1 FROM {h5p_points} WHERE content_id = :content_id && uid = :uid', [
+        ':content_id' => $content_id,
+        ':uid' => $uid,
+      ])->fetchField();
+
+    // which fields to update
+    $fields = [
+      'content_id' => $content_id,
+      'uid' => $uid,
+      'finished' => time(),
+      'points' => $score,
+      'max_points' => $max_score,
+    ];
+
+    // Only set started time if it does not exist
+    if (! $exists) {
+      $fields['started'] = $opened;
+    }
+
+    $this->database->merge('h5p_points')
+      ->key([
+        'uid' => $uid,
+        'content_id' => $content_id,
+      ])
+      ->fields($fields)
+      ->execute();
+
+    return new JsonResponse(['success' => TRUE]);
   }
 
   /**
    * Handles insert, updating and deleteing content user data through AJAX.
    *
-   * @param string $content_id
+   * @param string $content_main_id
    * @param string $data_id
-   * @param string $sub_coontent_id
-   * @return string JSON
+   * @param string $sub_content_id
+   *
+   * return JsonResponse
    */
   function contentUserData($content_main_id, $data_id, $sub_content_id) {
 
@@ -141,5 +196,4 @@ class H5PAJAX extends ControllerBase {
 
     return new JsonResponse($response);
   }
-
 }
