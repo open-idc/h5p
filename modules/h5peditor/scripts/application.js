@@ -1,99 +1,93 @@
-var H5PEditor = H5PEditor || {};
-var ns = H5PEditor;
+(function ($, Drupal, H5P, H5PEditor) {
+  var initialized;
 
-(function ($) {
-  'use strict';
-
-  Drupal.behaviors.drupal_h5p_editor = {
-    attach: function (context, settings) {
-
-      ns.init = function () {
-        // Setup
-        ns.$ = H5P.jQuery;
-        ns.basePath = drupalSettings.path.baseUrl + settings.h5p.drupal_h5p_editor.h5peditor.modulePath + '/h5p-editor';
-        ns.contentId = settings.h5p.drupal_h5p_editor.h5peditor.nodeVersionId;
-        ns.fileIcon = settings.h5p.drupal_h5p_editor.h5peditor.fileIcon;
-        ns.ajaxPath = settings.h5p.drupal_h5p_editor.h5peditor.ajaxPath;
-        ns.filesPath = settings.h5p.drupal_h5p_editor.h5peditor.filesPath;
-        ns.relativeUrl = settings.h5p.drupal_h5p_editor.h5peditor.relativeUrl;
-        ns.contentRelUrl = settings.h5p.drupal_h5p_editor.h5peditor.contentRelUrl;
-        ns.editorRelUrl = settings.h5p.drupal_h5p_editor.h5peditor.editorRelUrl;
-        ns.apiVersion = settings.h5p.drupal_h5p_editor.h5peditor.apiVersion;
-        var fieldName = settings.h5p.drupal_h5p_editor.h5peditor.fieldName;
-        var fieldNumber = settings.h5p.drupal_h5p_editor.h5peditor.fieldNumber;
-
-        // Elements
-        var h5peditor;
-        var $upload = $('input[name="files[h5p]"]').parents('.form-item');
-        var $editor = $('.h5p-editor');
-        var $create = $('#edit-h5p-editor').hide();
-        var $type = $('input[name="h5p_type"]');
-        var $params = $('input[name="' + fieldName + '[' + fieldNumber + '][value][json_content]"]');
-        var $library = $('input[name="' + fieldName + '[' + fieldNumber + '][value][h5p_library]"]');
-        var library = $library.val();
-
-
-        // Semantics describing what copyright information can be stored for media.
-        ns.copyrightSemantics = settings.h5p.drupal_h5p_editor.h5peditor.copyrightSemantics;
-
-        // Required styles and scripts for the editor
-        ns.assets = settings.h5p.drupal_h5p_editor.h5peditor.assets;
-
-        // Required for assets
-        ns.baseUrl = drupalSettings.path.baseUrl;
-
-        $type.change(function () {
-          if ($type.filter(':checked').val() === 'upload') {
-            $create.hide();
-            $upload.show();
-          }
-          else {
-            $upload.hide();
-            if (h5peditor === undefined) {
-              h5peditor = new ns.Editor(library, $params.val(), $editor[0]);
-            }
-            $create.show();
-          }
-        });
-
-        // TODO: Use something more robust than mousedown.
-        $('#edit-actions').find('input[type="submit"]').mousedown(function () {
-          if (h5peditor !== undefined) {
-            var params = h5peditor.getParams();
-
-            if (params === false) {
-              // return false;
-              /*
-               * TODO: Give good feedback when validation fails. Currently it seems save and delete buttons
-               * aren't working, but the user doesn't get any indication of why they aren't working.
-               */
-            }
-
-            if (params !== undefined) {
-              $library.val(h5peditor.getLibrary());
-              $params.val(JSON.stringify(params));
-            }
-          }
-        });
-
-        // Trigger editor load
-        $type.change();
-      };
-
-      ns.getAjaxUrl = function (action, parameters) {
-        var url = settings.h5p.drupal_h5p_editor.h5peditor.ajaxPath + action;
-
-        if (parameters !== undefined) {
-          for (var key in parameters) {
-            url += '/' + parameters[key];
-          }
-        }
-
-        return url;
-      };
-
-      $(document).ready(ns.init);
-
+  /**
+   * One time setup of the H5PEditor
+   *
+   * @param Object settings from drupal
+   */
+  H5PEditor.init = function (settings) {
+    if (initialized) {
+      return; // Prevent multi init
     }
-  }
-})(H5P.jQuery);
+    initialized = true;
+
+    // Set up editor settings
+    H5PEditor.$ = H5P.jQuery;
+    H5PEditor.baseUrl = drupalSettings.path.baseUrl;
+    H5PEditor.basePath = drupalSettings.h5peditor.libraryPath;
+    mapProperties(H5PEditor, drupalSettings.h5peditor,
+      ['contentId', 'fileIcon', 'relativeUrl', 'contentRelUrl', 'editorRelUrl', 'apiVersion', 'copyrightSemantics', 'assets']);
+  };
+
+  // Init editors
+  Drupal.behaviors.H5PEditor = {
+    attach: function (context, settings) {
+      $('.h5p-editor', context).once('H5PEditor').each(function () {
+        H5PEditor.init(settings);
+
+        // Grab data values specifc for editor instance
+        var $this = $(this);
+        var field = $this.data('field');
+        var delta = $this.data('delta');
+        var contentId = $this.data('contentId');
+        var $form = $this.parents('form');
+
+        // Locate parameters field
+        var $params = $('input[name="' + field + '[' + delta + '][value][parameters]"]', context);
+
+        // Locate library field
+        var $library = $('input[name="' + field + '[' + delta + '][value][library]"]', context);
+
+        // Create new editor
+        var h5peditor = new ns.Editor($library.val(), $params.val(), this, function () {
+          var iframeH5PEditor = this.H5PEditor;
+          iframeH5PEditor.contentId = (contentId ? contentId : 0);
+          iframeH5PEditor.ajaxPath = settings.h5peditor.ajaxPath.replace(':contentId', this.H5PEditor.contentId);
+          iframeH5PEditor.filesPath = settings.h5peditor.filesPath + (contentId ? '/content/' + contentId : '/editor');
+
+          /**
+           * Help build URLs for AJAX requests
+           */
+          iframeH5PEditor.getAjaxUrl = function (action, parameters) {
+            var url = iframeH5PEditor.ajaxPath + action;
+
+            if (parameters !== undefined) {
+              for (var key in parameters) {
+                url += '/' + parameters[key];
+              }
+            }
+
+            return url;
+          };
+        });
+
+        // Handle form submit
+        $form.submit(function () {
+          var params = h5peditor.getParams();
+
+          if (params !== undefined) {
+            $library.val(h5peditor.getLibrary());
+            $params.val(JSON.stringify(params));
+          }
+        });
+
+      });
+    }
+  };
+
+  /**
+   * Map properties from one object to the other
+   * @private
+   * @param {Object} to
+   * @param {Object} from
+   * @param {Array} props
+   */
+  var mapProperties = function (to, from, props) {
+    for (var i = 0; i < props.length; i++) {
+      var prop = props[i];
+      to[prop] = from[prop];
+    }
+  };
+
+})(jQuery, Drupal, H5P, H5PEditor);

@@ -32,35 +32,24 @@ class H5PEditorUtilities {
   /**
    * Get editor settings needed for JS front-end
    *
-   * @param string $fieldName Name of field that the editor uses
-   * @param int $fieldNumber The order of the field if multiple fields exists
-   * @param int $contentId Currently editing content. 0 for new content
-   *
    * @return array Settings needed for view
    */
-  public static function getEditorSettings($fieldName, $fieldNumber = 0, $contentId = 0) {
+  public static function getEditorSettings() {
     $contentValidator = H5PDrupal::getInstance('contentvalidator');
     $module_path      = drupal_get_path('module', 'h5p');
 
     $settings = [
-      'h5peditor' => [
-        'filesPath'          => self::getFilePathForContent($contentId),
-        'fileIcon'           => [
-          'path'   => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
-          'width'  => 50,
-          'height' => 50,
-        ],
-        'ajaxPath'           => self::getAjaxPath($contentId),
-        'modulePath'         => 'vendor/h5p',
-        'libraryPath'        => $module_path . '/libraries/',
-        'copyrightSemantics' => $contentValidator->getCopyrightSemantics(),
-        'assets'             => self::getEditorAssets(),
-        'contentRelUrl'      => '../h5p/content/',
-        'editorRelUrl'       => '../../../vendor/h5p/h5p-editor',
-        'apiVersion'         => \H5PCore::$coreApi,
-        'fieldName'          => $fieldName,
-        'fieldNumber'        => $fieldNumber,
+      'filesPath'          => base_path() . H5PDrupal::getRelativeH5PPath(),
+      'fileIcon'           => [
+        'path'   => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
+        'width'  => 50,
+        'height' => 50,
       ],
+      'ajaxPath'           => str_replace('%3A', ':', self::getAjaxPath()),
+      'libraryPath'         => base_path() . 'vendor/h5p/h5p-editor',
+      'copyrightSemantics' => $contentValidator->getCopyrightSemantics(),
+      'assets'             => self::getEditorAssets(),
+      'apiVersion'         => \H5PCore::$coreApi,
     ];
 
     return $settings;
@@ -145,37 +134,14 @@ class H5PEditorUtilities {
   }
 
   /**
-   * File path that can be used for saving files that should be bundled with
-   * the content.
-   *
-   * @param int $contentId Id of content that is being edited. 0 means new
-   * content.
-   *
-   * @return string Path to directory where content may be stored
-   */
-  private static function getFilePathForContent($contentId = 0) {
-    $filesBaseFolder = base_path() . H5PDrupal::getRelativeH5PPath();
-    if ($contentId) {
-      // Files stored in content
-      return "{$filesBaseFolder}/content/{$contentId}";
-    }
-    else {
-      // Files stored in editor
-      return "{$filesBaseFolder}/editor";
-    }
-  }
-
-  /**
    * Create URI for ajax the client may send to the server
-   *
-   * @param int $contentId Id of content that is being edited. 0 is new content.
    *
    * @return \Drupal\Core\GeneratedUrl|string Uri for AJAX
    */
-  private static function getAjaxPath($contentId = 0) {
+  private static function getAjaxPath() {
     $securityToken = \H5PCore::createToken('editorajax');
     return Url::fromUri(
-      "internal:/h5peditor/{$securityToken}/{$contentId}/"
+      "internal:/h5peditor/{$securityToken}/:contentId/"
     )->toString();
   }
 

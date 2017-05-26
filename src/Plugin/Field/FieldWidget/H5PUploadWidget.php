@@ -120,7 +120,7 @@ class H5PUploadWidget extends WidgetBase {
     ];
 
     $element['h5p_content_id'] = [
-      '#type' => 'hidden',
+      '#type' => 'value',
       '#value' => $items[$delta]->h5p_content_id
     ];
 
@@ -175,7 +175,7 @@ class H5PUploadWidget extends WidgetBase {
   /**
    * Delete content by id
    *
-   * @param $content_id Content id
+   * @param int $content_id Content id
    */
   private function deleteContent($content_id) {
     if ($content_id) {
