@@ -40,9 +40,9 @@ class H5PAJAX extends ControllerBase {
   /**
    * Handles insert, updating and deleteing content user data through AJAX.
    *
-   * @param string $content_id
+   * @param string $content_main_id
    * @param string $data_id
-   * @param string $sub_coontent_id
+   * @param string $sub_content_id
    * @return string JSON
    */
   function contentUserData($content_main_id, $data_id, $sub_content_id) {

@@ -29,6 +29,10 @@ class H5PEditorAJAXController extends ControllerBase {
 
   /**
    * Callback Install library from external file
+   *
+   * @param string $token Security token
+   * @param int $content_id Id of content
+   * @param string $machine_name Machine name of library
    */
   function libraryInstallCallback($token, $content_id, $machine_name) {
     $editor = H5PEditorUtilities::getInstance();
@@ -50,14 +54,18 @@ class H5PEditorAJAXController extends ControllerBase {
   }
 
   /**
-   * Callback that returns all library data
+   * Callback that returns data for a given library
    *
+   * @param string $machine_name Machine name of library
+   * @param int $major_version Major version of library
+   * @param int $minor_version Minor version of library
    */
   function libraryCallback($machine_name, $major_version, $minor_version) {
     $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
     $editor = H5PEditorUtilities::getInstance();
-    $module_path = drupal_get_path('module', 'h5p');
+    $files_path = \Drupal::service('file_system')->realpath('public://');
+    $module_path = "{$files_path}/h5p";
     $editor->ajax->action(\H5PEditorEndpoints::SINGLE_LIBRARY, $machine_name,
       $major_version, $minor_version, $language, $module_path
     );
@@ -72,6 +80,9 @@ class H5PEditorAJAXController extends ControllerBase {
 
   /**
    * Callback for file uploads.
+   *
+   * @param string $token Security token
+   * @param int $content_id Content id
    */
   function filesCallback($token, $content_id) {
     $editor = H5PEditorUtilities::getInstance();

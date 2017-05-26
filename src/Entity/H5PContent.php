@@ -69,7 +69,9 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
    */
   protected function loadLibrary() {
     $this->library = db_query(
-        "SELECT machine_name AS name,
+        "
+        SELECT  title,
+                machine_name AS name,
                 major_version AS major,
                 minor_version AS minor,
                 embed_types,
@@ -132,16 +134,20 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       $this->loadLibrary();
     }
 
+    // TODO: Provide real values for title, embedType and name
     $content = [
+      'title' => 'title',
       'id' => $this->id(),
       'slug' => 'interactive-content',
       'library' => [
+        'name' => $this->library->title,
         'machineName' => $this->library->name,
         'majorVersion' => $this->library->major,
         'minorVersion' => $this->library->minor,
       ],
       'params' => $this->get('parameters')->value,
       'filtered' => $this->get('filtered_parameters')->value,
+      'embedType' => 'div'
     ];
 
     $core = H5PDrupal::getInstance('core');
