@@ -23,6 +23,12 @@ function h5p_library_info_build() {
 
   // Register jQuery version that H5P depends on
   $libraries['h5p.jquery'] = [
+    'version' => '1.9.1',
+    'license' => [
+      'name' => 'MIT',
+      'url' => 'https://jquery.org/license/',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       '/vendor/h5p/h5p-core/js/jquery.js' => [],
     ],
@@ -30,9 +36,24 @@ function h5p_library_info_build() {
 
   // Register script for converting drupalSetting to H5PIntegration
   $libraries['h5p.integration'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       'js/h5p-integration.js' => [],
     ],
+  ];
+
+  // Content libraries metadata
+  $libraries['h5p.content'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'GPL 3.0',
+      'url' => 'https://github.com/h5p/h5p-php-library/blob/master/LICENSE.txt',
+      'gpl-compatible' => TRUE,
+    ]
   ];
 
   // Add dependencies for content scripts
@@ -58,6 +79,11 @@ function h5p_library_info_build() {
 
   // Register H5P content dependent on jQuery
   $libraries['h5p.admin'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'css' => [
       'base' => [
         '/vendor/h5p/h5p-core/styles/h5p.css' => [],
@@ -83,6 +109,11 @@ function h5p_library_info_build() {
   }*/
 
   $libraries['h5p.admin.library.list'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       '/vendor/h5p/h5p-core/js/h5p-library-list.js' => [],
     ],
@@ -92,6 +123,11 @@ function h5p_library_info_build() {
   ];
 
   $libraries['h5p.admin.library.upgrade'] = [
+    'version' => '1.0',
+    'license' => [
+      'name' => 'MIT',
+      'gpl-compatible' => TRUE,
+    ],
     'js' => [
       '/vendor/h5p/h5p-core/js/h5p-version.js' => [],
       '/vendor/h5p/h5p-core/js/h5p-content-upgrade.js' => [],
