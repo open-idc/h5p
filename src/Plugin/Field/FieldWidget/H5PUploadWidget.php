@@ -5,7 +5,7 @@ namespace Drupal\h5p\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Form\FormState;
+use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 /**
@@ -49,6 +49,14 @@ class H5PUploadWidget extends WidgetBase {
       '#element_validate' => [
         [$this, 'validate'],
       ],
+    ];
+
+    // Make it possible to clear a field
+    $element['h5p_clear_content'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Clear content'),
+      '#description' => t('Warning! Your content will be completely deleted'),
+      '#default_value' => 0
     ];
 
     $element['h5p_frame'] = [
@@ -165,6 +173,18 @@ class H5PUploadWidget extends WidgetBase {
   }
 
   /**
+   * Delete content by id
+   *
+   * @param $content_id Content id
+   */
+  private function deleteContent($content_id) {
+    if ($content_id) {
+      $h5p_content = H5PContent::load($content_id);
+      $h5p_content->delete();
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
@@ -172,6 +192,16 @@ class H5PUploadWidget extends WidgetBase {
     // We only message after validation has completed
     if (!$form_state->isValidationComplete()) {
       return $values;
+    }
+
+    // Content has been cleared
+    $clear_field = $values[0]['h5p_upload']['h5p_clear_content'];
+    if ($clear_field) {
+      $content_id = $values[0]['h5p_upload']['h5p_content_id'];
+      $this->deleteContent($content_id);
+      return [
+        'h5p_content_id' => NULL,
+      ];
     }
 
     // Determine if new revisions should be made

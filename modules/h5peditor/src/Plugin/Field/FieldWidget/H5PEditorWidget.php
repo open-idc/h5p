@@ -84,6 +84,14 @@ class H5PEditorWidget extends WidgetBase {
       ),
     );
 
+    // Make it possible to clear a field
+    $element['h5p_clear_content'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Clear content'),
+      '#description' => t('Warning! Your content will be completely deleted'),
+      '#default_value' => 0
+    ];
+
     $element['h5p_frame'] = [
       '#type' => 'checkbox',
       '#title' => t('Display buttons (download, embed and copyright)'),
@@ -165,6 +173,18 @@ class H5PEditorWidget extends WidgetBase {
   }
 
   /**
+   * Delete content by id
+   *
+   * @param $content_id Content id
+   */
+  private function deleteContent($content_id) {
+    if ($content_id) {
+      $h5p_content = H5PContent::load($content_id);
+      $h5p_content->delete();
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
@@ -173,7 +193,23 @@ class H5PEditorWidget extends WidgetBase {
       return $values;
     }
 
+    // Skip saving content if no library
     $library_string = $values[0]['value']['h5p_library'];
+    if (!$library_string) {
+      return [
+        'h5p_content_id' => NULL,
+      ];
+    }
+
+    // Content has been cleared
+    $clear_field = $values[0]['value']['h5p_clear_content'];
+    if ($clear_field) {
+      $this->deleteContent($this->content_id);
+      return [
+        'h5p_content_id' => NULL,
+      ];
+    }
+
     $params = $values[0]['value']['json_content'];
     $library = H5PEditorUtilities::getLibraryProperty($library_string);
 
