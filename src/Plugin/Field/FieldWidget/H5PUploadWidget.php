@@ -70,7 +70,7 @@ class H5PUploadWidget extends WidgetBase {
     ];
 
     $element['h5p_content_id'] = [
-      '#type' => 'hidden',
+      '#type' => 'value',
       '#value' => $items[$delta]->h5p_content_id
     ];
 

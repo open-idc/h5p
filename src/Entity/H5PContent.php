@@ -85,12 +85,31 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
-  public function getLibrary() {
+  public function getLibrary($assoc = FALSE) {
     if (empty($this->library)) {
       $this->loadLibrary();
     }
 
+    if ($assoc) {
+      return [
+        'machineName' => $this->library->name,
+        'majorVersion' => $this->library->major,
+        'minorVersion' => $this->library->minor
+      ];
+    }
+
     return $this->library;
+  }
+
+  /**
+   *
+   */
+  public function getLibraryString() {
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    return "{$this->library->name} {$this->library->major}.{$this->library->minor}";
   }
 
   /**
@@ -125,6 +144,13 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   }
 
   /**
+   * Only use for data comparison. Must not be used for content display.
+   */
+  public function getParameters() {
+    return json_decode($this->get('parameters')->value);
+  }
+
+  /**
    *
    */
   public function getFilteredParameters() {
@@ -142,6 +168,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       ],
       'params' => $this->get('parameters')->value,
       'filtered' => $this->get('filtered_parameters')->value,
+      'embedType' => $this->library->embed_types
     ];
 
     $core = H5PDrupal::getInstance('core');
@@ -189,7 +216,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $resizer_url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString();
 
     return array(
-      'library' => "{$this->library->name} {$this->library->major}.{$this->library->minor}",
+      'library' => $this->getLibraryString(),
       'jsonContent' => $filtered_parameters,
       'fullScreen' => $this->library->fullscreen,
       'exportUrl' => $this->getExportURL(),
