@@ -2,8 +2,8 @@
 
 namespace Drupal\h5p\Plugin\Field\FieldWidget;
 
+use Drupal\h5p\Plugin\Field\H5PWidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
@@ -19,29 +19,20 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
  *   }
  * )
  */
-class H5PUploadWidget extends WidgetBase {
-
-  protected $massagedValues;
+class H5PUploadWidget extends H5PWidgetBase {
 
   /**
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    // Prevent setting default value
-    if ($this->isDefaultValueWidget($form_state)) {
-      $element += [
-        '#type' => 'markup',
-        '#markup' => '<p>' . t('Currently, not supported.'). '</p>',
-      ];
-      return array('h5p_upload' => $element);
+    $parentElement = parent::formElement($items, $delta, $element, $form, $form_state);
+    $element = $parentElement['h5p_content'];
+    if (empty($element['id'])) {
+      return $parentElement; // No content id, use parent element
     }
 
-    $element += [
-      '#type' => 'fieldset',
-    ];
-
     $field_name = $this->fieldDefinition->getName();
-    $element['h5p_file'] = [
+    $element['file'] = [
       '#name' => "files[{$field_name}_{$delta}]",
       '#type' => 'file',
       '#title' => t('H5P Upload'),
@@ -51,80 +42,7 @@ class H5PUploadWidget extends WidgetBase {
       ],
     ];
 
-    // Make it possible to clear a field
-    $element['h5p_clear_content'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Clear content'),
-      '#description' => t('Warning! Your content will be completely deleted'),
-      '#default_value' => 0
-    ];
-
-    $element['h5p_frame'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Display buttons (download, embed and copyright)'),
-      '#default_value' => 1
-    ];
-
-    // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
-    $h5p_export = \Drupal::state()->get('h5p_export');
-    $h5p_export_default_value = ($h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON ? 1 : 0);
-    if ($h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON || $h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF) {
-      $element['h5p_export'] = [
-        '#type' => 'checkbox',
-        '#title' => t('Download button'),
-        '#default_value' => $h5p_export_default_value,
-        '#states' => [
-          'visible' => [
-            ':input[name="field_' . $element['#title'] . '[' . $delta  . '][h5p_upload][h5p_frame]"]' => array('checked' => TRUE)
-          ]
-        ]
-      ];
-    } else {
-      $element['h5p_export'] = [
-        '#type' => 'value',
-        '#value' => $h5p_export
-      ];
-    }
-
-    // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
-    $h5p_embed = \Drupal::state()->get('h5p_embed');
-    $h5p_embed_default_value = ($h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON ? 1 : 0);
-    if ($h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON || $h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF) {
-      $element['h5p_embed'] = [
-        '#type' => 'checkbox',
-        '#title' => t('Embed button'),
-        '#default_value' => $h5p_embed_default_value,
-        '#states' => [
-          'visible' => [
-            ':input[name="field_' . $element['#title'] . '[' . $delta  . '][h5p_upload][h5p_frame]"]' => array('checked' => TRUE)
-          ]
-        ]
-      ];
-    } else {
-      $element['h5p_embed'] = [
-        '#type' => 'value',
-        '#value' => $h5p_embed
-      ];
-    }
-
-    $h5p_copyright = \Drupal::state()->get('h5p_copyright');
-    $element['h5p_file_options_copyright'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Copyright button'),
-      '#default_value' => $h5p_copyright,
-      '#states' => [
-        'visible' => [
-          ':input[name="field_' . $element['#title'] . '[' . $delta  . '][h5p_upload][h5p_frame]"]' => array('checked' => TRUE)
-        ]
-      ]
-    ];
-
-    $element['h5p_content_id'] = [
-      '#type' => 'value',
-      '#value' => $items[$delta]->h5p_content_id
-    ];
-
-    return array('h5p_upload' => $element);
+    return $parentElement;
   }
 
   /**
@@ -139,9 +57,9 @@ class H5PUploadWidget extends WidgetBase {
     }
 
     // Prepare file validators
-    $validators = array(
-      'file_validate_extensions' => array('h5p'),
-    );
+    $validators = [
+      'file_validate_extensions' => ['h5p'],
+    ];
 
     // Prepare temp folder
     $interface = H5PDrupal::getInstance('interface', $file_field);
@@ -173,54 +91,16 @@ class H5PUploadWidget extends WidgetBase {
   }
 
   /**
-   * Delete content by id
-   *
-   * @param int $content_id Content id
-   */
-  private function deleteContent($content_id) {
-    if ($content_id) {
-      $h5p_content = H5PContent::load($content_id);
-      $h5p_content->delete();
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-
-    // We only message after validation has completed
-    if (!$form_state->isValidationComplete()) {
-      return $values;
-    }
-
-    // Determine if new revisions should be made
-    $do_new_revision = self::doNewRevision($form_state);
-
-    $return_values = [];
-    foreach ($values as $delta => $value) {
-      // Massage out each H5P Upload from the submitted form
-      $return_values[$delta] = $this->massageFormValue($value['h5p_upload'], $delta, $do_new_revision);
-    }
-
-    return $return_values;
-  }
-
-  /**
-   * Help message out each value from the submitted form
-   *
-   * @param array $value
-   * @param integer $delta
-   * @param boolean $do_new_revision
-   */
-  private function massageFormValue(array $value, $delta, $do_new_revision) {
+  protected function massageFormValue(array $value, $delta, $do_new_revision) {
     // Prepare default messaged return values
     $return_value = [
-      'h5p_content_id' => $value['h5p_content_id'],
+      'h5p_content_id' => $value['id'],
     ];
 
     // Determine if a H5P file has been uploaded
-    $file_is_uploaded = ($value['h5p_file'] === 1);
+    $file_is_uploaded = ($value['file'] === 1);
     if (!$file_is_uploaded) {
       return $return_value; // No new file, keep existing value
     }
@@ -229,12 +109,12 @@ class H5PUploadWidget extends WidgetBase {
     $return_value['h5p_content_revisioning_handled'] = TRUE;
 
     // Determine if we're clearing the content
-    if ($value['h5p_clear_content']) {
+    if ($value['clear_content']) {
       $return_value['h5p_content_id'] = NULL;
 
-      if ($value['h5p_content_id'] && !$do_new_revision) {
+      if ($value['id'] && !$do_new_revision) {
         // Not a new revision, delete existing content
-        H5PItem::deleteH5PContent($value['h5p_content_id']);
+        H5PItem::deleteH5PContent($value['id']);
       }
 
       return $return_value;
@@ -244,8 +124,15 @@ class H5PUploadWidget extends WidgetBase {
     $field_name = $this->fieldDefinition->getName();
     $storage = H5PDrupal::getInstance('storage', "{$field_name}_{$delta}");
 
+    if ($value['id']) {
+      // Load existing content
+      $h5p_content = H5PContent::load($value['id']);
+    }
+
+    $core = H5PDrupal::getInstance('core');
     $content = [
       'uploaded' => TRUE, // Used when logging event in insertContent or updateContent
+      'disable' => $core->getStorableDisplayOptions($value, !empty($h5p_content) ? $h5p_content->get('disabled_features')->value : 0),
     ];
 
     $has_content = !empty($return_value['h5p_content_id']);
@@ -259,27 +146,6 @@ class H5PUploadWidget extends WidgetBase {
     $return_value['h5p_content_id'] = $storage->contentId;
 
     return $return_value;
-  }
-
-  /**
-   * Determine if the current entity is creating a new revision.
-   * This is useful to avoid changing the H5P content belonging to
-   * an older revision of the entity.
-   *
-   * @param FormStateInterface $form_state
-   * @return boolean
-   */
-  public static function doNewRevision(FormStateInterface $form_state) {
-    $form_object = $form_state->getFormObject();
-    $entity = $form_object->getEntity();
-
-    // Determine if this is a new revision
-    $is_new_revision = ($entity->getEntityType()->hasKey('revision') && $form_state->getValue('revision'));
-
-    // Determine if we do revisioning for H5P content
-    // (may be disabled to save disk space)
-    $interface = H5PDrupal::getInstance();
-    return $interface->getOption('revisioning', TRUE) && $is_new_revision;
   }
 
 }

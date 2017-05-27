@@ -34,10 +34,10 @@
         var $form = $this.parents('form');
 
         // Locate parameters field
-        var $params = $('input[name="' + field + '[' + delta + '][value][parameters]"]', context);
+        var $params = $('input[name="' + field + '[' + delta + '][h5p_content][parameters]"]', context);
 
         // Locate library field
-        var $library = $('input[name="' + field + '[' + delta + '][value][library]"]', context);
+        var $library = $('input[name="' + field + '[' + delta + '][h5p_content][library]"]', context);
 
         // Create new editor
         var h5peditor = new ns.Editor($library.val(), $params.val(), this, function () {

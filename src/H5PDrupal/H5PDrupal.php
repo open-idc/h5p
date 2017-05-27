@@ -778,6 +778,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     // Update properties
     $h5p_content->set('library_id', $content['library']['libraryId']);
     $h5p_content->set('parameters', $content['params']);
+    $h5p_content->set('disabled_features', $content['disable']);
     $h5p_content->set('filtered_parameters', '');
 
     // Save changes
@@ -796,6 +797,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_content = H5PContent::create([
       'library_id' => $content['library']['libraryId'],
       'parameters' => $content['params'],
+      'disabled_features' => $content['disable'],
     ]);
 
     // Save

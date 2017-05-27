@@ -2,8 +2,8 @@
 
 namespace Drupal\H5PEditor\Plugin\Field\FieldWidget;
 
+use Drupal\h5p\Plugin\Field\H5PWidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
@@ -22,36 +22,21 @@ use Drupal\H5P\Plugin\Field\FieldType\H5PItem;
  *   }
  * )
  */
-class H5PEditorWidget extends WidgetBase {
+class H5PEditorWidget extends H5PWidgetBase {
 
   /**
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    // Don't allow setting default values
-    if ($this->isDefaultValueWidget($form_state)) {
-      $element += [
-        '#type' => 'markup',
-        '#markup' => '<p>' . t('Currently, not supported.'). '</p>',
-      ];
-      return ['value' => $element];
+    $parentElement = parent::formElement($items, $delta, $element, $form, $form_state);
+    $element = &$parentElement['h5p_content'];
+    if (empty($element['id'])) {
+      return $parentElement; // No content id, use parent element
     }
 
     $field_name = $items->getName();
 
-    // Element contains multiple form elements
-    $element += [
-      '#type' => 'fieldset',
-    ];
-
     $h5p_content_id = $items[$delta]->h5p_content_id;
-
-    // Keep track of current Content ID
-    $element['h5p_content_id'] = [
-      '#type' => 'value',
-      '#value' => $h5p_content_id,
-    ];
-
     if ($h5p_content_id) {
       // Load H5P Content entity
       $h5p_content = H5PContent::load($h5p_content_id);
@@ -85,110 +70,7 @@ class H5PEditorWidget extends WidgetBase {
       ],
     ];
 
-    // Make it possible to clear a field
-    $element['h5p_clear_content'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Clear content'),
-      '#description' => t('Warning! Your content will be completely deleted'),
-      '#default_value' => 0
-    ];
-
-    $element['h5p_frame'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Display buttons (download, embed and copyright)'),
-      '#default_value' => 1
-    ];
-    $h5p_frame_selector = ':input[name="' . $field_name . '[' . $delta  . '][value][h5p_frame]"]';
-
-    // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
-    $h5p_export = \Drupal::state()->get('h5p_export');
-    $h5p_export_default_value = ($h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON ? 1 : 0);
-    if ($h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON || $h5p_export == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF) {
-      $element['h5p_export'] = [
-        '#type' => 'checkbox',
-        '#title' => t('Download button'),
-        '#default_value' => $h5p_export_default_value,
-        '#states' => [
-          'visible' => [
-            "$h5p_frame_selector" => ['checked' => TRUE],
-          ]
-        ]
-      ];
-    } else {
-      $element['h5p_export'] = [
-        '#type' => 'value',
-        '#value' => $h5p_export
-      ];
-    }
-
-    // Only show a checkbox if H5PAdminSettingsForm allow author to change its value
-    $h5p_embed = \Drupal::state()->get('h5p_embed');
-    $h5p_embed_default_value = ($h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON ? 1 : 0);
-    if ($h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON || $h5p_embed == \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF) {
-      $element['h5p_embed'] = [
-        '#type' => 'checkbox',
-        '#title' => t('Embed button'),
-        '#default_value' => $h5p_embed_default_value,
-        '#states' => [
-          'visible' => [
-            "$h5p_frame_selector" => ['checked' => TRUE],
-          ]
-        ]
-      ];
-    } else {
-      $element['h5p_embed'] = [
-        '#type' => 'value',
-        '#value' => $h5p_embed
-      ];
-    }
-
-    $h5p_copyright = \Drupal::state()->get('h5p_copyright');
-    $element['h5p_file_options_copyright'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Copyright button'),
-      '#default_value' => $h5p_copyright,
-      '#states' => [
-        'visible' => [
-          "$h5p_frame_selector" => ['checked' => TRUE],
-        ]
-      ]
-    ];
-
-    return ['value' => $element];
-  }
-
-  /**
-   * Delete content by id
-   *
-   * @param int $content_id Content id
-   */
-  private function deleteContent($content_id) {
-    if ($content_id) {
-      $h5p_content = H5PContent::load($content_id);
-      $h5p_content->delete();
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-
-    // Only save content when validation has completed
-    if (!$form_state->isValidationComplete()) {
-      return $values;
-    }
-
-    // Determine if new revisions should be made
-    $do_new_revision = H5PUploadWidget::doNewRevision($form_state);
-
-    $return_values = [];
-    foreach ($values as $delta => $value) {
-      // Massage out each H5P Upload from the submitted form
-      $return_values[$delta] = $this->massageFormValue($value['value'], $delta, $do_new_revision);
-    }
-
-    return $return_values;
+    return $parentElement;
   }
 
   /**
@@ -198,28 +80,28 @@ class H5PEditorWidget extends WidgetBase {
    * @param integer $delta
    * @param boolean $do_new_revision
    */
-  private function massageFormValue(array $value, $delta, $do_new_revision) {
+  protected function massageFormValue(array $value, $delta, $do_new_revision) {
     // Prepare default messaged return values
     $return_value = [
       'h5p_content_revisioning_handled' => TRUE,
-      'h5p_content_id' => $value['h5p_content_id'],
+      'h5p_content_id' => $value['id'],
     ];
 
     // Skip saving content if no library is selector, or clearing content
-    if (!$value['library'] || $value['h5p_clear_content']) {
+    if (!$value['library'] || $value['clear_content']) {
       $return_value['h5p_content_id'] = NULL;
 
-      if ($value['h5p_content_id'] && !$do_new_revision) {
+      if ($value['id'] && !$do_new_revision) {
         // Not a new revision, delete existing content
-        H5PItem::deleteH5PContent($value['h5p_content_id']);
+        H5PItem::deleteH5PContent($value['id']);
       }
 
       return $return_value;
     }
 
     // Load existing content
-    if ($value['h5p_content_id']) {
-      $h5p_content = H5PContent::load($value['h5p_content_id']);
+    if ($value['id']) {
+      $h5p_content = H5PContent::load($value['id']);
       $old_library = $h5p_content->getLibrary(TRUE);
       $old_params = $h5p_content->getParameters();
     }
@@ -233,9 +115,10 @@ class H5PEditorWidget extends WidgetBase {
     $content = [
       'library' => H5PEditorUtilities::getLibraryProperty($value['library']),
       'params' => $value['parameters'],
+      'disable' => $core->getStorableDisplayOptions($value, !empty($h5p_content) ? $h5p_content->get('disabled_features')->value : 0),
     ];
-    if ($value['h5p_content_id'] && !$do_new_revision) {
-      $content['id'] = $value['h5p_content_id'];
+    if ($value['id'] && !$do_new_revision) {
+      $content['id'] = $value['id'];
     }
 
     // Save the new content
@@ -243,8 +126,8 @@ class H5PEditorWidget extends WidgetBase {
 
     // If we had existing content and did a new revision we need to make a copy
     // of the content folder from the old revision
-    if ($value['h5p_content_id'] && $do_new_revision) {
-      $core->fs->cloneContent($value['h5p_content_id'], $return_value['h5p_content_id']);
+    if ($value['id'] && $do_new_revision) {
+      $core->fs->cloneContent($value['id'], $return_value['h5p_content_id']);
     }
 
     // Keep new files, delete files from old parameters
