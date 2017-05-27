@@ -879,19 +879,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements deleteContentData
    */
   public function deleteContentData($contentId) {
-
-    // Would it be better if this is called from the entity's delete ? (in case the entity is delete from elsewhere(!= Field))
-    $h5p_content = H5PContent::load($contentId);
-    if (empty($h5p_content)) {
-      return; // Nothing to delete
-    }
-
-    // Load library
-    $h5p_library = $h5p_content->getLibrary();
-
-    // Delete entity
-    $h5p_content->delete();
-
     // Delete library usage
     $this->deleteLibraryUsage($contentId);
 
@@ -904,12 +891,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
     db_delete('h5p_content_user_data')
       ->condition('content_main_id', $contentId)
       ->execute();
-
-    // Log content delete
-    new H5PEvent('content', 'delete',
-      $contentId, '',
-      $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
-    );
   }
 
   /**

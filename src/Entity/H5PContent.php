@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Url;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\h5p\H5PDrupal\H5PEvent;
 
 /**
  * Defines the h5p content entity.
@@ -160,9 +161,8 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       $this->loadLibrary();
     }
 
-    // TODO: Provide real values for title, embedType and name
     $content = [
-      'title' => 'title',
+      'title' => 'Interactive Content',
       'id' => $this->id(),
       'slug' => 'interactive-content',
       'library' => [
@@ -215,7 +215,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
 
     $core = H5PDrupal::getInstance('core');
     $filtered_parameters = $this->getFilteredParameters();
-    $display_options = $core->getDisplayOptionsForEdit($this->get('disabled_features')->value);
+    $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $this->id());
 
     $embed_url = Url::fromUri('internal:/h5p/embed/' . $this->id(), ['absolute' => TRUE])->toString();
     $resizer_url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString();
@@ -231,6 +231,31 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'title' => 'Not Available',
       'contentUserData' => $content_user_data,
       'displayOptions' => $display_options,
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function delete() {
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    // Delete entity
+    parent::delete();
+
+    // Delete all associated files and data
+    $storage = H5PDrupal::getInstance('storage');
+    $storage->deletePackage([
+      'id' => $this->id(),
+      'slug' => 'interactive-content',
+    ]);
+
+    // Log content delete
+    new H5PEvent('content', 'delete',
+      $this->id(), '',
+      $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
     );
   }
 }

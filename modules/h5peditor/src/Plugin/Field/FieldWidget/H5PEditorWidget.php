@@ -9,6 +9,7 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5peditor\H5PEditor\H5PEditorUtilities;
 use Drupal\h5p\Plugin\Field\FieldWidget\H5PUploadWidget;
+use Drupal\H5P\Plugin\Field\FieldType\H5PItem;
 
 /**
  * Plugin implementation of the 'h5p_editor' widget.
@@ -178,24 +179,6 @@ class H5PEditorWidget extends WidgetBase {
       return $values;
     }
 
-    // Skip saving content if no library
-    $library_string = $values[0]['value']['library'];
-    if (!$library_string) {
-      return [
-        'h5p_content_id' => NULL,
-      ];
-    }
-
-    // Content has been cleared
-    $clear_field = $values[0]['value']['h5p_clear_content'];
-    if ($clear_field) {
-      $content_id = $values[0]['value']['h5p_content_id'];
-      $this->deleteContent($content_id);
-      return [
-        'h5p_content_id' => NULL,
-      ];
-    }
-
     // Determine if new revisions should be made
     $do_new_revision = H5PUploadWidget::doNewRevision($form_state);
 
@@ -222,11 +205,22 @@ class H5PEditorWidget extends WidgetBase {
       'h5p_content_id' => $value['h5p_content_id'],
     ];
 
+    // Skip saving content if no library is selector, or clearing content
+    if (!$value['library'] || $value['h5p_clear_content']) {
+      $return_value['h5p_content_id'] = NULL;
+
+      if ($value['h5p_content_id'] && !$do_new_revision) {
+        // Not a new revision, delete existing content
+        H5PItem::deleteH5PContent($value['h5p_content_id']);
+      }
+
+      return $return_value;
+    }
+
     // Load existing content
     if ($value['h5p_content_id']) {
       $h5p_content = H5PContent::load($value['h5p_content_id']);
       $old_library = $h5p_content->getLibrary(TRUE);
-      $old_library['name'] = $old_library['machineName'];
       $old_params = $h5p_content->getParameters();
     }
     else {

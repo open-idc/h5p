@@ -194,16 +194,6 @@ class H5PUploadWidget extends WidgetBase {
       return $values;
     }
 
-    // Content has been cleared
-    $clear_field = $values[0]['h5p_upload']['h5p_clear_content'];
-    if ($clear_field) {
-      $content_id = $values[0]['h5p_upload']['h5p_content_id'];
-      $this->deleteContent($content_id);
-      return [
-        'h5p_content_id' => NULL,
-      ];
-    }
-
     // Determine if new revisions should be made
     $do_new_revision = self::doNewRevision($form_state);
 
@@ -232,7 +222,22 @@ class H5PUploadWidget extends WidgetBase {
     // Determine if a H5P file has been uploaded
     $file_is_uploaded = ($value['h5p_file'] === 1);
     if (!$file_is_uploaded) {
-      return $return_value; // No new file
+      return $return_value; // No new file, keep existing value
+    }
+
+    // From here on this widget will handle the revisioning
+    $return_value['h5p_content_revisioning_handled'] = TRUE;
+
+    // Determine if we're clearing the content
+    if ($value['h5p_clear_content']) {
+      $return_value['h5p_content_id'] = NULL;
+
+      if ($value['h5p_content_id'] && !$do_new_revision) {
+        // Not a new revision, delete existing content
+        H5PItem::deleteH5PContent($value['h5p_content_id']);
+      }
+
+      return $return_value;
     }
 
     // Store the uploaded file
@@ -252,7 +257,6 @@ class H5PUploadWidget extends WidgetBase {
     // Save and update content id
     $storage->savePackage($content);
     $return_value['h5p_content_id'] = $storage->contentId;
-    $return_value['h5p_content_revisioning_handled'] = TRUE;
 
     return $return_value;
   }
