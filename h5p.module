@@ -58,6 +58,7 @@ function h5p_library_info_build() {
 
   // Add dependencies for content scripts
   $libraries['h5p.content']['dependencies'] = [
+    'core/drupalSettings',
     'h5p/h5p.integration',
     'h5p/h5p.jquery',
   ];
