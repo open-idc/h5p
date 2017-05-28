@@ -68,15 +68,6 @@ h5p.admin.content.h5p.rebuild_cache:
     _permission: 'administer site configuration'
     id: \d+
 
-h5p.admin.content.h5p.embed:
-  path: '/admin/content/h5p/embed'
-  defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::embed'
-    _title: 'H5P Embed'
-  requirements:
-    _permission: 'access content'
-    id: \d+
-
 h5p.ajax.set_finished:
   path: '/h5p-ajax/set-finished.json'
   defaults:
@@ -92,3 +83,12 @@ h5p.ajax.content_user_data:
     _title: 'Store Content User Data'
   requirements:
      _permission: 'access content'
+
+h5p.content.embed:
+  path: '/h5p/{id}/embed'
+  defaults:
+    _controller: '\Drupal\h5p\Controller\H5PController::embed'
+    _title: 'H5P Embed'
+  requirements:
+    _permission: 'access content'
+    id: \d+

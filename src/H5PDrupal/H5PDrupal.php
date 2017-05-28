@@ -96,8 +96,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_hub_is_enabled = $interface->getOption('hub_is_enabled', TRUE);
 
     // Create AJAX URLs
-    $set_finished_url = Url::fromUri('internal:/h5p-ajax/set-finished.json', ['query' => ['token' => \H5PCore::createToken('result')]])->toString();
-    $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString();
+    $set_finished_url = Url::fromUri('internal:/h5p-ajax/set-finished.json', ['query' => ['token' => \H5PCore::createToken('result')]])->toString(TRUE)->getGeneratedUrl();
+    $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString(TRUE)->getGeneratedUrl();
     $h5p_url = base_path() . self::getRelativeH5PPath();
 
     // Define the generic H5PIntegration settings
@@ -154,7 +154,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
         'name' => $user->getAccountName(),
         'mail' => $user->getEmail(),
       ];
-    } else {
+    }
+    else {
       $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
     }
 
