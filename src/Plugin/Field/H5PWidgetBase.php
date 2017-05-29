@@ -27,9 +27,10 @@ abstract class H5PWidgetBase extends WidgetBase {
       '#type' => 'fieldset',
     ];
 
+    $h5p_content_id = $items[$delta]->h5p_content_id;
     $element['id'] = [
       '#type' => 'value',
-      '#value' => $items[$delta]->h5p_content_id
+      '#value' => $h5p_content_id,
     ];
 
     // Make it possible to clear a field
@@ -43,7 +44,7 @@ abstract class H5PWidgetBase extends WidgetBase {
 
     // Load content
     $disable = NULL;
-    $h5p_content = H5PContent::load($items[$delta]->h5p_content_id);
+    $h5p_content = $h5p_content_id ? H5PContent::load($h5p_content_id) : NULL;
     if (!empty($h5p_content)) {
       $disable = $h5p_content->get('disabled_features')->value;
     }
