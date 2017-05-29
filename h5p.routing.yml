@@ -96,7 +96,7 @@ h5p.ajax.content_user_data:
 h5p.content.embed:
   path: '/h5p/{id}/embed'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PController::embed'
+    _controller: '\Drupal\h5p\Controller\H5PEmbed::embed'
     _title: 'H5P Embed'
   requirements:
     _permission: 'access content'
