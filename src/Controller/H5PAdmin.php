@@ -204,26 +204,6 @@ class H5PAdmin extends ControllerBase {
   }*/
 
   /**
-   * Display library delete page with form.
-   *
-   * @param string $library_id
-   */
-  function libraryDelete($library_id) {
-    // Is library deletable ?
-    $h5p_drupal = H5PDrupal::getInstance('interface');
-    $notCached = $h5p_drupal->getNumNotFiltered();
-    $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
-    if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
-      // Create form:
-      return \Drupal::formBuilder()->getForm('Drupal\h5p\Form\H5PLibraryDeleteForm', $library_id, $this->libraryDetailsTitle($library_id));
-
-    } else {
-      // May not delete this one
-      return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
-    }
-  }
-
-  /**
    * Restrict a library
    *
    * @param string $library_id
@@ -291,8 +271,8 @@ class H5PAdmin extends ControllerBase {
    *
    * @param integer $library_id
    */
-  function libraryDetailsTitle($library_id) {
-    $query = $this->database->select('h5p_libraries', 'l');
+  public static function libraryDetailsTitle($library_id) {
+    $query = db_select('h5p_libraries', 'l');
     $query->condition('l.library_id', $library_id, '=');
     $query->fields('l', ['title']);
     return $query->execute()->fetchField();

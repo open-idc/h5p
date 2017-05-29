@@ -53,7 +53,7 @@ h5p.admin.content.h5p.libraries.restrict:
 h5p.admin.content.h5p.libraries.delete:
   path: '/admin/content/h5p/libraries/{library_id}/delete'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDelete'
+    _form: '\Drupal\h5p\Form\H5PLibraryDeleteForm'
     _title: 'Delete H5P Library'
   requirements:
     _permission: 'administer site configuration'
