@@ -169,8 +169,9 @@ class H5PDefaultFormatter extends FormatterBase {
         'type' => 'file',
         'group' => 'h5p',
         'weight' => count($filePaths) - $index,
-        'cache' => TRUE,
-        'preprocess' => TRUE,
+        // TODO: Fix paths for resolving vendor assets
+        'cache' => FALSE,
+        'preprocess' => FALSE,
         'attributes' => [],
         'version' => NULL,
         'browsers' => [],

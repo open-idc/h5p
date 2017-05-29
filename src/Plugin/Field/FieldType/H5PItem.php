@@ -102,7 +102,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    */
   public function delete() {
     parent::delete();
-    $this->deleteH5PContent();
+    self::deleteH5PContent($this->get('h5p_content_id')->getValue());
   }
 
   /**
@@ -113,21 +113,23 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
 
     $interface = H5PDrupal::getInstance();
     if ($interface->getOption('revisioning', TRUE)) {
-      $this->deleteH5PContent();
+      self::deleteH5PContent($this->get('h5p_content_id')->getValue());
     }
   }
 
   /**
    * Delete the H5P Content referenced by this field
    */
-  private function deleteH5PContent() {
-    $content_id = $this->get('h5p_content_id')->getValue();
-    if (!empty($content_id)) {
-      $storage = H5PDrupal::getInstance('storage');
-      $storage->deletePackage([
-        'id' => $content_id,
-        'slug' => 'interactive-content',
-      ]);
+  public static function deleteH5PContent($content_id) {
+    if (empty($content_id)) {
+      return; // Nothing to delete
     }
+
+    $h5p_content = H5PContent::load($content_id);
+    if (empty($h5p_content)) {
+      return; // Nothing to delete
+    }
+
+    $h5p_content->delete();
   }
 }
