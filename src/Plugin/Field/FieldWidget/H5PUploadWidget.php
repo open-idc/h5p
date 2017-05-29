@@ -26,7 +26,7 @@ class H5PUploadWidget extends H5PWidgetBase {
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $parentElement = parent::formElement($items, $delta, $element, $form, $form_state);
-    $element = $parentElement['h5p_content'];
+    $element = &$parentElement['h5p_content'];
     if (empty($element['id'])) {
       return $parentElement; // No content id, use parent element
     }
@@ -99,18 +99,10 @@ class H5PUploadWidget extends H5PWidgetBase {
       'h5p_content_id' => $value['id'],
     ];
 
-    // Determine if a H5P file has been uploaded
-    $file_is_uploaded = ($value['file'] === 1);
-    if (!$file_is_uploaded) {
-      return $return_value; // No new file, keep existing value
-    }
-
-    // From here on this widget will handle the revisioning
-    $return_value['h5p_content_revisioning_handled'] = TRUE;
-
     // Determine if we're clearing the content
     if ($value['clear_content']) {
       $return_value['h5p_content_id'] = NULL;
+      $return_value['h5p_content_revisioning_handled'] = TRUE;
 
       if ($value['id'] && !$do_new_revision) {
         // Not a new revision, delete existing content
@@ -118,6 +110,12 @@ class H5PUploadWidget extends H5PWidgetBase {
       }
 
       return $return_value;
+    }
+
+    // Determine if a H5P file has been uploaded
+    $file_is_uploaded = ($value['file'] === 1);
+    if (!$file_is_uploaded) {
+      return $return_value; // No new file, keep existing value
     }
 
     // Store the uploaded file
@@ -144,6 +142,7 @@ class H5PUploadWidget extends H5PWidgetBase {
     // Save and update content id
     $storage->savePackage($content);
     $return_value['h5p_content_id'] = $storage->contentId;
+    $return_value['h5p_content_revisioning_handled'] = TRUE;
 
     return $return_value;
   }
