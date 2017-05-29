@@ -42,8 +42,8 @@
         // Create new editor
         var h5peditor = new ns.Editor($library.val(), $params.val(), this, function () {
           var iframeH5PEditor = this.H5PEditor;
-          iframeH5PEditor.contentId = (contentId ? contentId : 0);
-          iframeH5PEditor.ajaxPath = settings.h5peditor.ajaxPath.replace(':contentId', this.H5PEditor.contentId);
+          iframeH5PEditor.contentId = (contentId ? contentId : undefined);
+          iframeH5PEditor.ajaxPath = settings.h5peditor.ajaxPath.replace(':contentId', (contentId ? contentId : 0));
           iframeH5PEditor.filesPath = settings.h5peditor.filesPath + (contentId ? '/content/' + contentId : '/editor');
 
           /**
