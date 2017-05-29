@@ -9,7 +9,7 @@ h5p.admin.config.system.h5p:
 h5p.admin.content.h5p:
   path: '/admin/content/h5p'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PLibraryAdmin::list'
+    _controller: '\Drupal\h5p\Controller\H5PLibraryAdmin::libraryList'
     _title: 'H5P Library List'
   requirements:
     _permission: 'administer site configuration'

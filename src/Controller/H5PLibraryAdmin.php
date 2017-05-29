@@ -25,7 +25,6 @@ class H5PLibraryAdmin extends ControllerBase {
   }
 
   public static function create(ContainerInterface $container) {
-
     $controller = new static(\Drupal::database());
     return $controller;
   }
@@ -35,8 +34,7 @@ class H5PLibraryAdmin extends ControllerBase {
    *
    * @return string Html
    */
-  function list() {
-
+  function libraryList() {
     $core = H5PDrupal::getInstance('core');
     $numNotFiltered = $core->h5pF->getNumNotFiltered();
     $libraries = $core->h5pF->loadLibraries();
@@ -279,7 +277,7 @@ class H5PLibraryAdmin extends ControllerBase {
   }
 
   /**
-   * Helper function - adds admin settings
+   * Helper function - creates admin settings
    *
    * @param array $settings
    * @return array
