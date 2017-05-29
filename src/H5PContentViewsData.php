@@ -16,20 +16,6 @@ class H5PContentViewsData extends EntityViewsData implements EntityViewsDataInte
   public function getViewsData() {
     $data = parent::getViewsData();
 
-    //$data['h5p_content']['table']['base']['help'] = $this->t('TBD');
-    //$data['h5p_content']['table']['base']['defaults']['field'] = 'id';
-    $data['h5p_content']['table']['wizard_id'] = 'h5p_content';
-
-    $data['h5p_content']['id']['relationship'] = [
-      'title' => $this->t('H5P Points'),
-      'help' => $this->t('Relate H5P entities to points.'),
-      'id' => 'standard',
-      'base' => 'h5p_points',
-      'base field' => 'content_id',
-      'field' => 'id',
-      'label' => $this->t('H5P Points'),
-    ];
-
     $data['h5p_points']['table']['group'] = $this->t('H5P Points');
 
     $data['h5p_points']['table']['join'] = [
@@ -39,70 +25,57 @@ class H5PContentViewsData extends EntityViewsData implements EntityViewsDataInte
       ],
     ];
 
-    $data['h5p_points']['uid']['relationship'] = [
-      'base' => 'users',
-      'base field' => 'uid',
-      'label' => t('user'),
-    ];
-
-    $data['users']['h5p_uid_points']['relationship'] = [
-      'title' => t('H5P Points for user'),
-      'label'  => t('H5P Points for user'),
-      'help' => t('Will return an entry for each H5P that is stored for the user in the database.'),
-      'relationship field' => 'uid',
-      'outer field' => 'users.uid',
-      'argument table' => 'users',
-      'argument field' =>  'uid',
-      'base'   => 'h5p_points',
-      'field'  => 'uid',
-      'base field' => 'uid',
-    ];
-
     $data['h5p_points']['uid'] = [
-      'title' => $this->t('User id'),
+      'title' => $this->t('H5P user points'),
       'field' => [
-        'id' => 'numeric',
+        'id' => 'standard',
        ],
        'filter' => [
-         'id' => 'numeric',
+         'id' => 'standard',
        ],
        'argument' => [
-         'id' => 'numeric',
+         'id' => 'standard',
        ],
        'sort' => [
          'id' => 'standard',
+       ],
+       'relationship' => [
+         'base' => 'users_field_data',
+         'base field' => 'uid',
+         'id' => 'standard',
+         'label' => t('H5P user points'),
        ],
     ];
 
     $data['h5p_points']['started'] = [
       'title' => $this->t('Started'),
       'field' => [
-        'id' => 'numeric',
+        'id' => 'date',
        ],
        'filter' => [
-         'id' => 'numeric',
+         'id' => 'date',
        ],
        'argument' => [
-         'id' => 'numeric',
+         'id' => 'date',
        ],
        'sort' => [
-         'id' => 'standard',
+         'id' => 'date',
        ],
     ];
 
     $data['h5p_points']['finished'] = [
       'title' => $this->t('Finished'),
       'field' => [
-        'id' => 'numeric',
+        'id' => 'date',
        ],
        'filter' => [
-         'id' => 'numeric',
+         'id' => 'date',
        ],
        'argument' => [
-         'id' => 'numeric',
+         'id' => 'date',
        ],
        'sort' => [
-         'id' => 'standard',
+         'id' => 'date',
        ],
     ];
 
