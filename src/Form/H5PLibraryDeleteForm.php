@@ -11,8 +11,9 @@ use Drupal\Core\Form\FormStateInterface;
 
 
 /**
- * Implements teh UserRegisterPrivat form.
+ * Implements the H5PLibraryDeleteForm form.
  */
+// TODO should inherit ConfirmFormBase
 class H5PLibraryDeleteForm extends FormBase {
 
   /**

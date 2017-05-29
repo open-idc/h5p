@@ -23,11 +23,20 @@ h5p.admin.content.h5p:
 #    _permission: 'administer site configuration'
 #    id: \d+
 
+h5p.admin.content.h5p.libraries.upgrade-confirm:
+  path: '/admin/content/h5p/libraries/{library_id}/upgrade-confirm'
+  defaults:
+    _form: '\Drupal\h5p\Form\H5PContentUpgradeForm'
+    _title_callback: '\Drupal\h5p\Controller\H5PContentUpgrade::pageTitle'
+  requirements:
+    _permission: 'administer site configuration'
+    id: \d+
+
 h5p.admin.content.h5p.libraries.upgrade:
   path: '/admin/content/h5p/libraries/{library_id}/upgrade'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryUpgrade'
-    _title_callback: '\Drupal\h5p\Controller\H5PAdmin::libraryUpgradePageTitle'
+    _controller: '\Drupal\h5p\Controller\H5PContentUpgrade::upgrade'
+    _title_callback: '\Drupal\h5p\Controller\H5PContentUpgrade::pageTitle'
   requirements:
     _permission: 'administer site configuration'
     id: \d+
@@ -53,7 +62,7 @@ h5p.admin.content.h5p.libraries.delete:
 h5p.admin.content.h5p.upgrade.library:
   path: '/admin/content/h5p/upgrade/library/{name}/{major}/{minor}'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::contentUpgradeLibrary'
+    _controller: '\Drupal\h5p\Controller\H5PContentUpgrade::prepareUpgrade'
     _title: 'H5P Content Upgrade Library'
   requirements:
     _permission: 'administer site configuration'
