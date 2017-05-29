@@ -256,7 +256,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     // Log content delete
     new H5PEvent('content', 'delete',
       $this->id(), '',
-      $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
+      $this->library->name, $this->library->major . '.' . $this->library->minor
     );
   }
 }
