@@ -101,16 +101,45 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function delete() {
-    parent::delete();
-    self::deleteH5PContent($this->get('h5p_content_id')->getValue());
+    $entity = $this->getEntity();
+    $entity_type = $entity->getEntityType();
+    if (!$entity_type->isRevisionable()) {
+      // No revisions – only need to delete the current value
+      self::deleteH5PContent($this->get('h5p_content_id')->getValue());
+      return;
+    }
+
+    // We need to looks up all the revisions of this field and delete them
+    $storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
+    $table_mapping = $storage->getTableMapping();
+
+    $field_definition = $this->getFieldDefinition();
+    $storage_definition = $field_definition->getFieldStorageDefinition();
+
+    // Find revision table name
+    $revision_table = $table_mapping->getDedicatedRevisionTableName($storage_definition);
+
+    // Find column name
+    $columns = $storage_definition->getColumns();
+    $column = $table_mapping->getFieldColumnName($storage_definition, key($columns));
+
+    // Look up all h5p content referenced by this field
+    $database = \Drupal::database();
+    $results = $database->select($revision_table, 'r')
+        ->fields('r', [$column])
+        ->condition('entity_id', $entity->id())
+        ->execute();
+
+    // … and delete them one by one
+    while ($h5p_content_id = $results->fetchField()) {
+      self::deleteH5PContent($h5p_content_id);
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteRevision() {
-    parent::deleteRevision();
-
     $interface = H5PDrupal::getInstance();
     if ($interface->getOption('revisioning', TRUE)) {
       self::deleteH5PContent($this->get('h5p_content_id')->getValue());
