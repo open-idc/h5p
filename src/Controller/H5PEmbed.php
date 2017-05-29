@@ -8,9 +8,9 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\Core\Render\HtmlResponse;
 
 /**
- * An example controller.
+ * The embed controller
  */
-class H5PController extends ControllerBase {
+class H5PEmbed extends ControllerBase {
 
   /**
    * {@inheritdoc}

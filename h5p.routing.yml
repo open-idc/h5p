@@ -9,7 +9,7 @@ h5p.admin.config.system.h5p:
 h5p.admin.content.h5p:
   path: '/admin/content/h5p'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryList'
+    _controller: '\Drupal\h5p\Controller\H5PLibraryAdmin::libraryList'
     _title: 'H5P Library List'
   requirements:
     _permission: 'administer site configuration'
@@ -17,7 +17,7 @@ h5p.admin.content.h5p:
 #h5p.admin.content.h5p.libraries.details:
 #  path: '/admin/content/h5p/libraries/{library_id}'
 #  defaults:
-#    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDetails'
+#    _controller: '\Drupal\h5p\Controller\H5PLibraryAdmin::libraryDetails'
 #    _title: 'H5P Library Details'
 #  requirements:
 #    _permission: 'administer site configuration'
@@ -44,7 +44,7 @@ h5p.admin.content.h5p.libraries.upgrade:
 h5p.admin.content.h5p.libraries.restrict:
   path: '/admin/content/h5p/libraries/{library_id}/restrict'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryRestrict'
+    _controller: '\Drupal\h5p\Controller\H5PLibraryAdmin::restrict'
     _title: 'Restrict H5P Content'
   requirements:
     _permission: 'administer site configuration'
@@ -53,7 +53,7 @@ h5p.admin.content.h5p.libraries.restrict:
 h5p.admin.content.h5p.libraries.delete:
   path: '/admin/content/h5p/libraries/{library_id}/delete'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::libraryDelete'
+    _form: '\Drupal\h5p\Form\H5PLibraryDeleteForm'
     _title: 'Delete H5P Library'
   requirements:
     _permission: 'administer site configuration'
@@ -71,7 +71,7 @@ h5p.admin.content.h5p.upgrade.library:
 h5p.admin.content.h5p.rebuild_cache:
   path: '/admin/content/h5p/rebuild-cache'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PAdmin::rebuildCache'
+    _controller: '\Drupal\h5p\Controller\H5PLibraryAdmin::rebuildCache'
     _title: 'H5P Rebuild Content Cache'
   requirements:
     _permission: 'administer site configuration'
@@ -96,7 +96,7 @@ h5p.ajax.content_user_data:
 h5p.content.embed:
   path: '/h5p/{id}/embed'
   defaults:
-    _controller: '\Drupal\h5p\Controller\H5PController::embed'
+    _controller: '\Drupal\h5p\Controller\H5PEmbed::embed'
     _title: 'H5P Embed'
   requirements:
     _permission: 'access content'

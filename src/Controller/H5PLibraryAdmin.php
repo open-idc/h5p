@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class H5PAdmin extends ControllerBase {
+class H5PLibraryAdmin extends ControllerBase {
 
   protected $database;
 
@@ -25,7 +25,6 @@ class H5PAdmin extends ControllerBase {
   }
 
   public static function create(ContainerInterface $container) {
-
     $controller = new static(\Drupal::database());
     return $controller;
   }
@@ -36,7 +35,6 @@ class H5PAdmin extends ControllerBase {
    * @return string Html
    */
   function libraryList() {
-
     $core = H5PDrupal::getInstance('core');
     $numNotFiltered = $core->h5pF->getNumNotFiltered();
     $libraries = $core->h5pF->loadLibraries();
@@ -204,31 +202,11 @@ class H5PAdmin extends ControllerBase {
   }*/
 
   /**
-   * Display library delete page with form.
-   *
-   * @param string $library_id
-   */
-  function libraryDelete($library_id) {
-    // Is library deletable ?
-    $h5p_drupal = H5PDrupal::getInstance('interface');
-    $notCached = $h5p_drupal->getNumNotFiltered();
-    $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
-    if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
-      // Create form:
-      return \Drupal::formBuilder()->getForm('Drupal\h5p\Form\H5PLibraryDeleteForm', $library_id, $this->libraryDetailsTitle($library_id));
-
-    } else {
-      // May not delete this one
-      return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
-    }
-  }
-
-  /**
    * Restrict a library
    *
    * @param string $library_id
    */
-  function libraryRestrict($library_id) {
+  function restrict($library_id) {
     $restricted = filter_input(INPUT_GET, 'restrict');
     $restrict = ($restricted === '1');
 
@@ -291,15 +269,15 @@ class H5PAdmin extends ControllerBase {
    *
    * @param integer $library_id
    */
-  function libraryDetailsTitle($library_id) {
-    $query = $this->database->select('h5p_libraries', 'l');
+  public static function libraryDetailsTitle($library_id) {
+    $query = db_select('h5p_libraries', 'l');
     $query->condition('l.library_id', $library_id, '=');
     $query->fields('l', ['title']);
     return $query->execute()->fetchField();
   }
 
   /**
-   * Helper function - adds admin settings
+   * Helper function - creates admin settings
    *
    * @param array $settings
    * @return array
