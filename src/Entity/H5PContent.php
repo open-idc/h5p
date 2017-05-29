@@ -71,18 +71,17 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
    */
   protected function loadLibrary() {
     $this->library = db_query(
-        "
-        SELECT  title,
-                machine_name AS name,
-                major_version AS major,
-                minor_version AS minor,
-                embed_types,
-                fullscreen
-           FROM {h5p_libraries}
-          WHERE library_id = :id",
-        array(
+        "SELECT  title,
+                 machine_name AS name,
+                 major_version AS major,
+                 minor_version AS minor,
+                 embed_types,
+                 fullscreen
+            FROM {h5p_libraries}
+           WHERE library_id = :id",
+        [
           ':id' => $this->get('library_id')->value
-        ))
+        ])
         ->fetchObject();
   }
 
