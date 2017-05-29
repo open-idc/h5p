@@ -96,8 +96,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_hub_is_enabled = $interface->getOption('hub_is_enabled', TRUE);
 
     // Create AJAX URLs
-    $set_finished_url = Url::fromUri('internal:/h5p-ajax/set-finished.json', ['query' => ['token' => \H5PCore::createToken('result')]])->toString();
-    $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString();
+    $set_finished_url = Url::fromUri('internal:/h5p-ajax/set-finished.json', ['query' => ['token' => \H5PCore::createToken('result')]])->toString(TRUE)->getGeneratedUrl();
+    $content_user_data_url = Url::fromUri('internal:/h5p-ajax/content-user-data/:contentId/:dataType/:subContentId', ['query' => ['token' => \H5PCore::createToken('contentuserdata')]])->toString(TRUE)->getGeneratedUrl();
     $h5p_url = base_path() . self::getRelativeH5PPath();
 
     // Define the generic H5PIntegration settings
@@ -154,7 +154,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
         'name' => $user->getAccountName(),
         'mail' => $user->getEmail(),
       ];
-    } else {
+    }
+    else {
       $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
     }
 
@@ -778,6 +779,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     // Update properties
     $h5p_content->set('library_id', $content['library']['libraryId']);
     $h5p_content->set('parameters', $content['params']);
+    $h5p_content->set('disabled_features', $content['disable']);
     $h5p_content->set('filtered_parameters', '');
 
     // Save changes
@@ -796,6 +798,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_content = H5PContent::create([
       'library_id' => $content['library']['libraryId'],
       'parameters' => $content['params'],
+      'disabled_features' => $content['disable'],
     ]);
 
     // Save
@@ -879,19 +882,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements deleteContentData
    */
   public function deleteContentData($contentId) {
-
-    // Would it be better if this is called from the entity's delete ? (in case the entity is delete from elsewhere(!= Field))
-    $h5p_content = H5PContent::load($contentId);
-    if (empty($h5p_content)) {
-      return; // Nothing to delete
-    }
-
-    // Load library
-    $h5p_library = $h5p_content->getLibrary();
-
-    // Delete entity
-    $h5p_content->delete();
-
     // Delete library usage
     $this->deleteLibraryUsage($contentId);
 
@@ -904,12 +894,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
     db_delete('h5p_content_user_data')
       ->condition('content_main_id', $contentId)
       ->execute();
-
-    // Log content delete
-    new H5PEvent('content', 'delete',
-      $contentId, '',
-      $h5p_library->name, $h5p_library->major . '.' . $h5p_library->minor
-    );
   }
 
   /**

@@ -2,7 +2,7 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
-require_once 'vendor/h5p/h5p-editor/h5peditor-ajax.interface.php';
+//require_once 'vendor/h5p/h5p-editor/h5peditor-ajax.interface.php';
 
 class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
 
@@ -12,42 +12,56 @@ class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
    * @return array Latest version of all local libraries
    */
   public function getLatestLibraryVersions() {
-
     $connection = \Drupal::database();
 
-    $query = $connection->select('h5p_libraries', 'hl');
-    $query->condition('hl.runnable', 1, '=');
-    $query->fields('hl', ['library_id']);
-    $query->addExpression('MAX(hl.major_version)');
-    $query->groupBy('hl.library_id');
-    $result = $query->execute()->fetchAll();
+    // Retrieve latest major version
+    $max_major_version = $connection->select('h5p_libraries', 'h1');
+    $max_major_version->fields('h1', ['machine_name']);
+    $max_major_version->addExpression('MAX(h1.major_version)', 'major_version');
+    $max_major_version->condition('h1.runnable', 1);
+    $max_major_version->groupBy('h1.machine_name');
 
-    if (empty($result)) {
-      return [];
-    }
+    // Find latest minor version among the latest major versions
+    $max_minor_version = $connection->select('h5p_libraries', 'h2');
+    $max_minor_version->fields('h2', [
+      'machine_name',
+      'major_version',
+    ]);
+    $max_minor_version->addExpression('MAX(h2.minor_version)', 'minor_version');
 
-    $major_ids = [];
-    foreach ($result as $row) {
-      $major_ids[] = $row->library_id;
-    }
+    // Join max major version and minor versions
+    $max_minor_version->join($max_major_version, 'h1', "
+      h1.machine_name = h2.machine_name AND
+      h1.major_version = h2.major_version
+    ");
 
-    $query = $connection->select('h5p_libraries', 'hl');
-    $query->condition('hl.library_id', $major_ids, 'IN');
-    $query->fields('hl', ['library_id']);
-    $query->addExpression('MAX(hl.minor_version)');
-    $query->groupBy('hl.library_id');
-    $result_max_minor = $query->execute()->fetchAll();
-    foreach ($result as $row) {
-      $minor_ids[] = $row->library_id;
-    }
+    // Group together on major versions to get latest minor version
+    $max_minor_version->groupBy('h2.machine_name');
+    $max_minor_version->groupBy('h2.major_version');
 
-    $query = $connection->select('h5p_libraries', 'hl');
-    $query->condition('hl.library_id', $minor_ids, 'IN');
-    $query->fields('hl', ['machine_name','title','major_version','minor_version','patch_version', 'has_icon', 'restricted']);
-    $query->addField('hl', 'library_id', 'id');
-    $local_libraries = $query->execute()->fetchAll();
+    // Find latest patch version from latest major and minor version
+    $latest = $connection->select('h5p_libraries', 'h3');
+    $latest->addField('h3', 'library_id', 'id');
+    $latest->fields('h3', [
+      'machine_name',
+      'title',
+      'major_version',
+      'minor_version',
+      'patch_version',
+      'has_icon',
+      'restricted',
+    ]);
 
-    return $local_libraries;
+    // Join max minor versions with the latest patch version
+    $latest->join($max_minor_version, 'h4', "
+      h4.machine_name = h3.machine_name AND
+      h4.major_version = h3.major_version AND
+      h4.minor_version = h3.minor_version
+    ");
+
+    // Grab the results
+    $results = $latest->execute()->fetchAll();
+    return $results;
   }
 
   /**

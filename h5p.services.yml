@@ -1,5 +1,0 @@
-services:
-  h5p.h5p_subscriber:
-    class: Drupal\h5p\EventSubscriber\H5PSubscriber
-    tags:
-      - { name: event_subscriber }

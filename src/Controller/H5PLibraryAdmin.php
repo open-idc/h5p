@@ -6,14 +6,14 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
 
 use Drupal\Core\Url;
-use Drupal\Core\Link;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class H5PAdmin extends ControllerBase {
+class H5PLibraryAdmin extends ControllerBase {
 
   protected $database;
 
@@ -25,10 +25,7 @@ class H5PAdmin extends ControllerBase {
   }
 
   public static function create(ContainerInterface $container) {
-
-    $controller = new static(
-      $container->get('database')
-    );
+    $controller = new static(\Drupal::database());
     return $controller;
   }
 
@@ -38,7 +35,6 @@ class H5PAdmin extends ControllerBase {
    * @return string Html
    */
   function libraryList() {
-
     $core = H5PDrupal::getInstance('core');
     $numNotFiltered = $core->h5pF->getNumNotFiltered();
     $libraries = $core->h5pF->loadLibraries();
@@ -53,7 +49,7 @@ class H5PAdmin extends ControllerBase {
         if ($library->runnable) {
           $upgrades = $core->getUpgrades($library, $versions);
 
-          $url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/upgrade')->toString();
+          $url = Url::fromUri('internal:/admin/content/h5p/libraries/' . $library->id . '/upgrade-confirm')->toString();
           $upgradeUrl = empty($upgrades) ? FALSE : $url;
 
           $restricted = ($library->restricted === '1' ? TRUE : FALSE);
@@ -105,7 +101,7 @@ class H5PAdmin extends ControllerBase {
     $settings['containerSelector'] = '#h5p-admin-container';
 
     // Add the needed css and javascript
-    $build['#attached'] = $this->addSettings($settings);
+    $build['#attached'] = self::addSettings($settings);
     $build['#attached']['library'][] = 'h5p/h5p.admin.library.list';
 
     $build['title_add'] = ['#markup' => '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>'];
@@ -206,223 +202,11 @@ class H5PAdmin extends ControllerBase {
   }*/
 
   /**
-   * Creates the title for the upgrade content page
-   *
-   * @param string $library_id
-   * @return string
-   */
-  function libraryUpgradePageTitle($library_id) {
-    $query = $this->database->select('h5p_libraries', 'l');
-    $query->condition('library_id', $library_id, '=');
-    $query->fields('l', ['title', 'major_version', 'minor_version', 'patch_version']);
-    $library = $query->execute()->fetch();
-
-    return t('Upgrade @library content', ['@library' => $library->title . ' (' . \H5PCore::libraryVersion($library) . ')']);
-  }
-  /**
-   * Callback for the library content upgrade page.
-   *
-   * @param int $library_id
-   * @return string HTML
-   */
-  function libraryUpgrade($library_id) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      return $this->contentUpgradeProgress($library_id);
-    }
-
-    $query = $this->database->select('h5p_libraries', 'hl1');
-    $query->join('h5p_libraries', 'hl2', 'hl1.machine_name = hl2.machine_name');
-    $query->condition('hl1.library_id', $library_id, '=');
-    $query->addField('hl2', 'library_id', 'id');
-    $query->fields('hl2', ['machine_name', 'title', 'major_version', 'minor_version', 'patch_version']);
-    $query->orderBy('hl2.title', 'ASC');
-    $query->orderBy('hl2.major_version', 'ASC');
-    $query->orderBy('hl2.minor_version', 'ASC');
-    $results = $query->execute();
-
-    $versions = [];
-    foreach ($results as $result) {
-      $versions[$result->id] = $result;
-    }
-
-    $library = $versions[$library_id];
-
-    $core = H5PDrupal::getInstance('core');
-    $upgrades = $core->getUpgrades($library, $versions);
-
-    if (count($versions) < 2) {
-      return ['#markup' => t("There are no available upgrades for this library.")];
-    }
-
-    // Get num of contents that can be upgraded
-    $contents = $core->h5pF->getNumContent($library_id);
-    if (!$contents) {
-      return ['#markup' => t("There's no content instances to upgrade.")];
-    }
-
-    $contents_plural = \Drupal::translation()->formatPlural($contents, '1 content instance', '@count content instances');
-    $returnLink = Link::fromTextAndUrl(t('Return'), Url::fromUri('internal:/admin/content/h5p/'))->toString();
-    $settings = [
-      'libraryInfo' => [
-        'message' => t('You are about to upgrade %num. Please select upgrade version.', ['%num' => $contents_plural]),
-        'inProgress' => t('Upgrading to %ver...'),
-        'error' => t('An error occurred while processing parameters:'),
-        'errorData' => t('Could not load data for library %lib.'),
-        'errorScript' => t('Could not load upgrades script for %lib.'),
-        'errorContent' => t('Could not upgrade content %id:'),
-        'errorParamsBroken' => t('Parameters are broken.'),
-        'done' => t('You have successfully upgraded %num.', ['%num' => $contents_plural]) . $returnLink,
-        'library' => [
-          'name' => $library->machine_name,
-          'version' => $library->major_version . '.' . $library->minor_version,
-        ],
-        'libraryBaseUrl' => Url::fromUri('internal:/admin/content/h5p/upgrade/library')->toString(),
-        'scriptBaseUrl' => base_path() . 'vendor/h5p/h5p-core/js/',
-        'buster' => '?' . \Drupal::state()->get('css_js_query_string', ''),
-        'versions' => $upgrades,
-        'contents' => $contents,
-        'buttonLabel' => t('Upgrade'),
-        'infoUrl' => Url::fromUri("internal:/admin/content/h5p/libraries/{$library_id}/upgrade")->toString(),
-        'total' => $contents,
-        'token' => \H5PCore::createToken('contentupgrade'), // Use token to avoid unauthorized updating
-      ]
-    ];
-
-    // Create page - add settings and JS
-    $build['#markup'] = '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';
-    $build['#attached'] = $this->addSettings($settings);
-    $build['#attached']['library'][] = 'h5p/h5p.admin.library.upgrade';
-
-    return $build;
-  }
-
-  /**
-   * Handles saving of upgraded content. Returns new batch
-   *
-   * @param string $library_id
-   */
-  private function contentUpgradeProgress($library_id) {
-    // Verify security token
-    if (!\H5PCore::validToken('contentupgrade', filter_input(INPUT_POST, 'token'))) {
-      return ['#markup' => t('Error: Invalid security token!')];
-    }
-
-    // Get the library we're upgrading to
-    $to_library = db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = :id', [':id' => filter_input(INPUT_POST, 'libraryId')])->fetch();
-    if (!$to_library) {
-      return ['#markup' => t('Error: Your library is missing!')];
-    }
-
-    // Prepare response
-    $out = [
-      'params' => [],
-      'token' => \H5PCore::createToken('contentupgrade'),
-    ];
-
-    // Prepare our interface
-    $interface = H5PDrupal::getInstance('interface');
-
-    // Get updated params
-    $params = filter_input(INPUT_POST, 'params');
-    if ($params !== NULL) {
-      // Update params.
-      $params = json_decode($params);
-      foreach ($params as $id => $param) {
-        db_update('h5p_content')
-          ->fields([
-            'library_id' => $to_library->id,
-            'parameters' => $param,
-            'filtered_parameters' => ''
-          ])
-          ->condition('id', $id)
-          ->execute();
-
-        // Log content upgrade successful
-        new H5PEvent('content', 'upgrade',
-          $id,
-          '', // Should be title, but an entity does not have one
-          $to_library->name,
-          $to_library->major_version . '.' . $to_library->minor_version);
-
-        // Clear content cache
-        $interface->updateContentFields($id, ['filtered' => '']);
-      }
-    }
-
-    // Get number of contents for this library
-    $out['left'] = $interface->getNumContent($library_id);
-
-    if ($out['left']) {
-      // Find the 10 first contents using library and add to params
-      $contents = db_query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', [':id' => $library_id]);
-      foreach ($contents as $content) {
-        $out['params'][$content->id] = $content->params;
-      }
-    }
-
-    return new JsonResponse($out);
-  }
-
-  /**
-   * AJAX loading of libraries for content upgrade script.
-   *
-   * @param string $name Machine name
-   * @param int $major
-   * @param int $minor
-   */
-  function contentUpgradeLibrary($name, $major, $minor) {
-    $library = (object) [
-      'name' => $name,
-      'version' => (object) [
-        'major' => $major,
-        'minor' => $minor,
-      ],
-    ];
-
-    $core = H5PDrupal::getInstance('core');
-    $library->semantics = $core->loadLibrarySemantics($library->name, $library->version->major, $library->version->minor);
-    if ($library->semantics === NULL) {
-      throw new NotFoundHttpException();
-    }
-
-    $upgrades_script = H5PDrupal::getRelativeH5PPath() . "/libraries/{$library->name}-{$library->version->major}.{$library->version->minor}/upgrades.js";
-
-    if (file_exists($upgrades_script)) {
-      $library->upgradesScript = base_path() . $upgrades_script;
-    }
-
-    return new JsonResponse($library);
-  }
-
-  /**
-   * Display library delete page with form.
-   *
-   * @param string $library_id
-   */
-  function libraryDelete($library_id) {
-    // Is library deletable ?
-    $h5p_drupal = H5PDrupal::getInstance('interface');
-    $notCached = $h5p_drupal->getNumNotFiltered();
-    $library_usage = $h5p_drupal->getLibraryUsage($library_id, $notCached ? TRUE : FALSE);
-    if ($library_usage['content'] === 0 && $library_usage['libraries'] === 0) {
-      // Create form:
-      return \Drupal::formBuilder()->getForm('Drupal\h5p\Form\H5PLibraryDeleteForm', $library_id, $this->libraryDetailsTitle($library_id));
-
-    } else {
-      // May not delete this one
-      return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
-    }
-  }
-
-  function embed() {
-    // TODO
-  }
-  /**
    * Restrict a library
    *
    * @param string $library_id
    */
-  function libraryRestrict($library_id) {
+  function restrict($library_id) {
     $restricted = filter_input(INPUT_GET, 'restrict');
     $restrict = ($restricted === '1');
 
@@ -457,9 +241,6 @@ class H5PAdmin extends ControllerBase {
 
     // Do as many as we can in ten seconds.
     $start = microtime(TRUE);
-
-    $core = H5PDrupal::getInstance('core');
-
     $query = $this->database->select('h5p_content', 'hc')
       ->fields('hc', ['id'])
       ->isNull('hc.filtered_parameters');
@@ -488,21 +269,20 @@ class H5PAdmin extends ControllerBase {
    *
    * @param integer $library_id
    */
-  function libraryDetailsTitle($library_id) {
-    $query = $this->database->select('h5p_libraries', 'l');
+  public static function libraryDetailsTitle($library_id) {
+    $query = db_select('h5p_libraries', 'l');
     $query->condition('l.library_id', $library_id, '=');
     $query->fields('l', ['title']);
     return $query->execute()->fetchField();
   }
 
   /**
-   * Helper function - adds admin settings
+   * Helper function - creates admin settings
    *
-   * @param {array} $settings
+   * @param array $settings
+   * @return array
    */
-  function addSettings($settings = NULL) {
-    $module_path = drupal_get_path('module', 'h5p');
-
+  public static function addSettings($settings = NULL) {
     if ($settings === NULL) {
       $settings = [];
     }

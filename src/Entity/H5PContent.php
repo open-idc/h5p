@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Url;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\h5p\H5PDrupal\H5PEvent;
 
 /**
  * Defines the h5p content entity.
@@ -16,7 +17,8 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
  *   id = "h5p_content",
  *   label = @Translation("H5P Content"),
  *   handlers = {
- *     "storage_schema" = "Drupal\h5p\H5PContentStorageSchema"
+ *     "storage_schema" = "Drupal\h5p\H5PContentStorageSchema",
+ *     "views_data" = "Drupal\h5p\H5PContentViewsData",
  *   },
  *   base_table = "h5p_content",
  *   entity_keys = {
@@ -69,7 +71,9 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
    */
   protected function loadLibrary() {
     $this->library = db_query(
-        "SELECT machine_name AS name,
+        "
+        SELECT  title,
+                machine_name AS name,
                 major_version AS major,
                 minor_version AS minor,
                 embed_types,
@@ -85,12 +89,31 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
-  public function getLibrary() {
+  public function getLibrary($assoc = FALSE) {
     if (empty($this->library)) {
       $this->loadLibrary();
     }
 
+    if ($assoc) {
+      return [
+        'machineName' => $this->library->name,
+        'majorVersion' => $this->library->major,
+        'minorVersion' => $this->library->minor
+      ];
+    }
+
     return $this->library;
+  }
+
+  /**
+   *
+   */
+  public function getLibraryString() {
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    return "{$this->library->name} {$this->library->major}.{$this->library->minor}";
   }
 
   /**
@@ -125,6 +148,13 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   }
 
   /**
+   * Only use for data comparison. Must not be used for content display.
+   */
+  public function getParameters() {
+    return json_decode($this->get('parameters')->value);
+  }
+
+  /**
    *
    */
   public function getFilteredParameters() {
@@ -133,15 +163,18 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     }
 
     $content = [
+      'title' => 'Interactive Content',
       'id' => $this->id(),
       'slug' => 'interactive-content',
       'library' => [
+        'name' => $this->library->title,
         'machineName' => $this->library->name,
         'majorVersion' => $this->library->major,
         'minorVersion' => $this->library->minor,
       ],
       'params' => $this->get('parameters')->value,
       'filtered' => $this->get('filtered_parameters')->value,
+      'embedType' => 'div',
     ];
 
     $core = H5PDrupal::getInstance('core');
@@ -183,13 +216,13 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
 
     $core = H5PDrupal::getInstance('core');
     $filtered_parameters = $this->getFilteredParameters();
-    $display_options = $core->getDisplayOptionsForEdit($this->get('disabled_features')->value);
+    $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $this->id());
 
     $embed_url = Url::fromUri('internal:/h5p/embed/' . $this->id(), ['absolute' => TRUE])->toString();
     $resizer_url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString();
 
     return array(
-      'library' => "{$this->library->name} {$this->library->major}.{$this->library->minor}",
+      'library' => $this->getLibraryString(),
       'jsonContent' => $filtered_parameters,
       'fullScreen' => $this->library->fullscreen,
       'exportUrl' => $this->getExportURL(),
@@ -199,6 +232,31 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'title' => 'Not Available',
       'contentUserData' => $content_user_data,
       'displayOptions' => $display_options,
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function delete() {
+    if (empty($this->library)) {
+      $this->loadLibrary();
+    }
+
+    // Delete entity
+    parent::delete();
+
+    // Delete all associated files and data
+    $storage = H5PDrupal::getInstance('storage');
+    $storage->deletePackage([
+      'id' => $this->id(),
+      'slug' => 'interactive-content',
+    ]);
+
+    // Log content delete
+    new H5PEvent('content', 'delete',
+      $this->id(), '',
+      $this->library->name, $this->library->major . '.' . $this->library->minor
     );
   }
 }
