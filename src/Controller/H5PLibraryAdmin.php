@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class H5PAdmin extends ControllerBase {
+class H5PLibraryAdmin extends ControllerBase {
 
   protected $database;
 
@@ -35,7 +35,7 @@ class H5PAdmin extends ControllerBase {
    *
    * @return string Html
    */
-  function libraryList() {
+  function list() {
 
     $core = H5PDrupal::getInstance('core');
     $numNotFiltered = $core->h5pF->getNumNotFiltered();
@@ -208,7 +208,7 @@ class H5PAdmin extends ControllerBase {
    *
    * @param string $library_id
    */
-  function libraryRestrict($library_id) {
+  function restrict($library_id) {
     $restricted = filter_input(INPUT_GET, 'restrict');
     $restrict = ($restricted === '1');
 

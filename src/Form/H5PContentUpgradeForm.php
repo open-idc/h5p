@@ -4,7 +4,7 @@ namespace Drupal\h5p\Form;
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Controller\H5PContentUpgrade;
-use Drupal\h5p\Controller\H5PAdmin;
+use Drupal\h5p\Controller\H5PLibraryAdmin;
 
 use Drupal\Core\Url;
 use Drupal\Core\Link;
@@ -71,7 +71,7 @@ class H5PContentUpgradeForm extends FormBase {
 
     // Create page - add settings and JS
     $build['#markup'] = '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';
-    $build['#attached'] = H5PAdmin::addSettings($settings);
+    $build['#attached'] = H5PLibraryAdmin::addSettings($settings);
     $build['#attached']['library'][] = 'h5p/h5p.admin.library.upgrade';
 
     return $build;

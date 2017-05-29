@@ -3,7 +3,7 @@
 namespace Drupal\h5p\Form;
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
-use Drupal\h5p\Controller\H5PAdmin;
+use Drupal\h5p\Controller\H5PLibraryAdmin;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -47,7 +47,7 @@ class H5PLibraryDeleteForm extends FormBase {
       );
 
       $form['info'] = array(
-        '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => H5PAdmin::libraryDetailsTitle($library_id))) . '</div>'
+        '#markup' => '<div>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => H5PLibraryAdmin::libraryDetailsTitle($library_id))) . '</div>'
       );
 
       $form['actions']['#type'] = 'actions';
