@@ -1,5 +1,5 @@
 update h5p libraries:
-  title: 'Update libraries'
+  title: 'Update H5P libraries'
   description: 'The user is allowed to update H5P libraries. Only give this permission to trusted users who knows what they are doing.'
   restrict access: TRUE
 
@@ -37,12 +37,3 @@ embed own h5ps:
   title: 'Embed enabled for own H5Ps'
   description: "The embed button will be available for H5Ps the user has access to edit even even if embed button is hidden by configuration settings. This won't have any effect if embed button is globally disabled"
   restrict access: TRUE
-
-administer site configuration:
-  title: 'Administer H5P settings for site'
-  description: 'The user is allowed to view and change H5P Settings that affect the how H5P works throughout the site'
-  restrict access: TRUE
-
-access content:
-  title: 'View content'
-  description: 'The user is allowed to view H5Ps'

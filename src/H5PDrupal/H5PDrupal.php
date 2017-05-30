@@ -1087,6 +1087,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     if ($value !== \Drupal::config('h5p.settings')->get("h5p_{$name}")) {
       $config =\Drupal::configFactory()->getEditable('h5p.settings');
       $config->set("h5p_{$name}", $value);
+      $config->save();
     }
   }
 

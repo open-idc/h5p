@@ -73,7 +73,7 @@ class H5PAdminSettingsForm extends FormBase {
 
     $config = \Drupal::config('h5p.settings');
 
-    _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), \Drupal::config('h5p.settings')->get('h5p_frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
+    _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), $config)->get('h5p_frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
     $form['h5p_display_options']['h5p_export'] = array(
       '#title' => t('Download button'),
       '#options' => $button_behaviours,
@@ -168,7 +168,7 @@ class H5PAdminSettingsForm extends FormBase {
     $form['h5p_send_usage_statistics'] = array(
       '#type' => 'checkbox',
       '#title' => t('Automatically contribute usage statistics'),
-      '#default_value' => \Drupal::config('h5p.settings')->get('h5p_send_usage_statistics', 1),
+      '#default_value' => $config->get('h5p_send_usage_statistics', 1),
       '#description' => t('Usage statistics numbers will automatically be reported to help the developers better understand how H5P is used and to determine potential areas of improvement.'),
     );
 
@@ -216,11 +216,11 @@ class H5PAdminSettingsForm extends FormBase {
     $config =\Drupal::configFactory()->getEditable('h5p.settings');
     $values = $form_state->getValues();
 
-    $config->set('h5p_frame', $values[h5p_frame]);
-    $config->set('h5p_export', $values[h5p_export]);
-    $config->set('h5p_embed', $values[h5p_embed]);
-    $config->set('h5p_copyright', $values[h5p_copyright]);
-    $config->set('h5p_icon', $values[h5p_icon]);
+    $config->set('h5p_frame', $values['h5p_frame']);
+    $config->set('h5p_export', $values['h5p_export']);
+    $config->set('h5p_embed', $values['h5p_embed']);
+    $config->set('h5p_copyright', $values['h5p_copyright']);
+    $config->set('h5p_icon', $values['h5p_icon']);
 
     // Ensure that 'h5p_default_path' variable contains no trailing slash.
     $values['h5p_default_path'] = rtrim($values['h5p_default_path'], '/\\');
