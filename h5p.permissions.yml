@@ -13,11 +13,6 @@ access own h5p results:
   description: 'Access own H5P results from user profile.'
   restrict access: TRUE
 
-access h5p results for own content:
-  title: 'Access h5p results for own content'
-  description: 'The user is allowed to see all results for content he has created. Available as a tab on each node.'
-  restrict access: TRUE
-
 create restricted h5p content types:
   title: 'Create restricted H5P content types'
   description: 'The user is allowed to create H5P content types that has been restricted in the library administration interface.'
