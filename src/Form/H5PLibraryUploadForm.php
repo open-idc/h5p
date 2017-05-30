@@ -58,12 +58,8 @@ class H5PLibraryUploadForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
     $storage = H5PDrupal::getInstance('storage');
     $storage->savePackage(NULL, NULL, TRUE);
-
-    // Maintain session variables.
-    unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
   }
 
   function validateH5PFileUpload(array &$form, FormStateInterface $form_state, $upgradeOnly = FALSE) {

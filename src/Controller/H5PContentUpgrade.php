@@ -2,12 +2,9 @@
 
 namespace Drupal\h5p\Controller;
 
-use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\H5PDrupal\H5PEvent;
-
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Render\HtmlResponse;
 use Drupal\Core\Database\Connection;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -34,7 +31,8 @@ class H5PContentUpgrade extends ControllerBase {
    * Helper for getting library versions
    *
    * @param string $library_id
-   * @return Array
+   *
+   * @return array
    */
   public static function getLibraryVersions($library_id) {
     $query = db_select('h5p_libraries', 'hl1');
@@ -59,6 +57,7 @@ class H5PContentUpgrade extends ControllerBase {
    * Creates the title for the upgrade content page
    *
    * @param string $library_id
+   *
    * @return string
    */
   public function pageTitle($library_id) {
@@ -75,7 +74,7 @@ class H5PContentUpgrade extends ControllerBase {
    *
    * @param string $library_id
    *
-   * @return JsonResponse
+   * @return JsonResponse|array
    */
   public function upgrade($library_id) {
     // Verify security token
