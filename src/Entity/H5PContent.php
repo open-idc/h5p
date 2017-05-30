@@ -95,6 +95,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
 
     if ($assoc) {
       return [
+        'name' => $this->library->name,
         'machineName' => $this->library->name,
         'majorVersion' => $this->library->major,
         'minorVersion' => $this->library->minor
