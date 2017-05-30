@@ -73,7 +73,7 @@ class H5PAdminSettingsForm extends FormBase {
 
     $config = \Drupal::config('h5p.settings');
 
-    _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), $config)->get('h5p_frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
+    _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), $config->get('h5p_frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
     $form['h5p_display_options']['h5p_export'] = array(
       '#title' => t('Download button'),
       '#options' => $button_behaviours,
