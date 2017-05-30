@@ -159,6 +159,7 @@ class H5PEditorUtilities {
     preg_match_all('/(.+)\s(\d+)\.(\d+)$/', $library, $matches);
     if (count($matches) == 4) {
       $libraryData = [
+        'name'         => $matches[1][0],
         'machineName'  => $matches[1][0],
         'majorVersion' => $matches[2][0],
         'minorVersion' => $matches[3][0],

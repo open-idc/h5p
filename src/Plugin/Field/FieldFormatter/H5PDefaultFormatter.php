@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
 
+
 /**
  * Plugin implementation of the 'h5p_default' formatter.
  *
@@ -42,6 +43,14 @@ class H5PDefaultFormatter extends FormatterBase {
     $element = array();
     $jsOptimizer = \Drupal::service('asset.js.collection_optimizer');
     $cssOptimizer = \Drupal::service('asset.css.collection_optimizer');
+    $moduleHandler = \Drupal::service('module_handler');
+    $systemPerformance = \Drupal::config('system.performance');
+    $cssAssetConfig = array( 'preprocess' => $systemPerformance->get('css.preprocess'), 'media' => 'css' );
+    $jsAssetConfig = array( 'preprocess' => $systemPerformance->get('js.preprocess') );
+
+    $config['system.performance']['css']['preprocess'] = true;
+    // Aggregate JavaScript files in Drupal - on.
+    $config['system.performance']['js']['preprocess'] = true;
 
     foreach ($items as $delta => $item) {
       $value = $item->getValue();
@@ -62,44 +71,47 @@ class H5PDefaultFormatter extends FormatterBase {
       $core = H5PDrupal::getInstance('core');
       $preloaded_dependencies = $core->loadContentDependencies($h5p_content->id(), 'preloaded');
 
-      // TODO: Are alter hooks really needed with the new dependency system?
-      //$library_list = _h5p_dependencies_to_library_list($preloaded_dependencies);
-      //\Drupal::moduleHandler()->alter('h5p_scripts', $files['scripts'], $library_list, $embed_type);
-      //\Drupal::moduleHandler()->alter('h5p_styles', $files['styles'], $library_list, $embed_type);
+      // Load dependencies
+      $files = $core->getDependenciesFiles($preloaded_dependencies, $h5p_integration['url']);
 
       $loadpackages = [
         'h5p/h5p.content',
       ];
 
+      // Load dependencies
+      foreach ($preloaded_dependencies as $dependency) {
+        $loadpackages[] = 'h5p/' . _h5p_library_machine_to_id($dependency);
+      }
+
+      // Add alter hooks
+      $moduleHandler->alter('h5p_scripts', $files['scripts'], $loadpackages, $h5p_content->library->embed_types);
+      $moduleHandler->alter('h5p_styles', $files['styles'], $loadpackages, $h5p_content->library->embed_types);
+
       // Determine embed type and HTML to use
       if ($h5p_content->isDivEmbeddable()) {
         $html = '<div class="h5p-content" data-content-id="' . $h5p_content->id() . '"></div>';
-
-        // Load dependencies
-        foreach ($preloaded_dependencies as $dependency) {
-          $loadpackages[] = 'h5p/' . _h5p_library_machine_to_id($dependency);
-        }
       }
       else {
+        // reset packages sto be loaded dynamically
+        $loadpackages = [
+          'h5p/h5p.content',
+        ];
+
+        // set html
         $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no"></iframe></div>';
 
         // Load core assets
         $coreAssets = H5PDrupal::getCoreAssets();
 
-        $h5p_integration['core']['styles'] = $this->createCachedPublicFiles($coreAssets['styles'], $cssOptimizer);
-        $h5p_integration['core']['scripts'] = $this->createCachedPublicFiles($coreAssets['scripts'], $jsOptimizer);
+        $h5p_integration['core']['styles'] = $this->createCachedPublicFiles($coreAssets['styles'], $cssOptimizer, $cssAssetConfig);
+        $h5p_integration['core']['scripts'] = $this->createCachedPublicFiles($coreAssets['scripts'], $jsOptimizer, $jsAssetConfig);
 
-        // Load dependencies
-        $files = $core->getDependenciesFiles($preloaded_dependencies);
-        $jsFilePaths = $this->getDependencyFilePaths($files['scripts'], $h5p_integration['url']);
-        $cssFilePaths = $this->getDependencyFilePaths($files['styles'], $h5p_integration['url']);
+        // Load public files
+        $jsFilePaths = array_map(function($asset){ return $asset->path; }, $files['scripts']);
+        $cssFilePaths = array_map(function($asset){ return $asset->path; }, $files['styles']);
 
-        $h5p_integration['contents'][$content_id_string]['styles'] = $this->createCachedPublicFiles($cssFilePaths, $cssOptimizer);
-        $h5p_integration['contents'][$content_id_string]['scripts'] = $this->createCachedPublicFiles($jsFilePaths, $jsOptimizer);
-
-
-        //$this->moduleHandler->alter('js', $javascript, $assets);
-        //$this->themeManager->alter('js', $javascript, $assets);
+        $h5p_integration['contents'][$content_id_string]['styles'] = $this->createCachedPublicFiles($cssFilePaths, $cssOptimizer, $cssAssetConfig);
+        $h5p_integration['contents'][$content_id_string]['scripts'] = $this->createCachedPublicFiles($jsFilePaths, $jsOptimizer, $jsAssetConfig);
       }
 
       // Render each element as markup.
@@ -127,27 +139,16 @@ class H5PDefaultFormatter extends FormatterBase {
   }
 
   /**
-   * Takes files configs and returns absolute file paths
-   *
-   * @param array $scripts
-   * @param string $baseUrl
-   *
-   * @return string[]
-   */
-  private function getDependencyFilePaths(array $scripts, $baseUrl) {
-    return preg_filter('/^/', ltrim($baseUrl, '/'), array_column($scripts, 'path'));
-  }
-
-  /**
    * Combines a set of files to a cached version, that is public available
    *
    * @param string[] $filePaths
    * @param AssetCollectionOptimizerInterface $optimizer
+   * @param array $assetConfig
    *
    * @return string[]
    */
-  private function createCachedPublicFiles(array $filePaths, $optimizer) {
-    $assets = $this->createDependencyFileAssets($filePaths);
+  private function createCachedPublicFiles(array $filePaths, $optimizer, $assetConfig) {
+    $assets = $this->createDependencyFileAssets($filePaths, $assetConfig);
     $cachedAsset = $optimizer->optimize($assets);
 
     return array_map(function($publicUrl){ return file_create_url($publicUrl); }, array_column($cachedAsset, 'data'));
@@ -157,27 +158,29 @@ class H5PDefaultFormatter extends FormatterBase {
    * Takes a list of file paths, and creates drupal Assets
    *
    * @param string[] $filePaths
+   * @param array $assetConfig
+   *
    * @return array
    */
-  private function createDependencyFileAssets($filePaths) {
+  private function createDependencyFileAssets($filePaths, $assetConfig) {
     $result = array();
+
+    $defaultAssetConfig = [
+      'type' => 'file',
+      'group' => 'h5p',
+      'cache' => TRUE,
+      'attributes' => [],
+      'version' => NULL,
+      'browsers' => [],
+    ];
 
     foreach ($filePaths as $index => $path) {
       $path = $this->cleanFilePath($path);
 
       $result[$path] = [
-        'type' => 'file',
-        'group' => 'h5p',
         'weight' => count($filePaths) - $index,
-        // TODO: Fix paths for resolving vendor assets
-        'cache' => FALSE,
-        'preprocess' => FALSE,
-        'attributes' => [],
-        'version' => NULL,
-        'browsers' => [],
         'data' => $path,
-        'media' => 'css'
-      ];
+      ] + $assetConfig + $defaultAssetConfig;
     }
 
     return $result;

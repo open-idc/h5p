@@ -236,7 +236,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     return [
       'name' => 'drupal',
-      'version' => $h5p_info['core'],
+      'version' => isset($h5p_info['core']) ? $h5p_info['core'] : NULL,
       'h5pVersion' => isset($h5p_info['version']) ? $h5p_info['version'] : NULL,
     ];
   }
@@ -1015,7 +1015,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements alterLibrarySemantics().
    */
   public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion) {
-    \Drupal::moduleHandler()->alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
+    // alter only takes 4 arguments, so versions are combined to single parameter
+    $version = $majorVersion . '.'. $minorVersion;
+    \Drupal::moduleHandler()->alter('h5p_semantics', $semantics, $name, $version);
   }
 
   /**
@@ -1068,7 +1070,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    $h5p = \Drupal::state()->get('h5p_' . $name, $default);
+    $h5p = \Drupal::config('h5p.settings')->get('h5p_' . $name, $default);
     return $h5p;
   }
 
@@ -1082,8 +1084,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function setOption($name, $value) {
     // Only update the setting if it has infact changed.
-    if ($value !== \Drupal::state()->get("h5p_{$name}")) {
-      \Drupal::state()->set("h5p_{$name}", $value);
+    if ($value !== \Drupal::config('h5p.settings')->get("h5p_{$name}")) {
+      $config =\Drupal::configFactory()->getEditable('h5p.settings');
+      $config->set("h5p_{$name}", $value);
     }
   }
 

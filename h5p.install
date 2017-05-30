@@ -46,40 +46,13 @@ function h5p_uninstall() {
     }
   }
 
-  // Remove state
-  \Drupal::state()->deleteMultiple(array(
-    'h5p_frame',
-    'h5p_export',
-    'h5p_embed',
-    'h5p_copyright',
-    'h5p_icon',
-    'h5p_revisioning',
-    'h5p_content_dev_mode',
-    'h5p_default_path',
-    'h5p_dev_mode',
-    'h5p_library_development',
-    'h5p_library_whitelist_extras',
-    'h5p_whitelist',
-    'h5p_unsupported_libraries',
-    'h5p_fetched_library_metadata_on',
-    'h5p_first_runnable_saved',
-    'h5p_save_content_frequency',
-    'h5p_save_content_state',
-    'h5p_update_available',
-    'h5p_update_available_path',
-    'h5p_site_type',
-    'h5p_enable_lrs_content_types',
-    'h5p_hub_is_enabled',
-    'h5p_content_type_cache_updated_at',
-    'h5p_allow_communication_with_h5p_org',
-    'h5p_send_usage_statistics',
-  ));
-
   // Show link to h5p.org form
-  drupal_set_message('H5P has now been disabled. Answer the short survey below and get a chance to win a US$500 Amazon Gift Card.</br><iframe src="http://h5p.org/uninstall-form" width="100%" height="360px" style="border: 0;"></iframe>');
+  $survey_message = \Drupal\Core\Render\Markup::create('H5P has now been disabled. Answer the short survey below and get a chance to win a US $500 Amazon Gift Card.</br><iframe src="http://h5p.org/uninstall-form" width="100%" height="360px" style="border: 0;"></iframe>');
+  drupal_set_message($survey_message);
 
   // Alternative text for drush uninstalls
-  drupal_set_message("Leaving because the H5P plugin isn’t working for you? Please share your feedback so we can improve. <a href=\"https://h5p.org/drupal-module-disabled\">https://h5p.org/drupal-module-disabled</a>");
+  $feedback_message = \Drupal\Core\Render\Markup::create('Leaving because the H5P plugin isn’t working for you? Please share your feedback so we can improve. <a href=\"https://h5p.org/drupal-module-disabled\">https://h5p.org/drupal-module-disabled</a>');
+  drupal_set_message($feedback_message);
 
   // Intentionally not deleting variable h5p_site_uuid. If h5p module is uninstalled/installed,
   // the uuid should be the same
