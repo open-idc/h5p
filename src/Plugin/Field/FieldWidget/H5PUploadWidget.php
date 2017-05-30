@@ -83,8 +83,10 @@ class H5PUploadWidget extends H5PWidgetBase {
     $validator = H5PDrupal::getInstance('validator', $file_field);
     if (!$validator->isValidPackage()) {
       $form_state->setError($element, t("The contents of the uploaded '.h5p' file was not valid."));
+      $files[0]->delete();
       return;
     }
+    $files[0]->delete();
 
     // Indicate that we have a valid file upload
     $form_state->setValue($element['#parents'], 1);
