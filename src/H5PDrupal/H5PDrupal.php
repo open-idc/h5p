@@ -1015,7 +1015,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements alterLibrarySemantics().
    */
   public function alterLibrarySemantics(&$semantics, $name, $majorVersion, $minorVersion) {
-    \Drupal::moduleHandler()->alter('h5p_semantics', $semantics, $name, $majorVersion, $minorVersion);
+    // alter only takes 4 arguments, so versions are combined to single parameter
+    $version = $majorVersion . '.'. $minorVersion;
+    \Drupal::moduleHandler()->alter('h5p_semantics', $semantics, $name, $version);
   }
 
   /**
