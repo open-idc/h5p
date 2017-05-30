@@ -71,36 +71,38 @@ class H5PAdminSettingsForm extends FormBase {
       \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF => t('Controlled by author, default is off'),
     );
 
-    _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), \Drupal::state()->get('h5p_frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
+    $config = \Drupal::config('h5p.settings');
+
+    _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), \Drupal::config('h5p.settings')->get('h5p_frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
     $form['h5p_display_options']['h5p_export'] = array(
       '#title' => t('Download button'),
       '#options' => $button_behaviours,
-      '#default_value' => \Drupal::state()->get('h5p_export', \H5PDisplayOptionBehaviour::ALWAYS_SHOW),
+      '#default_value' => $config->get('h5p_export'),
       '#type' => 'select',
     );
 
     $form['h5p_display_options']['h5p_embed'] = array(
       '#title' => t('Embed button'),
       '#options' => $button_behaviours,
-      '#default_value' => \Drupal::state()->get('h5p_embed', \H5PDisplayOptionBehaviour::ALWAYS_SHOW),
+      '#default_value' => $config->get('h5p_embed'),
       '#type' => 'select',
     );
 
-    _h5p_add_display_option($form['h5p_display_options'], 'h5p_copyright', t('Copyright button'), \Drupal::state()->get('h5p_copyright', 1));
-    _h5p_add_display_option($form['h5p_display_options'], 'h5p_icon', t('About H5P button'), \Drupal::state()->get('h5p_icon', 1));
+    _h5p_add_display_option($form['h5p_display_options'], 'h5p_copyright', t('Copyright button'), $config->get('h5p_copyright'));
+    _h5p_add_display_option($form['h5p_display_options'], 'h5p_icon', t('About H5P button'), $config->get('h5p_icon'));
 
     $dir = \Drupal::service('file_system')->realpath('public://');
     $form['h5p_default_path'] = array(
       '#type' => 'textfield',
       '#title' => t('Default h5p package path'),
-      '#default_value' => \Drupal::state()->get('h5p_default_path', 'h5p'),
+      '#default_value' => $config->get('h5p_default_path', 'h5p'),
       '#description' => t('Subdirectory in the directory %dir where files will be stored. Do not include trailing slash.', array('%dir' => $dir)),
     );
 
     $form['h5p_revisioning'] = array(
       '#type' => 'checkbox',
       '#title' => t('Save content files for each revision'),
-      '#default_value' => $h5p_revisioning = \Drupal::state()->get('h5p_revisioning', 1),
+      '#default_value' => $config->get('h5p_revisioning', 1),
       '#description' => t("Disable this feature to save disk space. Disabling this does not mean existing revisions will be deleted."),
     );
 
@@ -108,7 +110,7 @@ class H5PAdminSettingsForm extends FormBase {
       '#type' => 'textfield',
       '#maxlength' => 8192,
       '#title' => t('White list of accepted files.'),
-      '#default_value' => \Drupal::state()->get('h5p_whitelist', \H5PCore::$defaultContentWhitelist),
+      '#default_value' => $config->get('h5p_whitelist', \H5PCore::$defaultContentWhitelist),
       '#description' => t("List accepted content file extensions for uploaded H5Ps. List extensions separated by space, eg. 'png jpg jpeg gif webm mp4 ogg mp3'. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
     );
 
@@ -116,35 +118,35 @@ class H5PAdminSettingsForm extends FormBase {
       '#type' => 'textfield',
       '#maxlength' => 8192,
       '#title' => t('White list of extra accepted files in libraries.'),
-      '#default_value' => \Drupal::state()->get('h5p_library_whitelist_extras', \H5PCore::$defaultLibraryWhitelistExtras),
+      '#default_value' => $config->get('h5p_library_whitelist_extras', \H5PCore::$defaultLibraryWhitelistExtras),
       '#description' => t("Libraries might need to accept more files that should be allowed in normal contents. Add extra files here. Changing this list has security implications. Do not change it if you don't know what you're doing. Adding php to the list is for instance a security risk."),
     );
 
     $form['h5p_save_content_state'] = array(
       '#type' => 'checkbox',
       '#title' => t('Save content state'),
-      '#default_value' => \Drupal::state()->get('h5p_save_content_state', 0),
+      '#default_value' => $config->get('h5p_save_content_state', 0),
       '#description' => t('Automatically save the current state of interactive content for each user. This means that the user may pick up where he left off.'),
     );
 
     $form['h5p_save_content_frequency'] = array(
       '#type' => 'textfield',
       '#title' => t('Save content state frequency'),
-      '#default_value' => \Drupal::state()->get('h5p_save_content_frequency', 30),
+      '#default_value' => $config->get('h5p_save_content_frequency', 30),
       '#description' => t("In seconds, how often do you wish the user to auto save their progress. Increasee this number if you're having issues with many ajax request."),
     );
 
     $form['h5p_enable_lrs_content_types'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable LRS dependent content types'),
-      '#default_value' => \Drupal::state()->get('h5p_enable_lrs_content_types', 0),
+      '#default_value' => $config->get('h5p_enable_lrs_content_types', 0),
       '#description' => t('Makes it possible to use content types that rely upon a Learning Record Store to function properly, like the Questionnaire content type.'),
     );
 
     $form['h5p_hub_is_enabled'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use H5P Hub'),
-      '#default_value' => \Drupal::state()->get('h5p_hub_is_enabled', 1),
+      '#default_value' => $config->get('h5p_hub_is_enabled', 1),
       '#attributes' => array('class' => array('h5p-settings-disable-hub-checkbox')),
       '#description' => t("It's strongly encouraged to keep this option <strong>enabled</strong>. The H5P Hub provides an easy interface for getting new content types and keeping existing content types up to date. In the future, it will also make it easier to share and reuse content. If this option is disabled you'll have to install and update content types through file upload forms."),
     );
@@ -166,7 +168,7 @@ class H5PAdminSettingsForm extends FormBase {
     $form['h5p_send_usage_statistics'] = array(
       '#type' => 'checkbox',
       '#title' => t('Automatically contribute usage statistics'),
-      '#default_value' => \Drupal::state()->get('h5p_send_usage_statistics', 1),
+      '#default_value' => \Drupal::config('h5p.settings')->get('h5p_send_usage_statistics', 1),
       '#description' => t('Usage statistics numbers will automatically be reported to help the developers better understand how H5P is used and to determine potential areas of improvement.'),
     );
 
@@ -211,33 +213,38 @@ class H5PAdminSettingsForm extends FormBase {
    */
   function submitForm(array &$form, FormStateInterface $form_state) {
 
+    $config =\Drupal::configFactory()->getEditable('h5p.settings');
     $values = $form_state->getValues();
 
-    // todo $JM use system config instead of drupal::state()
-    \Drupal::state()->set('h5p_frame', $values['h5p_frame']);
-    \Drupal::state()->set('h5p_export', $values['h5p_export']);
-    \Drupal::state()->set('h5p_embed', $values['h5p_embed']);
-    \Drupal::state()->set('h5p_copyright', $values['h5p_copyright']);
-    \Drupal::state()->set('h5p_icon', $values['h5p_icon']);
-    \Drupal::state()->set('h5p_default_path', $values['h5p_default_path']);
-    \Drupal::state()->set('h5p_revisioning', $values['h5p_revisioning']);
-    \Drupal::state()->set('h5p_whitelist', $values['h5p_whitelist']);
-    \Drupal::state()->set('h5p_library_whitelist_extras', $values['h5p_library_whitelist_extras']);
-    // TODO: These do not exist in the form
-    //    \Drupal::state()->set('h5p_dev_mode', $values['h5p_dev_mode']);
-//    \Drupal::state()->set('h5p_library_development', $values['h5p_library_development']);
-    \Drupal::state()->set('h5p_save_content_state', $values['h5p_save_content_state']);
-    \Drupal::state()->set('h5p_save_content_frequency', $values['h5p_save_content_frequency']);
-    \Drupal::state()->set('h5p_enable_lrs_content_types', $values['h5p_enable_lrs_content_types']);
-    \Drupal::state()->set('h5p_hub_is_enabled', $values['h5p_hub_is_enabled']);
-    \Drupal::state()->set('h5p_send_usage_statistics', $values['h5p_send_usage_statistics']);
+    $config->set('h5p_frame', $values[h5p_frame]);
+    $config->set('h5p_export', $values[h5p_export]);
+    $config->set('h5p_embed', $values[h5p_embed]);
+    $config->set('h5p_copyright', $values[h5p_copyright]);
+    $config->set('h5p_icon', $values[h5p_icon]);
 
     // Ensure that 'h5p_default_path' variable contains no trailing slash.
     $values['h5p_default_path'] = rtrim($values['h5p_default_path'], '/\\');
-    \Drupal::state()->set('h5p_default_path', $values['h5p_default_path']);
+    $config->set('h5p_default_path', $values['h5p_default_path']);
+
+    $config->set('h5p_revisioning', $values['h5p_revisioning']);
+
     // Ensure that the h5p white list is always stored in lower case.
     $values['h5p_whitelist'] = mb_strtolower($values['h5p_whitelist']);
-    \Drupal::state()->set('h5p_whitelist', $values['h5p_whitelist']);
+    $config->set('h5p_whitelist', $values['h5p_whitelist']);
+
+    $config->set('h5p_library_whitelist_extras', $values['h5p_library_whitelist_extras']);
+
+    // TODO: These do not exist in the form
+    //    $config->set('h5p_dev_mode', $values['h5p_dev_mode']);
+    //    $config->set('h5p_library_development', $values['h5p_library_development']);
+    $config->set('h5p_save_content_state', $values['h5p_save_content_state']);
+    $config->set('h5p_save_content_frequency', $values['h5p_save_content_frequency']);
+    $config->set('h5p_enable_lrs_content_types', $values['h5p_enable_lrs_content_types']);
+    $config->set('h5p_hub_is_enabled', $values['h5p_hub_is_enabled']);
+    $config->set('h5p_send_usage_statistics', $values['h5p_send_usage_statistics']);
+
+    // Save the configuration
+    $config->save();
 
     // TODO: Be able to change site key
 //  if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $form_state['values']['h5p_site_key'])) {

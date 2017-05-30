@@ -1,28 +1,20 @@
 test_value: false
 
+# From H5PDisplayOptionBehaviour
 h5p_frame: 1
 h5p_export: 3
 h5p_embed: 3
 h5p_copyright: 1
 h5p_icon: 1
 
-    # \Drupal::state()->set('h5p_default_path', $values['h5p_default_path']);
-    # \Drupal::state()->set('h5p_revisioning', $values['h5p_revisioning']);
-    # \Drupal::state()->set('h5p_whitelist', $values['h5p_whitelist']);
-    # \Drupal::state()->set('h5p_library_whitelist_extras', $values['h5p_library_whitelist_extras']);
-    # \Drupal::state()->set('h5p_dev_mode', $values['h5p_dev_mode']);
-    # \Drupal::state()->set('h5p_library_development', $values['h5p_library_development']);
-    # \Drupal::state()->set('h5p_save_content_state', $values['h5p_save_content_state']);
-    # \Drupal::state()->set('h5p_save_content_frequency', $values['h5p_save_content_frequency']);
-    # \Drupal::state()->set('h5p_enable_lrs_content_types', $values['h5p_enable_lrs_content_types']);
-    # \Drupal::state()->set('h5p_hub_is_enabled', $values['h5p_hub_is_enabled']);
-    # \Drupal::state()->set('h5p_send_usage_statistics', $values['h5p_send_usage_statistics']);
+h5p_default_path: 'h5p'
+h5p_revisioning: 1
 
-
-
-
-    # \Drupal::state()->set('h5p_frame', $values['h5p_frame']);
-    # \Drupal::state()->set('h5p_export', $values['h5p_export']);
-    # \Drupal::state()->set('h5p_embed', $values['h5p_embed']);
-    # \Drupal::state()->set('h5p_copyright', $values['h5p_copyright']);
-    # \Drupal::state()->set('h5p_icon', $values['h5p_icon']);
+# From $defaultContentWhitelist
+h5p_whitelist: 'json png jpg jpeg gif bmp tif tiff svg eot ttf woff woff2 otf webm mp4 ogg mp3 txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf md textile'
+h5p_library_whitelist_extras: 'js css'
+h5p_save_content_state: 0
+h5p_save_content_frequency: 30
+h5p_enable_lrs_content_types: 0
+h5p_hub_is_enabled: 1
+h5p_send_usage_statistics: 1
