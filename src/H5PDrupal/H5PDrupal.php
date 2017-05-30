@@ -236,7 +236,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     return [
       'name' => 'drupal',
-      'version' => $h5p_info['core'],
+      'version' => isset($h5p_info['core']) ? $h5p_info['core'] : NULL,
       'h5pVersion' => isset($h5p_info['version']) ? $h5p_info['version'] : NULL,
     ];
   }
