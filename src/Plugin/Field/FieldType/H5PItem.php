@@ -101,8 +101,6 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function delete() {
-
-    /*
     $entity = $this->getEntity();
     $entity_type = $entity->getEntityType();
     if (!$entity_type->isRevisionable()) {
@@ -136,7 +134,6 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
     while ($h5p_content_id = $results->fetchField()) {
       self::deleteH5PContent($h5p_content_id);
     }
-    */
   }
 
   /**
