@@ -655,7 +655,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     );
 
     // invoke library installed
-    \Drupal::moduleHandler()->invokeAll('h5p_library_installed', $libraryData, $new);
+    \Drupal::moduleHandler()->invokeAll('h5p_library_installed', array($libraryData, $new));
 
     db_delete('h5p_libraries_languages')
       ->condition('library_id', $libraryData['libraryId'])
