@@ -3,3 +3,32 @@
  * @file
  * Contains h5peditor.module
  */
+
+ /**
+  * Implements hook_library_info_build().
+  *
+  * @see hook_library_info_build()
+  */
+function h5peditor_library_info_build() {
+   $libraries = [];
+
+   $h5p_module_path = drupal_get_path('module', 'h5p');
+   $libraries['h5peditor.assets'] = [
+     'version' => '1.0',
+     'license' => [
+       'name' => 'MIT',
+       'url' => 'https://github.com/h5p/h5p-editor-php-library/blob/master/README.md',
+       'gpl-compatible' => TRUE,
+     ],
+     'js' => [
+       "/{$h5p_module_path}/vendor/h5p/h5p-editor/scripts/h5p-hub-client.js" => [],
+       "/{$h5p_module_path}/vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js" => [],
+       "/{$h5p_module_path}/vendor/h5p/h5p-editor/scripts/h5peditor-editor.js" => [],
+     ],
+     'dependencies' => [
+       'h5p/h5p.content',
+     ],
+   ];
+
+   return $libraries;
+ }

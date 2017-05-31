@@ -7,17 +7,4 @@ h5peditor:
     scripts/application.js: {}
   dependencies:
     - core/jquery
-    - h5peditor/h5peditorAssets
-
-h5peditorAssets:
-  version: 1.0
-  license:
-    - name: MIT
-    - url: https://github.com/h5p/h5p-editor-php-library/blob/master/README.md
-    - gpl-compatible: TRUE
-  js:
-    /vendor/h5p/h5p-editor/scripts/h5p-hub-client.js: {}
-    /vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js: {}
-    /vendor/h5p/h5p-editor/scripts/h5peditor-editor.js: {}
-  dependencies:
-    - h5p/h5p.content
+    - h5peditor/h5peditor.assets

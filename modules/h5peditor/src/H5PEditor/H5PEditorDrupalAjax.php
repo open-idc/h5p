@@ -2,8 +2,6 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
-//require_once 'vendor/h5p/h5p-editor/h5peditor-ajax.interface.php';
-
 class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
 
   /**
