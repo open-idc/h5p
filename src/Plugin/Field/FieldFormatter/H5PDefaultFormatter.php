@@ -48,10 +48,6 @@ class H5PDefaultFormatter extends FormatterBase {
     $cssAssetConfig = array( 'preprocess' => $systemPerformance->get('css.preprocess'), 'media' => 'css' );
     $jsAssetConfig = array( 'preprocess' => $systemPerformance->get('js.preprocess') );
 
-    $config['system.performance']['css']['preprocess'] = true;
-    // Aggregate JavaScript files in Drupal - on.
-    $config['system.performance']['js']['preprocess'] = true;
-
     foreach ($items as $delta => $item) {
       $value = $item->getValue();
 
@@ -84,8 +80,8 @@ class H5PDefaultFormatter extends FormatterBase {
       }
 
       // Add alter hooks
-      $moduleHandler->alter('h5p_scripts', $files['scripts'], $loadpackages, $h5p_content->library->embed_types);
-      $moduleHandler->alter('h5p_styles', $files['styles'], $loadpackages, $h5p_content->library->embed_types);
+      $moduleHandler->alter('h5p_scripts', $files['scripts'], $loadpackages, $h5p_content->getLibrary()->embed_types);
+      $moduleHandler->alter('h5p_styles', $files['styles'], $loadpackages, $h5p_content->getLibrary()->embed_types);
 
       // Determine embed type and HTML to use
       if ($h5p_content->isDivEmbeddable()) {
@@ -186,6 +182,13 @@ class H5PDefaultFormatter extends FormatterBase {
     return $result;
   }
 
+  /**
+   * Remove leading / and remove query part of an URL
+   *
+   * @param string $path
+   *
+   * @return string
+   */
   private function cleanFilePath($path){
     return explode('?', ltrim($path, '/'))[0];
   }
