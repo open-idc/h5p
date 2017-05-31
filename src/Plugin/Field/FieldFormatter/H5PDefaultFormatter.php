@@ -190,6 +190,6 @@ class H5PDefaultFormatter extends FormatterBase {
    * @return string
    */
   private function cleanFilePath($path){
-    return explode('?', ltrim($path, '/'))[0];
+    return explode('?', $path)[0];
   }
 }
