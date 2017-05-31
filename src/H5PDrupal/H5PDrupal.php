@@ -180,19 +180,17 @@ class H5PDrupal implements \H5PFrameworkInterface {
     ];
 
     // Determine cache buster
-    $css_js_query_string = \Drupal::state()->get('css_js_query_string', '');
-    $cache_buster = "?{$css_js_query_string}";
+    $cache_buster = \Drupal::state()->get('css_js_query_string', '');
+    $h5p_module_path = drupal_get_path('module', 'h5p');
 
     // Add all core scripts
     foreach (\H5PCore::$scripts as $script) {
-      $js = 'vendor/h5p/h5p-core/' . $script;
-      $assets[$keys[0]][] = base_path() . $js . $cache_buster;
+      $assets[$keys[0]][] = "{$h5p_module_path}/vendor/h5p/h5p-core/{$script}?{$cache_buster}";
     }
 
     // and styles
     foreach (\H5PCore::$styles as $style) {
-      $css = 'vendor/h5p/h5p-core/' . $style;
-      $assets[$keys[1]][] = base_path() . $css . $cache_buster;
+      $assets[$keys[1]][] = "{$h5p_module_path}/vendor/h5p/h5p-core/{$style}?{$cache_buster}";
     }
 
     return $assets;

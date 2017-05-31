@@ -136,7 +136,7 @@ function h5p_library_info_build() {
 
   /*$libraries['h5p.admin.library.details'] = [
     'js' => [
-      '/vendor/h5p/h5p-core/js/h5p-library-details.js' => [],
+      'vendor/h5p/h5p-core/js/h5p-library-details.js' => [],
     ],
     'dependencies' => [
       'h5p/h5p.admin',
