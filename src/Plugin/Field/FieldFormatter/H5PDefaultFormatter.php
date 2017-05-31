@@ -68,7 +68,7 @@ class H5PDefaultFormatter extends FormatterBase {
       $preloaded_dependencies = $core->loadContentDependencies($h5p_content->id(), 'preloaded');
 
       // Load dependencies
-      $files = $core->getDependenciesFiles($preloaded_dependencies, $h5p_integration['url']);
+      $files = $core->getDependenciesFiles($preloaded_dependencies, H5PDrupal::getRelativeH5PPath());
 
       $loadpackages = [
         'h5p/h5p.content',
@@ -190,6 +190,6 @@ class H5PDefaultFormatter extends FormatterBase {
    * @return string
    */
   private function cleanFilePath($path){
-    return explode('?', ltrim($path, '/'))[0];
+    return explode('?', $path)[0];
   }
 }

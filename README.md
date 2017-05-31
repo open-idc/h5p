@@ -14,14 +14,30 @@ The latest development version may be found on git.
 git clone --branch 8.x-1.x https://git.drupal.org/project/h5p.git
 ```
 
+### Development
+
+Composer dependencies are bundled with the module to ease installation.
+If you're not a developer proceed to the installation section.
+
+For developers, you can clone the Git repositories for the dependencies by
+running ```rm -rf vendor/h5p && composer install --no-autoloader```
+
 ### Installation
 
-1) goto  modules/contrib/h5p directory
-2) run ```composer update```. This should add h5p to the vendor directory of your Drupal installation
-3) Enable H5P through GUI at /admin/modules or with drush using ```drush en h5p```
+After downloading the module you can enable it by:
+1) Using the GUI at /admin/modules
+2) Using the Drush command ```drush en h5p```
+3) Using the Drupal CLI command ```drupal module:install h5p```
+
+The next step is to add and configure H5P Fields
 
 ### Uninstall
-Uninstall through GUI at /admin/modules or with drush using ```drush pmu h5p```
+
+Remember to delete any fields and clean up H5P Content entities before uninstalling.
+You can uninstall the module by:
+1) Using the GUI at /admin/modules
+2) Using the Drush command ```drush pmu h5p```
+3) Using the Drupal CLI command ```drupal module:uninstall h5p```
 
 ## Configuration
 All configuration settings should be available through the Drupal GUI at /admin/config/system/h5p

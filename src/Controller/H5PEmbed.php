@@ -26,12 +26,14 @@ class H5PEmbed extends ControllerBase {
       ],
     ];
 
+    $h5p_module_path = drupal_get_path('module', 'h5p');
+
     // Load requested content
     $h5p_content = H5PContent::load($id);
 
     // TODO: Check access to field / entity ?
     if (empty($h5p_content)) {
-      $response['#markup'] = '<body style="margin:0"><div style="background: #fafafa url(' . base_path() . 'vendor/h5p/h5p-core/images/h5p.svg) no-repeat center;background-size: 50% 50%;width: 100%;height: 100%;"></div><div style="width:100%;position:absolute;top:75%;text-align:center;color:#434343;font-family: Consolas,monaco,monospace">' . t('Content unavailable.') . '</div></body>';
+      $response['#markup'] = '<body style="margin:0"><div style="background: #fafafa url(' . base_path() . $h5p_module_path . 'vendor/h5p/h5p-core/images/h5p.svg) no-repeat center;background-size: 50% 50%;width: 100%;height: 100%;"></div><div style="width:100%;position:absolute;top:75%;text-align:center;color:#434343;font-family: Consolas,monaco,monospace">' . t('Content unavailable.') . '</div></body>';
       return new HtmlResponse($response);
     }
 
@@ -51,8 +53,8 @@ class H5PEmbed extends ControllerBase {
     $files = $core->getDependenciesFiles($preloaded_dependencies, H5PDrupal::getRelativeH5PPath());
 
     // Merge assets
-    $scripts = $coreAssets['scripts'] + $core->getAssetsUrls($files['scripts']);
-    $styles = $coreAssets['styles'] + $core->getAssetsUrls($files['styles']);
+    $scripts = array_merge($coreAssets['scripts'], $core->getAssetsUrls($files['scripts']));
+    $styles = array_merge($coreAssets['styles'], $core->getAssetsUrls($files['styles']));
     // TODO: Aggregate assets
 
     // Get current language
@@ -65,7 +67,7 @@ class H5PEmbed extends ControllerBase {
 
     // Render the page and add to the response
     ob_start();
-    include 'vendor/h5p/h5p-core/embed.php';
+    include $h5p_module_path . '/vendor/h5p/h5p-core/embed.php';
     $response['#markup'] = ob_get_clean();
 
     return new HtmlResponse($response);

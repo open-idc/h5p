@@ -221,8 +221,9 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $filtered_parameters = $this->getFilteredParameters();
     $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $this->id());
 
-    $embed_url = Url::fromUri('internal:/h5p/embed/' . $this->id(), ['absolute' => TRUE])->toString();
-    $resizer_url = Url::fromUri('internal:/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString();
+    $h5p_module_path = drupal_get_path('module', 'h5p');
+    $embed_url = Url::fromUri('internal:/h5p/' . $this->id() . '/embed', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
+    $resizer_url = Url::fromUri('internal:/' . $h5p_module_path . '/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString(TRUE)->getGeneratedUrl();
 
     return array(
       'library' => $this->getLibraryString(),

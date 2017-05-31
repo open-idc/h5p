@@ -1,0 +1,135 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "91cbc3afa3dbf6c3bd8cdd5bbbcc9a3a",
+    "content-hash": "5faeebb845629c46814aee4b2f5afed5",
+    "packages": [
+        {
+            "name": "h5p/h5p-core",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/h5p/h5p-php-library.git",
+                "reference": "46d772cb511cf4fc6deaaf398d52aed8031b986f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/46d772cb511cf4fc6deaaf398d52aed8031b986f",
+                "reference": "46d772cb511cf4fc6deaaf398d52aed8031b986f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "h5p.classes.php",
+                    "h5p-development.class.php",
+                    "h5p-file-storage.interface.php",
+                    "h5p-default-storage.class.php",
+                    "h5p-event-base.class.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Svein-Tore Griff With",
+                    "email": "with@joubel.com",
+                    "homepage": "http://joubel.com",
+                    "role": "CEO"
+                },
+                {
+                    "name": "Frode Petterson",
+                    "email": "frode.petterson@joubel.com",
+                    "homepage": "http://joubel.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "H5P Core functionality in PHP",
+            "homepage": "https://h5p.org",
+            "keywords": [
+                "content",
+                "h5p",
+                "hvp",
+                "interactive",
+                "quiz"
+            ],
+            "time": "2017-05-31 09:17:28"
+        },
+        {
+            "name": "h5p/h5p-editor",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/h5p/h5p-editor-php-library.git",
+                "reference": "da6b9f5413abd6d417d79aedb90f55b7d8d6514f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/da6b9f5413abd6d417d79aedb90f55b7d8d6514f",
+                "reference": "da6b9f5413abd6d417d79aedb90f55b7d8d6514f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "h5peditor.class.php",
+                    "h5peditor-file.class.php",
+                    "h5peditor-ajax.class.php",
+                    "h5peditor-storage.interface.php",
+                    "h5peditor-ajax.interface.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Svein-Tore Griff With",
+                    "email": "with@joubel.com",
+                    "homepage": "http://joubel.com",
+                    "role": "CEO"
+                },
+                {
+                    "name": "Frode Petterson",
+                    "email": "frode.petterson@joubel.com",
+                    "homepage": "http://joubel.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "H5P Editor functionality in PHP",
+            "homepage": "https://h5p.org",
+            "keywords": [
+                "content",
+                "editor",
+                "h5p",
+                "hvp",
+                "interactive",
+                "quiz"
+            ],
+            "time": "2017-05-31 08:21:36"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "h5p/h5p-core": 20,
+        "h5p/h5p-editor": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

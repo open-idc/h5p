@@ -43,6 +43,7 @@ class H5PContentUpgradeForm extends FormBase {
 
     $contents_plural = \Drupal::translation()->formatPlural($contents, '1 content instance', '@count content instances');
     $returnLink = Link::fromTextAndUrl(t('Return'), Url::fromUri('internal:/admin/content/h5p/'))->toString();
+    $h5p_module_rel = base_path() . drupal_get_path('module', 'h5p');
     $settings = [
       'libraryInfo' => [
         'message' => t('You are about to upgrade %num. Please select upgrade version.', ['%num' => $contents_plural]),
@@ -58,8 +59,8 @@ class H5PContentUpgradeForm extends FormBase {
           'version' => $library->major_version . '.' . $library->minor_version,
         ],
         'libraryBaseUrl' => Url::fromUri('internal:/admin/content/h5p/upgrade/library')->toString(),
-        'scriptBaseUrl' => base_path() . 'vendor/h5p/h5p-core/js/',
-        'buster' => '?' . \Drupal::state()->get('css_js_query_string', ''),
+        'scriptBaseUrl' => "{$h5p_module_rel}/vendor/h5p/h5p-core/js/",
+        'buster' => '?' . \Drupal::state()->get('system.css_js_query_string', '0'),
         'versions' => $upgrades,
         'contents' => $contents,
         'buttonLabel' => t('Upgrade'),
