@@ -36,17 +36,17 @@ class H5PEditorUtilities {
    */
   public static function getEditorSettings() {
     $contentValidator = H5PDrupal::getInstance('contentvalidator');
-    $module_path      = drupal_get_path('module', 'h5p');
+    $h5p_module_rel      = base_path() . drupal_get_path('module', 'h5p');
 
     $settings = [
       'filesPath'          => base_path() . H5PDrupal::getRelativeH5PPath(),
       'fileIcon'           => [
-        'path'   => base_path() . 'vendor/h5p/h5p-editor/images/binary-file.png',
+        'path'   => "{$h5p_module_rel}/vendor/h5p/h5p-editor/images/binary-file.png",
         'width'  => 50,
         'height' => 50,
       ],
       'ajaxPath'           => str_replace('%3A', ':', self::getAjaxPath()),
-      'libraryPath'         => base_path() . 'vendor/h5p/h5p-editor',
+      'libraryPath'        => "{$h5p_module_rel}/vendor/h5p/h5p-editor",
       'copyrightSemantics' => $contentValidator->getCopyrightSemantics(),
       'assets'             => self::getEditorAssets(),
       'apiVersion'         => \H5PCore::$coreApi,
@@ -61,8 +61,9 @@ class H5PEditorUtilities {
    * @return array Js and css for showing the editor
    */
   private static function getEditorAssets() {
-    $corePath   = base_path() . "vendor/h5p/h5p-core/";
-    $editorPath = base_path() . "vendor/h5p/h5p-editor/";
+    $h5p_module_rel = base_path() . drupal_get_path('module', 'h5p');
+    $corePath   = "{$h5p_module_rel}/vendor/h5p/h5p-core/";
+    $editorPath = "{$h5p_module_rel}/vendor/h5p/h5p-editor/";
 
     $css  = array_merge(
       self::getAssets(\H5PCore::$styles, $corePath),
@@ -119,7 +120,8 @@ class H5PEditorUtilities {
   private static function getTranslationFilePath() {
     $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-    $languageFolder = base_path() . 'vendor/h5p/h5p-editor/language';
+    $h5p_module_rel = base_path() . drupal_get_path('module', 'h5p');
+    $languageFolder = "{$h5p_module_rel}/vendor/h5p/h5p-editor/language";
     $chosenLanguage = "{$languageFolder}/{$language}.js";
     $cacheBuster    = self::getCacheBuster();
 
