@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\H5P\Plugin\Field\FieldFormatter;
+namespace Drupal\h5p\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Asset\AssetCollectionOptimizerInterface;
 use Drupal\Core\Field\FormatterBase;

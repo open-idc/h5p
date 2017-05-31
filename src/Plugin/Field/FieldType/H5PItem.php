@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\H5P\Plugin\Field\FieldType;
+namespace Drupal\h5p\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldItemInterface;
@@ -101,6 +101,8 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function delete() {
+
+    /*
     $entity = $this->getEntity();
     $entity_type = $entity->getEntityType();
     if (!$entity_type->isRevisionable()) {
@@ -134,6 +136,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
     while ($h5p_content_id = $results->fetchField()) {
       self::deleteH5PContent($h5p_content_id);
     }
+    */
   }
 
   /**

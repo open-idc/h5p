@@ -3,11 +3,11 @@
 namespace Drupal\h5p\Plugin\Field\FieldWidget;
 
 use Drupal\h5p\Plugin\Field\H5PWidgetBase;
-use Drupal\H5P\Plugin\Field\FieldType\H5PItem;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\h5p\Entity\H5PContent;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Drupal\h5p\Entity\H5PContent;
+use Drupal\h5p\Plugin\Field\FieldType\H5PItem;
 
 /**
  * Plugin implementation of the 'h5p_upload' widget.

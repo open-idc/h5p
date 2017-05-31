@@ -2,7 +2,7 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
-use Drupal\H5PEditor;
+use Drupal\h5peditor;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\Core\Url;
 
