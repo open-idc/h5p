@@ -180,7 +180,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     ];
 
     // Determine cache buster
-    $css_js_query_string = \Drupal::state()->get('css_js_query_string', '');
+    $css_js_query_string = \Drupal::state()->get('system.css_js_query_string', '0');
     $cache_buster = "?{$css_js_query_string}";
 
     // Add all core scripts
