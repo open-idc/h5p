@@ -123,6 +123,12 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
     $columns = $storage_definition->getColumns();
     $column = $table_mapping->getFieldColumnName($storage_definition, key($columns));
 
+    if (!$database->schema()->tableExists($revision_table)) {
+      // No revision table exists. Just delete content value
+      self::deleteH5PContent($this->get('h5p_content_id')->getValue());
+      return;
+    }
+
     // Look up all h5p content referenced by this field
     $database = \Drupal::database();
     $results = $database->select($revision_table, 'r')
