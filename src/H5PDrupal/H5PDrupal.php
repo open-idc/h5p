@@ -101,6 +101,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_url = base_path() . self::getRelativeH5PPath();
 
     // Define the generic H5PIntegration settings
+    $core = self::getInstance('core');
     $settings = array(
       'baseUrl' => base_path(),
       'url' => $h5p_url,
@@ -111,40 +112,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       ),
       'saveFreq' => $h5p_save_content_state ? $h5p_save_content_frequency : FALSE,
       'l10n' => array(
-        'H5P' => array(
-          'fullscreen' => t('Fullscreen'),
-          'disableFullscreen' => t('Disable fullscreen'),
-          'download' => t('Download'),
-          'copyrights' => t('Rights of use'),
-          'embed' => t('Embed'),
-          'size' => t('Size'),
-          'showAdvanced' => t('Show advanced'),
-          'hideAdvanced' => t('Hide advanced'),
-          'advancedHelp' => t('Include this script on your website if you want dynamic sizing of the embedded content:'),
-          'copyrightInformation' => t('Rights of use'),
-          'close' => t('Close'),
-          'title' => t('Title'),
-          'author' => t('Author'),
-          'year' => t('Year'),
-          'source' => t('Source'),
-          'license' => t('License'),
-          'thumbnail' => t('Thumbnail'),
-          'noCopyrights' => t('No copyright information available for this content.'),
-          'downloadDescription' => t('Download this content as a H5P file.'),
-          'copyrightsDescription' => t('View copyright information for this content.'),
-          'embedDescription' => t('View the embed code for this content.'),
-          'h5pDescription' => t('Visit H5P.org to check out more cool content.'),
-          'contentChanged' => t('This content has changed since you last used it.'),
-          'startingOver' => t("You'll be starting over."),
-          'by' => t('by'),
-          'showMore' => t('Show more'),
-          'showLess' => t('Show less'),
-          'subLevel' => t('Sublevel'),
-          'confirmDialogHeader' => t('Confirm action'),
-          'confirmDialogBody' => t('Please confirm that you wish to proceed. This action is not reversible.'),
-          'cancelLabel' => t('Cancel'),
-          'confirmLabel' => t('Confirm')
-        ),
+        'H5P' => $core->getLocalization(),
       ),
       'hubIsEnabled' => $h5p_hub_is_enabled,
     );
@@ -181,16 +149,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Determine cache buster
     $cache_buster = \Drupal::state()->get('system.css_js_query_string', '0');
-    $h5p_module_path = drupal_get_path('module', 'h5p');
+    $h5p_module_rel = base_path() . drupal_get_path('module', 'h5p');
 
     // Add all core scripts
     foreach (\H5PCore::$scripts as $script) {
-      $assets[$keys[0]][] = "{$h5p_module_path}/vendor/h5p/h5p-core/{$script}?{$cache_buster}";
+      $assets[$keys[0]][] = "{$h5p_module_rel}/vendor/h5p/h5p-core/{$script}?{$cache_buster}";
     }
 
     // and styles
     foreach (\H5PCore::$styles as $style) {
-      $assets[$keys[1]][] = "{$h5p_module_path}/vendor/h5p/h5p-core/{$style}?{$cache_buster}";
+      $assets[$keys[1]][] = "{$h5p_module_rel}/vendor/h5p/h5p-core/{$style}?{$cache_buster}";
     }
 
     return $assets;
@@ -653,7 +621,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     );
 
     // invoke library installed
-    \Drupal::moduleHandler()->invokeAll('h5p_library_installed', $libraryData, $new);
+    \Drupal::moduleHandler()->invokeAll('h5p_library_installed', array($libraryData, $new));
 
     db_delete('h5p_libraries_languages')
       ->condition('library_id', $libraryData['libraryId'])

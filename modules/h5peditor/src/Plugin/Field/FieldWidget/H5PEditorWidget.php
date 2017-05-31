@@ -1,15 +1,14 @@
 <?php
 
-namespace Drupal\H5PEditor\Plugin\Field\FieldWidget;
+namespace Drupal\h5peditor\Plugin\Field\FieldWidget;
 
 use Drupal\h5p\Plugin\Field\H5PWidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
+use Drupal\h5p\Plugin\Field\FieldType\H5PItem;
 use Drupal\h5peditor\H5PEditor\H5PEditorUtilities;
-use Drupal\h5p\Plugin\Field\FieldWidget\H5PUploadWidget;
-use Drupal\H5P\Plugin\Field\FieldType\H5PItem;
 
 /**
  * Plugin implementation of the 'h5p_editor' widget.

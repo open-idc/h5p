@@ -53,8 +53,8 @@ class H5PEmbed extends ControllerBase {
     $files = $core->getDependenciesFiles($preloaded_dependencies, H5PDrupal::getRelativeH5PPath());
 
     // Merge assets
-    $scripts = $coreAssets['scripts'] + $core->getAssetsUrls($files['scripts']);
-    $styles = $coreAssets['styles'] + $core->getAssetsUrls($files['styles']);
+    $scripts = array_merge($coreAssets['scripts'], $core->getAssetsUrls($files['scripts']));
+    $styles = array_merge($coreAssets['styles'], $core->getAssetsUrls($files['styles']));
     // TODO: Aggregate assets
 
     // Get current language
@@ -67,7 +67,7 @@ class H5PEmbed extends ControllerBase {
 
     // Render the page and add to the response
     ob_start();
-    include $h5p_module_path . 'vendor/h5p/h5p-core/embed.php';
+    include $h5p_module_path . '/vendor/h5p/h5p-core/embed.php';
     $response['#markup'] = ob_get_clean();
 
     return new HtmlResponse($response);
