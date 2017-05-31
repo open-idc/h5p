@@ -61,7 +61,7 @@ class H5PEditorWidget extends H5PWidgetBase {
           'h5p' => [
             'H5PIntegration' => H5PDrupal::getGenericH5PIntegrationSettings()
           ],
-          'h5peditor' => H5PEditorUtilities::getEditorSettings($h5p_content_id),
+          'h5peditor' => H5PEditorUtilities::getEditorSettings(),
         ],
         'library' => [
           'h5peditor/h5peditor',

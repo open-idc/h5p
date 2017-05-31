@@ -46,7 +46,7 @@ class H5PEditorUtilities {
         'height' => 50,
       ],
       'ajaxPath'           => str_replace('%3A', ':', self::getAjaxPath()),
-      'libraryPath'        => "{$h5p_module_rel}/vendor/h5p/h5p-editor",
+      'libraryPath'        => "{$h5p_module_rel}/vendor/h5p/h5p-editor/",
       'copyrightSemantics' => $contentValidator->getCopyrightSemantics(),
       'assets'             => self::getEditorAssets(),
       'apiVersion'         => \H5PCore::$coreApi,

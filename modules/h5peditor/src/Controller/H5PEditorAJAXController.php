@@ -3,6 +3,7 @@
 namespace Drupal\h5peditor\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\H5PDrupal\H5PEvent;
 use Drupal\h5peditor\H5PEditor\H5PEditorUtilities;
 
@@ -64,10 +65,8 @@ class H5PEditorAJAXController extends ControllerBase {
     $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
     $editor = H5PEditorUtilities::getInstance();
-    $files_path = \Drupal::service('file_system')->realpath('public://');
-    $module_path = "{$files_path}/h5p";
     $editor->ajax->action(\H5PEditorEndpoints::SINGLE_LIBRARY, $machine_name,
-      $major_version, $minor_version, $language, $module_path
+      $major_version, $minor_version, $language, H5PDrupal::getRelativeH5PPath()
     );
 
     // Log library loaded
