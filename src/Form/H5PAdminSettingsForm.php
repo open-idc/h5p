@@ -6,6 +6,7 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use \Drupal\Core\Cache\Cache;
 
 
 /**
@@ -245,6 +246,8 @@ class H5PAdminSettingsForm extends FormBase {
 
     // Save the configuration
     $config->save();
+
+    Cache::invalidateTags(['h5p_content']);
 
     // TODO: Be able to change site key
 //  if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $form_state['values']['h5p_site_key'])) {

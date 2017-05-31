@@ -125,7 +125,8 @@ class H5PDefaultFormatter extends FormatterBase {
         ],
         '#cache' => [
           'tags' => [
-            'h5p_content:' . $h5p_content->id()
+            'h5p_content:' . $h5p_content->id(),
+            'h5p_content'
           ]
         ],
       );
