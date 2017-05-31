@@ -63,9 +63,6 @@ class H5PLibraryUploadForm extends FormBase {
   }
 
   function validateH5PFileUpload(array &$form, FormStateInterface $form_state, $upgradeOnly = FALSE) {
-
-    $values = $form_state->getValues();
-
     $validators = array(
       'file_validate_extensions' => array('h5p'),
     );

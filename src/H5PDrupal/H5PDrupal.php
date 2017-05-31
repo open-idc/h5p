@@ -572,6 +572,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
   /**
    * Implements saveLibraryData
+   *
+   * @param array $libraryData
+   * @param boolean $new
    */
   public function saveLibraryData(&$libraryData, $new = TRUE) {
     $preloadedJs = $this->pathsToCsv($libraryData, 'preloadedJs');
@@ -651,14 +654,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $libraryData['majorVersion'] . '.' . $libraryData['minorVersion']
     );
 
-    // Invoke h5p_library_installed hook for each library that has
-    // been installed
-    // TODO
-    /*
-    if (sizeof(module_implements('h5p_library_installed')) > 0) {
-      module_invoke_all('h5p_library_installed', $libraryData, $new);
-    }
-    */
+    // invoke library installed
+    \Drupal::moduleHandler()->invokeAll('h5p_library_installed', $libraryData, $new);
 
     db_delete('h5p_libraries_languages')
       ->condition('library_id', $libraryData['libraryId'])

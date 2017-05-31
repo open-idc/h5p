@@ -178,10 +178,13 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     ];
 
     $core = H5PDrupal::getInstance('core');
-    return $core->filterParameters($content);
+    $filteredParameters = $core->filterParameters($content);
 
-    // TODO: Implement hook filtered_params ?
-    //   \Drupal::moduleHandler()->alter('h5p_params', $files['scripts'], $library_list, $embed_type);
+    // alters filtered params
+    $moduleHandler = \Drupal::moduleHandler();
+    $filteredAsJson = json_decode($filteredParameters);
+    $moduleHandler->alter('h5p_filtered_params', $filteredAsJson);
+    return json_encode($filteredAsJson);
   }
 
   /**

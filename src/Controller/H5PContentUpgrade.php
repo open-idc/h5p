@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class H5PContentUpgrade extends ControllerBase {
 
+  protected $database;
+
   /**
    * constructor.
    */
@@ -35,7 +37,7 @@ class H5PContentUpgrade extends ControllerBase {
    * @return array
    */
   public static function getLibraryVersions($library_id) {
-    $query = db_select('h5p_libraries', 'hl1');
+    $query = \Drupal::database()->select('h5p_libraries', 'hl1');
     $query->join('h5p_libraries', 'hl2', 'hl1.machine_name = hl2.machine_name');
     $query->condition('hl1.library_id', $library_id, '=');
     $query->addField('hl2', 'library_id', 'id');
@@ -83,7 +85,7 @@ class H5PContentUpgrade extends ControllerBase {
     }
 
     // Get the library we're upgrading to
-    $to_library = db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = :id', [':id' => filter_input(INPUT_POST, 'libraryId')])->fetch();
+    $to_library = $this->database->query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = :id', [':id' => filter_input(INPUT_POST, 'libraryId')])->fetch();
     if (!$to_library) {
       return ['#markup' => t('Error: Your library is missing!')];
     }
@@ -103,7 +105,7 @@ class H5PContentUpgrade extends ControllerBase {
       // Update params.
       $params = json_decode($params);
       foreach ($params as $id => $param) {
-        db_update('h5p_content')
+        $this->database->update('h5p_content')
           ->fields([
             'library_id' => $to_library->id,
             'parameters' => $param,
@@ -129,7 +131,7 @@ class H5PContentUpgrade extends ControllerBase {
 
     if ($out['left']) {
       // Find the 10 first contents using library and add to params
-      $contents = db_query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', [':id' => $library_id]);
+      $contents = $this->database->query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', [':id' => $library_id]);
       foreach ($contents as $content) {
         $out['params'][$content->id] = $content->params;
       }
