@@ -107,7 +107,7 @@ class H5PEditorUtilities {
    * @return string A cache buster that may be applied to resources
    */
   private static function getCacheBuster() {
-    $cache_buster = \Drupal::state()->get('css_js_query_string');
+    $cache_buster = \Drupal::state()->get('system.css_js_query_string', '0');
     return $cache_buster ? "?{$cache_buster}" : '';
   }
 
