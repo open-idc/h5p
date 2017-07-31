@@ -44,18 +44,24 @@ class H5PEditorWidget extends H5PWidgetBase {
     $element['parameters'] = [
       '#type' => 'hidden',
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getFilteredParameters(),
+      '#attributes' => [
+        'id' => str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-parameters",
+      ],
     ];
 
     $element['library'] = [
       '#type' => 'hidden',
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getLibraryString(),
+      '#attributes' => [
+        'id' => str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-library",
+      ],
     ];
 
     // Add editor element
     $element['editor'] = [
       '#type' => 'item',
       '#title' => t('Content type'),
-      '#markup' => '<div class="h5p-editor" data-field="' . $field_name . '" data-delta="' . $delta . '"' . (empty($h5p_content) ? '' : ' data-content-id="' . $h5p_content_id . '"') . '>' . t('Waiting for javascript...') . '</div>',
+      '#markup' => '<div class="h5p-editor" data-parametersid="' . $element['parameters']['#attributes']['id'] . '" data-libraryid="' . $element['library']['#attributes']['id'] . '"' . (empty($h5p_content) ? '' : ' data-content-id="' . $h5p_content_id . '"') . '>' . t('Waiting for javascript...') . '</div>',
       '#attached' => [
         'drupalSettings' => [
           'h5p' => [

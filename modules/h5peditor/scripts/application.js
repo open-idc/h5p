@@ -28,16 +28,16 @@
 
         // Grab data values specifc for editor instance
         var $this = $(this);
-        var field = $this.data('field');
-        var delta = $this.data('delta');
+        var parametersFieldId = $this.data('parametersid');
+        var libraryFieldId = $this.data('libraryid');
         var contentId = $this.data('contentId');
         var $form = $this.parents('form');
 
         // Locate parameters field
-        var $params = $('input[name="' + field + '[' + delta + '][h5p_content][parameters]"]', context);
+        var $params = $('#' + parametersFieldId, context);
 
         // Locate library field
-        var $library = $('input[name="' + field + '[' + delta + '][h5p_content][library]"]', context);
+        var $library = $('#' + libraryFieldId, context);
 
         // Create new editor
         var h5peditor = new ns.Editor($library.val(), $params.val(), this, function () {

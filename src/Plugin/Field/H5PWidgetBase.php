@@ -66,12 +66,15 @@ abstract class H5PWidgetBase extends WidgetBase {
         '#title' => $labels[$name],
         '#default_value' => $value,
         '#weight' => 40,
+        '#attributes' => [
+          'id' => str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-{$name}",
+        ],
       ];
 
       if ($name !== \H5PCore::DISPLAY_OPTION_FRAME) {
         $element[$name]['#states'] = [
           'visible' => [
-            ':input[name="' . $field_name . '[' . $delta  . '][h5p_content][' . \H5PCore::DISPLAY_OPTION_FRAME . ']"]' => ['checked' => TRUE]
+            '#' . str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-" . \H5PCore::DISPLAY_OPTION_FRAME => ['checked' => TRUE],
           ]
         ];
       }
