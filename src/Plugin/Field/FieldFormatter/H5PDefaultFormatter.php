@@ -94,7 +94,7 @@ class H5PDefaultFormatter extends FormatterBase {
         ];
 
         // set html
-        $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no"></iframe></div>';
+        $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" frameBorder="0" scrolling="no"></iframe></div>';
 
         // Load core assets
         $coreAssets = H5PDrupal::getCoreAssets();
