@@ -52,10 +52,15 @@ class H5PEmbed extends ControllerBase {
     $preloaded_dependencies = $core->loadContentDependencies($id, 'preloaded');
     $files = $core->getDependenciesFiles($preloaded_dependencies, H5PDrupal::getRelativeH5PPath());
 
+    // Load public files
+    $jsFilePaths = array_map(function($asset){ return $asset->path; }, $files['scripts']);
+    $cssFilePaths = array_map(function($asset){ return $asset->path; }, $files['styles']);
+
+    // Get aggregated assets
+    $aggregatedAssets = H5PDrupal::aggregatedAssets([$coreAssets['scripts'], $jsFilePaths], [$coreAssets['styles'], $cssFilePaths]);
     // Merge assets
-    $scripts = array_merge($coreAssets['scripts'], $core->getAssetsUrls($files['scripts']));
-    $styles = array_merge($coreAssets['styles'], $core->getAssetsUrls($files['styles']));
-    // TODO: Aggregate assets
+    $scripts = array_merge($aggregatedAssets['scripts'][0], $aggregatedAssets['scripts'][1]);
+    $styles = array_merge($aggregatedAssets['styles'][0], $aggregatedAssets['styles'][1]);
 
     // Get current language
     $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();

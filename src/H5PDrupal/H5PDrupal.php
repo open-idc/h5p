@@ -149,19 +149,72 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     // Determine cache buster
     $cache_buster = \Drupal::state()->get('system.css_js_query_string', '0');
-    $h5p_module_rel = base_path() . drupal_get_path('module', 'h5p');
+    $h5p_module_path = drupal_get_path('module', 'h5p');
 
     // Add all core scripts
     foreach (\H5PCore::$scripts as $script) {
-      $assets[$keys[0]][] = "{$h5p_module_rel}/vendor/h5p/h5p-core/{$script}?{$cache_buster}";
+      $assets[$keys[0]][] = "{$h5p_module_path}/vendor/h5p/h5p-core/{$script}?{$cache_buster}";
     }
 
     // and styles
     foreach (\H5PCore::$styles as $style) {
-      $assets[$keys[1]][] = "{$h5p_module_rel}/vendor/h5p/h5p-core/{$style}?{$cache_buster}";
+      $assets[$keys[1]][] = "{$h5p_module_path}/vendor/h5p/h5p-core/{$style}?{$cache_buster}";
     }
 
     return $assets;
+  }
+
+  /**
+   *
+   */
+  public static function aggregatedAssets($scriptAssets, $styleAssets) {
+    $jsOptimizer = \Drupal::service('asset.js.collection_optimizer');
+    $cssOptimizer = \Drupal::service('asset.css.collection_optimizer');
+    $systemPerformance = \Drupal::config('system.performance');
+    $jsAssetConfig = ['preprocess' => $systemPerformance->get('js.preprocess')];
+    $cssAssetConfig = ['preprocess' => $systemPerformance->get('css.preprocess'), 'media' => 'css'];
+    $assets = ['scripts' => [], 'styles' => []];
+    foreach ($scriptAssets as $jsFiles) {
+      $assets['scripts'][] = self::createCachedPublicFiles($jsFiles, $jsOptimizer, $jsAssetConfig);
+    }
+    foreach ($styleAssets as $cssFiles) {
+      $assets['styles'][] = self::createCachedPublicFiles($cssFiles, $cssOptimizer, $cssAssetConfig);
+    }
+    return $assets;
+  }
+
+  /**
+   * Combines a set of files to a cached version, that is public available
+   *
+   * @param string[] $filePaths
+   * @param AssetCollectionOptimizerInterface $optimizer
+   * @param array $assetConfig
+   *
+   * @return string[]
+   */
+  private static function createCachedPublicFiles(array $filePaths, $optimizer, $assetConfig) {
+    $assets = [];
+
+    $defaultAssetConfig = [
+      'type' => 'file',
+      'group' => 'h5p',
+      'cache' => TRUE,
+      'attributes' => [],
+      'version' => NULL,
+      'browsers' => [],
+    ];
+
+    foreach ($filePaths as $index => $path) {
+      $path = explode('?', $path)[0];
+
+      $assets[$path] = [
+        'weight' => count($filePaths) - $index,
+        'data' => $path,
+      ] + $assetConfig + $defaultAssetConfig;
+    }
+    $cachedAsset = $optimizer->optimize($assets);
+
+    return array_map(function($publicUrl){ return file_create_url($publicUrl); }, array_column($cachedAsset, 'data'));
   }
 
   /**

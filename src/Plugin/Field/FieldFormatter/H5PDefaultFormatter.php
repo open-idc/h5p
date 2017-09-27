@@ -41,12 +41,7 @@ class H5PDefaultFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $element = array();
-    $jsOptimizer = \Drupal::service('asset.js.collection_optimizer');
-    $cssOptimizer = \Drupal::service('asset.css.collection_optimizer');
     $moduleHandler = \Drupal::service('module_handler');
-    $systemPerformance = \Drupal::config('system.performance');
-    $cssAssetConfig = array( 'preprocess' => $systemPerformance->get('css.preprocess'), 'media' => 'css' );
-    $jsAssetConfig = array( 'preprocess' => $systemPerformance->get('js.preprocess') );
 
     foreach ($items as $delta => $item) {
       $value = $item->getValue();
@@ -96,18 +91,19 @@ class H5PDefaultFormatter extends FormatterBase {
         // set html
         $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" frameBorder="0" scrolling="no"></iframe></div>';
 
-        // Load core assets
-        $coreAssets = H5PDrupal::getCoreAssets();
-
-        $h5p_integration['core']['styles'] = $this->createCachedPublicFiles($coreAssets['styles'], $cssOptimizer, $cssAssetConfig);
-        $h5p_integration['core']['scripts'] = $this->createCachedPublicFiles($coreAssets['scripts'], $jsOptimizer, $jsAssetConfig);
-
         // Load public files
         $jsFilePaths = array_map(function($asset){ return $asset->path; }, $files['scripts']);
         $cssFilePaths = array_map(function($asset){ return $asset->path; }, $files['styles']);
 
-        $h5p_integration['contents'][$content_id_string]['styles'] = $this->createCachedPublicFiles($cssFilePaths, $cssOptimizer, $cssAssetConfig);
-        $h5p_integration['contents'][$content_id_string]['scripts'] = $this->createCachedPublicFiles($jsFilePaths, $jsOptimizer, $jsAssetConfig);
+        // Load core assets
+        $coreAssets = H5PDrupal::getCoreAssets();
+
+        // Aggregate all assets
+        $aggregatedAssets = H5PDrupal::aggregatedAssets([$coreAssets['scripts'], $jsFilePaths], [$coreAssets['styles'], $cssFilePaths]);
+        $h5p_integration['core']['scripts'] = $aggregatedAssets['scripts'][0];
+        $h5p_integration['core']['styles'] = $aggregatedAssets['styles'][0];
+        $h5p_integration['contents'][$content_id_string]['scripts'] = $aggregatedAssets['scripts'][1];
+        $h5p_integration['contents'][$content_id_string]['styles'] = $aggregatedAssets['styles'][1];
       }
 
       // Render each element as markup.
@@ -133,64 +129,5 @@ class H5PDefaultFormatter extends FormatterBase {
     }
 
     return $element;
-  }
-
-  /**
-   * Combines a set of files to a cached version, that is public available
-   *
-   * @param string[] $filePaths
-   * @param AssetCollectionOptimizerInterface $optimizer
-   * @param array $assetConfig
-   *
-   * @return string[]
-   */
-  private function createCachedPublicFiles(array $filePaths, $optimizer, $assetConfig) {
-    $assets = $this->createDependencyFileAssets($filePaths, $assetConfig);
-    $cachedAsset = $optimizer->optimize($assets);
-
-    return array_map(function($publicUrl){ return file_create_url($publicUrl); }, array_column($cachedAsset, 'data'));
-  }
-
-  /**
-   * Takes a list of file paths, and creates drupal Assets
-   *
-   * @param string[] $filePaths
-   * @param array $assetConfig
-   *
-   * @return array
-   */
-  private function createDependencyFileAssets($filePaths, $assetConfig) {
-    $result = array();
-
-    $defaultAssetConfig = [
-      'type' => 'file',
-      'group' => 'h5p',
-      'cache' => TRUE,
-      'attributes' => [],
-      'version' => NULL,
-      'browsers' => [],
-    ];
-
-    foreach ($filePaths as $index => $path) {
-      $path = $this->cleanFilePath($path);
-
-      $result[$path] = [
-        'weight' => count($filePaths) - $index,
-        'data' => $path,
-      ] + $assetConfig + $defaultAssetConfig;
-    }
-
-    return $result;
-  }
-
-  /**
-   * Remove leading / and remove query part of an URL
-   *
-   * @param string $path
-   *
-   * @return string
-   */
-  private function cleanFilePath($path){
-    return explode('?', $path)[0];
   }
 }
