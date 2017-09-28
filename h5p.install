@@ -85,6 +85,125 @@ function h5p_install() {
 }
 
 /**
+ * Check that H5P PHP setup and extension requirements are met
+ *
+ * @param string $phase The phase in which requirements are checked
+ * @return array $requirements Requirements and their severity
+ */
+function h5p_requirements($phase) {
+  $requirements = [];
+
+  // Only run during installation
+  if ($phase !== 'install') {
+    return $requirements;
+  }
+
+  // Replicates functionality in H5P checkSetupErrorMessages since we can't include code from core for this
+
+  // ZipArchive requirement
+  $requirements['h5p_php_extension_ziparchive'] = [
+    'title' => 'ZipArchive PHP extension must be enabled',
+    'description' => 'ZipArchive PHP extensions must be installed and enabled.',
+    'severity' => REQUIREMENT_OK
+  ];
+  if (!class_exists('ZipArchive')) {
+    $requirements['h5p_php_extension_ziparchive']['severity'] = REQUIREMENT_ERROR;
+  }
+
+  // mbstring requirement
+  $requirements['h5p_php_extension_mbstring'] = [
+    'title' => 'Mbstring PHP extension must be enabled',
+    'description' => 'Mbstring PHP extension must be installed and enabled.',
+    'severity' => REQUIREMENT_OK
+  ];
+  if (!extension_loaded('mbstring')) {
+    $requirements['h5p_php_extension_mbstring']['severity'] = REQUIREMENT_ERROR;
+  }
+
+  // Check php version >= 5.2
+  $requirements['h5p_php_version'] = [
+    'title' => 'PHP version must be at least 5.2',
+    'description' => 'PHP version 5.2 is required. Version 5.6 or later is recommended.',
+    'severity' => REQUIREMENT_OK
+  ];
+
+  $php_version = explode('.', phpversion());
+  if ($php_version[0] < 5 || ($php_version[0] === 5 && $php_version[1] < 2)) {
+    $requirements['h5p_php_version']['severity'] = REQUIREMENT_ERROR;
+  }
+
+  $max_upload_size = _h5p_return_bytes(ini_get('upload_max_filesize'));
+  $max_post_size   = _h5p_return_bytes(ini_get('post_max_size'));
+  $byte_threshold  = 5000000; // 5MB
+  $requirements['h5p_sufficient_upload_size'] = [
+    'title' => 'Sufficient upload filesize should be set for the server',
+    'description' => 'PHP max upload size should be set appropriately so you are able to upload H5Ps and other media.',
+    'severity' => REQUIREMENT_OK
+  ];
+
+  if ($max_upload_size < $byte_threshold) {
+    $requirements['h5p_sufficient_upload_size']['severity'] = REQUIREMENT_WARNING;
+  }
+
+  $requirements['h5p_sufficient_post_size'] = [
+    'title' => 'Sufficient post size should be set for the server',
+    'description' => 'PHP post size should be set appropriately so you are able to upload and store H5Ps and other media.',
+    'severity' => REQUIREMENT_OK
+  ];
+
+  if ($max_post_size < $byte_threshold) {
+    $requirements['h5p_sufficient_post_size']['severity'] = REQUIREMENT_WARNING;
+  }
+
+  $requirements['h5p_post_exceeds_upload_size'] = [
+    'title' => 'Max post size should be higher than max upload size',
+    'description' => 'PHP max post size should be bigger than max upload size. Neglecting this is known to cause issues in some installations.',
+    'severity' => REQUIREMENT_OK
+  ];
+
+  if ($max_upload_size > $max_post_size) {
+    $requirements['h5p_post_exceeds_upload_size']['severity'] = REQUIREMENT_WARNING;
+  }
+
+  // Check SSL
+  $requirements['h5p_ssl_enabled'] = [
+    'title' => 'Enable SSL',
+    'description' => 'The setup should have SSL enabled. SSL ensures a secure connection with the H5P Hub.',
+    'severity' => REQUIREMENT_OK
+  ];
+
+  if (!extension_loaded('openssl')) {
+    $requirements['h5p_ssl_enabled']['severity'] = REQUIREMENT_WARNING;
+  }
+
+  return $requirements;
+}
+
+/**
+ * Return bytes from php_ini string value
+ *
+ * @param string $val
+ *
+ * @return int|string
+ */
+function _h5p_return_bytes($val) {
+  $val  = trim($val);
+  $last = strtolower($val[strlen($val) - 1]);
+  $bytes = (int) $val;
+
+  switch ($last) {
+    case 'g':
+      $bytes *= 1024;
+    case 'm':
+      $bytes *= 1024;
+    case 'k':
+      $bytes *= 1024;
+  }
+
+  return $bytes;
+}
+
+/**
  * Recursively remove file or directory.
  *
  * @param string $file
