@@ -93,17 +93,12 @@ function h5p_install() {
 function h5p_requirements($phase) {
   $requirements = [];
 
-  // Only run during installation
-  if ($phase !== 'install') {
-    return $requirements;
-  }
-
   // Replicates functionality in H5P checkSetupErrorMessages since we can't include code from core for this
 
   // ZipArchive requirement
   $requirements['h5p_php_extension_ziparchive'] = [
-    'title' => 'ZipArchive PHP extension must be enabled',
-    'description' => 'ZipArchive PHP extensions must be installed and enabled.',
+    'title' => t('ZipArchive extension'),
+    'description' => t('ZipArchive PHP extensions must be installed and enabled.'),
     'severity' => REQUIREMENT_OK
   ];
   if (!class_exists('ZipArchive')) {
@@ -112,8 +107,8 @@ function h5p_requirements($phase) {
 
   // mbstring requirement
   $requirements['h5p_php_extension_mbstring'] = [
-    'title' => 'Mbstring PHP extension must be enabled',
-    'description' => 'Mbstring PHP extension must be installed and enabled.',
+    'title' => t('Mbstring extension'),
+    'description' => t('Mbstring PHP extension must be installed and enabled.'),
     'severity' => REQUIREMENT_OK
   ];
   if (!extension_loaded('mbstring')) {
@@ -122,8 +117,8 @@ function h5p_requirements($phase) {
 
   // Check php version >= 5.2
   $requirements['h5p_php_version'] = [
-    'title' => 'PHP version must be at least 5.2',
-    'description' => 'PHP version 5.2 is required. Version 5.6 or later is recommended.',
+    'title' => t('PHP version'),
+    'description' => t('PHP version 5.2 is required. Version 5.6 or later is recommended.'),
     'severity' => REQUIREMENT_OK
   ];
 
@@ -136,8 +131,8 @@ function h5p_requirements($phase) {
   $max_post_size   = _h5p_return_bytes(ini_get('post_max_size'));
   $byte_threshold  = 5000000; // 5MB
   $requirements['h5p_sufficient_upload_size'] = [
-    'title' => 'Sufficient upload filesize should be set for the server',
-    'description' => 'PHP max upload size should be set appropriately so you are able to upload H5Ps and other media.',
+    'title' => t('Upload size settings'),
+    'description' => t('PHP max upload size should be set appropriately so you are able to upload H5Ps and other media.'),
     'severity' => REQUIREMENT_OK
   ];
 
@@ -146,8 +141,8 @@ function h5p_requirements($phase) {
   }
 
   $requirements['h5p_sufficient_post_size'] = [
-    'title' => 'Sufficient post size should be set for the server',
-    'description' => 'PHP post size should be set appropriately so you are able to upload and store H5Ps and other media.',
+    'title' => t('Post size settings'),
+    'description' => t('PHP post size should be set appropriately so you are able to upload and store H5Ps and other media.'),
     'severity' => REQUIREMENT_OK
   ];
 
@@ -156,8 +151,8 @@ function h5p_requirements($phase) {
   }
 
   $requirements['h5p_post_exceeds_upload_size'] = [
-    'title' => 'Max post size should be higher than max upload size',
-    'description' => 'PHP max post size should be bigger than max upload size. Neglecting this is known to cause issues in some installations.',
+    'title' => t('Post and upload settings'),
+    'description' => t('PHP max post size should be bigger than max upload size. Neglecting this is known to cause issues in some installations.'),
     'severity' => REQUIREMENT_OK
   ];
 
@@ -167,8 +162,8 @@ function h5p_requirements($phase) {
 
   // Check SSL
   $requirements['h5p_ssl_enabled'] = [
-    'title' => 'Enable SSL',
-    'description' => 'The setup should have SSL enabled. SSL ensures a secure connection with the H5P Hub.',
+    'title' => t('SSL settings'),
+    'description' => t('The setup should have SSL enabled. SSL ensures a secure connection with the H5P Hub.'),
     'severity' => REQUIREMENT_OK
   ];
 
