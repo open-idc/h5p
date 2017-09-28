@@ -44,7 +44,7 @@
           var iframeH5PEditor = this.H5PEditor;
           iframeH5PEditor.contentId = (contentId ? contentId : undefined);
           iframeH5PEditor.ajaxPath = settings.h5peditor.ajaxPath.replace(':contentId', (contentId ? contentId : 0));
-          iframeH5PEditor.filesPath = settings.h5peditor.filesPath + (contentId ? '/content/' + contentId : '/editor');
+          iframeH5PEditor.filesPath = settings.h5peditor.filesPath + '/editor';
 
           /**
            * Help build URLs for AJAX requests
