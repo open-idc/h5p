@@ -101,7 +101,7 @@ class H5PLibraryAdmin extends ControllerBase {
     $settings['containerSelector'] = '#h5p-admin-container';
 
     // Add the needed css and javascript
-    $build['#attached'] = $this->addSettings($settings);
+    $build['#attached'] = self::addSettings($settings);
     $build['#attached']['library'][] = 'h5p/h5p.admin.library.list';
 
     $build['title_add'] = ['#markup' => '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>'];
@@ -214,11 +214,7 @@ class H5PLibraryAdmin extends ControllerBase {
    * @param array $settings
    * @return array
    */
-  private function addSettings($settings = NULL) {
-    if ($settings === NULL) {
-      $settings = [];
-    }
-
+  public static function addSettings($settings = NULL) {
     $settings['containerSelector'] = '#h5p-admin-container';
     $settings['l10n'] = [
       'NA' => t('N/A'),
