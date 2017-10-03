@@ -61,7 +61,7 @@ class H5PAJAX extends ControllerBase {
 
     // Everything is OK - let's update db
     // Check if it exists
-    $exists = $this->database->query('SELECT 1 FROM {h5p_points} WHERE content_id = :content_id && uid = :uid', [
+    $exists = $this->database->query('SELECT 1 FROM {h5p_points} WHERE content_id = :content_id AND uid = :uid', [
         ':content_id' => $content_id,
         ':uid' => $uid,
       ])->fetchField();
