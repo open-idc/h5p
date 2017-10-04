@@ -120,19 +120,13 @@ class H5PEditorUtilities {
   private static function getTranslationFilePath() {
     $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-    $h5p_module_rel = base_path() . drupal_get_path('module', 'h5p');
+    $h5p_module_rel = drupal_get_path('module', 'h5p');
     $languageFolder = "{$h5p_module_rel}/vendor/h5p/h5p-editor/language";
+    $defaultLanguage = "{$languageFolder}/en.js";
     $chosenLanguage = "{$languageFolder}/{$language}.js";
-    $cacheBuster    = self::getCacheBuster();
+    $cacheBuster = self::getCacheBuster();
 
-    if (file_exists($chosenLanguage)) {
-      // Use set language file
-      return "$chosenLanguage{$cacheBuster}";
-    }
-    else {
-      // Default to english
-      return "{$languageFolder}/en.js{$cacheBuster}";
-    }
+    return base_path() . (file_exists($chosenLanguage) ? $chosenLanguage : $defaultLanguage) . $cacheBuster;
   }
 
   /**
