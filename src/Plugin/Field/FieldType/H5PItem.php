@@ -48,6 +48,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties['h5p_content_id'] = DataDefinition::create('integer');
     $properties['h5p_content_revisioning_handled'] = DataDefinition::create('boolean');
+    $properties['h5p_content_new_translation'] = DataDefinition::create('boolean');
 
     return $properties;
   }
@@ -74,15 +75,18 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
     $entity = $this->getEntity();
     $is_new_revision = (!empty($entity->original) && $entity->getRevisionId() != $entity->original->getRevisionId());
 
+    // Determine if this is a new translation
+    $do_new_translation = $this->get('h5p_content_new_translation')->getValue();
+
     // Determine if we do revisioning for H5P content
     // (may be disabled to save disk space)
     $interface = H5PDrupal::getInstance();
     $do_new_revision = $interface->getOption('revisioning', TRUE) && $is_new_revision;
-    if (!$do_new_revision) {
+    if (!$do_new_revision && !$do_new_translation) {
       return; // No need to do anything
     }
 
-    // New revision, clone the existing content
+    // New revision or translation, clone the existing content
     $h5p_content_id = $this->get('h5p_content_id')->getValue();
     $h5p_content = H5PContent::load($h5p_content_id);
     $h5p_content->set('id', NULL);

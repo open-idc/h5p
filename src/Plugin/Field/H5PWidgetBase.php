@@ -42,6 +42,12 @@ abstract class H5PWidgetBase extends WidgetBase {
       '#weight' => 40,
     ];
 
+    // Determine if this is a new translation or not
+    $element['new_translation'] = [
+      '#type' => 'value',
+      '#value' => !empty($form_state->get('content_translation')),
+    ];
+
     // Load content
     $disable = NULL;
     $h5p_content = $h5p_content_id ? H5PContent::load($h5p_content_id) : NULL;

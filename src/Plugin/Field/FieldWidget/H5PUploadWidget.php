@@ -100,6 +100,7 @@ class H5PUploadWidget extends H5PWidgetBase {
     // Prepare default messaged return values
     $return_value = [
       'h5p_content_id' => $value['id'],
+      'h5p_content_new_translation' => $value['new_translation'],
     ];
 
     // Determine if we're clearing the content
@@ -107,7 +108,7 @@ class H5PUploadWidget extends H5PWidgetBase {
       $return_value['h5p_content_id'] = NULL;
       $return_value['h5p_content_revisioning_handled'] = TRUE;
 
-      if ($value['id'] && !$do_new_revision) {
+      if ($value['id'] && !$do_new_revision && !$value['new_translation']) {
         // Not a new revision, delete existing content
         H5PItem::deleteH5PContent($value['id']);
       }
@@ -137,7 +138,7 @@ class H5PUploadWidget extends H5PWidgetBase {
     ];
 
     $has_content = !empty($return_value['h5p_content_id']);
-    if ($has_content && !$do_new_revision) {
+    if ($has_content && !$do_new_revision && !$value['new_translation']) {
       // Use existing id = update existing content
       $content['id'] = $return_value['h5p_content_id'];
     }
