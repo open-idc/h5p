@@ -120,7 +120,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
     // (deleteRevision is not called for old revisions when deleting node)
     // Bug in Drupal Core?
     static $revisionsCleanedUp = [];
-    if ($entity->isDefaultTranslation() && !$revisionsCleanedUp[$entity->id()]) {
+    if ($entity->isDefaultTranslation() && empty($revisionsCleanedUp[$entity->id()])) {
       // Only trigger cleanup once pr entity
       $revisionsCleanedUp[$entity->id()] = TRUE;
 
