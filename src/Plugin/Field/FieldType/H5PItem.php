@@ -105,44 +105,49 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function delete() {
+    // Get entity
     $entity = $this->getEntity();
-    $entity_type = $entity->getEntityType();
-    if (!$entity_type->isRevisionable()) {
-      // No revisions – only need to delete the current value
+
+    if ($entity->isDefaultTranslation() || $this->getFieldDefinition()->isTranslatable()) {
+      // Only delete the referenced H5P if this is the default translation
+      // or that the field is translatable.
+      // (If it's not translatable the H5P is shared between translations)
+      // (The content can be translated without having enabled translation for the field)
       self::deleteH5PContent($this->get('h5p_content_id')->getValue());
-      return;
     }
 
-    // We need to looks up all the revisions of this field and delete them
-    $storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
-    $table_mapping = $storage->getTableMapping();
+    // The following is a fix to clean up all revisions when deleting an entity
+    // (deleteRevision is not called for old revisions when deleting node)
+    // Bug in Drupal Core?
+    static $revisionsCleanedUp = [];
+    if ($entity->isDefaultTranslation() && !$revisionsCleanedUp[$entity->id()]) {
+      // Only trigger cleanup once pr entity
+      $revisionsCleanedUp[$entity->id()] = TRUE;
 
-    $field_definition = $this->getFieldDefinition();
-    $storage_definition = $field_definition->getFieldStorageDefinition();
+      $storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
+      $table_mapping = $storage->getTableMapping();
+      $storage_definition = $this->getFieldDefinition()->getFieldStorageDefinition();
 
-    // Find revision table name
-    $revision_table = $table_mapping->getDedicatedRevisionTableName($storage_definition);
+      // Check if we can get data values from the revision table, if not we use
+      // the data table as no revisions has been created for this field.
+      $revision_table = $table_mapping->getDedicatedRevisionTableName($storage_definition);
+      $database = \Drupal::database();
+      $from_table = ($database->schema()->tableExists($revision_table) ? $revision_table : $table_mapping->getDedicatedDataTableName($storage_definition));
 
-    // Find column name
-    $columns = $storage_definition->getColumns();
-    $column = $table_mapping->getFieldColumnName($storage_definition, key($columns));
+      // Find column name for field instance
+      $columns = $storage_definition->getColumns();
+      $column = $table_mapping->getFieldColumnName($storage_definition, key($columns));
 
-    $database = \Drupal::database();
-    if (!$database->schema()->tableExists($revision_table)) {
-      // No revision table exists. Just delete content value
-      self::deleteH5PContent($this->get('h5p_content_id')->getValue());
-      return;
-    }
+      // Look up all the H5P content referenced by this field
+      $results = $database->select($from_table, 'f')
+          ->fields('f', [$column])
+          ->condition('entity_id', $entity->id())
+          ->execute();
 
-    // Look up all h5p content referenced by this field
-    $results = $database->select($revision_table, 'r')
-        ->fields('r', [$column])
-        ->condition('entity_id', $entity->id())
-        ->execute();
-
-    // … and delete them one by one
-    while ($h5p_content_id = $results->fetchField()) {
-      self::deleteH5PContent($h5p_content_id);
+      // delete them one by one
+      while ($h5p_content_id = $results->fetchField()) {
+        self::deleteH5PContent($h5p_content_id);
+      }
     }
   }
 

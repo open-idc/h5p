@@ -130,6 +130,10 @@ class H5PUploadWidget extends H5PWidgetBase {
       // Load existing content
       $h5p_content = H5PContent::load($value['id']);
     }
+    if (empty($h5p_content)) {
+      // Invalid content, probably deleted
+      $return_value['h5p_content_id'] = NULL;
+    }
 
     $core = H5PDrupal::getInstance('core');
     $content = [
