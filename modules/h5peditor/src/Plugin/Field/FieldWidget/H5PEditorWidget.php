@@ -90,14 +90,15 @@ class H5PEditorWidget extends H5PWidgetBase {
     $return_value = [
       'h5p_content_revisioning_handled' => TRUE,
       'h5p_content_id' => $value['id'],
+      'h5p_content_new_translation' => $value['new_translation'],
     ];
 
     // Skip saving content if no library is selector, or clearing content
     if (!$value['library'] || $value['clear_content']) {
       $return_value['h5p_content_id'] = NULL;
 
-      if ($value['id'] && !$do_new_revision) {
-        // Not a new revision, delete existing content
+      if ($value['id'] && !$do_new_revision && !$value['new_translation']) {
+        // Not a new revision or translation, delete existing content
         H5PItem::deleteH5PContent($value['id']);
       }
 
@@ -105,14 +106,11 @@ class H5PEditorWidget extends H5PWidgetBase {
     }
 
     // Load existing content
-    if ($value['id']) {
-      $h5p_content = H5PContent::load($value['id']);
-      $old_library = $h5p_content->getLibrary(TRUE);
-      $old_params = $h5p_content->getParameters();
-    }
-    else {
-      $old_library = NULL;
-      $old_params = NULL;
+    $h5p_content = $value['id'] ? H5PContent::load($value['id']) : NULL;
+    $old_library = empty($h5p_content) ? NULL : $h5p_content->getLibrary(TRUE);
+    $old_params = empty($h5p_content) ? NULL : $h5p_content->getParameters();
+    if (empty($h5p_content)) {
+      $value['id'] = NULL; // Invalid, content has been deleted
     }
 
     // Prepare content values
@@ -122,7 +120,7 @@ class H5PEditorWidget extends H5PWidgetBase {
       'params' => $value['parameters'],
       'disable' => $core->getStorableDisplayOptions($value, !empty($h5p_content) ? $h5p_content->get('disabled_features')->value : 0),
     ];
-    if ($value['id'] && !$do_new_revision) {
+    if ($value['id'] && !$do_new_revision && !$value['new_translation']) {
       $content['id'] = $value['id'];
     }
 
@@ -131,7 +129,7 @@ class H5PEditorWidget extends H5PWidgetBase {
 
     // If we had existing content and did a new revision we need to make a copy
     // of the content folder from the old revision
-    if ($value['id'] && $do_new_revision) {
+    if ($value['id'] && ($do_new_revision || $value['new_translation'])) {
       $core->fs->cloneContent($value['id'], $return_value['h5p_content_id']);
     }
 

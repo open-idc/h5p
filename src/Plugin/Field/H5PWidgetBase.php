@@ -42,6 +42,12 @@ abstract class H5PWidgetBase extends WidgetBase {
       '#weight' => 40,
     ];
 
+    // Determine if this is a new translation or not
+    $element['new_translation'] = [
+      '#type' => 'value',
+      '#value' => !empty($form_state->get('content_translation')),
+    ];
+
     // Load content
     $disable = NULL;
     $h5p_content = $h5p_content_id ? H5PContent::load($h5p_content_id) : NULL;
@@ -98,6 +104,10 @@ abstract class H5PWidgetBase extends WidgetBase {
 
     $return_values = [];
     foreach ($values as $delta => $value) {
+      if (!isset($value['h5p_content'])) {
+        continue; // Prevent crashing when there's no data
+      }
+
       // Massage out each H5P Upload from the submitted form
       $return_values[$delta] = $this->massageFormValue($value['h5p_content'], $delta, $do_new_revision);
     }

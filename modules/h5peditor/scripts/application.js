@@ -1,5 +1,6 @@
 (function ($, Drupal, H5P, H5PEditor) {
   var initialized;
+  var submitHandlers = [];
 
   /**
    * One time setup of the H5PEditor
@@ -39,8 +40,23 @@
         // Locate library field
         var $library = $('#' + libraryFieldId, context);
 
+        // Create form submit handler
+        var submit = {
+          element: null,
+          handler: function () {
+            var params = h5peditor.getParams();
+
+            if (params !== undefined) {
+              $library.val(h5peditor.getLibrary());
+              $params.val(JSON.stringify(params));
+            }
+          }
+        };
+        submitHandlers.push(submit);
+
         // Create new editor
         var h5peditor = new ns.Editor($library.val(), $params.val(), this, function () {
+          submit.element = this.frameElement; // Update frame element
           var iframeH5PEditor = this.H5PEditor;
           iframeH5PEditor.contentId = (contentId ? contentId : undefined);
           iframeH5PEditor.ajaxPath = settings.h5peditor.ajaxPath.replace(':contentId', (contentId ? contentId : 0));
@@ -62,17 +78,20 @@
           };
         });
 
-        // Handle form submit
-        $form.submit(function () {
-          var params = h5peditor.getParams();
-
-          if (params !== undefined) {
-            $library.val(h5peditor.getLibrary());
-            $params.val(JSON.stringify(params));
+        $form.submit(submit.handler);
+      });
+    },
+    detach: function (context, settings, trigger) {
+      if (trigger === 'serialize') {
+        $('.h5p-editor-iframe', context).once('H5PEditor').each(function () {
+          for (var i = 0; i < submitHandlers.length; i++) {
+            if (submitHandlers[i].element === this) {
+              // Trigger submit handler
+              submitHandlers[i].handler();
+            }
           }
         });
-
-      });
+      }
     }
   };
 
