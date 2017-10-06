@@ -63,13 +63,14 @@ class H5PLibraryUploadForm extends FormBase {
   }
 
   function validateH5PFileUpload(array &$form, FormStateInterface $form_state, $upgradeOnly = FALSE) {
+    $interface = H5PDrupal::getInstance();
     $validators = array(
       'file_validate_extensions' => array('h5p'),
     );
     // New uploads need to be saved in temp in order to be viewable
     // during node preview.
 
-    $h5p_default_path = \Drupal::config('h5p.settings')->get('h5p_default_path', 'h5p');
+    $h5p_default_path = $interface->getOption('default_path', 'h5p');
     $temporary_file_path = 'public://' . $h5p_default_path . '/temp/' . uniqid('h5p-');
     file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
 
@@ -78,7 +79,6 @@ class H5PLibraryUploadForm extends FormBase {
       // These has to be set instead of sending parameteres to the validation function.
       $uri = $file[0]->getFileUri();
 
-      $interface = H5PDrupal::getInstance();
       $interface->getUploadedH5pPath(\Drupal::service('file_system')->realpath($uri));
       $interface->getUploadedH5pFolderPath(\Drupal::service('file_system')->realpath($temporary_file_path));
 

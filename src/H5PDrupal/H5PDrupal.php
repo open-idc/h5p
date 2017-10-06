@@ -235,10 +235,10 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $hub_is_enabled = $this->getOption('hub_is_enabled', TRUE);
     $send_usage_statistics = $this->getOption('send_usage_statistics', TRUE);
-    $last_fetched_at = $this->getOption('fetched_library_metadata_on', 0);
+    $last_fetched_at = intval($this->getOption('fetched_library_metadata_on', 0));
 
     if ($fetchingDisabled || (($hub_is_enabled) || $send_usage_statistics) &&
-        (intval($last_fetched_at) < (time() - 86400))) {
+        ($last_fetched_at < (time() - 86400))) {
       // Fetch the library-metadata:
       $core = H5PDrupal::getInstance('core');
       $core->fetchLibrariesMetadata($fetchingDisabled);
@@ -1086,8 +1086,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    $h5p = \Drupal::config('h5p.settings')->get('h5p_' . $name, $default);
-    return $h5p;
+    $value = \Drupal::config('h5p.settings')->get('h5p_' . $name);
+    return $value !== NULL ? $value : $default;
   }
 
   /**
@@ -1101,7 +1101,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
   public function setOption($name, $value) {
     // Only update the setting if it has infact changed.
     if ($value !== \Drupal::config('h5p.settings')->get("h5p_{$name}")) {
-      $config =\Drupal::configFactory()->getEditable('h5p.settings');
+      $config = \Drupal::configFactory()->getEditable('h5p.settings');
       $config->set("h5p_{$name}", $value);
       $config->save();
     }
