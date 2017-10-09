@@ -146,7 +146,58 @@ function h5p_requirements($phase) {
     'severity' => extension_loaded('openssl') ? REQUIREMENT_OK : REQUIREMENT_WARNING,
   ];
 
+  if ($phase == 'runtime') {
+
+    // Check public files .htaccess for correct .h5p mime type
+    // If the mime type isn't defined the 'nosniff' header will make the .h5p
+    // render as text in the browser
+    if (!_h5p_mime_type_defined() && \Drupal::config('h5p.settings')->get('h5p_export')) {
+      $requirements['h5p_file_download'] = [
+        'title' => t('H5P file download'),
+        'value' => t('Not working'),
+        'severity' => REQUIREMENT_WARNING,
+        'description' => t('To allow download of .h5p files the mime type must be defined in the .htaccess file for the public files directory.'),
+      ];
+    }
+
+  }
+
   return $requirements;
+}
+
+/**
+ * Check if the .h5p mime type is defined
+ */
+function _h5p_mime_type_defined() {
+  $htaccess_file = 'public://.htaccess';
+
+  if (!file_exists($htaccess_file)) {
+    return FALSE;
+  }
+
+  $contents = @file_get_contents($htaccess_file);
+  if (!$contents) {
+    return FALSE;
+  }
+
+  if (!preg_match('/AddType [^\/ ]+\/[^\/ ]+ \.h5p/i', $contents)) {
+    // No added, try to add
+
+    // Make sure the file is writable
+    \Drupal::service('file_system')->chmod($htaccess_file, 0644);
+
+    // Update file contents
+    $file_updated = @file_put_contents($htaccess_file, "\n\n#Trigger download of .h5p files\nAddType application/zip .h5p\n", FILE_APPEND);
+
+    // Restore Drupal's default chmod for this file
+    \Drupal::service('file_system')->chmod($htaccess_file, 0444);
+
+    if (!$file_updated) {
+      return FALSE; // Writing failed
+    }
+  }
+
+  return TRUE;
 }
 
 /**
