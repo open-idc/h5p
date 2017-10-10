@@ -574,19 +574,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements getNumAuthors
    */
   public function getNumAuthors() {
-    return 0;
-    // TODO: Figure out a nice way to do this ?
-    /*
-    $numAuthors = db_query("
-      SELECT COUNT(DISTINCT uid)
-      FROM {node_field_data}
-      WHERE type = :type
-    ", array(
-      ':type' => 'h5p_content'
-    ))->fetchField();
 
-    return $numAuthors;
-    */
+    $id = db_query(
+        "SELECT id
+           FROM {h5p_content}
+          LIMIT 1")->fetchField();
+
+    // Return 1 if there is content and 0 if there is none
+    return empty($id) ? 0 : 1;
   }
 
   /**
