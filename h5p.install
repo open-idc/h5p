@@ -136,7 +136,7 @@ function h5p_requirements($phase) {
   $requirements['h5p_post_exceeds_upload_size'] = [
     'title' => t('Post and upload settings'),
     'description' => t('PHP max post size should be bigger than max upload size. Neglecting this is known to cause issues in some installations.'),
-    'severity' => ($max_upload_size <= $max_post_size) ? REQUIREMENT_WARNING : REQUIREMENT_OK,
+    'severity' => ($max_upload_size > $max_post_size) ? REQUIREMENT_WARNING : REQUIREMENT_OK,
   ];
 
   // Check SSL
