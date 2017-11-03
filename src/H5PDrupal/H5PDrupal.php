@@ -1196,7 +1196,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * @return boolean
    */
   private static function mayCurrentUserUpdateNode($nid) {
-    return node_access('update', node_load($nid)); // TODO: Field access instead ?
+    return \Drupal\node\Entity\Node::load($nid)->access('update');
   }
 
   /**
