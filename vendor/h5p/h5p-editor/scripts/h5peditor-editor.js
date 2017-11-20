@@ -124,16 +124,21 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
 
     // Load libraries data
     $.ajax({
-      url: this.contentWindow.H5PEditor.getAjaxUrl('libraries')
+      url: this.contentWindow.H5PEditor.getAjaxUrl(H5PIntegration.hubIsEnabled ? 'content-type-cache' : 'libraries')
     }).fail(function () {
       $container.html('Error, unable to load libraries.');
     }).done(function (data) {
+      if (data.success === false) {
+        $container.html(data.message + ' (' + data.errorCode  + ')');
+        return;
+      }
+
       // Create library selector
       self.selector = new LibrarySelector(data, library, defaultParams);
       self.selector.appendTo($container.html(''));
 
       // Resize iframe when selector resizes
-      self.selector.on('resized', resize);
+      self.selector.on('resize', resize);
 
       /**
        * Event handler for exposing events

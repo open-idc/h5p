@@ -279,14 +279,15 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     try {
       $client = \Drupal::httpClient();
-      $response = $client->request('POST', $url, $options);
+      $response = $client->request(empty($data) ? 'GET' : 'POST', $url, $options);
       $response_data = (string) $response->getBody();
       if (empty($response_data)) {
         return FALSE;
       }
 
     }
-    catch (RequestException $e) {
+    catch (\Exception $e) {
+      $this->setErrorMessage($e->getMessage(), 'failed-fetching-external-data');
       return FALSE;
     }
 
@@ -299,7 +300,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       return TRUE;
     }
 
-    return isset($response->error) ? NULL : $response_data;
+    return $response_data;
   }
 
   /**
@@ -320,9 +321,19 @@ class H5PDrupal implements \H5PFrameworkInterface {
   }
 
   /**
+   * Kesps track of messages for the user.
+   * @var array
+   */
+  private $messages = array('error' => array(), 'info' => array());
+
+  /**
    * Implements setErrorMessage
    */
-  public function setErrorMessage($message) {
+  public function setErrorMessage($message, $code = NULL) {
+    $this->messages['error'][] = (object)array(
+      'code' => $code,
+      'message' => $message
+    );
     drupal_set_message($message, 'error');
   }
 
@@ -330,9 +341,22 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements setInfoMessage
    */
   public function setInfoMessage($message) {
+    $this->messages['info'][] = $message;
     drupal_set_message($message);
   }
 
+  /**
+   * Implements getMessages
+   */
+  public function getMessages($type) {
+    if (empty($this->messages[$type])) {
+      return NULL;
+    }
+    $messages = $this->messages[$type];
+    $this->messages[$type] = array();
+    drupal_get_messages($type === 'info' ? 'status' : $type, TRUE); // Prevent messages from displaying twice
+    return $messages;
+  }
 
   /**
    * Implements t
