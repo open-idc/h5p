@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit487a928b07b1954e5b81479df05863c6
+class ComposerStaticInit1126f2a1d20d4b0a19d60d62b0198ab5
 {
     public static $files = array (
         '0c6f877f03a67a7485a2a748706e2f2f' => __DIR__ . '/..' . '/h5p/h5p-core/h5p.classes.php',
