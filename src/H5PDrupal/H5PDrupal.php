@@ -452,7 +452,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements isPatchedLibrary
    */
   public function isPatchedLibrary($library) {
-    return TRUE;
     if ($this->getOption('dev_mode', FALSE)) {
       return TRUE;
     }
