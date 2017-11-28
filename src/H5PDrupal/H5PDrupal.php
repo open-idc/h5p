@@ -1166,8 +1166,18 @@ class H5PDrupal implements \H5PFrameworkInterface {
       $h5p_content->save();
     }
 
-    // Clear library JS cache
+    // Clear hook_library_info_build() to use updated libraries
     \Drupal::service('library.discovery.collector')->clear();
+
+    // Delete ALL cached JS and CSS files
+    \Drupal::service('asset.js.collection_optimizer')->deleteAll();
+    \Drupal::service('asset.css.collection_optimizer')->deleteAll();
+
+    // Reset cache buster
+    _drupal_flush_css_js();
+
+    // Clear field view cache for ALL H5P content
+    \Drupal\Core\Cache\Cache::invalidateTags(['h5p_content']);
   }
 
   /**
