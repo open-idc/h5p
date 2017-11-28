@@ -4,20 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b40028c90f1f29bd09aff13feb539a0",
+    "hash": "221b987f06ea3e3909828f0c0f145211",
+    "content-hash": "1d1ab44646d8d549b94d82eb4636267d",
     "packages": [
         {
             "name": "h5p/h5p-core",
-            "version": "dev-release",
+            "version": "1.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
-                "reference": "f3efd217c876ba6fe5146b9e93df7eedbfb83d5b"
+                "reference": "95901159d0e6e4649a6c6696f0a8e5d1c71035d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/f3efd217c876ba6fe5146b9e93df7eedbfb83d5b",
-                "reference": "f3efd217c876ba6fe5146b9e93df7eedbfb83d5b",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/95901159d0e6e4649a6c6696f0a8e5d1c71035d4",
+                "reference": "95901159d0e6e4649a6c6696f0a8e5d1c71035d4",
                 "shasum": ""
             },
             "require": {
@@ -60,20 +61,20 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2017-11-20T15:12:22+00:00"
+            "time": "2017-11-23 14:15:03"
         },
         {
             "name": "h5p/h5p-editor",
-            "version": "dev-release",
+            "version": "1.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-editor-php-library.git",
-                "reference": "d0a1281f447ed317cd5ab92828b00836ddbdbfaf"
+                "reference": "010196ba38b2febdad55771a84c5beade1b010b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/d0a1281f447ed317cd5ab92828b00836ddbdbfaf",
-                "reference": "d0a1281f447ed317cd5ab92828b00836ddbdbfaf",
+                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/010196ba38b2febdad55771a84c5beade1b010b9",
+                "reference": "010196ba38b2febdad55771a84c5beade1b010b9",
                 "shasum": ""
             },
             "require": {
@@ -117,16 +118,13 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2017-11-22T08:45:32+00:00"
+            "time": "2017-11-28 09:55:41"
         }
     ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "dev",
-    "stability-flags": {
-        "h5p/h5p-core": 20,
-        "h5p/h5p-editor": 20
-    },
+    "minimum-stability": "RC",
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
