@@ -23,6 +23,8 @@ use Drupal\h5peditor\H5PEditor\H5PEditorUtilities;
  */
 class H5PEditorWidget extends H5PWidgetBase {
 
+  protected static $counter = 0;
+
   /**
    * {@inheritdoc}
    */
@@ -45,7 +47,7 @@ class H5PEditorWidget extends H5PWidgetBase {
       '#type' => 'hidden',
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getFilteredParameters(),
       '#attributes' => [
-        'id' => str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-parameters",
+        'id' => "h5p-content-parameters-" . self::$counter,
       ],
     ];
 
@@ -53,9 +55,10 @@ class H5PEditorWidget extends H5PWidgetBase {
       '#type' => 'hidden',
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getLibraryString(),
       '#attributes' => [
-        'id' => str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-library",
+        'id' => "h5p-content-library-" . self::$counter,
       ],
     ];
+    self::$counter++;
 
     // Add editor element
     $element['editor'] = [
