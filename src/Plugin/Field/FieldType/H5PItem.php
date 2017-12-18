@@ -46,9 +46,17 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties['h5p_content_id'] = DataDefinition::create('integer');
-    $properties['h5p_content_revisioning_handled'] = DataDefinition::create('boolean');
-    $properties['h5p_content_new_translation'] = DataDefinition::create('boolean');
+    $properties['h5p_content_id'] = DataDefinition::create('integer')
+      ->setLabel(t('H5P Content ID'))
+      ->setDescription(t('References the H5P Content Entity'));
+
+    $properties['h5p_content_revisioning_handled'] = DataDefinition::create('boolean')
+      ->setLabel(t('H5P Revisioning Handled'))
+      ->setDescription(t('Indicates if revisioning has already been handled'));
+
+    $properties['h5p_content_new_translation'] = DataDefinition::create('boolean')
+      ->setLabel(t('H5P New Translation'))
+      ->setDescription(t('Indicates if this is new translation'));
 
     return $properties;
   }
