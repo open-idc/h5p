@@ -167,8 +167,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'id' => $this->id(),
       'slug' => 'interactive-content',
       'library' => [
-        'name' => $this->library->title,
-        'machineName' => $this->library->name,
+        'name' => $this->library->name,
         'majorVersion' => $this->library->major,
         'minorVersion' => $this->library->minor,
       ],
