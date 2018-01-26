@@ -1,52 +1,52 @@
 h5p.settings:
   type: config_object
   label: 'H5P settings'
-   mapping:
-     h5p_frame:
-       type: integer
-       label: 'Display buttons (download, embed and copyright)'
-     h5p_export:
-       type: integer
-       label: 'Download button'
-     h5p_embed:
-       type: integer
-       label: 'Embed button'
-     h5p_copyright:
-       type: integer
-       label: 'Copyright button'
-     h5p_icon:
-       type: integer
-       label: 'About H5P button'
-     h5p_default_path:
-       type: string
-       label: 'Default h5p package path'
-     h5p_revisioning:
-       type: integer
-       label: 'Save content files for each revision'
-     h5p_whitelist:
-       type: string
-       label: 'White list of accepted files.'
-     h5p_library_whitelist_extras:
-       type: string
-       label: 'White list of extra accepted files in libraries.'
-     h5p_save_content_state:
-       type: integer
-       label: 'Save content state'
-     h5p_save_content_frequency:
-       type: integer
-       label: 'Save content state frequency'
-     h5p_enable_lrs_content_types:
-       type: integer
-       label: 'Enable LRS dependent content types'
-     h5p_hub_is_enabled:
-       type: integer
-       label: 'Use H5P Hub'
-     h5p_send_usage_statistics:
-       type: integer
-       label: 'Automatically contribute usage statistics'
-     h5p_site_uuid:
-       type: string
-       label: 'H5P site UUID'
-     h5p_content_type_cache_updated_at:
-       type: integer
-       label: 'Content Type Cache Update at'
+  mapping:
+   h5p_frame:
+     type: integer
+     label: 'Display buttons (download, embed and copyright)'
+   h5p_export:
+     type: integer
+     label: 'Download button'
+   h5p_embed:
+     type: integer
+     label: 'Embed button'
+   h5p_copyright:
+     type: integer
+     label: 'Copyright button'
+   h5p_icon:
+     type: integer
+     label: 'About H5P button'
+   h5p_default_path:
+     type: string
+     label: 'Default h5p package path'
+   h5p_revisioning:
+     type: integer
+     label: 'Save content files for each revision'
+   h5p_whitelist:
+     type: string
+     label: 'White list of accepted files.'
+   h5p_library_whitelist_extras:
+     type: string
+     label: 'White list of extra accepted files in libraries.'
+   h5p_save_content_state:
+     type: integer
+     label: 'Save content state'
+   h5p_save_content_frequency:
+     type: integer
+     label: 'Save content state frequency'
+   h5p_enable_lrs_content_types:
+     type: integer
+     label: 'Enable LRS dependent content types'
+   h5p_hub_is_enabled:
+     type: integer
+     label: 'Use H5P Hub'
+   h5p_send_usage_statistics:
+     type: integer
+     label: 'Automatically contribute usage statistics'
+   h5p_site_uuid:
+     type: string
+     label: 'H5P site UUID'
+   h5p_content_type_cache_updated_at:
+     type: integer
+     label: 'Content Type Cache Update at'
