@@ -35,6 +35,12 @@ function h5p_uninstall() {
     ->condition($h5p_uri)
     ->execute();
 
+  // Clean up state.
+  \Drupal::state()->deleteMultiple([
+    'h5p.content_type_cache_updated_at',
+    'h5p.fetched_library_metadata_on',
+  ]);
+
   // Only remove development dir if it's empty.
   $dir = $h5p_path . '/development';
   if (is_dir($dir) && count(scandir($dir)) === 2) {
@@ -804,3 +810,22 @@ function h5p_schema() {
 
   return $schema;
 }
+/**
+ * Removes config for library update and content type update times.
+ * This has been moved to the State API.
+ */
+function h5p_update_8001(&$sandbox) {
+  $config = \Drupal::service('config.factory')
+    ->getEditable('h5p.settings');
+  $state = \Drupal::state();
+  $state->setMultiple([
+    'h5p.content_type_cache_updated_at' => $config->get('h5p_content_type_cache_updated_at', 0),
+    'h5p.fetched_library_metadata_on' => $config->get('h5p_fetched_library_metadata_on', 0),
+  ]);
+  $config->clear('h5p_content_type_cache_updated_at')
+    ->clear('h5p_fetched_library_metadata_on')
+    ->save();
+
+  drupal_set_message('Module h5p removed configuration items successfully.');
+}
+

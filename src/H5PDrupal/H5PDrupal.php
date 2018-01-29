@@ -12,6 +12,13 @@ class H5PDrupal implements \H5PFrameworkInterface {
   private $h5pPath, $folderPath;
 
   /**
+   *  Store these options in State API instead of config.
+   */
+  const STATE_OPTIONS = [
+    'content_type_cache_updated_at',
+    'fetched_library_metadata_on',
+  ];
+  /**
    * Get an instance of one of the h5p library classes
    *
    * @staticvar H5PDrupal $interface
@@ -1104,7 +1111,12 @@ class H5PDrupal implements \H5PFrameworkInterface {
    *   Whatever has been stored as the setting
    */
   public function getOption($name, $default = NULL) {
-    $value = \Drupal::config('h5p.settings')->get('h5p_' . $name);
+    if ($this->stateOption($name)) {
+      $value = \Drupal::state()->get('h5p.' . $name, $default);
+    }
+    else {
+      $value = \Drupal::config('h5p.settings')->get('h5p_' . $name);
+    }
     return $value !== NULL ? $value : $default;
   }
 
@@ -1118,13 +1130,28 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function setOption($name, $value) {
     // Only update the setting if it has infact changed.
-    if ($value !== \Drupal::config('h5p.settings')->get("h5p_{$name}")) {
-      $config = \Drupal::configFactory()->getEditable('h5p.settings');
-      $config->set("h5p_{$name}", $value);
-      $config->save();
+    if ($value !== $this->getOption($name)) {
+      if ($this->stateOption($name)) {
+        \Drupal::state()->set('h5p.' . $name, $value);
+      }
+      else {
+        $config = \Drupal::configFactory()->getEditable('h5p.settings');
+        $config->set("h5p_{$name}", $value);
+        $config->save();
+      }
     }
   }
 
+  /**
+   * Returns whether to store this variable in Drupal's state api, or config.
+   *
+   * @param string $name
+   *   Key for the name
+   * @return boolean
+   */
+  protected function stateOption($name) {
+    return in_array($name, self::STATE_OPTIONS);
+  }
   /**
    * Convert variables to fit our DB.
    */
