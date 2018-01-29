@@ -122,6 +122,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
         'H5P' => $core->getLocalization(),
       ),
       'hubIsEnabled' => $h5p_hub_is_enabled,
+      'reportingIsEnabled' => ($interface->getOption('enable_lrs_content_types', FALSE) === 1) ? TRUE : FALSE,
     );
 
     if ($user->id()) {
