@@ -1251,36 +1251,26 @@ class H5PDrupal implements \H5PFrameworkInterface {
   }
 
   /**
-   * Helper function to determine access
-   *
-   * @param int $nid
-   * @return boolean
-   */
-  private static function mayCurrentUserUpdateNode($nid) {
-    return \Drupal\node\Entity\Node::load($nid)->access('update');
-  }
-
-  /**
    * Implements hasPermission
    *
    * @param H5PPermission $permission
-   * @param int $content_id
+   * @param boolean $canUpdateEntity
    * @return bool
    */
-  public function hasPermission($permission, $content_id = NULL) {
+  public function hasPermission($permission, $canUpdateEntity = NULL) {
 
     $user = \Drupal::currentUser();
     switch ($permission) {
       case \H5PPermission::DOWNLOAD_H5P:
-        return $content_id !== NULL && (
+        return $canUpdateEntity !== NULL && (
             $user->hasPermission('download all h5ps') ||
-            (self::mayCurrentUserUpdateNode($content_id) && $user->hasPermission('download own h5ps'))
+            ($canUpdateEntity && $user->hasPermission('download own h5ps'))
           );
 
       case \H5PPermission::EMBED_H5P:
-        return $content_id !== NULL && (
+        return $canUpdateEntity !== NULL && (
             $user->hasPermission('embed all h5ps') ||
-            (self::mayCurrentUserUpdateNode($content_id) && $user->hasPermission('embed own h5ps'))
+            ($canUpdateEntity && $user->hasPermission('embed own h5ps'))
           );
 
       case \H5PPermission::CREATE_RESTRICTED:

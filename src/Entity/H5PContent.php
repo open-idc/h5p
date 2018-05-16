@@ -189,7 +189,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
-  public function getH5PIntegrationSettings() {
+  public function getH5PIntegrationSettings($canUpdateEntity) {
     if (empty($this->library)) {
       $this->loadLibrary();
     }
@@ -218,7 +218,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
 
     $core = H5PDrupal::getInstance('core');
     $filtered_parameters = $this->getFilteredParameters();
-    $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $this->id());
+    $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $canUpdateEntity);
 
     $h5p_module_path = drupal_get_path('module', 'h5p');
     $embed_url = Url::fromUri('internal:/h5p/' . $this->id() . '/embed', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();

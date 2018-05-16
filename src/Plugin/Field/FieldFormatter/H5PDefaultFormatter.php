@@ -57,7 +57,7 @@ class H5PDefaultFormatter extends FormatterBase {
 
       // Add content specific settings
       $content_id_string = 'cid-' . $h5p_content->id();
-      $h5p_integration['contents'][$content_id_string] = $h5p_content->getH5PIntegrationSettings();
+      $h5p_integration['contents'][$content_id_string] = $h5p_content->getH5PIntegrationSettings($item->getEntity()->access('update'));
 
       $core = H5PDrupal::getInstance('core');
       $preloaded_dependencies = $core->loadContentDependencies($h5p_content->id(), 'preloaded');
