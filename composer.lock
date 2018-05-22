@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc991dabf3d381fbe8921eb63217bbb1",
+    "content-hash": "7417dc7b92ea4d7e6c3e8c3ba50127d2",
     "packages": [
         {
             "name": "h5p/h5p-core",
-            "version": "1.17.0",
+            "version": "1.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
-                "reference": "95901159d0e6e4649a6c6696f0a8e5d1c71035d4"
+                "reference": "942a083afa46e37f872a35b06890de3414237dcd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/95901159d0e6e4649a6c6696f0a8e5d1c71035d4",
-                "reference": "95901159d0e6e4649a6c6696f0a8e5d1c71035d4",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/942a083afa46e37f872a35b06890de3414237dcd",
+                "reference": "942a083afa46e37f872a35b06890de3414237dcd",
                 "shasum": ""
             },
             "require": {
@@ -60,7 +60,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2017-11-23T14:15:03+00:00"
+            "time": "2018-05-16T13:16:34+00:00"
         },
         {
             "name": "h5p/h5p-editor",

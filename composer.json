@@ -5,7 +5,7 @@
   "homepage": "http://drupal.org/project/h5p",
   "license": "GPL-2.0+",
   "require": {
-    "h5p/h5p-core": "1.17.0",
+    "h5p/h5p-core": "1.18.0",
     "h5p/h5p-editor": "1.17.1"
   },
   "minimum-stability": "RC"
