@@ -815,7 +815,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements updateContent
    */
   public function updateContent($content, $contentMainId = NULL) {
-
     // Load existing entity
     $h5p_content = H5PContent::load($content['id']);
 

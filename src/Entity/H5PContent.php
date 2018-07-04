@@ -63,6 +63,66 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       ->setSetting('size', 'small')
       ->setDefaultValue(0);
 
+    $fields['title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Title'))
+      ->setDescription(t('Title of the main content'))
+      ->setSetting('max_length', '255')
+      ->setDefaultValue(NULL);
+
+    $fields['authors'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Authors'))
+      ->setDescription(t('List of authors in json format'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['source'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Source'))
+      ->setDescription(t('Link to the source, could also be citation'))
+      ->setSetting('max_length', '255')
+      ->setDefaultValue(NULL);
+
+    $fields['yearFrom'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Year (from)'))
+      ->setDescription(t('Start year for copyright'))
+      ->setSetting('unsigned', TRUE)
+      ->setSetting('size', 'normal');
+
+    $fields['yearTo'] = BaseFieldDefinition::create('integer')
+    ->setLabel(t('Year (to)'))
+    ->setDescription(t('End year for copyright'))
+    ->setSetting('unsigned', TRUE)
+    ->setSetting('size', 'normal');
+
+    $fields['license'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('License'))
+      ->setDescription(t('License name of the content'))
+      ->setSetting('max_length', '32')
+      ->setDefaultValue(NULL);
+
+    $fields['license_version'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('License version'))
+      ->setDescription(t('Version of license used for the content'))
+      ->setSetting('max_length', '10')
+      ->setDefaultValue(NULL);
+
+    $fields['changes'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Changes'))
+      ->setDescription(t('List of changes in json format'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['license_extras'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('License extras'))
+      ->setDescription(t('Extra licensing terms'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['author_comments'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Authors comments'))
+      ->setDescription(t('Comments for the editor'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
     return $fields;
   }
 

@@ -29,6 +29,7 @@ class H5PEditorWidget extends H5PWidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    error_log('H5PEditorWidget::formElement');
     $parentElement = parent::formElement($items, $delta, $element, $form, $form_state);
     $element = &$parentElement['h5p_content'];
     if (empty($element['id'])) {
@@ -43,6 +44,7 @@ class H5PEditorWidget extends H5PWidgetBase {
       $h5p_content = H5PContent::load($h5p_content_id);
     }
 
+    // TODO: Here is the hidden field is build for the editor that needs to be filled
     $element['parameters'] = [
       '#type' => 'hidden',
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getFilteredParameters(),
