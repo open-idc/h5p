@@ -829,3 +829,76 @@ function h5p_update_8001(&$sandbox) {
   drupal_set_message('Module h5p removed configuration items successfully.');
 }
 
+/**
+ * Adds database fields for main content metadata
+ */
+function h5p_update_8002(&$sandbox) {
+  error_log('UPDATE');
+  if (!db_field_exists('h5p_content', 'title')) {
+    db_add_field('h5p_content', 'title', array(
+        'description' => 'Title of the main content',
+        'type' => 'varchar',
+        'length' => 255,
+        'not_null' => TRUE
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'authors')) {
+    db_add_field('h5p_content', 'authors', array(
+        'description' => 'List of authors in json format',
+        'type' => 'text'
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'source')) {
+    db_add_field('h5p_content', 'source', array(
+        'description' => 'Link to the source, could also be citation',
+        'type' => 'varchar',
+        'length' => 255
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'year_from')) {
+    db_add_field('h5p_content', 'year_from', array(
+        'description' => 'Start year for copyright',
+        'type' => 'int',
+        'unsigned' => TRUE
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'year_to')) {
+    db_add_field('h5p_content', 'year_to', array(
+        'description' => 'End year for copyright',
+        'type' => 'int',
+        'unsigned' => TRUE
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'license')) {
+    db_add_field('h5p_content', 'license', array(
+        'description' => 'License name of the content',
+        'type' => 'varchar',
+        'length' => 32
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'license_version')) {
+    db_add_field('h5p_content', 'license_version', array(
+        'description' => 'Version of license used for the content',
+        'type' => 'varchar',
+        'length' => 10
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'changes')) {
+    db_add_field('h5p_content', 'changes', array(
+        'description' => 'List of changes in json format',
+        'type' => 'text'
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'license_extras')) {
+    db_add_field('h5p_content', 'license_extras', array(
+        'description' => 'Extra licensing terms',
+        'type' => 'text'
+    ));
+  }
+  if (!db_field_exists('h5p_content', 'author_comments')) {
+    db_add_field('h5p_content', 'author_comments', array(
+        'description' => 'Comments for the editor',
+        'type' => 'text'
+    ));
+  }
+}
