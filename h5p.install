@@ -833,7 +833,6 @@ function h5p_update_8001(&$sandbox) {
  * Adds database fields for main content metadata
  */
 function h5p_update_8002(&$sandbox) {
-  error_log('UPDATE');
   if (!db_field_exists('h5p_content', 'title')) {
     db_add_field('h5p_content', 'title', array(
         'description' => 'Title of the main content',
