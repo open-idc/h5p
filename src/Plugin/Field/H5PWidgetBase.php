@@ -14,7 +14,6 @@ abstract class H5PWidgetBase extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    error_log('H5PWidgetBase::formElement');
     // Prevent setting default value
     if ($this->isDefaultValueWidget($form_state)) {
       $element += [

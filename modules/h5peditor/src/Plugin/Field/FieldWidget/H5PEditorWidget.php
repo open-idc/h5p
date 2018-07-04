@@ -29,7 +29,6 @@ class H5PEditorWidget extends H5PWidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    error_log('H5PEditorWidget::formElement');
     $parentElement = parent::formElement($items, $delta, $element, $form, $form_state);
     $element = &$parentElement['h5p_content'];
     if (empty($element['id'])) {
