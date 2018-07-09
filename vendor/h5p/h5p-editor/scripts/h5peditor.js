@@ -24,7 +24,7 @@ ns.libraryCache = {};
 /**
  * Keeps track of callbacks to run once a library gets loaded.
  */
-ns.loadedCallbacks = {};
+ns.loadedCallbacks = [];
 
 /**
  * Keep track of which libraries have been loaded in the browser, i.e CSS is
@@ -161,12 +161,16 @@ ns.loadLibrary = function (libraryName, callback) {
           libraryData.semantics = semantics;
           ns.libraryCache[libraryName] = libraryData;
 
-          ns.libraryRequested(libraryName, callback);
+          ns.libraryRequested(libraryName, function (semen) {
+            callback(semen);
 
-          // Run queue.
-          for (var i = 0; i < ns.loadedCallbacks[libraryName].length; i++) {
-            ns.loadedCallbacks[libraryName][i](libraryData.semantics);
-          }
+            // Run queue.
+            if (ns.loadedCallbacks[libraryName]) {
+              for (var i = 0; i < ns.loadedCallbacks[libraryName].length; i++) {
+                ns.loadedCallbacks[libraryName][i](semen);
+              }
+            }
+          });
         },
         error: function(jqXHR, textStatus, errorThrown) {
           if (window['console'] !== undefined) {
@@ -190,7 +194,7 @@ ns.resetLoadedLibraries = function () {
   ns.$('head style.h5p-editor-style').remove();
   H5PIntegration.loadedCss = [];
   H5PIntegration.loadedJs = [];
-  ns.loadedCallbacks = {};
+  ns.loadedCallbacks = [];
   ns.libraryLoaded = {};
 }
 
@@ -642,13 +646,19 @@ ns.createText = function (value, maxLength, placeholder) {
  * @returns {String}
  */
 ns.createLabel = function (field, content) {
-  var html = '<label class="h5peditor-label-wrapper">';
+  // There's no good way to retrieve the current library the label is processed for, is it?
+  // We use the previous library's state of entitlement instead.
+  const wrapperFront = (this.previousLibraryEntitledForMetadata) ? '<div class="h5p-editor-flex-wrapper">' : '';
+  const wrapperBack = (this.previousLibraryEntitledForMetadata) ? '</div>' : '';
+
+  // New items can be added next to the label within the flex-wrapper
+  var html = wrapperFront + '<label class="h5peditor-label-wrapper">';
 
   if (field.label !== 0) {
     html += '<span class="h5peditor-label' + (field.optional ? '' : ' h5peditor-required') + '">' + (field.label === undefined ? field.name : field.label) + '</span>';
   }
 
-  return html + (content || '') + '</label>';
+  return html + (content || '') + '</label>' + wrapperBack;
 };
 
 /**
@@ -777,6 +787,41 @@ ns.bindImportantDescriptionEvents = function (widget, fieldName, parent) {
 };
 
 /**
+ * Generate markup for the copy and paste buttons.
+ *
+ * @returns {string} HTML
+ */
+ns.createCopyPasteButtons = function () {
+  return '<label class="h5peditor-copypaste-wrap">' +
+           '<button class="h5peditor-copy-button" disabled>' + ns.t('core', 'copyButton') + '</button>' +
+           '<button class="h5peditor-paste-button" disabled>' + ns.t('core', 'pasteButton') + '</button>' +
+         '</label>';
+};
+
+/**
+ * Confirm replace if there is content selected
+ *
+ * @param {string} library Current selected library
+ * @param {number} top Offset
+ * @param {function} next Next callback
+ */
+ns.confirmReplace = function (library, top, next) {
+  if (library) {
+    // Confirm changing library
+    var confirmReplace = new H5P.ConfirmationDialog({
+      headerText: H5PEditor.t('core', 'pasteContent'),
+      dialogText: H5PEditor.t('core', 'confirmPasteContent')
+    }).appendTo(document.body);
+    confirmReplace.on('confirmed', next);
+    confirmReplace.show(top);
+  }
+  else {
+    // No need to confirm
+    next();
+  }
+}
+
+/**
  * Check if any errors has been set.
  *
  * @param {jQuery} $errors
@@ -886,6 +931,152 @@ ns.createButton = function (id, title, handler, displayTitle) {
   options[displayTitle ? 'html' : 'aria-label'] = title;
 
   return ns.$('<div/>', options);
+};
+
+/**
+ * Sync two input fields. Empty fields will take value of the other or be set to ''.
+ * master fields takes precedence if both are set already.
+ *
+ * @param {jQuery} $masterField - Master field that holds the value for initialization.
+ * @param {jQuery} $slaveField - Slave field to be synced with.
+ * @param {object} [options] - Options.
+ * @param {string} [options.defaultText] - Default text if fields are empty.
+ * @param {string} [options.listenerName] - Listener name.
+ */
+ ns.sync = function ($masterField, $slaveField, options) {
+  if (!$masterField || $masterField.length === 0 || !$slaveField || $slaveField.length === 0) {
+    return;
+  }
+  options = options || {};
+
+  const listenerName = options.listenerName || 'input.metadata-sync';
+
+  // Remove old sync
+  $masterField.off(listenerName);
+  $slaveField.off(listenerName);
+
+  // Initialize fields
+  if ($masterField.val()) {
+    $slaveField.val($masterField.val()).trigger('change');
+  }
+  else if ($slaveField.val()) {
+    $masterField.val($slaveField.val()).trigger('change');
+  }
+  else if (options.defaultText) {
+    $masterField.val(options.defaultText).trigger('change');
+    $slaveField.val(options.defaultText).trigger('change');
+  }
+
+  // Keep fields in sync
+  $masterField.on(listenerName, function() {
+    $slaveField.val($masterField.val()).trigger('change');
+  });
+  $slaveField.on(listenerName, function() {
+    $masterField.val($slaveField.val()).trigger('change');
+  });
+};
+
+/**
+ * Check if the current library is entitled for the metadata button. No by default.
+ *
+ * It will probably be okay to remove this check at some point in time when
+ * the majority of content types and plugins have been updated to a version
+ * that supports the metadata system.
+ *
+ * @param {string} library - Current library.
+ * @return {boolean} True, if form should have the metadata button.
+ */
+ns.entitledForMetadata = function (library) {
+  this.previousLibraryEntitledForMetadata = false;
+
+  if (!library || typeof library !== 'string') {
+    return false;
+  }
+
+  library = H5P.libraryFromString(library);
+  if (!library) {
+    return false;
+  }
+
+  // This list holds all the libraries that (and later) are ready for metadata
+  const passList = [
+    'H5P.Accordion 1.1',
+    'H5P.AdvancedText 1.2',
+    'H5P.Agamotto 1.4',
+    'H5P.AppearIn 1.1',
+    'H5P.ArithmeticQuiz 1.2',
+    'H5P.Audio 1.3',
+    'H5P.AudioRecorder 1.1',
+    'H5P.Blanks 1.11',
+    'H5P.Chart 1.3',
+    'H5P.Collage 0.4',
+    'H5P.Column 1.8',
+    'H5P.ContinuousText 1.3',
+    'H5P.CoursePresentation 1.20',
+    'H5P.Dialogcards 1.8',
+    'H5P.DocumentationTool 1.7',
+    'H5P.DocumentExportPage 1.4',
+    'H5P.DragQuestion 1.13',
+    'H5P.DragText 1.8',
+    'H5P.Essay 1.2',
+    'H5P.ExportableTextArea 1.3',
+    'H5P.ExportPage 1.2',
+    'H5P.FacebookPageFeed 1.1',
+    'H5P.Flashcards 1.6',
+    'H5P.FreeTextQuestion 1.1',
+    'H5P.GoalsAssessmentPage 1.4',
+    'H5P.GoalsPage 1.5',
+    'H5P.GoToQuestion 1.4',
+    'H5P.GuessTheAnswer 1.4',
+    'H5P.IFrameEmbed 1.1',
+    'H5P.Image 1.1',
+    'H5P.ImageHotspotQuestion 1.8',
+    'H5P.ImageHotspots 1.7',
+    'H5P.ImageJuxtaposition 1.2',
+    'H5P.ImageMultipleHotspotQuestion 1.1',
+    'H5P.ImagePair 1.4',
+    'H5P.ImageSequencing 1.1',
+    'H5P.ImageSlider 1.1',
+    'H5P.InteractiveVideo 1.20',
+    'H5P.IVHotspot 1.3',
+    'H5P.Link 1.4',
+    'H5P.MarkTheWords 1.9',
+    'H5P.MemoryGame 1.3',
+    'H5P.MultiChoice 1.13',
+    'H5P.OpenEndedQuestion 1.1',
+    'H5P.PersonalityQuiz 1.1',
+    'H5P.Questionnaire 1.3',
+    'H5P.QuestionSet 1.16',
+    'H5P.SimpleMultiChoice 1.2',
+    'H5P.SingleChoiceSet 1.11',
+    'H5P.SpeakTheWords 1.4',
+    'H5P.SpeakTheWordsSet 1.2',
+    'H5P.StandardPage 1.4',
+    'H5P.Summary 1.10',
+    'H5P.Table 1.2',
+    'H5P.Text 1.2',
+    'H5P.TextInputField 1.2',
+    'H5P.Timeline 1.2',
+    'H5P.TrueFalse 1.5',
+    'H5P.TwitterUserFeed 1.1',
+    'H5P.Video 1.5'
+  ];
+
+  let pass = passList.filter(function(item) {
+    return item.indexOf(library.machineName + ' ') !== -1;
+  });
+  if (pass.length === 0) {
+    return false;
+  }
+
+  pass = H5P.libraryFromString(pass[0]);
+  if (library.majorVersion < pass.majorVersion || library.minorVersion < pass.minorVersion) {
+    return false;
+  }
+
+  this.previousLibraryEntitledForMetadata = true;
+
+  return true;
 };
 
 // Factory for creating storage instance

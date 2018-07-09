@@ -78,16 +78,16 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $fields['source'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Source'))
       ->setDescription(t('Link to the source, could also be citation'))
-      ->setSetting('max_length', '255')
+      ->setSetting('max_length', '2083')
       ->setDefaultValue(NULL);
 
-    $fields['yearFrom'] = BaseFieldDefinition::create('integer')
+    $fields['year_from'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Year (from)'))
       ->setDescription(t('Start year for copyright'))
       ->setSetting('unsigned', TRUE)
       ->setSetting('size', 'normal');
 
-    $fields['yearTo'] = BaseFieldDefinition::create('integer')
+    $fields['year_to'] = BaseFieldDefinition::create('integer')
     ->setLabel(t('Year (to)'))
     ->setDescription(t('End year for copyright'))
     ->setSetting('unsigned', TRUE)

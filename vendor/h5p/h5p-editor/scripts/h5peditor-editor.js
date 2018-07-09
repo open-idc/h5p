@@ -245,14 +245,30 @@ ns.Editor.prototype.getParams = function (notFormSubmit) {
     this.formSubmitted = true;
   }
   if (this.selector !== undefined) {
-    return this.selector.getParams();
+    return {
+      params: this.selector.getParams(),
+      metadata: this.selector.getMetadata()
+    };
   }
   else if(this.form){
-    return this.form.params;
+    return {
+      params: this.form.params,
+      metadata: this.form.metadata
+    };
   }
   else {
     console.warn('no selector defined for "getParams"');
   }
+};
+
+/**
+ *
+ * @alias H5PEditor.Editor#presave
+ * @param content
+ * @return {H5PEditor.Presave}
+ */
+ns.Editor.prototype.presave = function (content) {
+  return this.selector.presave(content, this.getLibrary());
 };
 
 /**

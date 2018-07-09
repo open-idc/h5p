@@ -6,18 +6,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
-            "reference": "942a083afa46e37f872a35b06890de3414237dcd"
+            "reference": "a015d1a134aeb91d30b6a839172ec450c9529224"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/942a083afa46e37f872a35b06890de3414237dcd",
-            "reference": "942a083afa46e37f872a35b06890de3414237dcd",
+            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/a015d1a134aeb91d30b6a839172ec450c9529224",
+            "reference": "a015d1a134aeb91d30b6a839172ec450c9529224",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2018-05-16T13:16:34+00:00",
+        "time": "2018-07-03T13:49:21+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -56,7 +56,7 @@
             "quiz"
         ],
         "support": {
-            "source": "https://github.com/h5p/h5p-php-library/tree/wp-1.10.2",
+            "source": "https://github.com/h5p/h5p-php-library/tree/master",
             "issues": "https://github.com/h5p/h5p-php-library/issues"
         }
     },
@@ -67,18 +67,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-editor-php-library.git",
-            "reference": "5fe488468c4015acf88604297d62ff04373b8007"
+            "reference": "a3c36b9d8d913191152c849837ea6441aeab9eee"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/5fe488468c4015acf88604297d62ff04373b8007",
-            "reference": "5fe488468c4015acf88604297d62ff04373b8007",
+            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/a3c36b9d8d913191152c849837ea6441aeab9eee",
+            "reference": "a3c36b9d8d913191152c849837ea6441aeab9eee",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2018-05-31T09:19:49+00:00",
+        "time": "2018-07-09T06:57:42+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
