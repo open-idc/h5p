@@ -243,7 +243,23 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $moduleHandler = \Drupal::moduleHandler();
     $filteredAsJson = json_decode($filteredParameters);
     $moduleHandler->alter('h5p_filtered_params', $filteredAsJson);
-    return json_encode($filteredAsJson);
+
+    $metawrap = [
+      'params' => $filteredAsJson,
+      'metadata' => [
+        'title' => $this->get('title')->value,
+        'authors' => json_decode($this->get('authors')->value),
+        'source' => $this->get('source')->value,
+        'yearFrom' => $this->get('year_from')->value,
+        'yearTo' => $this->get('year_to')->value,
+        'license' => $this->get('license')->value,
+        'licenseVersion' => $this->get('license_version')->value,
+        'licenseExtras' => $this->get('license_extras')->value,
+        'authorComments' => $this->get('author_comments')->value,
+        'changes' => json_decode($this->get('changes')->value),
+      ]
+    ];
+    return json_encode($metawrap);
   }
 
   /**

@@ -43,7 +43,6 @@ class H5PEditorWidget extends H5PWidgetBase {
       $h5p_content = H5PContent::load($h5p_content_id);
     }
 
-    // TODO: Here is the hidden field is build for the editor that needs to be filled
     $element['parameters'] = [
       '#type' => 'hidden',
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getFilteredParameters(),
@@ -117,11 +116,14 @@ class H5PEditorWidget extends H5PWidgetBase {
       $value['id'] = NULL; // Invalid, content has been deleted
     }
 
+    $params = json_decode($value['parameters']);
+
     // Prepare content values
     $core = H5PDrupal::getInstance('core');
     $content = [
       'library' => H5PEditorUtilities::getLibraryProperty($value['library']),
-      'params' => $value['parameters'],
+      'params' => json_encode($params->params),
+      'metadata' => $params->metadata,
       'disable' => $core->getStorableDisplayOptions($value, !empty($h5p_content) ? $h5p_content->get('disabled_features')->value : 0),
     ];
     if ($value['id'] && !$do_new_revision && !$value['new_translation']) {
@@ -142,7 +144,7 @@ class H5PEditorWidget extends H5PWidgetBase {
     $editor->processParameters(
       $return_value['h5p_content_id'],
       $content['library'],
-      json_decode($content['params']),
+      $params->params,
       $old_library,
       $old_params
     );
