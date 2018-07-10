@@ -45,7 +45,7 @@ class H5PEditorWidget extends H5PWidgetBase {
 
     $element['parameters'] = [
       '#type' => 'hidden',
-      '#default_value' => empty($h5p_content) ? '' : $h5p_content->getFilteredParameters(),
+      '#default_value' => empty($h5p_content) ? '' : $h5p_content->getEditorJSON(),
       '#attributes' => [
         'id' => "h5p-content-parameters-" . self::$counter,
       ],

@@ -823,16 +823,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_content->set('parameters', $content['params']);
     $h5p_content->set('disabled_features', $content['disable']);
     $h5p_content->set('filtered_parameters', '');
-    $h5p_content->set('title', empty($content['metadata']['title']) ? NULL : $content['metadata']['title']);
-    $h5p_content->set('authors', empty($content['metadata']['authors']) ? NULL : json_encode($content['metadata']['authors']));
-    $h5p_content->set('source', empty($content['metadata']['source']) ? NULL : $content['metadata']['source']);
-    $h5p_content->set('year_from', empty($content['metadata']['yearFrom']) ? NULL : $content['metadata']['yearFrom']);
-    $h5p_content->set('year_to', empty($content['metadata']['yearTo']) ? NULL : $content['metadata']['yearTo']);
-    $h5p_content->set('license', empty($content['metadata']['license']) ? NULL : $content['metadata']['license']);
-    $h5p_content->set('license_version', empty($content['metadata']['licenseVersion']) ? NULL : $content['metadata']['licenseVersion']);
-    $h5p_content->set('license_extras', empty($content['metadata']['licenseExtras']) ? NULL : $content['metadata']['licenseExtras']);
-    $h5p_content->set('author_comments', empty($content['metadata']['authorComments']) ? NULL : $content['metadata']['authorComments']);
-    $h5p_content->set('changes', empty($content['metadata']['changes']) ? NULL : json_encode($content['metadata']['changes']));
+    $h5p_content->set('title', empty($content['metadata']->title) ? NULL : $content['metadata']->title);
+    $h5p_content->set('authors', empty($content['metadata']->authors) ? NULL : json_encode($content['metadata']->authors));
+    $h5p_content->set('source', empty($content['metadata']->source) ? NULL : $content['metadata']->source);
+    $h5p_content->set('year_from', empty($content['metadata']->yearFrom) ? NULL : $content['metadata']->yearFrom);
+    $h5p_content->set('year_to', empty($content['metadata']->yearTo) ? NULL : $content['metadata']->yearTo);
+    $h5p_content->set('license', empty($content['metadata']->license) ? NULL : $content['metadata']->license);
+    $h5p_content->set('license_version', empty($content['metadata']->licenseVersion) ? NULL : $content['metadata']->licenseVersion);
+    $h5p_content->set('license_extras', empty($content['metadata']->licenseExtras) ? NULL : $content['metadata']->licenseExtras);
+    $h5p_content->set('author_comments', empty($content['metadata']->authorComments) ? NULL : $content['metadata']->authorComments);
+    $h5p_content->set('changes', empty($content['metadata']->changes) ? NULL : json_encode($content['metadata']->changes));
 
     // Save changes
     $h5p_content->save();
@@ -851,16 +851,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
       'library_id' => $content['library']['libraryId'],
       'parameters' => $content['params'],
       'disabled_features' => $content['disable'],
-      'title' => empty($content['metadata']['title']) ? NULL : $content['metadata']['title'],
-      'authors' => empty($content['metadata']['authors']) ? NULL : json_encode($content['metadata']['authors']),
-      'source' => empty($content['metadata']['source']) ? NULL : $content['metadata']['source'],
-      'year_from' => empty($content['metadata']['yearFrom']) ? NULL : $content['metadata']['yearFrom'],
-      'year_to' => empty($content['metadata']['yearTo']) ? NULL : $content['metadata']['yearTo'],
-      'license' => empty($content['metadata']['license']) ? NULL : $content['metadata']['license'],
-      'license_version' => empty($content['metadata']['licenseVersion']) ? NULL : $content['metadata']['licenseVersion'],
-      'license_extras' => empty($content['metadata']['licenseExtras']) ? NULL : $content['metadata']['licenseExtras'],
-      'author_comments' => empty($content['metadata']['authorComments']) ? NULL : $content['metadata']['authorComments'],
-      'changes' => empty($content['metadata']['changes']) ? NULL : json_encode($content['metadata']['changes']),
+      'title' => empty($content['metadata']->title) ? NULL : $content['metadata']->title,
+      'authors' => empty($content['metadata']->authors) ? NULL : json_encode($content['metadata']->authors),
+      'source' => empty($content['metadata']->source) ? NULL : $content['metadata']->source,
+      'year_from' => empty($content['metadata']->yearFrom) ? NULL : $content['metadata']->yearFrom,
+      'year_to' => empty($content['metadata']->yearTo) ? NULL : $content['metadata']->yearTo,
+      'license' => empty($content['metadata']->license) ? NULL : $content['metadata']->license,
+      'license_version' => empty($content['metadata']->licenseVersion) ? NULL : $content['metadata']->licenseVersion,
+      'license_extras' => empty($content['metadata']->licenseExtras) ? NULL : $content['metadata']->licenseExtras,
+      'author_comments' => empty($content['metadata']->authorComments) ? NULL : $content['metadata']->authorComments,
+      'changes' => empty($content['metadata']->changes) ? NULL : json_encode($content['metadata']->changes),
     ]);
 
     // Save
