@@ -189,7 +189,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   /**
    *
    */
-  public function getH5PIntegrationSettings($canUpdateEntity) {
+  public function getH5PIntegrationSettings($canUpdateEntity = FALSE) {
     if (empty($this->library)) {
       $this->loadLibrary();
     }

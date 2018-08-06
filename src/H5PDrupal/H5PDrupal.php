@@ -133,7 +133,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       ];
     }
     else {
-      $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
+      $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
     }
 
     return $settings;
