@@ -1,3 +1,4 @@
+/*global H5PEditor, H5P, ns, Darkroom*/
 H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
   var instanceCounter = 0;
   var scriptsLoaded = false;
@@ -32,7 +33,7 @@ H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
 
     var headerTitle = document.createElement('div');
     headerTitle.className = 'h5p-editing-image-header-title';
-    headerTitle.textContent = H5PEditor.t('core', 'editImage');
+    headerTitle.textContent = 'Edit Image!';
     header.appendChild(headerTitle);
 
     var headerButtons = document.createElement('div');
@@ -50,9 +51,6 @@ H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
 
     // Create editing image
     var editingImage = new Image();
-    if (H5PIntegration && H5PIntegration.crossorigin) {
-      editingImage.crossOrigin = H5PIntegration.crossorigin;
-    }
     editingImage.className = 'h5p-editing-image hidden';
     editingImage.id = 'h5p-editing-image-' + uniqueId;
     editingContainer.appendChild(editingImage);
@@ -266,13 +264,11 @@ H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
       }
 
       editingImage.src = imgSrc;
-      editingImage.onload = function () {
-        createDarkroom();
-        editingImage.onload = null;
-      };
       imageLoading.classList.remove('hidden');
       editingImage.classList.add('hidden');
       editingContainer.appendChild(editingImage);
+
+      createDarkroom();
     };
 
     /**

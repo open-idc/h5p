@@ -1,3 +1,5 @@
+var H5PEditor = H5PEditor || {};
+
 H5PEditor.widgets.select = H5PEditor.Select = (function (E) {
   /**
    * Initialize a new widget.

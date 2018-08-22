@@ -1,4 +1,5 @@
-var H5PEditor = window.H5PEditor = window.H5PEditor || {};
+/*global H5P*/
+var H5PEditor = H5PEditor || {};
 var ns = H5PEditor;
 
 /**
@@ -236,12 +237,6 @@ ns.widgets.image.prototype.addFile = function () {
       that.confirmRemovalDialog.show(that.$file.offset().top);
       return false;
     });
-
-  var $img = this.$file.find('img');
-  $img.one('load', function () {
-    // Make editor resize
-    $img.addClass('loaded');
-  });
 
   // Uploading original image
   that.$editImage.removeClass('hidden');

@@ -108,7 +108,7 @@ class H5peditor {
       }
 
       // Some libraries rely on an LRS to work and must be enabled manually
-      if (in_array($libraries[$i]->name, array('H5P.Questionnaire', 'H5P.FreeTextQuestion')) &&
+      if ($libraries[$i]->name === 'H5P.Questionnaire' &&
           !$this->h5p->h5pF->getOption('enable_lrs_content_types')) {
         $libraries[$i]->restricted = TRUE;
       }
@@ -366,11 +366,11 @@ class H5peditor {
       foreach ($files['scripts'] as $script) {
         if (preg_match('/:\/\//', $script->path) === 1) {
           // External file
-          $libraryData->javascript[] = $script->path . $script->version;
+          $libraryData->javascript[$script->path . $script->version] = "\n" . file_get_contents($script->path);
         }
         else {
           // Local file
-          $libraryData->javascript[] = $url . $script->path . $script->version;
+          $libraryData->javascript[$url . $script->path . $script->version] = "\n" . $this->h5p->fs->getContent($fileDir . $script->path);
         }
       }
     }
@@ -380,11 +380,12 @@ class H5peditor {
       foreach ($files['styles'] as $css) {
         if (preg_match('/:\/\//', $css->path) === 1) {
           // External file
-          $libraryData->css[] = $css->path . $css->version;
+          $libraryData->css[$css->path . $css->version] = file_get_contents($css->path);
         }
         else {
           // Local file
-          $libraryData->css[] = $url . $css->path . $css->version;
+          H5peditor::buildCssPath(NULL, $url . dirname($css->path) . '/');
+          $libraryData->css[$url . $css->path . $css->version] = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', 'H5peditor::buildCssPath', $this->h5p->fs->getContent($fileDir . $css->path));
         }
       }
     }
@@ -634,7 +635,7 @@ class H5peditor {
     // Restrict LRS dependent content
     if (!$this->h5p->h5pF->getOption('enable_lrs_content_types')) {
       foreach ($cached_libraries as &$lib) {
-        if (in_array($lib['machineName'], array('H5P.Questionnaire', 'H5P.FreeTextQuestion'))) {
+        if ($lib['machineName'] === 'H5P.Questionnaire') {
           $lib['restricted'] = TRUE;
         }
       }

@@ -1,4 +1,8 @@
-window.ns = window.H5PEditor = window.H5PEditor || {};
+/**
+ * @namespace
+ */
+var H5PEditor = (H5PEditor || {});
+var ns = H5PEditor;
 
 /**
  * Construct the editor.
@@ -39,9 +43,6 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
    * @private
    */
   var populateIframe = function () {
-    if (!iframe.contentDocument) {
-      return; // Not possible, iframe 'load' hasn't been triggered yet
-    }
     iframe.contentDocument.open();
     iframe.contentDocument.write(
       '<!doctype html><html>' +
@@ -81,10 +82,8 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
       return; // Prevent crashing when iframe is unloaded
     }
     if (iframe.clientHeight === iframe.contentDocument.body.scrollHeight &&
-      (iframe.contentDocument.body.scrollHeight === iframe.contentWindow.document.body.clientHeight ||
-       iframe.contentDocument.body.scrollHeight - 1 === iframe.contentWindow.document.body.clientHeight)) {
+      iframe.contentDocument.body.scrollHeight === iframe.contentWindow.document.body.clientHeight) {
       return; // Do not resize unless page and scrolling differs
-      // Note: ScrollHeight may be 1px larger in some cases(Edge) where the actual height is a fraction.
     }
 
     // Retain parent size to avoid jumping/scrolling
@@ -212,7 +211,6 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
   $iframe.load(load);
 
   // Populate iframe with the H5P Editor
-  // (should not really be done until 'load', but might be here in case the iframe is reloaded?)
   populateIframe();
 };
 

@@ -1,3 +1,6 @@
+var H5PEditor = H5PEditor || {};
+var ns = H5PEditor;
+
 /**
  * Construct a form from library semantics.
  */
