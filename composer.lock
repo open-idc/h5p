@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "81e1d923d408a0094039ea8bb641a751",
+    "content-hash": "7417dc7b92ea4d7e6c3e8c3ba50127d2",
     "packages": [
         {
             "name": "h5p/h5p-core",
-            "version": "dev-master",
+            "version": "1.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
@@ -33,6 +33,7 @@
                     "h5p-event-base.class.php"
                 ]
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPL-3.0"
             ],
@@ -59,24 +60,20 @@
                 "interactive",
                 "quiz"
             ],
-            "support": {
-                "source": "https://github.com/h5p/h5p-php-library/tree/wp-1.10.2",
-                "issues": "https://github.com/h5p/h5p-php-library/issues"
-            },
             "time": "2018-05-16T13:16:34+00:00"
         },
         {
             "name": "h5p/h5p-editor",
-            "version": "dev-master",
+            "version": "1.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-editor-php-library.git",
-                "reference": "5fe488468c4015acf88604297d62ff04373b8007"
+                "reference": "06e52c65be4323a721172ee7eb8b80908c4ce6be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/5fe488468c4015acf88604297d62ff04373b8007",
-                "reference": "5fe488468c4015acf88604297d62ff04373b8007",
+                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/06e52c65be4323a721172ee7eb8b80908c4ce6be",
+                "reference": "06e52c65be4323a721172ee7eb8b80908c4ce6be",
                 "shasum": ""
             },
             "require": {
@@ -92,6 +89,7 @@
                     "h5peditor-ajax.interface.php"
                 ]
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPL-3.0"
             ],
@@ -119,20 +117,13 @@
                 "interactive",
                 "quiz"
             ],
-            "support": {
-                "source": "https://github.com/h5p/h5p-editor-php-library/tree/master",
-                "issues": "https://github.com/h5p/h5p-editor-php-library/issues"
-            },
-            "time": "2018-05-31T09:19:49+00:00"
+            "time": "2018-01-22T12:39:38+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "RC",
-    "stability-flags": {
-        "h5p/h5p-core": 20,
-        "h5p/h5p-editor": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

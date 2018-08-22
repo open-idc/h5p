@@ -4,19 +4,9 @@
   "description": "Drupal H5P Module.",
   "homepage": "http://drupal.org/project/h5p",
   "license": "GPL-2.0+",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/h5p/h5p-php-library"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/h5p/h5p-editor-php-library"
-    }
-  ],
   "require": {
-    "h5p/h5p-core": "dev-master",
-    "h5p/h5p-editor": "dev-master"
+    "h5p/h5p-core": "1.18.0",
+    "h5p/h5p-editor": "1.17.1"
   },
   "minimum-stability": "RC"
 }
