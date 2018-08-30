@@ -87,6 +87,14 @@ ns.libraryRequested = function (libraryName, callback) {
 
             if (isFinishedLoading) {
               ns.libraryLoaded[libraryName] = true;
+
+              // Need to set translations after all scripts have been loaded
+              if (libraryData.translations) {
+                for (var machineName in libraryData.translations) {
+                  H5PEditor.language[machineName] = libraryData.translations[machineName];
+                }
+              }
+
               callback(ns.libraryCache[libraryName].semantics);
             }
           };
@@ -161,13 +169,13 @@ ns.loadLibrary = function (libraryName, callback) {
           libraryData.semantics = semantics;
           ns.libraryCache[libraryName] = libraryData;
 
-          ns.libraryRequested(libraryName, function (semen) {
-            callback(semen);
+          ns.libraryRequested(libraryName, function (semantics) {
+            callback(semantics);
 
             // Run queue.
             if (ns.loadedCallbacks[libraryName]) {
               for (var i = 0; i < ns.loadedCallbacks[libraryName].length; i++) {
-                ns.loadedCallbacks[libraryName][i](semen);
+                ns.loadedCallbacks[libraryName][i](semantics);
               }
             }
           });
@@ -654,6 +662,11 @@ ns.createLabel = function (field, content) {
   // New items can be added next to the label within the flex-wrapper
   var html = wrapperFront + '<label class="h5peditor-label-wrapper">';
 
+  // Temporary fix for the old version of CoursePresentation's custom editor
+  if (field.widget === 'coursepresentation' && field.name === 'presentation') {
+    field.label = 0;
+  }
+
   if (field.label !== 0) {
     html += '<span class="h5peditor-label' + (field.optional ? '' : ' h5peditor-required') + '">' + (field.label === undefined ? field.name : field.label) + '</span>';
   }
@@ -792,10 +805,10 @@ ns.bindImportantDescriptionEvents = function (widget, fieldName, parent) {
  * @returns {string} HTML
  */
 ns.createCopyPasteButtons = function () {
-  return '<label class="h5peditor-copypaste-wrap">' +
-           '<button class="h5peditor-copy-button" disabled>' + ns.t('core', 'copyButton') + '</button>' +
-           '<button class="h5peditor-paste-button" disabled>' + ns.t('core', 'pasteButton') + '</button>' +
-         '</label>';
+  return '<div class="h5peditor-copypaste-wrap">' +
+           '<button class="h5peditor-copy-button disabled" title="' + H5PEditor.t('core', 'copyToClipboard') + '">' + ns.t('core', 'copyButton') + '</button>' +
+           '<button class="h5peditor-paste-button disabled" title="' + H5PEditor.t('core', 'pasteFromClipboard') + '">' + ns.t('core', 'pasteButton') + '</button>' +
+         '</div>';
 };
 
 /**
@@ -819,7 +832,7 @@ ns.confirmReplace = function (library, top, next) {
     // No need to confirm
     next();
   }
-}
+};
 
 /**
  * Check if any errors has been set.
@@ -977,7 +990,7 @@ ns.createButton = function (id, title, handler, displayTitle) {
 };
 
 /**
- * Check if the current library is entitled for the metadata button. No by default.
+ * Check if the current library is entitled for the metadata button. True by default.
  *
  * It will probably be okay to remove this check at some point in time when
  * the majority of content types and plugins have been updated to a version
@@ -987,7 +1000,7 @@ ns.createButton = function (id, title, handler, displayTitle) {
  * @return {boolean} True, if form should have the metadata button.
  */
 ns.entitledForMetadata = function (library) {
-  this.previousLibraryEntitledForMetadata = false;
+  this.previousLibraryEntitledForMetadata = true;
 
   if (!library || typeof library !== 'string') {
     return false;
@@ -998,85 +1011,345 @@ ns.entitledForMetadata = function (library) {
     return false;
   }
 
-  // This list holds all the libraries that (and later) are ready for metadata
-  const passList = [
-    'H5P.Accordion 1.1',
-    'H5P.AdvancedText 1.2',
-    'H5P.Agamotto 1.4',
-    'H5P.AppearIn 1.1',
-    'H5P.ArithmeticQuiz 1.2',
-    'H5P.Audio 1.3',
-    'H5P.AudioRecorder 1.1',
-    'H5P.Blanks 1.11',
-    'H5P.Chart 1.3',
-    'H5P.Collage 0.4',
-    'H5P.Column 1.8',
-    'H5P.ContinuousText 1.3',
-    'H5P.CoursePresentation 1.20',
-    'H5P.Dialogcards 1.8',
-    'H5P.DocumentationTool 1.7',
-    'H5P.DocumentExportPage 1.4',
-    'H5P.DragQuestion 1.13',
-    'H5P.DragText 1.8',
-    'H5P.Essay 1.2',
-    'H5P.ExportableTextArea 1.3',
-    'H5P.ExportPage 1.2',
-    'H5P.FacebookPageFeed 1.1',
-    'H5P.Flashcards 1.6',
-    'H5P.FreeTextQuestion 1.1',
-    'H5P.GoalsAssessmentPage 1.4',
-    'H5P.GoalsPage 1.5',
-    'H5P.GoToQuestion 1.4',
-    'H5P.GuessTheAnswer 1.4',
-    'H5P.IFrameEmbed 1.1',
-    'H5P.Image 1.1',
-    'H5P.ImageHotspotQuestion 1.8',
-    'H5P.ImageHotspots 1.7',
-    'H5P.ImageJuxtaposition 1.2',
-    'H5P.ImageMultipleHotspotQuestion 1.1',
-    'H5P.ImagePair 1.4',
-    'H5P.ImageSequencing 1.1',
-    'H5P.ImageSlider 1.1',
-    'H5P.InteractiveVideo 1.20',
-    'H5P.IVHotspot 1.3',
-    'H5P.Link 1.4',
-    'H5P.MarkTheWords 1.9',
-    'H5P.MemoryGame 1.3',
-    'H5P.MultiChoice 1.13',
-    'H5P.OpenEndedQuestion 1.1',
-    'H5P.PersonalityQuiz 1.1',
-    'H5P.Questionnaire 1.3',
-    'H5P.QuestionSet 1.16',
-    'H5P.SimpleMultiChoice 1.2',
-    'H5P.SingleChoiceSet 1.11',
-    'H5P.SpeakTheWords 1.4',
-    'H5P.SpeakTheWordsSet 1.2',
-    'H5P.StandardPage 1.4',
-    'H5P.Summary 1.10',
-    'H5P.Table 1.2',
-    'H5P.Text 1.2',
-    'H5P.TextInputField 1.2',
-    'H5P.Timeline 1.2',
-    'H5P.TrueFalse 1.5',
-    'H5P.TwitterUserFeed 1.1',
-    'H5P.Video 1.5'
+  // This list holds all old libraries (/older versions implicitly) that need an update for metadata
+  const blockList = [
+    'H5P.Accordion 1.0', // H5P.AdvancedText as sub-library should not have metadata
+    'H5P.Agamotto 1.3', // Title moved to/retrieved from metadata
+    'H5P.Audio 1.2', // Copyright information was moved to metadata
+    'H5P.Blanks 1.10', // Title moved to/retrieved from metadata
+    'H5P.Column 1.7', // Mixed libraries
+    'H5P.CoursePresentation 1.19', // Custom Editor was changed
+    'H5P.Dialogcards 1.7', // Title moved to/retrieved from metadata
+    'H5P.DocumentationTool 1.6', // Title moved to/retrieved from metadata
+    'H5P.DocumentExportPage 1.3', // Title moved to/retrieved from metadata
+    'H5P.DragQuestion 1.12', // Title moved to/retrieved from metadata
+    'H5P.DragText 1.7', // Title moved to/retrieved from metadata
+    'H5P.ExportableTextArea 1.2', // Title moved to/retrieved from metadata
+    'H5P.GoalsAssessmentPage 1.3', // Title moved to/retrieved from metadata
+    'H5P.GoalsPage 1.4', // Title moved to/retrieved from metadata
+    'H5P.Image 1.0', // Copyright information was moved to metadata
+    'H5P.ImageHotspotQuestion 1.7', // Title moved to/retrieved from metadata
+    // TODO: FindMultipleHotspots (external) - Title Fields
+    'H5P.ImageHotspots 1.6', // Not all sub-libraries are supposed to have metadata
+    'H5P.ImageJuxtaposition 1.1', // Title moved to/retrieved from metadata
+    'H5P.InteractiveVideo 1.19', // Custom Editor was changed
+    'H5P.MarkTheWords 1.8', // Title moved to/retrieved from metadata
+    'H5P.MultiChoice 1.12', // Title moved to/retrieved from metadata
+    // TODO: PersonalityQuiz (external) - Title Fields
+    'H5P.SingleChoiceSet 1.10', // Title moved to/retrieved from metadata
+    'H5P.StandardPage 1.3', // Title moved to/retrieved from metadata
+    'H5P.Summary 1.9', // Title moved to/retrieved from metadata
+    'H5P.TrueFalse 1.4', // Title moved to/retrieved from metadata
+    'H5P.Video 1.4' // Copyright information was moved to metadata
   ];
 
-  let pass = passList.filter(function(item) {
+  let block = blockList.filter(function(item) {
+    // + ' ' makes sure to avoid partial matches
     return item.indexOf(library.machineName + ' ') !== -1;
   });
-  if (pass.length === 0) {
-    return false;
+  if (block.length === 0) {
+    return true;
   }
 
-  pass = H5P.libraryFromString(pass[0]);
-  if (library.majorVersion < pass.majorVersion || library.minorVersion < pass.minorVersion) {
-    return false;
+  block = H5P.libraryFromString(block[0]);
+  if (library.majorVersion > block.majorVersion || library.majorVersion === block.majorVersion && library.minorVersion > block.minorVersion) {
+    return true;
   }
 
-  this.previousLibraryEntitledForMetadata = true;
+  this.previousLibraryEntitledForMetadata = false;
 
-  return true;
+  return false;
+};
+
+/**
+ * Show a toast message.
+ *
+ * The reference element could be dom elements the toast should be attached to,
+ * or e.g. the document body for general toast messages.
+ *
+ * @param {DOM} element Reference element to show toast message for.
+ * @param {string} message Message to show.
+ * @param {object} [config] Configuration.
+ * @param {string} [config.style=h5p-editor-toast] Style name for the tooltip.
+ * @param {number} [config.duration=3000] Toast message length in ms.
+ * @param {object} [config.position] Relative positioning of the toast.
+ * @param {string} [config.position.horizontal=centered] [before|left|centered|right|after].
+ * @param {string} [config.position.vertical=below] [above|top|centered|bottom|below].
+ * @param {number} [config.position.offsetHorizontal=0] Extra horizontal offset.
+ * @param {number} [config.position.offsetVertical=0] Extra vetical offset.
+ * @param {boolean} [config.position.noOverflowLeft=false] True to prevent overflow left.
+ * @param {boolean} [config.position.noOverflowRight=false] True to prevent overflow right.
+ * @param {boolean} [config.position.noOverflowTop=false] True to prevent overflow top.
+ * @param {boolean} [config.position.noOverflowBottom=false] True to prevent overflow bottom.
+ * @param {boolean} [config.position.noOverflowX=false] True to prevent overflow left and right.
+ * @param {boolean} [config.position.noOverflowY=false] True to prevent overflow top and bottom.
+ * @param {object} [config.position.overflowReference=document.body] DOM reference for overflow.
+ */
+ns.attachToastTo = function (element, message, config) {
+  if (element === undefined || message === undefined) {
+    return;
+  }
+
+  /**
+   * Handle click while toast is showing.
+   */
+  const clickHandler = function (event) {
+    /*
+     * A common use case will be to attach toasts to buttons that are clicked.
+     * The click would remove the toast message instantly without this check.
+     * Children of the clicked element are also ignored.
+     */
+    if (event.path.indexOf(element) !== -1) {
+      return;
+    }
+    clearTimeout(timer);
+    removeToast();
+  };
+
+  /**
+   * Remove the toast message.
+   */
+  const removeToast = function () {
+    document.removeEventListener('click', clickHandler);
+    toast.remove(toast);
+  };
+
+  /**
+   * Get absolute coordinates for the toast.
+   *
+   * @param {DOM} element Reference element to show toast message for.
+   * @param {DOM} toast Toast element.
+   * @param {object} [position={}] Relative positioning of the toast message.
+   * @param {string} [position.horizontal=centered] [before|left|centered|right|after].
+   * @param {string} [position.vertical=below] [above|top|centered|bottom|below].
+   * @param {number} [position.offsetHorizontal=0] Extra horizontal offset.
+   * @param {number} [position.offsetVertical=0] Extra vetical offset.
+   * @param {boolean} [position.noOverflowLeft=false] True to prevent overflow left.
+   * @param {boolean} [position.noOverflowRight=false] True to prevent overflow right.
+   * @param {boolean} [position.noOverflowTop=false] True to prevent overflow top.
+   * @param {boolean} [position.noOverflowBottom=false] True to prevent overflow bottom.
+   * @param {boolean} [position.noOverflowX=false] True to prevent overflow left and right.
+   * @param {boolean} [position.noOverflowY=false] True to prevent overflow top and bottom.
+   * @return {object}
+   */
+  const getToastCoordinates = function (element, toast, position) {
+    position = position || {};
+    position.offsetHorizontal = position.offsetHorizontal || 0;
+    position.offsetVertical = position.offsetVertical || 0;
+
+    const toastRect = toast.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+
+    let left = 0;
+    let top = 0;
+
+    // Compute horizontal position
+    switch (position.horizontal) {
+      case 'before':
+        left = elementRect.left - toastRect.width - position.offsetHorizontal;
+        break;
+      case 'after':
+        left = elementRect.left + elementRect.width + position.offsetHorizontal;
+        break;
+      case 'left':
+        left = elementRect.left + position.offsetHorizontal;
+        break;
+      case 'right':
+        left = elementRect.left + elementRect.width - toastRect.width - position.offsetHorizontal;
+        break;
+      case 'centered':
+        left = elementRect.left + elementRect.width / 2 - toastRect.width / 2 + position.offsetHorizontal;
+        break;
+      default:
+        left = elementRect.left + elementRect.width / 2 - toastRect.width / 2 + position.offsetHorizontal;
+    }
+
+    // Compute vertical position
+    switch (position.vertical) {
+      case 'above':
+        top = elementRect.top - toastRect.height - position.offsetVertical;
+        break;
+      case 'below':
+        top = elementRect.top + elementRect.height + position.offsetVertical;
+        break;
+      case 'top':
+        top = elementRect.top + position.offsetVertical;
+        break;
+      case 'bottom':
+        top = elementRect.top + elementRect.height - toastRect.height - position.offsetVertical;
+        break;
+      case 'centered':
+        top = elementRect.top + elementRect.height / 2 - toastRect.height / 2 + position.offsetVertical;
+        break;
+      default:
+        top = elementRect.top + elementRect.height + position.offsetVertical;
+    }
+
+    // Prevent overflow
+    const overflowElement = document.body;
+    const bounds = overflowElement.getBoundingClientRect();
+    if ((position.noOverflowLeft || position.noOverflowX) && (left < bounds.x)) {
+      left = bounds.x;
+    }
+    if ((position.noOverflowRight || position.noOverflowX) && ((left + toastRect.width) > (bounds.x + bounds.width))) {
+      left = bounds.x + bounds.width - toastRect.width;
+    }
+    if ((position.noOverflowTop || position.noOverflowY) && (top < bounds.y)) {
+      top = bounds.y;
+    }
+    if ((position.noOverflowBottom || position.noOverflowY) && ((top + toastRect.height) > (bounds.y + bounds.height))) {
+      left = bounds.y + bounds.height - toastRect.height;
+    }
+
+    return {left: left, top: top};
+  };
+
+  // Sanitization
+  config = config || {};
+  config.style = config.style || 'h5p-editor-toast';
+  config.duration = config.duration || 3000;
+
+  // Build toast
+  const toast = document.createElement('div');
+  toast.setAttribute('id', config.style);
+  toast.classList.add('h5p-toast-disabled');
+  toast.classList.add(config.style);
+
+  const msg = document.createElement('span');
+  msg.innerHTML = message;
+  toast.appendChild(msg);
+
+  document.body.appendChild(toast);
+
+  // The message has to be set before getting the coordinates
+  const coordinates = getToastCoordinates(element, toast, config.position);
+  toast.style.left = Math.round(coordinates.left) + 'px';
+  toast.style.top = Math.round(coordinates.top) + 'px';
+
+  toast.classList.remove('h5p-toast-disabled');
+  const timer = setTimeout(removeToast, config.duration);
+
+  // The toast can also be removed by clicking somewhere
+  document.addEventListener('click', clickHandler);
+};
+
+/**
+ * Check if clipboard can be pasted.
+ *
+ * @param {Object} clipboard Clipboard data.
+ * @param {Object} libs Libraries to compare against.
+ * @return {boolean} True, if content can be pasted.
+ */
+ns.canPaste = function (clipboard, libs) {
+  return (this.canPastePlus(clipboard, libs)).canPaste;
+};
+
+/**
+ * Check if clipboard can be pasted and give reason if not.
+ *
+ * @param {Object} clipboard Clipboard data.
+ * @param {Object} libs Libraries to compare against.
+ * @return {Object} Results. {canPaste: boolean, reason: string, description: string}.
+ */
+ns.canPastePlus = function (clipboard, libs) {
+  // Clipboard is empty
+  if (!clipboard || !clipboard.generic) {
+    return {
+      canPaste: false,
+      reason: 'pasteNoContent',
+      description: ns.t('core', 'pasteNoContent')
+    };
+  }
+
+  // No libraries to compare to
+  if (libs === undefined) {
+    return {
+      canPaste: false,
+      reason: 'pasteError',
+      description: ns.t('core', 'pasteError')
+    };
+  }
+
+  // Translate Hub format to common library format
+  if (libs.libraries !== undefined) {
+    libs = libs.libraries;
+    libs.forEach(function(lib) {
+      lib.name = lib.machineName;
+      lib.majorVersion = lib.localMajorVersion;
+      lib.minorVersion = lib.localMinorVersion;
+    });
+  }
+
+  // Check if clipboard library type is available
+  const machineNameClip = clipboard.generic.library.split(' ')[0];
+  let candidates = libs.filter(function (library) {
+    return library.name === machineNameClip;
+  });
+  if (candidates.length === 0) {
+    return {
+      canPaste: false,
+      reason: 'pasteContentNotSupported',
+      description: ns.t('core', 'pasteContentNotSupported')
+    };
+  }
+
+  // Check if clipboard library version is available
+  const versionClip = clipboard.generic.library.split(' ')[1];
+  const match = candidates.some(function(candidate) {
+    return ('' + candidate.majorVersion + '.' + candidate.minorVersion) === versionClip;
+  });
+  if (match) {
+    return {canPaste: true};
+  }
+
+  // Sort remaining candidates by version number
+  candidates = candidates
+    .map(function (candidate) {
+      return '' + candidate.majorVersion + '.' + candidate.minorVersion;
+    })
+    .map(function (candidate) {
+      return candidate.replace(/\d+/g, function (d) {return +d + 1000;});
+    })
+    .sort()
+    .map(function (candidate) {
+      return candidate.replace(/\d+/g, function (d) {return +d - 1000;});
+    });
+
+  // Clipboard library is newer than latest available local library
+  const candidateMax = candidates.slice(-1)[0];
+  if (+candidateMax.split('.')[0] < +versionClip.split('.')[0] ||
+      (+candidateMax.split('.')[0] === +versionClip.split('.')[0] &&
+      +candidateMax.split('.')[1] < +versionClip.split('.')[1])) {
+    return {
+      canPaste: false,
+      reason: 'pasteTooNew',
+      description: ns.t('core', 'pasteTooNew', {
+        ':clip': versionClip,
+        ':local': candidateMax
+      })
+    };
+  }
+
+  // Clipboard library is older than latest available local library
+  const candidateMin = candidates.slice(0, 1)[0];
+  if (+candidateMin.split('.')[0] > +versionClip.split('.')[0] ||
+      (+candidateMin.split('.')[0] === +versionClip.split('.')[0] &&
+       +candidateMin.split('.')[1] > +versionClip.split('.')[1])) {
+    return {
+      canPaste: false,
+      reason: 'pasteTooOld',
+      description: ns.t('core', 'pasteTooOld', {
+        ':clip': versionClip,
+        ':local': candidateMin
+      })
+    };
+  }
+
+  return {
+    canPaste: false,
+    reason: 'pasteError',
+    description: ns.t('core', 'pasteError')
+  };
 };
 
 // Factory for creating storage instance

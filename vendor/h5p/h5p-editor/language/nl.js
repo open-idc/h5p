@@ -34,7 +34,6 @@ H5PEditor.language.core = {
   editCopyright: 'Copyright bewerken',
   close: 'Sluiten',
   tutorial: 'Tutorial beschikbaar',
-  example: 'Example',
   editMode: 'Bewerkmodus',
   listLabel: 'Lijst',
   uploadError: 'Fout bij uploaden bestand',
@@ -181,5 +180,14 @@ H5PEditor.language.core = {
   copiedButton: 'Copied',
   pasteButton: 'Paste',
   pasteContent: 'Paste Content',
-  confirmPasteContent: 'By doing this you will replace the current content with the content from your clipboard. Are you sure you wish to continue?'
+  confirmPasteContent: 'By doing this you will replace the current content with the content from your clipboard. Are you sure you wish to continue?',
+  copyToClipboard: 'Copy H5P content to the clipboard',
+  copiedToClipboard: 'Content is copied to the clipboard',
+  pasteFromClipboard: 'Paste H5P content from the clipboard',
+  pasteNoContent: 'No H5P content on the clipboard',
+  pasteError: 'Cannot paste from clipboard',
+  pasteContentNotSupported: 'The content you’re trying to paste is not supported in this context',
+  pasteTooOld: 'The content you’re trying to paste is of a lower version (:clip) than what is supported in this context (:local), if possible try to have the content you want to paste upgraded, copy it again and try pasting it here.',
+  pasteTooNew: 'The content you’re trying to paste is of a higher version (:clip) than what is supported in this context (:local), if possible try to have this content upgraded first, and then try pasting the content here again.',
+  ok: 'OK'
 };

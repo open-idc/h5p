@@ -1,8 +1,3 @@
-/*global H5P*/
-var H5PEditor = H5PEditor || {};
-var H5PIntegration = H5PIntegration || false;
-var ns = H5PEditor;
-
 /**
  * Creates a metadata form
  *
@@ -14,14 +9,9 @@ var ns = H5PEditor;
  * @param {boolean} [options.populateTitle] If true, will populate the title if empty.
  */
 H5PEditor.metadataForm = function (field, metadata, $container, parent, options) {
-  // TODO: Is field really needed? Was it copy-pasted?
   const that = this;
   options = options || {};
-  /*
-   * TODO: Is there a decent way to make this a "real class" that can be used?
-   *       Changing all the fields by using a DOM selector here and in other
-   *       source files feels very wrong.
-   */
+
   var self = this;
   self.metadata = metadata;
   self.parent = parent;
@@ -59,7 +49,6 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
 
   group.$group.find('.title').remove();
   group.$group.find('.content').addClass('copyright-form');
-  field.children = [group];
 
   // Locate license and version selectors
   this.licenseField = find(group.children, 'field.name', 'license');
@@ -118,22 +107,31 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
     }
   });
 
+  // This can be made nicer when refactoring
+  var tmpChildren = this.parent.children.slice();
+
   // Create and append the rest of the widgets and fields
   // Append the metadata author list widget
   H5PEditor.metadataAuthorWidget(getPartialSemantics('authorWidget').fields, self.metadata, group, this.parent);
+  tmpChildren = tmpChildren.concat(this.parent.children);
 
   // Append the additional license field
-  var widget = H5PEditor.$('<div class="h5p-metadata-license-extras"></div>');
-  ns.processSemanticsChunk([getPartialSemantics('licenseExtras')], self.metadata, widget, this.parent);
-  widget.appendTo(group.$group.find('.content.copyright-form'));
+  var $widget = H5PEditor.$('<div class="h5p-metadata-license-extras"></div>');
+  ns.processSemanticsChunk([getPartialSemantics('licenseExtras')], self.metadata, $widget, this.parent);
+  $widget.appendTo(group.$group.find('.content.copyright-form'));
+  tmpChildren = tmpChildren.concat(this.parent.children);
 
   // Append the metadata changelog widget
   H5PEditor.metadataChangelogWidget([getPartialSemantics('changeLog')], self.metadata, group, this.parent);
+  tmpChildren = tmpChildren.concat(this.parent.children);
 
   // Append the additional information field
-  var $widget = H5PEditor.$('<div class="h5p-metadata-additional-information"></div>');
+  $widget = H5PEditor.$('<div class="h5p-metadata-additional-information"></div>');
   ns.processSemanticsChunk([getPartialSemantics('authorComments')], self.metadata, $widget, this.parent);
   $widget.appendTo(group.$group.find('.content.copyright-form'));
+  tmpChildren = tmpChildren.concat(this.parent.children);
+
+  this.parent.children = tmpChildren;
 
   $wrapper.find('.h5p-save').click(function () {
     // Try to automatically add an author if form is closed and a license selected
@@ -146,7 +144,6 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
   });
 
   // Set author of main content.
-  // TODO: Add realName to H5PIntegration
   if (
     H5PIntegration && H5PIntegration.user && H5PIntegration.user.name
   ) {
@@ -182,7 +179,7 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
  * @param {string} property to look for
  * @param {string} value to match property value against
  */
-function find (list, property, value) {
+function find(list, property, value) {
   var properties = property.split('.');
 
   for (var i = 0; i < list.length; i++) {

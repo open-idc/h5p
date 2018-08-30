@@ -9,6 +9,8 @@
 ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
   var that = this;
 
+  this.libraries = libraries;
+
   H5P.EventDispatcher.call(this);
 
   try {
@@ -95,6 +97,24 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
     return false;
   };
 
+  /**
+   * Confirm replace if there is content selected
+   *
+   * @param {number} top Offset
+   * @param {function} next Next callback
+   */
+  this.confirmPasteError = function (message, top, next) {
+    // Confirm changing library
+    var confirmReplace = new H5P.ConfirmationDialog({
+      headerText: H5PEditor.t('core', 'pasteError'),
+      dialogText: message,
+      cancelText: ' ',
+      confirmText: H5PEditor.t('core', 'ok')
+    }).appendTo(document.body);
+    confirmReplace.on('confirmed', next);
+    confirmReplace.show(top);
+  };
+
   // Change library on confirmation
   changeLibraryDialog.on('confirmed', loadLibrary);
 
@@ -113,13 +133,12 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
   this.on('select', loadLibrary);
 
   H5P.externalDispatcher.on('datainclipboard', function (event) {
-    that.$copyButton.html(ns.t('core', 'copyButton')).removeClass('h5peditor-copied');
     var disable = !event.data.reset;
     if (disable) {
       // Check if content type is supported here
       disable = that.canPaste(H5P.getClipboard());
     }
-    that.$pasteButton.prop('disabled', !disable);
+    that.$pasteButton.toggleClass('disabled', !disable);
     if (that.selector.setCanPaste) {
       that.selector.setCanPaste(disable);
     }
@@ -160,20 +179,53 @@ ns.LibrarySelector.prototype.appendTo = function ($element) {
   if (window.localStorage) {
     var $buttons = ns.$(ns.createCopyPasteButtons()).appendTo($element);
     this.$copyButton = $buttons.find('.h5peditor-copy-button').click(function () {
+      if (this.classList.contains('disabled')) {
+        return;
+      }
       H5P.clipboardify({
         library: self.getCurrentLibrary(),
         params: self.getParams(),
         metadata: self.getMetadata()
       });
-      self.$copyButton.html(ns.t('core', 'copiedButton')).addClass('h5peditor-copied');
+      ns.attachToastTo(
+        self.$copyButton.get(0),
+        H5PEditor.t('core', 'copiedToClipboard'),
+        {position: {
+          horizontal: 'center',
+          vertical: 'above',
+          noOverflowX: true
+        }}
+      );
     });
     this.$pasteButton = $buttons.find('.h5peditor-paste-button').click(function () {
+      // Notify user why paste is not possible
+      if (this.classList.contains('disabled')) {
+        const pasteCheck = ns.canPastePlus(H5P.getClipboard(), self.libraries);
+        if (pasteCheck.canPaste !== true) {
+          if (pasteCheck.reason === 'pasteTooOld' || pasteCheck.reason === 'pasteTooNew') {
+            self.confirmPasteError(pasteCheck.description, self.$parent.offset().top, function() {});
+          }
+          else {
+            ns.attachToastTo(
+              self.$pasteButton.get(0),
+              pasteCheck.description,
+              {position: {
+                horizontal: 'center',
+                vertical: 'above',
+                noOverflowX: true
+              }}
+            );
+          }
+          return;
+        }
+      }
+
       self.pasteContent();
     });
 
     if (this.canPaste(H5P.getClipboard())) {
       // Toggle paste button when libraries are loaded
-      this.$pasteButton.prop('disabled', false);
+      this.$pasteButton.toggleClass('disabled', false);
       if (this.selector.setCanPaste) {
         this.selector.setCanPaste(true);
       }
@@ -189,8 +241,25 @@ ns.LibrarySelector.prototype.appendTo = function ($element) {
 ns.LibrarySelector.prototype.pasteContent = function () {
   var self = this;
   var clipboard = H5P.getClipboard();
-  if (!self.canPaste(clipboard)) {
-    console.error('Tried to paste unsupported content');
+
+  // Tell user why paste is not possible
+  const pasteCheck = ns.canPastePlus(H5P.getClipboard(), self.libraries);
+  if (pasteCheck.canPaste !== true) {
+    if (pasteCheck.reason === 'pasteTooOld' || pasteCheck.reason === 'pasteTooNew') {
+      self.confirmPasteError(pasteCheck.description, self.$parent.offset().top, function() {});
+    }
+    else {
+      ns.attachToastTo(
+        document.getElementById('h5peditor-hub-paste-button'),
+        pasteCheck.description,
+        {position: {
+          horizontal: 'center',
+          vertical: 'above',
+          noOverflowX: true,
+          overflowReference: document.body}
+        }
+      );
+    }
     return;
   }
 
@@ -251,7 +320,7 @@ ns.LibrarySelector.prototype.loadSemantics = function (library, params, metadata
       that.form.currentLibrary = library;
       that.form.processSemantics(semantics, overrideParams, metadata);
       if (window.localStorage) {
-        that.$copyButton.prop('disabled', false);
+        that.$copyButton.toggleClass('disabled', false);
       }
     }
 
@@ -294,7 +363,9 @@ ns.LibrarySelector.prototype.getParams = function () {
 };
 
 /**
- * TODO: Please document your functions
+ * Get the metadata of the main form.
+ *
+ * @return {object} Metadata object.
  */
 ns.LibrarySelector.prototype.getMetadata = function () {
   if (this.form === undefined) {

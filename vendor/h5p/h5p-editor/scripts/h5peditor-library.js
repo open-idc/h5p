@@ -1,7 +1,3 @@
-var H5PEditor = (H5PEditor || {});
-var ns = H5PEditor;
-var H5PIntegration = H5PIntegration || false;
-
 /**
  * Callback for setting new parameters.
  *
@@ -65,14 +61,13 @@ ns.Library = function (parent, field, params, setValue) {
     if (!self.libraries) {
       return; // Libraries not loaded yet.
     }
-    self.$copyButton.html(ns.t('core', 'copyButton')).removeClass('h5peditor-copied');
 
     var canPaste = !event.data.reset;
     if (canPaste) {
       // Check if content type is supported here
       canPaste = self.canPaste(H5P.getClipboard());
     }
-    self.$pasteButton.prop('disabled', !canPaste);
+    self.$pasteButton.toggleClass('disabled', !canPaste);
   });
 };
 
@@ -87,34 +82,70 @@ ns.Library.prototype.constructor = ns.Library;
  */
 ns.Library.prototype.appendTo = function ($wrapper) {
   var that = this;
-  var html = '';
+  var html = '<div class="field ' + this.field.type + '">';
+
   if (this.field.label !== 0 && this.field.label !== undefined) {
-    html = '' +
-      '<div class="h5p-editor-flex-wrapper">' +
-        '<label class="h5peditor-label-wrapper"><span class="h5peditor-label' + (this.field.optional ? '' : ' h5peditor-required') + '">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</span></label>' +
+    html += '<div class="h5p-editor-flex-wrapper">' +
+        '<label class="h5peditor-label-wrapper">' +
+          '<span class="h5peditor-label' +
+            (this.field.optional ? '' : ' h5peditor-required') + '">' +
+              (this.field.label === undefined ? this.field.name : this.field.label) +
+          '</span>' +
+        '</label>' +
       '</div>';
   }
 
-  html += ns.createDescription(this.field.description);
-  html = '<div class="field ' + this.field.type + '">' + html + '<select>' + ns.createOption('-', 'Loading...') + '</select>';
+  if (this.field.description) {
+    html += ns.createDescription(this.field.description);
+  }
+
+  html += '<select>' + ns.createOption('-', 'Loading...') + '</select>';
+
   if (window.localStorage) {
     html += ns.createCopyPasteButtons();
   }
 
-  // TODO: Remove errors, it is deprecated
-  html += '<div class="errors h5p-errors"></div><div class="libwrap"> ' +
-  '</div></div>';
+  html += '<div class="libwrap"></div>';
+
+  html += '</div>';
 
   this.$myField = ns.$(html).appendTo($wrapper);
   this.$select = this.$myField.children('select');
   this.$libraryWrapper = this.$myField.children('.libwrap');
   if (window.localStorage) {
     this.$copyButton = this.$myField.find('.h5peditor-copy-button').click(function () {
+      if (this.classList.contains('disabled')) {
+        return;
+      }
+
       that.validate(); // Make sure all values are up-to-date
       H5P.clipboardify(that.params);
-      that.$copyButton.html(ns.t('core', 'copiedButton')).addClass('h5peditor-copied');
+
+      ns.attachToastTo(
+        that.$copyButton.get(0),
+        H5PEditor.t('core', 'copiedToClipboard'),
+        {position: {horizontal: 'center', vertical: 'above', noOverflowX: true}}
+      );
     });
     this.$pasteButton = this.$myField.find('.h5peditor-paste-button').click(function () {
+
+      // Inform user why paste is not possible
+      if (this.classList.contains('disabled')) {
+        const pasteCheck = ns.canPastePlus(H5P.getClipboard(), that.libraries);
+        if (pasteCheck.canPaste !== true) {
+          if (pasteCheck.reason === 'pasteTooOld' || pasteCheck.reason === 'pasteTooNew') {
+            that.confirmPasteError(pasteCheck.description, that.$select.offset().top, function() {});
+          }
+          else {
+            ns.attachToastTo(
+              this,
+              pasteCheck.description,
+              {position: {horizontal: 'center', vertical: 'above', noOverflowX: true}}
+            );
+          }
+          return;
+        }
+      }
       that.replaceContent(H5P.getClipboard());
     });
   }
@@ -137,7 +168,29 @@ ns.Library.prototype.canPaste = function (clipboard) {
   }
 
   return false;
+};
+
+/**
+ * Hide fields that are not required.
+ */
+ns.Library.prototype.hide = function () {
+  this.hideLibrarySelector();
+  this.hideCopyPaste();
 }
+
+/**
+ * Hide library selector.
+ */
+ns.Library.prototype.hideLibrarySelector = function () {
+  this.$myField.children('select').hide();
+};
+
+/**
+ * Hide copy button and paste button.
+ */
+ns.Library.prototype.hideCopyPaste = function () {
+  this.$myField.children('.h5peditor-copypaste-wrap').hide();
+};
 
 /**
  * Replace library content using given clipboard
@@ -156,7 +209,7 @@ ns.Library.prototype.replaceContent = function (clipboard) {
   // Load library on confirmation
   ns.confirmReplace(this.params.library, this.$select.offset().top, function () {
     // Update UI
-    self.$select.val(clipboard.generic.library)
+    self.$select.val(clipboard.generic.library);
 
     // Delete old params (to keep object ref)
     for (var prop in self.params) {
@@ -166,7 +219,7 @@ ns.Library.prototype.replaceContent = function (clipboard) {
     }
 
     // Update params
-    for (var prop in clipboard.generic) {
+    for (prop in clipboard.generic) {
       if (clipboard.generic.hasOwnProperty(prop)) {
         self.params[prop] = clipboard.generic[prop];
       }
@@ -175,7 +228,7 @@ ns.Library.prototype.replaceContent = function (clipboard) {
     // Load form
     self.loadLibrary(clipboard.generic.library, true);
   });
-}
+};
 
 /**
  * Confirm replace if there is content selected
@@ -196,7 +249,7 @@ ns.Library.prototype.confirmReplace = function (next) {
     // No need to confirm
     next();
   }
-}
+};
 
 /**
  * Handler for when the library list has been loaded
@@ -242,7 +295,7 @@ ns.Library.prototype.librariesLoaded = function (libList) {
   }
   else if (window.localStorage && self.canPaste(H5P.getClipboard())) {
     // Toggle paste button when libraries are loaded
-    self.$pasteButton.prop('disabled', false);
+    self.$pasteButton.toggleClass('disabled', false);
   }
 
   if (self.runChangeCallback === true) {
@@ -275,7 +328,7 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
     delete this.params.metadata;
 
     this.$libraryWrapper.attr('class', 'libwrap');
-    this.$copyButton.prop('disabled', true);
+    this.$copyButton.toggleClass('disabled', true);
     return;
   }
 
@@ -300,7 +353,7 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
 
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
     if (window.localStorage) {
-      that.$copyButton.prop('disabled', false);
+      that.$copyButton.toggleClass('disabled', false);
     }
 
     if (that.libraries !== undefined) {
@@ -336,7 +389,7 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
       .indexOf(this.currentLibrary);
 
     // By default, the metadata button should be displayed
-    if (this.field.options[itemPosition].hasmetadata === false) {
+    if (this.field.options[itemPosition].hasMetadata === false) {
       return;
     }
   }
@@ -361,21 +414,13 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
     that.$libraryWrapper.before(that.$metadataWrapper);
   }
 
-  //Prevent multiple buttons when changing libraries
+  // Prevent multiple buttons when changing libraries
   if (that.$libraryWrapper.closest('.content').find('.h5p-metadata-button-wrapper').length === 0) {
     that.$metadataButton = H5PEditor.$('' +
       '<div class="h5p-metadata-button-wrapper">' +
         '<div class="h5p-metadata-button-tip"></div>' +
         '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
       '</div>');
-
-    // TODO: This needs refactoring. Badly!
-    // There are too many combinations of
-    // - metadata title (yes/no)
-    // - metadata button (yes/no)
-    // - metadata button (here/there/elsewhere)
-    // - compound type (editor this way/editor that way)
-    // that were introduced one after the other leading to too many switches and CSS selectors all over the place
 
     // Put the metadataButton after the first visible label if it has text
     var $labelWrapper = that.$libraryWrapper.siblings('.h5p-editor-flex-wrapper').children('.h5peditor-label-wrapper');

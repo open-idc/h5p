@@ -102,6 +102,21 @@ interface H5PFrameworkInterface {
   public function getUploadedH5pPath();
 
   /**
+   * Load addon libraries
+   *
+   * @return array
+   */
+  public function loadAddons();
+
+  /**
+   * Load config for libraries
+   *
+   * @param array $libraries
+   * @return array
+   */
+  public function getLibraryConfig($libraries = NULL);
+
+  /**
    * Get a list of the current installed libraries
    *
    * @return array
@@ -620,22 +635,29 @@ class H5PValidator {
 
   private $h5pOptional = array(
     'contentType' => '/^.{1,255}$/',
+    'dynamicDependencies' => array(
+      'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
+      'majorVersion' => '/^[0-9]{1,5}$/',
+      'minorVersion' => '/^[0-9]{1,5}$/',
+    ),
     // deprecated
     'author' => '/^.{1,255}$/',
     'authors' => array(
       'name' => '/^.{1,255}$/',
       'role' => '/^\w+$/',
     ),
-    'license' => '/^(CC BY|CC BY-SA|CC BY-ND|CC BY-NC|CC BY-NC-SA|CC BY-NC-ND|GNU GPL|PD|ODC PDDL|CC PDM|U|C|cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT|GPL1|GPL2|GPL3|MPL|MPL2)$/',
-    'licenseVersion' => '/^(1.0|2.0|2.5|3.0|4.0)$/',
-    'source' => '/^(http[s]?://.+)$',
+    'source' => '/^(http[s]?:\/\/.+)$/',
+    'license' => '/^(CC BY|CC BY-SA|CC BY-ND|CC BY-NC|CC BY-NC-SA|CC BY-NC-ND|CC0 1\.0|GNU GPL|PD|ODC PDDL|CC PDM|U|C|cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT|GPL1|GPL2|GPL3|MPL|MPL2)$/',
+    'licenseVersion' => '/^(1\.0|2\.0|2\.5|3\.0|4\.0)$/',
+    'licenseExtras' => '/^.{1,5000}$/',
     'yearsFrom' => '/^([0-9]{1,4})$/',
     'yearsTo' => '/^([0-9]{1,4})$/',
-    'dynamicDependencies' => array(
-      'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
-      'majorVersion' => '/^[0-9]{1,5}$/',
-      'minorVersion' => '/^[0-9]{1,5}$/',
+    'changes' => array(
+      'date' => '/^[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{1,2}:[0-9]{2}:[0-9]{2}$/',
+      'author' => '/^.{1,255}$/',
+      'log' => '/^.{1,5000}$/'
     ),
+    'authorComments' => '/^.{1,5000}$/',
     'w' => '/^[0-9]{1,4}$/',
     'h' => '/^[0-9]{1,4}$/',
     // deprecated
@@ -1605,7 +1627,9 @@ Class H5PExport {
 
     foreach(array('authors', 'source', 'license', 'licenseVersion', 'licenseExtras' ,'yearFrom', 'yearTo', 'changes', 'authorComments') as $field) {
       if (isset($content['metadata'][$field])) {
-        $h5pJson[$field] = json_decode(json_encode($content['metadata'][$field], TRUE));
+        if (($field !== 'authors' && $field !== 'changes') || (count($content['metadata'][$field]) > 0)) {
+          $h5pJson[$field] = json_decode(json_encode($content['metadata'][$field], TRUE));
+        }
       }
     }
 
@@ -1633,7 +1657,7 @@ Class H5PExport {
               $library['minorVersion']
           );
 
-          if ($isDevLibrary !== NULL) {
+          if ($isDevLibrary !== NULL && isset($library['path'])) {
             $exportFolder = "/" . $library['path'];
           }
         }
@@ -1797,7 +1821,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 16
+    'minorVersion' => 19
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -1962,6 +1986,25 @@ class H5PCore {
     }
     $validator->validateLibrary($params, (object) array('options' => array($params->library)));
 
+    // Handle addons:
+    $addons = $this->h5pF->loadAddons();
+    foreach ($addons as $addon) {
+      $add_to = json_decode($addon['addTo']);
+
+      if (isset($add_to->content->types)) {
+        foreach($add_to->content->types as $type) {
+
+          if (isset($type->text->regex) &&
+              $this->textAddonMatches($params->params, $type->text->regex)) {
+            $validator->addon($addon);
+
+            // An addon shall only be added once
+            break;
+          }
+        }
+      }
+    }
+
     $params = json_encode($params->params);
 
     // Update content dependencies.
@@ -1992,6 +2035,75 @@ class H5PCore {
       ));
     }
     return $params;
+  }
+
+  /**
+   * Retrieve a value from a nested mixed array structure.
+   *
+   * @param Array $params Array to be looked in.
+   * @param String $path Supposed path to the value.
+   * @param String [$delimiter='.'] Property delimiter within the path.
+   * @return Object|NULL The object found or NULL.
+   */
+  private function retrieveValue ($params, $path, $delimiter='.') {
+    $path = explode($delimiter, $path);
+
+    // Property not found
+    if (!isset($params[$path[0]])) {
+      return NULL;
+    }
+
+    $first = $params[$path[0]];
+
+    // End of path, done
+    if (sizeof($path) === 1) {
+      return $first;
+    }
+
+    // We cannot go deeper
+    if (!is_array($first)) {
+      return NULL;
+    }
+
+    // Regular Array
+    if (isset($first[0])) {
+      foreach($first as $number => $object) {
+        $found = $this->retrieveValue($object, implode($delimiter, array_slice($path, 1)));
+        if (isset($found)) {
+          return $found;
+        }
+      }
+      return NULL;
+    }
+
+    // Associative Array
+    return $this->retrieveValue($first, implode('.', array_slice($path, 1)));
+  }
+
+  /**
+   * Determine if params contain any match.
+   *
+   * @param {object} params - Parameters.
+   * @param {string} [pattern] - Regular expression to identify pattern.
+   * @param {boolean} [found] - Used for recursion.
+   * @return {boolean} True, if params matches pattern.
+   */
+  private function textAddonMatches($params, $pattern, $found = false) {
+    $type = gettype($params);
+    if ($type === 'string') {
+      if (preg_match($pattern, $params) === 1) {
+        return true;
+      }
+    }
+    elseif ($type === 'array' || $type === 'object') {
+      foreach ($params as $value) {
+        $found = $this->textAddonMatches($value, $pattern, $found);
+        if ($found === true) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -2872,7 +2984,7 @@ class H5PCore {
    */
   private static function printJson($data, $status_code = NULL) {
     header('Cache-Control: no-cache');
-    header('Content-type: application/json; charset=utf-8');
+    header('Content-Type: application/json; charset=utf-8');
     print json_encode($data);
   }
 
@@ -3229,6 +3341,19 @@ class H5PContentValidator {
   }
 
   /**
+   * Add Addon library.
+   */
+  public function addon($library) {
+    $depKey = 'preloaded-' . $library['machineName'];
+    $this->dependencies[$depKey] = array(
+      'library' => $library,
+      'type' => 'preloaded'
+    );
+    $this->nextWeight = $this->h5pC->findLibraryDependencies($this->dependencies, $library, $this->nextWeight);
+    $this->dependencies[$depKey]['weight'] = $this->nextWeight++;
+  }
+
+  /**
    * Get the flat dependency tree.
    *
    * @return array
@@ -3557,7 +3682,6 @@ class H5PContentValidator {
 
     if (isset($file->copyright)) {
       $this->validateGroup($file->copyright, $this->getCopyrightSemantics());
-      // TODO: We'll need to do something here about getMetadataSemantics() if we change the widgets
     }
   }
 
@@ -4174,41 +4298,41 @@ class H5PContentValidator {
                 'options' => [
                   (object) array(
                     'value' => 'CC BY',
-                    'label' => $this->h5pF->t('Attribution'),
+                    'label' => $this->h5pF->t('Attribution (CC BY)'),
                     'versions' => $cc_versions
                   ),
                   (object) array(
                     'value' => 'CC BY-SA',
-                    'label' => $this->h5pF->t('Attribution-ShareAlike'),
+                    'label' => $this->h5pF->t('Attribution-ShareAlike (CC BY-SA)'),
                     'versions' => $cc_versions
                   ),
                   (object) array(
                     'value' => 'CC BY-ND',
-                    'label' => $this->h5pF->t('Attribution-NoDerivs'),
+                    'label' => $this->h5pF->t('Attribution-NoDerivs (CC BY-ND)'),
                     'versions' => $cc_versions
                   ),
                   (object) array(
                     'value' => 'CC BY-NC',
-                    'label' => $this->h5pF->t('Attribution-NonCommercial'),
+                    'label' => $this->h5pF->t('Attribution-NonCommercial (CC BY-NC)'),
                     'versions' => $cc_versions
                   ),
                   (object) array(
                     'value' => 'CC BY-NC-SA',
-                    'label' => $this->h5pF->t('Attribution-NonCommercial-ShareAlike'),
+                    'label' => $this->h5pF->t('Attribution-NonCommercial-ShareAlike (CC BY-NC-SA)'),
                     'versions' => $cc_versions
                   ),
                   (object) array(
                     'value' => 'CC BY-NC-ND',
-                    'label' => $this->h5pF->t('Attribution-NonCommercial-NoDerivs'),
+                    'label' => $this->h5pF->t('Attribution-NonCommercial-NoDerivs (CC BY-NC-ND)'),
                     'versions' => $cc_versions
                   ),
                   (object) array(
                     'value' => 'CC0 1.0',
-                    'label' => $this->h5pF->t('Public Domain Dedication')
+                    'label' => $this->h5pF->t('Public Domain Dedication (CC0)')
                   ),
                   (object) array(
                     'value' => 'CC PDM',
-                    'label' => $this->h5pF->t('Public Domain Mark')
+                    'label' => $this->h5pF->t('Public Domain Mark (PDM)')
                   ),
                 ]
               ),
@@ -4352,7 +4476,7 @@ class H5PContentValidator {
             'name' => 'authorComments',
             'type' => 'textarea',
             'label' => $this->h5pF->t('Author comments'),
-            'description' => $this->h5pF->t('Comments for the editor of the content (This text will not be published as a part of copyright info'),
+            'description' => $this->h5pF->t('Comments for the editor of the content (This text will not be published as a part of copyright info)'),
             'optional' => TRUE
           )
         )

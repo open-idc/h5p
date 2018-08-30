@@ -34,7 +34,6 @@ H5PEditor.language.core = {
   editCopyright: 'Rediger opphavsrett',
   close: 'Lukk',
   tutorial: 'Veiledning',
-  example: 'Eksempel',
   editMode: 'Redigeringsmodus',
   listLabel: 'Liste',
   uploadError: 'Filopplasting feilet',
@@ -69,6 +68,7 @@ H5PEditor.language.core = {
   showImportantInstructions: 'Vis instruksjoner',
   hideImportantInstructions: 'Skjul viktige instruksjoner',
   hide: 'Skjul',
+  example: 'Eksempel',
   createContentTabLabel: 'Lag innhold',
   uploadTabLabel: 'Last opp',
   uploadPlaceholder: 'Ingen fil er valgt',
@@ -180,5 +180,14 @@ H5PEditor.language.core = {
   copiedButton: 'Kopiert',
   pasteButton: 'Lim inn',
   pasteContent: 'Lim inn innhold',
-  confirmPasteContent: 'Ved å gjøre dette vil du erstatte innholdet i redigeringsverktøyet med innhold fra utklippstavlen din. Er du sikker på at du vil fortsette?'
+  confirmPasteContent: 'Ved å gjøre dette vil du erstatte innholdet i redigeringsverktøyet med innhold fra utklippstavlen din. Er du sikker på at du vil fortsette?',
+  copyToClipboard: 'Copy H5P content to the clipboard',
+  copiedToClipboard: 'Content is copied to the clipboard',
+  pasteFromClipboard: 'Paste H5P content from the clipboard',
+  pasteNoContent: 'No H5P content on the clipboard',
+  pasteError: 'Cannot paste from clipboard',
+  pasteContentNotSupported: 'The content you’re trying to paste is not supported in this context',
+  pasteTooOld: 'The content you’re trying to paste is of a lower version (:clip) than what is supported in this context (:local), if possible try to have the content you want to paste upgraded, copy it again and try pasting it here.',
+  pasteTooNew: 'The content you’re trying to paste is of a higher version (:clip) than what is supported in this context (:local), if possible try to have this content upgraded first, and then try pasting the content here again.',
+  ok: 'OK'
 };
