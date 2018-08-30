@@ -321,7 +321,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
-      'title' => 'Not Available',
+      'metadata' => $this->getMetadata(),
       'contentUserData' => $content_user_data,
       'displayOptions' => $display_options,
     );
