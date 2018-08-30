@@ -664,6 +664,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->execute();
       $libraryData['libraryId'] = $libraryId;
@@ -687,6 +688,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->condition('library_id', $libraryData['libraryId'])
         ->execute();
@@ -1350,7 +1352,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements loadAddons
    */
   public function loadAddons() {
-    $result = db_query("SELECT l1.machine_name, l1.major_version, l1.minor_version
+    $result = db_query("SELECT l1.library_id, l1.machine_name, l1.major_version, l1.minor_version, l1.add_to
                           FROM {h5p_libraries} l1
                      LEFT JOIN {h5p_libraries} l2 ON l1.machine_name = l2.machine_name AND
                                                      (l1.major_version < l2.major_version OR
@@ -1361,7 +1363,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $addons = array();
     while ($addon = $result->fetchObject()) {
-      $addons[] = H5PCore::snakeToCamel($addon);
+      $addons[] = \H5PCore::snakeToCamel($addon);
     }
     return $addons;
   }
