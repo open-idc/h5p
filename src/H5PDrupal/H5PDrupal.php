@@ -1345,4 +1345,31 @@ class H5PDrupal implements \H5PFrameworkInterface {
         ->execute();
     }
   }
+
+  /**
+   * Implements loadAddons
+   */
+  public function loadAddons() {
+    $result = db_query("SELECT l1.machine_name, l1.major_version, l1.minor_version
+                          FROM {h5p_libraries} l1
+                     LEFT JOIN {h5p_libraries} l2 ON l1.machine_name = l2.machine_name AND
+                                                     (l1.major_version < l2.major_version OR
+                                                      (l1.major_version = l2.major_version AND
+                                                       l1.minor_version < l2.minor_version))
+                         WHERE l1.add_to IS NOT NULL
+                           AND l2.machine_name IS NULL");
+
+    $addons = array();
+    while ($addon = $result->fetchObject()) {
+      $addons[] = H5PCore::snakeToCamel($addon);
+    }
+    return $addons;
+  }
+
+  /**
+   * Implements getLibraryConfig
+   */
+  public function getLibraryConfig($libraries = NULL) {
+    return NULL;
+  }
 }
