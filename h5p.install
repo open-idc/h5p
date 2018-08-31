@@ -842,16 +842,9 @@ function h5p_update_8001(&$sandbox) {
 }
 
 /**
- * Adds database fields for main content metadata
+ * Add fields for metadata and addons.
  */
-function h5p_update_8002(&$sandbox) {
-}
-
-/**
- * Add field for plugin Configuration
- * Add field for metadata
- */
-function h5p_update_8003() {
+function h5p_update_8002() {
   if (!db_field_exists('h5p_libraries', 'add_to')) {
     db_add_field('h5p_libraries', 'add_to', array(
       'description' => 'plugin configuration data',
