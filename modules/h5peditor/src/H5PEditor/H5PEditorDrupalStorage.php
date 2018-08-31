@@ -79,7 +79,7 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
         $details = db_query(
-          "SELECT title, runnable, restricted, tutorial_url
+          "SELECT title, runnable, restricted, tutorial_url, metadata
            FROM {h5p_libraries}
            WHERE machine_name = :name
            AND major_version = :major
@@ -96,6 +96,7 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
           $library->title = $details->title;
           $library->runnable = $details->runnable;
           $library->restricted = $super_user ? FALSE : ($details->restricted === '1' ? TRUE : FALSE);
+          $library->metadata = $details->metadata;
           $librariesWithDetails[] = $library;
         }
       }
@@ -111,7 +112,8 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
               major_version,
               minor_version,
               restricted,
-              tutorial_url
+              tutorial_url,
+              metadata
        FROM {h5p_libraries}
        WHERE runnable = 1
        AND semantics IS NOT NULL
