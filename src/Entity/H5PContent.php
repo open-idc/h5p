@@ -252,7 +252,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
    * @return array
    */
   public function getMetadata() {
-    return [
+    $metadata = [
       'title' => $this->get('title')->value,
       'authors' => json_decode($this->get('authors')->value),
       'source' => $this->get('source')->value,
@@ -264,6 +264,12 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'authorComments' => $this->get('author_comments')->value,
       'changes' => json_decode($this->get('changes')->value),
     ];
+    foreach ($metadata as $key => $data) {
+      if (is_null($data)) {
+        unset($metadata[$key]);
+      }
+    }
+    return $metadata;
   }
 
   /**
