@@ -1,4 +1,3 @@
-/*global H5PEditor, H5P, ns, Darkroom*/
 H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
   var instanceCounter = 0;
   var scriptsLoaded = false;
@@ -33,7 +32,7 @@ H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
 
     var headerTitle = document.createElement('div');
     headerTitle.className = 'h5p-editing-image-header-title';
-    headerTitle.textContent = 'Edit Image!';
+    headerTitle.textContent = H5PEditor.t('core', 'editImage');
     header.appendChild(headerTitle);
 
     var headerButtons = document.createElement('div');
@@ -263,12 +262,23 @@ H5PEditor.ImageEditingPopup = (function ($, EventDispatcher) {
         darkroom.parentNode.removeChild(darkroom);
       }
 
+      // Set crossorigin attribute
+      var crossOrigin = H5P.getCrossOrigin(imgSrc);
+      if (crossOrigin) {
+        editingImage.crossOrigin = crossOrigin;
+      }
+      else {
+        editingImage.removeAttribute('crossorigin');
+      }
+
       editingImage.src = imgSrc;
+      editingImage.onload = function () {
+        createDarkroom();
+        editingImage.onload = null;
+      };
       imageLoading.classList.remove('hidden');
       editingImage.classList.add('hidden');
       editingContainer.appendChild(editingImage);
-
-      createDarkroom();
     };
 
     /**

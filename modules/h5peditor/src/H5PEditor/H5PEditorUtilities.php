@@ -48,6 +48,7 @@ class H5PEditorUtilities {
       'ajaxPath'           => str_replace('%3A', ':', self::getAjaxPath()),
       'libraryPath'        => "{$h5p_module_rel}/vendor/h5p/h5p-editor/",
       'copyrightSemantics' => $contentValidator->getCopyrightSemantics(),
+      'metadataSemantics' => $contentValidator->getMetadataSemantics(),
       'assets'             => self::getEditorAssets(),
       'apiVersion'         => \H5PCore::$coreApi,
     ];

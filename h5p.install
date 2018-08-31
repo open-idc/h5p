@@ -417,6 +417,10 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'add_to' => array(
+        'description' => 'Plugin configuration data',
+        'type' => 'text',
+      ),
     ),
     'primary key' => array('library_id'),
     'indexes' => array(
@@ -829,3 +833,20 @@ function h5p_update_8001(&$sandbox) {
   drupal_set_message('Module h5p removed configuration items successfully.');
 }
 
+/**
+ * Adds database fields for main content metadata
+ */
+function h5p_update_8002(&$sandbox) {
+}
+
+/**
+* Add field for plugin Configuration
+*/
+function h5p_update_8003() {
+  if (!db_field_exists('h5p_libraries', 'add_to')) {
+    db_add_field('h5p_libraries', 'add_to', array(
+      'description' => 'plugin configuration data',
+      'type' => 'text'
+    ));
+  }
+}

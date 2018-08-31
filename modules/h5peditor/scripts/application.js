@@ -18,7 +18,7 @@
     H5PEditor.baseUrl = drupalSettings.path.baseUrl;
     H5PEditor.basePath = drupalSettings.h5peditor.libraryPath;
     mapProperties(H5PEditor, drupalSettings.h5peditor,
-      ['contentId', 'fileIcon', 'relativeUrl', 'contentRelUrl', 'editorRelUrl', 'apiVersion', 'copyrightSemantics', 'assets']);
+      ['contentId', 'fileIcon', 'relativeUrl', 'contentRelUrl', 'editorRelUrl', 'apiVersion', 'copyrightSemantics', 'metadataSemantics', 'assets']);
   };
 
   // Init editors

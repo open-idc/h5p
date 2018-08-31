@@ -663,6 +663,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->execute();
       $libraryData['libraryId'] = $libraryId;
@@ -686,6 +687,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->condition('library_id', $libraryData['libraryId'])
         ->execute();
@@ -814,7 +816,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements updateContent
    */
   public function updateContent($content, $contentMainId = NULL) {
-
     // Load existing entity
     $h5p_content = H5PContent::load($content['id']);
 
@@ -823,6 +824,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_content->set('parameters', $content['params']);
     $h5p_content->set('disabled_features', $content['disable']);
     $h5p_content->set('filtered_parameters', '');
+    $h5p_content->set('title', empty($content['metadata']->title) ? NULL : $content['metadata']->title);
+    $h5p_content->set('authors', empty($content['metadata']->authors) ? NULL : json_encode($content['metadata']->authors));
+    $h5p_content->set('source', empty($content['metadata']->source) ? NULL : $content['metadata']->source);
+    $h5p_content->set('year_from', empty($content['metadata']->yearFrom) ? NULL : $content['metadata']->yearFrom);
+    $h5p_content->set('year_to', empty($content['metadata']->yearTo) ? NULL : $content['metadata']->yearTo);
+    $h5p_content->set('license', empty($content['metadata']->license) ? NULL : $content['metadata']->license);
+    $h5p_content->set('license_version', empty($content['metadata']->licenseVersion) ? NULL : $content['metadata']->licenseVersion);
+    $h5p_content->set('license_extras', empty($content['metadata']->licenseExtras) ? NULL : $content['metadata']->licenseExtras);
+    $h5p_content->set('author_comments', empty($content['metadata']->authorComments) ? NULL : $content['metadata']->authorComments);
+    $h5p_content->set('changes', empty($content['metadata']->changes) ? NULL : json_encode($content['metadata']->changes));
 
     // Save changes
     $h5p_content->save();
@@ -841,6 +852,16 @@ class H5PDrupal implements \H5PFrameworkInterface {
       'library_id' => $content['library']['libraryId'],
       'parameters' => $content['params'],
       'disabled_features' => $content['disable'],
+      'title' => empty($content['metadata']->title) ? NULL : $content['metadata']->title,
+      'authors' => empty($content['metadata']->authors) ? NULL : json_encode($content['metadata']->authors),
+      'source' => empty($content['metadata']->source) ? NULL : $content['metadata']->source,
+      'year_from' => empty($content['metadata']->yearFrom) ? NULL : $content['metadata']->yearFrom,
+      'year_to' => empty($content['metadata']->yearTo) ? NULL : $content['metadata']->yearTo,
+      'license' => empty($content['metadata']->license) ? NULL : $content['metadata']->license,
+      'license_version' => empty($content['metadata']->licenseVersion) ? NULL : $content['metadata']->licenseVersion,
+      'license_extras' => empty($content['metadata']->licenseExtras) ? NULL : $content['metadata']->licenseExtras,
+      'author_comments' => empty($content['metadata']->authorComments) ? NULL : $content['metadata']->authorComments,
+      'changes' => empty($content['metadata']->changes) ? NULL : json_encode($content['metadata']->changes),
     ]);
 
     // Save
@@ -1324,5 +1345,32 @@ class H5PDrupal implements \H5PFrameworkInterface {
         ))
         ->execute();
     }
+  }
+
+  /**
+   * Implements loadAddons
+   */
+  public function loadAddons() {
+    $result = db_query("SELECT l1.library_id, l1.machine_name, l1.major_version, l1.minor_version, l1.add_to
+                          FROM {h5p_libraries} l1
+                     LEFT JOIN {h5p_libraries} l2 ON l1.machine_name = l2.machine_name AND
+                                                     (l1.major_version < l2.major_version OR
+                                                      (l1.major_version = l2.major_version AND
+                                                       l1.minor_version < l2.minor_version))
+                         WHERE l1.add_to IS NOT NULL
+                           AND l2.machine_name IS NULL");
+
+    $addons = array();
+    while ($addon = $result->fetchObject()) {
+      $addons[] = \H5PCore::snakeToCamel($addon);
+    }
+    return $addons;
+  }
+
+  /**
+   * Implements getLibraryConfig
+   */
+  public function getLibraryConfig($libraries = NULL) {
+    return $this->getOption('mathdisplay_config', NULL);
   }
 }
