@@ -1372,6 +1372,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements getLibraryConfig
    */
   public function getLibraryConfig($libraries = NULL) {
-    return $this->getOption('mathdisplay_config', NULL);
+    return $this->getOption('library_config', NULL);
   }
 }
