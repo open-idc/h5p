@@ -1352,7 +1352,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements loadAddons
    */
   public function loadAddons() {
-    $result = db_query("SELECT l1.library_id, l1.machine_name, l1.major_version, l1.minor_version, l1.add_to
+    $result = db_query("SELECT l1.library_id, l1.machine_name, l1.major_version, l1.minor_version, l1.add_to, l1.preloaded_js, l1.preloaded_css
                           FROM {h5p_libraries} l1
                      LEFT JOIN {h5p_libraries} l2 ON l1.machine_name = l2.machine_name AND
                                                      (l1.major_version < l2.major_version OR
