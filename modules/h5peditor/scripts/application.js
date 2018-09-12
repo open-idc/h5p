@@ -45,12 +45,28 @@
         // Create form submit handler
         var submit = {
           element: null,
-          handler: function () {
-            var params = h5peditor.getParams();
+          handler: function (event) {
+            if (h5peditor !== undefined) {
 
-            if (params !== undefined) {
-              $library.val(h5peditor.getLibrary());
-              $params.val(JSON.stringify(params));
+              var params = h5peditor.getParams();
+
+              // Validate mandatory main title. Prevent submitting if that's not set.
+              // Deliberatly doing it after getParams(), so that any other validation
+              // problems are also revealed
+              if (!h5peditor.isMainTitleSet()) {
+                return event.preventDefault();
+              }
+
+              if (params !== undefined) {
+                // Set main library
+                $library.val(h5peditor.getLibrary());
+
+                // Set params
+                $params.val(JSON.stringify(params));
+
+                // TODO - Calculate & set max score
+                // $maxscore.val(h5peditor.getMaxScore(params.params));
+              }
             }
           }
         };
