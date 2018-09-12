@@ -1,3 +1,5 @@
+/* global drupalSettings jQuery Drupal */
+
 (function ($, Drupal, H5P, H5PEditor) {
   var initialized;
   var submitHandlers = [];
@@ -7,14 +9,14 @@
    *
    * @param Object settings from drupal
    */
-  H5PEditor.init = function (settings) {
+  H5PEditor.init = function () {
     if (initialized) {
       return; // Prevent multi init
     }
     initialized = true;
 
     // Set up editor settings
-    H5PEditor.$ = H5P.jQuery;
+    H5PEditor.$ = H5P.jQuery;
     H5PEditor.baseUrl = drupalSettings.path.baseUrl;
     H5PEditor.basePath = drupalSettings.h5peditor.libraryPath;
     mapProperties(H5PEditor, drupalSettings.h5peditor,
@@ -25,7 +27,7 @@
   Drupal.behaviors.H5PEditor = {
     attach: function (context, settings) {
       $('.h5p-editor', context).once('H5PEditor').each(function () {
-        H5PEditor.init(settings);
+        H5PEditor.init();
 
         // Grab data values specifc for editor instance
         var $this = $(this);
@@ -55,7 +57,7 @@
         submitHandlers.push(submit);
 
         // Create new editor
-        var h5peditor = new ns.Editor($library.val(), $params.val(), this, function () {
+        var h5peditor = new H5PEditor.Editor($library.val(), $params.val(), this, function () {
           submit.element = this.frameElement; // Update frame element
           var iframeH5PEditor = this.H5PEditor;
           iframeH5PEditor.contentId = (contentId ? contentId : undefined);

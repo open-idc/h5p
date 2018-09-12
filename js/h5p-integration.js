@@ -1,3 +1,5 @@
+/* globals drupalSettings */
+
 try {
   window.H5PIntegration = drupalSettings.h5p.H5PIntegration;
 }
