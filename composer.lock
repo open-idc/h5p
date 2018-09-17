@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
-                "reference": "425aac5d33a1fd4d1c14a2211e57948991b7bce4"
+                "reference": "c9cb23e06c65ef2d703e76dcf9fca63016d32981"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/425aac5d33a1fd4d1c14a2211e57948991b7bce4",
-                "reference": "425aac5d33a1fd4d1c14a2211e57948991b7bce4",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/c9cb23e06c65ef2d703e76dcf9fca63016d32981",
+                "reference": "c9cb23e06c65ef2d703e76dcf9fca63016d32981",
                 "shasum": ""
             },
             "require": {
@@ -30,7 +30,8 @@
                     "h5p-development.class.php",
                     "h5p-file-storage.interface.php",
                     "h5p-default-storage.class.php",
-                    "h5p-event-base.class.php"
+                    "h5p-event-base.class.php",
+                    "h5p-metadata.class.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -60,7 +61,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2018-09-11T09:50:51+00:00"
+            "time": "2018-09-17T11:44:42+00:00"
         },
         {
             "name": "h5p/h5p-editor",
@@ -68,12 +69,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-editor-php-library.git",
-                "reference": "1bd28a7a75f6b033ef4d46fbfb14d2914435cd43"
+                "reference": "a02743f3de284f423e3c632fe3d8ea0c6846d6b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/1bd28a7a75f6b033ef4d46fbfb14d2914435cd43",
-                "reference": "1bd28a7a75f6b033ef4d46fbfb14d2914435cd43",
+                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/a02743f3de284f423e3c632fe3d8ea0c6846d6b4",
+                "reference": "a02743f3de284f423e3c632fe3d8ea0c6846d6b4",
                 "shasum": ""
             },
             "require": {
@@ -117,7 +118,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2018-09-12T10:58:19+00:00"
+            "time": "2018-09-17T07:29:44+00:00"
         }
     ],
     "packages-dev": [],

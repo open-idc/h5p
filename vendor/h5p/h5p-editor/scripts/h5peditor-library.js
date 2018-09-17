@@ -1,3 +1,4 @@
+/* global ns */
 /**
  * Callback for setting new parameters.
  *
@@ -409,7 +410,7 @@ ns.Library.prototype.addMetadataForm = function () {
     that.$metadataButton = H5PEditor.$('' +
       '<div class="h5p-metadata-button-wrapper">' +
         '<div class="h5p-metadata-button-tip"></div>' +
-        '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
+        '<div class="h5p-metadata-toggler">' + ns.t('core', 'metadata') + '</div>' +
       '</div>');
 
     // Put the metadataButton after the first visible label if it has text

@@ -1,3 +1,4 @@
+/* global ns */
 /**
  * This file contains helper functions for the editor.
  */
@@ -319,7 +320,8 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent, m
 
         // Render common fields if found
         if (renderableCommonFields.length) {
-          var libraryName = commonFieldMachineName.length ? commonFieldMachineName.split(' ')[0] : '';
+          var libraryName = commonFieldMachineName === 'Other libraries' ? commonFieldMachineName
+            : (commonFieldMachineName.length ? commonFieldMachineName.split(' ')[0] : '');
           if (libraries.length && libraries[0].title) {
             libraryName = libraries[0].title;
           }
@@ -331,10 +333,8 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent, m
             commonFieldsLibraryWrapper = document.createElement('fieldset');
             var libraryWrapperClass = libraryName.replace(/\s+/g, '-').toLowerCase();
 
-            commonFieldsLibraryWrapper.classList.add(
-              'common-fields-library-wrapper',
-              'common-fields-' + libraryWrapperClass
-            );
+            commonFieldsLibraryWrapper.classList.add('common-fields-library-wrapper');
+            commonFieldsLibraryWrapper.classList.add('common-fields-' + libraryWrapperClass);
 
             var libraryTitle = document.createElement('legend');
             libraryTitle.classList.add('common-field-legend');
@@ -539,6 +539,42 @@ ns.findField = function (path, parent) {
   }
 
   return false;
+};
+
+/**
+ * Find a semantics field in the semantics structure by name of the field
+ * Will return the first found by depth first search if there are identically named fields
+ *
+ * @param {string} fieldName Name of the field we wish to find
+ * @param {Object|Array} semanticsStructure Semantics we wish to find the field within
+ * @returns {null|Object} Returns the field if found, otherwise null.
+ */
+ns.findSemanticsField = function (fieldName, semanticsStructure) {
+  if (Array.isArray(semanticsStructure)) {
+    for (let i = 0; i < semanticsStructure.length; i++) {
+      var semanticsField = ns.findSemanticsField(fieldName, semanticsStructure[i]);
+      if (semanticsField !== null) {
+        // Return immediately if field is found
+        return semanticsField;
+      }
+    }
+    return null;
+  }
+  else if (semanticsStructure.name === fieldName) {
+    return semanticsStructure;
+  }
+  else if (semanticsStructure.field) {
+    // Process field
+    return ns.findSemanticsField(fieldName, semanticsStructure.field);
+  }
+  else if (semanticsStructure.fields) {
+    // Process fields
+    return ns.findSemanticsField(fieldName, semanticsStructure.fields);
+  }
+  else {
+    // No matching semantics found within known properties and list structures
+    return null;
+  }
 };
 
 /**
@@ -877,7 +913,7 @@ ns.bindImportantDescriptionEvents = function (widget, fieldName, parent) {
       widget.$item.addClass('important-description-visible');
       ns.storage.set(context, true);
     })
-    .keydown(function () {
+    .keydown(function (event) {
       if (event.which == 13 || event.which == 32) {
         ns.$(this).trigger('click');
         event.preventDefault();
@@ -890,7 +926,7 @@ ns.bindImportantDescriptionEvents = function (widget, fieldName, parent) {
       widget.$item.removeClass('important-description-visible');
       ns.storage.set(context, false);
     })
-    .keydown(function () {
+    .keydown(function (event) {
       if (event.which == 13 || event.which == 32) {
         ns.$(this).trigger('click');
         event.preventDefault();

@@ -105,19 +105,23 @@ class H5PContentUpgrade extends ControllerBase {
       // Update params.
       $params = json_decode($params);
       foreach ($params as $id => $param) {
+        $upgraded = json_decode($param);
+
+        $fields = array_merge(\H5PMetadata::toDBArray($upgraded->metadata), array(
+          'main_library_id' => $to_library->id,
+          'json_content' => json_encode($upgraded->params),
+          'filtered' => '',
+        ));
+
         $this->database->update('h5p_content')
-          ->fields([
-            'library_id' => $to_library->id,
-            'parameters' => $param,
-            'filtered_parameters' => ''
-          ])
+          ->fields($fields)
           ->condition('id', $id)
           ->execute();
 
         // Log content upgrade successful
         new H5PEvent('content', 'upgrade',
           $id,
-          '', // Should be title, but an entity does not have one
+          $upgraded->metadata->title ? $upgraded->metadata->title : '',
           $to_library->name,
           $to_library->major_version . '.' . $to_library->minor_version);
 
@@ -130,10 +134,21 @@ class H5PContentUpgrade extends ControllerBase {
     $out['left'] = $interface->getNumContent($library_id);
 
     if ($out['left']) {
-      // Find the 10 first contents using library and add to params
-      $contents = $this->database->query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', [':id' => $library_id]);
+      // Find the 40 first contents using library and add to params
+      $contents = $this->database->query(
+        'SELECT id, parameters AS params, title, authors, source, license,
+                license_version, license_extras, year_from, year_to, changes,
+                author_comments
+           FROM {h5p_content}
+          WHERE library_id = :id
+          LIMIT 40', [
+        ':id' => $library_id
+      ]);
+
       foreach ($contents as $content) {
-        $out['params'][$content->id] = $content->params;
+        $out['params'][$content->id] =
+          '{"params":' . $content->params .
+          ',"metadata":' . \H5PMetadata::toJSON($content) . '}';
       }
     }
 
