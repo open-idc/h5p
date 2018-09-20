@@ -98,7 +98,7 @@ ns.Library.prototype.appendTo = function ($wrapper) {
         '<label class="h5peditor-label-wrapper">' +
           '<span class="h5peditor-label' +
             (this.field.optional ? '' : ' h5peditor-required') + '">' +
-              (this.field.label === undefined ? this.field.name : this.field.label) +
+              this.field.label +
           '</span>' +
         '</label>' +
       '</div>';
@@ -110,7 +110,45 @@ ns.Library.prototype.appendTo = function ($wrapper) {
 
   html += '<select>' + ns.createOption('-', 'Loading...') + '</select>';
 
-  if (window.localStorage) {
+  /**
+   * For some content types with custom editors, we don't want to add the copy
+   * and paste button, since it is handled by the custom editors themself.
+   *
+   * @return {boolean}
+   */
+  var enableCopyAndPaste = function () {
+    var librarySelector = ns.findLibraryAncestor(that.parent);
+    if (librarySelector.currentLibrary !== undefined) {
+
+      var library = ns.libraryFromString(librarySelector.currentLibrary);
+
+      var config = {
+        'H5P.CoursePresentation': {
+          major: 1,
+          minor: 20
+        },
+        'H5P.InteractiveVideo': {
+          major: 1,
+          minor: 20
+        },
+        'H5P.DragQuestion': {
+          major: 1,
+          minor: 13
+        }
+      }[library.machineName];
+
+      if (config === undefined) {
+        return true;
+      }
+
+      return library.majorVersion > config.major ||
+        (library.majorVersion == config.major && library.minorVersion >= config.minor);
+    }
+
+    return true;
+  };
+
+  if (window.localStorage && enableCopyAndPaste()) {
     html += ns.createCopyPasteButtons();
   }
 
@@ -120,6 +158,7 @@ ns.Library.prototype.appendTo = function ($wrapper) {
 
   this.$myField = ns.$(html).appendTo($wrapper);
   this.$select = this.$myField.children('select');
+  this.$label = this.$myField.find('.h5peditor-label');
   this.$libraryWrapper = this.$myField.children('.libwrap');
   if (window.localStorage) {
     this.$copyButton = this.$myField.find('.h5peditor-copy-button').click(function () {
@@ -364,21 +403,19 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
       that.$copyButton.toggleClass('disabled', false);
     }
 
+    that.addMetadataForm();
+
     if (that.libraries !== undefined) {
       that.change();
     }
     else {
       that.runChangeCallback = true;
     }
-
-    that.addMetadataForm(semantics);
   });
 };
 
 /**
  * Add metadata form.
- *
- * @param {object} semantics - Semantics.
  */
 ns.Library.prototype.addMetadataForm = function () {
   var that = this;
@@ -388,20 +425,29 @@ ns.Library.prototype.addMetadataForm = function () {
     return;
   }
 
-  if (that.$metadataWrapper === undefined) {
-    that.$metadataWrapper = ns.$('<div class="push-top"></div>');
-    that.$metadataForm = ns.metadataForm(that.semantics, that.params.metadata, that.$metadataWrapper, that, {populateTitle: true});
+  // Restore children after adding metadata fields
+  const children = this.children;
+  this.children = [];
+
+  if (that.$metadataFormWrapper === undefined) {
+    // Put metadata form wrapper before library wrapper
+    that.$metadataFormWrapper = ns.$('<div class="h5p-metadata-form-wrapper"></div>');
+    that.$metadataForm = ns.metadataForm(that.semantics, that.params.metadata, that.$metadataFormWrapper, that, {populateTitle: true});
 
     /*
      * Note: Use the id metadata-title-sub in custom editors to invoke syncing
      * the title field with the metadata title
      */
     ns.sync(
-      that.$libraryWrapper.parent().siblings('.h5p-metadata-title-wrapper').find('input#metadata-title-sub'),
-      that.$metadataForm.find('.field-name-title').find('input')
+      that.$libraryWrapper.parent()
+        .siblings('.h5p-metadata-title-wrapper')
+        .find('input#metadata-title-sub'),
+      that.$metadataForm
+        .find('.field-name-title')
+        .find('input')
     );
 
-    that.$libraryWrapper.before(that.$metadataWrapper);
+    that.$libraryWrapper.before(that.$metadataFormWrapper);
   }
 
   // Prevent multiple buttons when changing libraries
@@ -413,52 +459,99 @@ ns.Library.prototype.addMetadataForm = function () {
         '<div class="h5p-metadata-toggler">' + ns.t('core', 'metadata') + '</div>' +
       '</div>');
 
-    // Put the metadataButton after the first visible label if it has text
-    var $labelWrapper = that.$libraryWrapper.siblings('.h5p-editor-flex-wrapper').children('.h5peditor-label-wrapper');
-    if ($labelWrapper.length > 0 && !$labelWrapper.is(':empty')) {
-      var label = that.$libraryWrapper.closest('.content').find('.h5p-editor-flex-wrapper').first();
-      if (label.css('display') === 'none') {
-        label = that.$libraryWrapper.find('.h5p-editor-flex-wrapper').first();
-      }
-      label.append(that.$metadataButton);
+    const librarySelectorLabelVisible = (that.libraries.length > 1) && that.$label.text().trim().length !== 0;
+
+    if (librarySelectorLabelVisible) {
+      that.$metadataButton.appendTo(this.$label.parent());
     }
     else {
-      $labelWrapper = that.$libraryWrapper.find('.h5peditor-label-wrapper').first();
-      // We might be in a compound content type like CP or IV where the layout is different
-      const $compoundLabelWrapper = that.$libraryWrapper.parent().parent().find('.h5p-metadata-title-wrapper').find('.h5p-editor-flex-wrapper').first();
-      if ($compoundLabelWrapper.length > 0) {
-        $compoundLabelWrapper.append(that.$metadataButton);
+      // Put the metadataButton after the first visible label found if it has text
+      var $labelWrapper = that.$libraryWrapper
+        .siblings('.h5p-editor-flex-wrapper')
+        .children('.h5peditor-label-wrapper');
+
+      if ($labelWrapper.length > 0 && !$labelWrapper.is(':empty')) {
+        var label = that.$libraryWrapper
+          .closest('.content')
+          .find('.h5p-editor-flex-wrapper')
+          .first();
+
+        if (label.length === 0 || label.css('display') === 'none') {
+          label = that.$libraryWrapper
+            .find('.h5p-editor-flex-wrapper')
+            .first();
+        }
+        label.append(that.$metadataButton);
       }
-      // First label found, even if it's empty
-      else if ($labelWrapper.length > 0) {
-        $labelWrapper.append(that.$metadataButton);
-      }
-      // Next to the library select field
       else {
-        var $librarySelector = that.$libraryWrapper.siblings('select');
-        that.$metadataButton.addClass('inline-with-selector');
-        $librarySelector.after(that.$metadataButton);
+        $labelWrapper = that.$libraryWrapper
+          .find('.h5peditor-label-wrapper')
+          .first();
+
+        // We might be in a compound content type like CP or IV where the layout is different
+        const $compoundLabelWrapper = that.$libraryWrapper
+          .parent().parent()
+          .find('.h5p-metadata-title-wrapper')
+          .find('.h5p-editor-flex-wrapper')
+          .first();
+
+        if ($compoundLabelWrapper.length > 0) {
+          $compoundLabelWrapper.append(that.$metadataButton);
+        }
+        // First label found, even if it's empty
+        else if ($labelWrapper.length > 0) {
+          $labelWrapper.append(that.$metadataButton);
+        }
+        // Next to the library select field
+        else {
+          var $librarySelector = that.$libraryWrapper.siblings('select');
+          that.$metadataButton.addClass('inline-with-selector');
+          $librarySelector.after(that.$metadataButton);
+        }
       }
     }
 
     // Add click listener
     that.$metadataButton.click(function () {
-      that.$metadataWrapper.find('.h5p-metadata-wrapper').toggleClass('h5p-open');
-      that.$metadataWrapper.closest('.h5peditor-form').find('.overlay').toggle();
-      that.$metadataWrapper.find('.h5p-metadata-wrapper').find('.field-name-title').find('input.h5peditor-text').focus();
+      that.$metadataFormWrapper
+        .find('.h5p-metadata-wrapper')
+        .toggleClass('h5p-open');
+
+      that.$metadataFormWrapper
+        .closest('.h5peditor-form')
+        .find('.overlay')
+        .toggle();
+
+      that.$metadataFormWrapper
+        .find('.h5p-metadata-wrapper')
+        .find('.field-name-title')
+        .find('input.h5peditor-text')
+        .focus();
+
       if (H5PIntegration && H5PIntegration.user && H5PIntegration.user.name) {
-        that.$metadataWrapper.find('.field-name-authorName').find('input.h5peditor-text').val(H5PIntegration.user.name);
+        that.$metadataFormWrapper
+          .find('.field-name-authorName')
+          .find('input.h5peditor-text')
+          .val(H5PIntegration.user.name);
       }
       /*
        * Try (again) to sync with a title field. Custom editors may need
        * this here because the master may not yet exist before.
        */
       ns.sync(
-        that.$libraryWrapper.parent().siblings('.h5p-metadata-title-wrapper').find('input#metadata-title-sub'),
-        that.$metadataForm.find('.field-name-title').find('input')
+        that.$libraryWrapper.parent()
+          .siblings('.h5p-metadata-title-wrapper')
+          .find('input#metadata-title-sub'),
+        that.$metadataForm
+          .find('.field-name-title')
+          .find('input')
       );
     });
   }
+
+  // Restore children
+  this.metadataChildren = this.children;
+  this.children = children;
 };
 
 /**
@@ -518,6 +611,14 @@ ns.Library.prototype.change = function (callback) {
 ns.Library.prototype.validate = function () {
   var valid = true;
 
+  if (this.metadataChildren) {
+    for (var i = 0; i < this.metadataChildren.length; i++) {
+      if (this.metadataChildren[i].validate() === false) {
+        valid = false;
+      }
+    }
+  }
+
   if (this.children) {
     for (var i = 0; i < this.children.length; i++) {
       if (this.children[i].validate() === false) {
@@ -553,14 +654,18 @@ ns.Library.prototype.ready = function (ready) {
  * * @alias H5PEditor.Library#removeChildren
  */
 ns.Library.prototype.removeChildren = function () {
+  if (this.metadataChildren !== undefined) {
+    ns.removeChildren(this.metadataChildren);
+  }
+
   if (this.currentLibrary === '-' || this.children === undefined) {
     return;
   }
 
   // Remove old metadata form and button
-  if (this.$metadataWrapper) {
-    this.$metadataWrapper.remove();
-    delete this.$metadataWrapper;
+  if (this.$metadataFormWrapper) {
+    this.$metadataFormWrapper.remove();
+    delete this.$metadataFormWrapper;
     this.$metadataButton.remove();
     delete this.$metadataButton;
   }
