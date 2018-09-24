@@ -223,7 +223,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     }
 
     $content = [
-      'title' => 'Interactive Content',
+      'title' => $this->get('title')->value,
       'id' => $this->id(),
       'slug' => 'interactive-content',
       'library' => [
@@ -234,6 +234,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'params' => $this->get('parameters')->value,
       'filtered' => $this->get('filtered_parameters')->value,
       'embedType' => 'div',
+      'metadata' => $this->getMetadata()
     ];
 
     $core = H5PDrupal::getInstance('core');
