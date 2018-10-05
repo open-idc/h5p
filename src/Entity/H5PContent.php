@@ -270,7 +270,10 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
         unset($metadata[$key]);
       }
     }
-    return $metadata;
+
+    $core = H5PDrupal::getInstance('core');
+    $validator = new \H5PContentValidator($core->h5pF, $core);
+    return $validator->validateMetadata($metadata);
   }
 
   /**
