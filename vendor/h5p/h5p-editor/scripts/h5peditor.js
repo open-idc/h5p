@@ -339,6 +339,16 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent, m
             var libraryTitle = document.createElement('legend');
             libraryTitle.classList.add('common-field-legend');
             libraryTitle.textContent = libraryName;
+            libraryTitle.tabIndex = '0';
+            libraryTitle.setAttribute('role', 'button');
+            libraryTitle.addEventListener('click', function () {
+              commonFieldsLibraryWrapper.classList.toggle('expanded');
+            });
+            libraryTitle.addEventListener('keypress', function (e) {
+              if (e.which === 32) {
+                commonFieldsLibraryWrapper.classList.toggle('expanded');
+              }
+            });
             commonFieldsLibraryWrapper.appendChild(libraryTitle);
 
             ns.renderableCommonFields[commonFieldMachineName].wrapper = commonFieldsLibraryWrapper;
@@ -393,16 +403,16 @@ ns.setCommonFieldsWrapper = function (parent, wrapper) {
  */
 ns.addCommonField = function (field, parent, params, ancestor, skipAppendTo) {
   var commonField;
-  if (ancestor.commonFields[parent.library] === undefined) {
-    ancestor.commonFields[parent.library] = {};
+
+  // Group all fields based on library name + version
+  if (ancestor.commonFields[parent.currentLibrary] === undefined) {
+    ancestor.commonFields[parent.currentLibrary] = {};
   }
 
-  ancestor.commonFields[parent.library][parent.currentLibrary] =
-    ancestor.commonFields[parent.library][parent.currentLibrary] || {};
-
-  if (ancestor.commonFields[parent.library][parent.currentLibrary][field.name] === undefined) {
+  // Field name will have to be unique for library
+  if (ancestor.commonFields[parent.currentLibrary][field.name] === undefined) {
     var widget = ns.getWidgetName(field);
-    ancestor.commonFields[parent.library][parent.currentLibrary][field.name] = {
+    ancestor.commonFields[parent.currentLibrary][field.name] = {
       instance: new ns.widgets[widget](parent, field, params[field.name], function (field, value) {
         for (var i = 0; i < commonField.setValues.length; i++) {
           commonField.setValues[i](field, value);
@@ -413,7 +423,7 @@ ns.addCommonField = function (field, parent, params, ancestor, skipAppendTo) {
     };
   }
 
-  commonField = ancestor.commonFields[parent.library][parent.currentLibrary][field.name];
+  commonField = ancestor.commonFields[parent.currentLibrary][field.name];
   commonField.parents.push(ns.findLibraryAncestor(parent));
   commonField.setValues.push(function (field, value) {
     if (value === undefined) {
@@ -792,13 +802,8 @@ ns.createText = function (value, maxLength, placeholder) {
  * @returns {String}
  */
 ns.createLabel = function (field, content) {
-  // There's no good way to retrieve the current library the label is processed for, is it?
-  // We use the previous library's state of entitlement instead.
-  const wrapperFront = (this.previousLibraryEntitledForMetadata) ? '<div class="h5p-editor-flex-wrapper">' : '';
-  const wrapperBack = (this.previousLibraryEntitledForMetadata) ? '</div>' : '';
-
   // New items can be added next to the label within the flex-wrapper
-  var html = wrapperFront + '<label class="h5peditor-label-wrapper">';
+  var html = '<label class="h5peditor-label-wrapper">';
 
   // Temporary fix for the old version of CoursePresentation's custom editor
   if (field.widget === 'coursepresentation' && field.name === 'presentation') {
@@ -809,7 +814,7 @@ ns.createLabel = function (field, content) {
     html += '<span class="h5peditor-label' + (field.optional ? '' : ' h5peditor-required') + '">' + (field.label === undefined ? field.name : field.label) + '</span>';
   }
 
-  return html + (content || '') + '</label>' + wrapperBack;
+  return html + (content || '') + '</label>';
 };
 
 /**
@@ -943,7 +948,7 @@ ns.createCopyPasteButtons = function () {
   return '<div class="h5peditor-copypaste-wrap">' +
            '<button class="h5peditor-copy-button disabled" title="' + H5PEditor.t('core', 'copyToClipboard') + '">' + ns.t('core', 'copyButton') + '</button>' +
            '<button class="h5peditor-paste-button disabled" title="' + H5PEditor.t('core', 'pasteFromClipboard') + '">' + ns.t('core', 'pasteButton') + '</button>' +
-         '</div>';
+         '</div><div class="h5peditor-clearfix"></div>';
 };
 
 /**
@@ -1082,65 +1087,6 @@ ns.createButton = function (id, title, handler, displayTitle) {
 };
 
 /**
- * Sync two input fields. Empty fields will take value of the other or be set to ''.
- * master fields takes precedence if both are set already.
- *
- * @param {jQuery} $masterField - Master field that holds the value for initialization.
- * @param {jQuery} $slaveField - Slave field to be synced with.
- * @param {object} [options] - Options.
- * @param {string} [options.defaultText] - Default text if fields are empty.
- * @param {string} [options.listenerName] - Listener name.
- * @param {function} [options.callback] - Callback when a sync is executed. Returns new string.
- */
-ns.sync = function ($masterField, $slaveField, options) {
-  if (!$masterField || $masterField.length === 0 || !$slaveField || $slaveField.length === 0) {
-    return;
-  }
-  options = options || {};
-
-  const listenerName = options.listenerName || 'input.metadata-sync';
-
-  // Remove old sync
-  $masterField.off(listenerName);
-  $slaveField.off(listenerName);
-
-  let valueSet = '';
-
-  // Initialize fields
-  if ($masterField.val()) {
-    valueSet = $masterField.val();
-    $slaveField.val(valueSet).trigger('change');
-  }
-  else if ($slaveField.val()) {
-    valueSet = $slaveField.val();
-    $masterField.val(valueSet).trigger('change');
-  }
-  else if (options.defaultText) {
-    valueSet = options.defaultText || '';
-    $masterField.val(valueSet).trigger('change');
-    $slaveField.val(valueSet).trigger('change');
-  }
-
-  // Keep fields in sync
-  $masterField.on(listenerName, function () {
-    $slaveField.val($masterField.val()).trigger('change');
-    if (options.callback) {
-      options.callback($masterField.val());
-    }
-  });
-  $slaveField.on(listenerName, function () {
-    $masterField.val($slaveField.val()).trigger('change');
-    if (options.callback) {
-      options.callback($slaveField.val());
-    }
-  });
-
-  if (options.callback) {
-    options.callback(valueSet);
-  }
-};
-
-/**
  * Check if the current library is entitled for the metadata button. True by default.
  *
  * It will probably be okay to remove this check at some point in time when
@@ -1151,7 +1097,6 @@ ns.sync = function ($masterField, $slaveField, options) {
  * @return {boolean} True, if form should have the metadata button.
  */
 ns.enableMetadata = function (library) {
-  this.previousLibraryEntitledForMetadata = true;
 
   if (!library || typeof library !== 'string') {
     return false;
@@ -1202,8 +1147,6 @@ ns.enableMetadata = function (library) {
   if (library.majorVersion > block.majorVersion || library.majorVersion === block.majorVersion && library.minorVersion > block.minorVersion) {
     return true;
   }
-
-  this.previousLibraryEntitledForMetadata = false;
 
   return false;
 };
@@ -1543,91 +1486,3 @@ ns.storage = (function () {
   };
   return instance;
 })();
-
-/**
- * Wrapper that makes it easy to enter fullscreen for any given element.
- *
- * @class
- * @augments H5P.EventDispatcher
- * @param {DOMElement} element
- */
-ns.Fullscreen = (function (EventDispatcher, fullScreenBrowserPrefix, safariBrowser) {
-  if (fullScreenBrowserPrefix === undefined) {
-    return undefined; // Not supported
-  }
-
-  function Fullscreen(element) {
-    if (!(element instanceof HTMLElement)) {
-      throw new Error('Element not an instance of HTMLElement');
-    }
-
-    // Extend event system
-    EventDispatcher.call(this);
-
-    /** @alias H5P.Fullscreen# */
-    const self = this;
-
-    // Event names varies from browser to browser
-    const eventName = (fullScreenBrowserPrefix === 'ms' ? 'MSFullscreenChange' : fullScreenBrowserPrefix + 'fullscreenchange');
-
-    // Keep track of if this fullscreen is active or not (keep in mind that others could still be active)
-    self.isActive = false;
-
-    /**
-     * Event handler for fullscreen changes.
-     */
-    const handleFullscreenChange = function (event) {
-      if (event.target !== element) {
-        return; // Other fullscreen
-      }
-      if (!self.isActive) {
-        // Entering fullscreen mode
-        self.isActive = true;
-        self.trigger('entered');
-      }
-      else {
-        // Exiting fullscreen
-        self.isActive = false;
-        self.trigger('exited');
-      }
-    };
-    document.addEventListener(eventName, handleFullscreenChange, false);
-
-    /**
-     * Engage fullscreen mode
-     */
-    self.enter = function () {
-      if (fullScreenBrowserPrefix === '') {
-        element.requestFullScreen();
-      }
-      else {
-        const method = (fullScreenBrowserPrefix === 'ms' ? 'msRequestFullscreen' : fullScreenBrowserPrefix + 'RequestFullScreen');
-        const params = (fullScreenBrowserPrefix === 'webkit' && safariBrowser === 0 ? Element.ALLOW_KEYBOARD_INPUT : undefined);
-        element[method](params);
-      }
-    };
-
-    /**
-     * Disengage fullscreen mode
-     */
-    self.exit = function () {
-      if (!self.isActive) {
-        return; // Only allow to exit own fullscreen mode
-      }
-      if (fullScreenBrowserPrefix === '') {
-        document.exitFullscreen();
-      }
-      else if (fullScreenBrowserPrefix === 'moz') {
-        document.mozCancelFullScreen();
-      }
-      else {
-        document[fullScreenBrowserPrefix + 'ExitFullscreen']();
-      }
-    };
-  }
-
-  Fullscreen.prototype = Object.create(EventDispatcher.prototype);
-  Fullscreen.prototype.constructor = Fullscreen;
-
-  return Fullscreen;
-})(H5P.EventDispatcher, H5P.fullScreenBrowserPrefix, H5P.safariBrowser);

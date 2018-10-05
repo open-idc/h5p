@@ -210,7 +210,9 @@ interface H5PFrameworkInterface {
    *   - minorVersion: The library's minorVersion
    *   - patchVersion: The library's patchVersion
    *   - runnable: 1 if the library is a content type, 0 otherwise
-   *   - metadata: 1 if the library should support setting metadata (copyright etc)
+   *   - metadataSettings: Associative array containing:
+   *      - disable: 1 if the library should not support setting metadata (copyright etc)
+   *      - disableExtraTitleField: 1 if the library don't need the extra title field
    *   - fullscreen(optional): 1 if the library supports fullscreen, 0 otherwise
    *   - embedTypes(optional): list of supported embed types
    *   - preloadedJs(optional): list of associative arrays containing:
@@ -681,7 +683,10 @@ class H5PValidator {
     'author' => '/^.{1,255}$/',
     'license' => '/^(cc-by|cc-by-sa|cc-by-nd|cc-by-nc|cc-by-nc-sa|cc-by-nc-nd|pd|cr|MIT|GPL1|GPL2|GPL3|MPL|MPL2)$/',
     'description' => '/^.{1,}$/',
-    'metadata' => '/^(0|1)$/',
+    'metadataSettings' => array(
+      'disable' => '/^(0|1)$/',
+      'disableExtraTitleField' => '/^(0|1)$/'
+    ),
     'dynamicDependencies' => array(
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
       'majorVersion' => '/^[0-9]{1,5}$/',
@@ -1440,10 +1445,11 @@ class H5PStorage {
       // Indicate that the dependencies of this library should be saved.
       $library['saveDependencies'] = TRUE;
 
-      // Save library meta data
-      if (!isset($library['metadata'])) {
-        $library['metadata'] = 1;
-      }
+      // Convert metadataSettings values to boolean & json_encode it before saving
+      $library['metadataSettings'] = isset($library['metadataSettings']) ?
+        H5PMetadata::boolifyAndEncodeSettings($library['metadataSettings']) :
+        NULL;
+
       $this->h5pF->saveLibraryData($library, $new);
 
       // Save library folder
@@ -1941,7 +1947,7 @@ class H5PCore {
     if ($content !== NULL) {
       // Validate main content's metadata
       $validator = new H5PContentValidator($this->h5pF, $this);
-      $validator->validateMetadata($content['metadata']);
+      $content['metadata'] = $validator->validateMetadata($content['metadata']);
 
       $content['library'] = array(
         'id' => $content['libraryId'],
@@ -3301,7 +3307,10 @@ class H5PCore {
       'licensePD' => $this->h5pF->t('Public Domain'),
       'licenseCC010' => $this->h5pF->t('CC0 1.0 Universal (CC0 1.0) Public Domain Dedication'),
       'licensePDM' => $this->h5pF->t('Public Domain Mark'),
-      'licenseC' => $this->h5pF->t('Copyright')
+      'licenseC' => $this->h5pF->t('Copyright'),
+      'contentType' => $this->h5pF->t('Content Type'),
+      'licenseExtras' => $this->h5pF->t('License Extras'),
+      'changes' => $this->h5pF->t('Changelog'),
     );
   }
 }
@@ -3375,8 +3384,9 @@ class H5PContentValidator {
    * Validate metadata
    *
    * @param array $metadata
+   * @return array Validated & filtered
    */
-  public function validateMetadata(&$metadata) {
+  public function validateMetadata($metadata) {
     $semantics = $this->getMetadataSemantics();
 
     $group = (object)$metadata;
@@ -3384,6 +3394,8 @@ class H5PContentValidator {
       'type' => 'group',
       'fields' => $semantics,
     ), FALSE);
+
+    return (array)$group;
   }
 
   /**
@@ -3910,7 +3922,7 @@ class H5PContentValidator {
 
     // Validate subcontent's metadata
     if (isset($value->metadata)) {
-      $this->validateMetadata($value->metadata);
+      $value->metadata = $this->validateMetadata($value->metadata);
     }
 
     $validKeys = array('library', 'params', 'subContentId', 'metadata');
@@ -4507,7 +4519,12 @@ class H5PContentValidator {
         'label' => $this->h5pF->t('Author comments'),
         'description' => $this->h5pF->t('Comments for the editor of the content (This text will not be published as a part of copyright info)'),
         'optional' => TRUE
-      )
+      ),
+      (object) array(
+        'name' => 'contentType',
+        'type' => 'text',
+        'widget' => 'none'
+      ),
     );
 
     return $semantics;

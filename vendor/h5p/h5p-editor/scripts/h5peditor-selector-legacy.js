@@ -20,7 +20,7 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
     // For new content deny old or restricted libs.
     if (selectedLibrary === libraryName ||
       ((library.restricted === undefined || !library.restricted) &&
-        library.isOld !== true
+      library.isOld !== true
       )
     ) {
       options += '<option value="' + libraryName + '"';

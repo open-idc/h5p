@@ -4,7 +4,7 @@
  */
 abstract class H5PMetadata {
 
-  const FIELDS = array(
+  private static $fields = array(
     'title' => array(
       'type' => 'text',
       'maxLength' => 255
@@ -79,7 +79,7 @@ abstract class H5PMetadata {
       $metadata = (array) $metadata;
     }
 
-    foreach (self::FIELDS as $key => $config) {
+    foreach (self::$fields as $key => $config) {
 
       if ($key === 'title' && !$include_title) {
         continue;
@@ -99,7 +99,7 @@ abstract class H5PMetadata {
 
           case 'int':
             $value = ($value !== null) ? intval($value): null;
-            $types[] = '%i';
+            $types[] = '%d';
             break;
 
           case 'json':
@@ -113,5 +113,25 @@ abstract class H5PMetadata {
     }
 
     return $fields;
+  }
+
+  /**
+   * The metadataSettings field in libraryJson uses 1 for true and 0 for false.
+   * Here we are converting these to booleans, and also doing JSON encoding.
+   * This is invoked before the library data is beeing inserted/updated to DB.
+   *
+   * @param array $metadataSettings
+   * @return string
+   */
+  public static function boolifyAndEncodeSettings($metadataSettings) {
+    // Convert metadataSettings values to boolean
+    if (isset($metadataSettings['disable'])) {
+      $metadataSettings['disable'] = $metadataSettings['disable'] === 1;
+    }
+    if (isset($metadataSettings['disable'])) {
+      $metadataSettings['disableExtraTitleField'] = $metadataSettings['disableExtraTitleField'] === 1;
+    }
+
+    return json_encode($metadataSettings);
   }
 }
