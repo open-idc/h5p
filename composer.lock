@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
-                "reference": "8dafa5db91a251534bc07fe5403063e8b6a55990"
+                "reference": "c4e52f4f29f3824dd69fbddeeb524ff1dade32aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/8dafa5db91a251534bc07fe5403063e8b6a55990",
-                "reference": "8dafa5db91a251534bc07fe5403063e8b6a55990",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/c4e52f4f29f3824dd69fbddeeb524ff1dade32aa",
+                "reference": "c4e52f4f29f3824dd69fbddeeb524ff1dade32aa",
                 "shasum": ""
             },
             "require": {
@@ -61,7 +61,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2018-10-16T07:53:11+00:00"
+            "time": "2018-10-17T11:53:38+00:00"
         },
         {
             "name": "h5p/h5p-editor",
@@ -69,12 +69,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-editor-php-library.git",
-                "reference": "0a32cfccc44e3ce7ad1f9f93987cc9e1a909492c"
+                "reference": "00c2caa82328621e2366e3e7eca75766de1adea4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/0a32cfccc44e3ce7ad1f9f93987cc9e1a909492c",
-                "reference": "0a32cfccc44e3ce7ad1f9f93987cc9e1a909492c",
+                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/00c2caa82328621e2366e3e7eca75766de1adea4",
+                "reference": "00c2caa82328621e2366e3e7eca75766de1adea4",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +118,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2018-10-05T13:05:08+00:00"
+            "time": "2018-10-16T13:53:58+00:00"
         }
     ],
     "packages-dev": [],
