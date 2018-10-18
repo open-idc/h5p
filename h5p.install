@@ -422,13 +422,9 @@ function h5p_schema() {
         'description' => 'Plugin configuration data',
         'type' => 'text',
       ),
-      'metadata' => array(
-        'description' => 'Whether or not as sublibrary gets metadata button',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 1,
+      'metadata_settings' => array(
+        'description' => 'Metadata settings',
+        'type' => 'text'
       ),
     ),
     'primary key' => array('library_id'),
@@ -852,14 +848,10 @@ function h5p_update_8002() {
       'type' => 'text'
     ));
   }
-  if (!db_field_exists('h5p_libraries', 'metadata')) {
-    db_add_field('h5p_libraries', 'metadata', array(
-      'description' => 'Whether or not as sublibrary gets metadata button',
-      'type' => 'int',
-      'size' => 'tiny',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 1,
+  if (!db_field_exists('h5p_libraries', 'metadata_settings')) {
+    db_add_field('h5p_libraries', 'metadata_settings', array(
+      'description' => 'Metadata settings',
+      'type' => 'text'
     ));
   }
 

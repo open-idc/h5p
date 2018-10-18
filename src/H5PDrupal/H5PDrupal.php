@@ -648,6 +648,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     if (!isset($libraryData['hasIcon'])) {
       $libraryData['hasIcon'] = 0;
     }
+
     if ($new) {
       $libraryId = db_insert('h5p_libraries')
         ->fields(array(
@@ -664,7 +665,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
-          'metadata' => $librarydata['metadata'] ? 1 : 0,
+          'metadata_settings' => $libraryData['metadataSettings'],
           'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->execute();
@@ -689,6 +690,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'metadata_settings' => $libraryData['metadataSettings'],
           'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->condition('library_id', $libraryData['libraryId'])
