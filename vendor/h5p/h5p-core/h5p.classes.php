@@ -1647,7 +1647,7 @@ Class H5PExport {
     );
 
     foreach(array('authors', 'source', 'license', 'licenseVersion', 'licenseExtras' ,'yearFrom', 'yearTo', 'changes', 'authorComments') as $field) {
-      if (isset($content['metadata'][$field])) {
+      if (isset($content['metadata'][$field]) && $content['metadata'][$field] !== '') {
         if (($field !== 'authors' && $field !== 'changes') || (count($content['metadata'][$field]) > 0)) {
           $h5pJson[$field] = json_decode(json_encode($content['metadata'][$field], TRUE));
         }
@@ -1998,6 +1998,10 @@ class H5PCore {
          ($content['slug'] &&
           $this->fs->hasExport($content['slug'] . '-' . $content['id'] . '.h5p')))) {
       return $content['filtered'];
+    }
+
+    if (!(isset($content['library']) && isset($content['params']))) {
+      return NULL;
     }
 
     // Validate and filter against main library semantics.

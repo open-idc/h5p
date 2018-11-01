@@ -963,7 +963,8 @@ ns.confirmReplace = function (library, top, next) {
     // Confirm changing library
     var confirmReplace = new H5P.ConfirmationDialog({
       headerText: H5PEditor.t('core', 'pasteContent'),
-      dialogText: H5PEditor.t('core', 'confirmPasteContent')
+      dialogText: H5PEditor.t('core', 'confirmPasteContent'),
+      confirmText: H5PEditor.t('core', 'confirmPasteButtonText')
     }).appendTo(document.body);
     confirmReplace.on('confirmed', next);
     confirmReplace.show(top);
@@ -1180,6 +1181,34 @@ ns.attachToastTo = function (element, message, config) {
     return;
   }
 
+  const eventPath = function (evt) {
+    var path = (evt.composedPath && evt.composedPath()) || evt.path;
+    var target = evt.target;
+
+    if (path != null) {
+      // Safari doesn't include Window, but it should.
+      return (path.indexOf(window) < 0) ? path.concat(window) : path;
+    }
+
+    if (target === window) {
+      return [window];
+    }
+
+    function getParents(node, memo) {
+      memo = memo || [];
+      var parentNode = node.parentNode;
+
+      if (!parentNode) {
+        return memo;
+      }
+      else {
+        return getParents(parentNode, memo.concat(parentNode));
+      }
+    }
+
+    return [target].concat(getParents(target), window);
+  };
+
   /**
    * Handle click while toast is showing.
    */
@@ -1189,19 +1218,24 @@ ns.attachToastTo = function (element, message, config) {
      * The click would remove the toast message instantly without this check.
      * Children of the clicked element are also ignored.
      */
-    if (event.path.indexOf(element) !== -1) {
+    var path = eventPath(event);
+    if (path.indexOf(element) !== -1) {
       return;
     }
     clearTimeout(timer);
     removeToast();
   };
 
+
+
   /**
    * Remove the toast message.
    */
   const removeToast = function () {
     document.removeEventListener('click', clickHandler);
-    toast.remove(toast);
+    if (toast.parentNode) {
+      toast.parentNode.removeChild(toast);
+    }
   };
 
   /**

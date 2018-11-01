@@ -370,6 +370,8 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
 
     this.$libraryWrapper.attr('class', 'libwrap');
     this.$copyButton.toggleClass('disabled', true);
+    this.$pasteButton.text(ns.t('core', 'pasteButton'));
+    this.$pasteButton.attr('title', ns.t('core', 'pasteFromClipboard'));
     return;
   }
 
@@ -413,6 +415,8 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper, that);
     if (window.localStorage) {
       that.$copyButton.toggleClass('disabled', false);
+      that.$pasteButton.text(ns.t('core', 'pasteAndReplaceButton'));
+      that.$pasteButton.attr('title', ns.t('core', 'pasteAndReplaceFromClipboard'));
     }
 
     if (that.metadataForm && metadataSettings.disableExtraTitleField) {
@@ -459,8 +463,6 @@ ns.Library.prototype.findLibrary = function (libraryName) {
  * @return {Object}
  */
 ns.Library.prototype.getLibraryMetadataSettings = function (library) {
-  const self = this;
-
   return library.metadataSettings ? library.metadataSettings : {
     disable: !ns.enableMetadata(library.uberName),
     disableExtraTitleField: false
@@ -585,7 +587,7 @@ ns.Library.prototype.removeChildren = function () {
 
       if (remove) {
         delete ancestor.commonFields[library];
-        ns.renderableCommonFields[library].wrapper.remove();
+        ns.$(ns.renderableCommonFields[library].wrapper).remove();
       }
     }
   }
