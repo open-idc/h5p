@@ -6,7 +6,7 @@
   "license": "GPL-2.0+",
   "require": {
     "h5p/h5p-core": "1.19.0",
-    "h5p/h5p-editor": "1.18.0"
+    "h5p/h5p-editor": "1.18.1"
   },
   "minimum-stability": "RC"
 }
