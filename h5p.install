@@ -945,3 +945,17 @@ function h5p_update_8002() {
   \Drupal::entityDefinitionUpdateManager()
     ->installFieldStorageDefinition('author_comments', 'h5p_content', 'h5p_content', $storage_definition);
 }
+
+
+/**
+ * Make the content files permanent
+ */
+function h5p_update_8003(&$sandbox) {
+  db_update('file_managed')
+    ->fields(array(
+      'status' => 1,
+    ))
+    ->condition('uri', 'public://h5p/content/%', 'LIKE')
+    ->condition('status', 0)
+    ->execute();
+}
