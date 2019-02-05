@@ -1842,7 +1842,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 19
+    'minorVersion' => 20
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -4362,7 +4362,7 @@ class H5PContentValidator {
           (object) array(
             'type' => 'optgroup',
             'label' => $this->h5pF->t('Creative Commons'),
-            'options' => [
+            'options' => array(
               (object) array(
                 'value' => 'CC BY',
                 'label' => $this->h5pF->t('Attribution (CC BY)'),
@@ -4401,7 +4401,7 @@ class H5PContentValidator {
                 'value' => 'CC PDM',
                 'label' => $this->h5pF->t('Public Domain Mark (PDM)')
               ),
-            ]
+            )
           ),
           (object) array(
             'value' => 'GNU GPL',
