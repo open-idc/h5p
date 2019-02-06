@@ -1,23 +1,23 @@
 [
     {
         "name": "h5p/h5p-core",
-        "version": "1.20.0",
-        "version_normalized": "1.20.0.0",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
-            "reference": "e7a256da05ba9e11cd383b53a01cfaadca81b7b0"
+            "reference": "415e1010646df7a99a9ed1cddcf009e8beb48a29"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/e7a256da05ba9e11cd383b53a01cfaadca81b7b0",
-            "reference": "e7a256da05ba9e11cd383b53a01cfaadca81b7b0",
+            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/415e1010646df7a99a9ed1cddcf009e8beb48a29",
+            "reference": "415e1010646df7a99a9ed1cddcf009e8beb48a29",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-02-04T12:22:15+00:00",
+        "time": "2019-02-05T16:14:34+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -60,23 +60,23 @@
     },
     {
         "name": "h5p/h5p-editor",
-        "version": "1.20.0",
-        "version_normalized": "1.20.0.0",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-editor-php-library.git",
-            "reference": "b87c9b8083f85b97adf2cb2d9cb83e1a959dc273"
+            "reference": "6364550f23f73584140e591bd2cfcf47d18b527a"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/b87c9b8083f85b97adf2cb2d9cb83e1a959dc273",
-            "reference": "b87c9b8083f85b97adf2cb2d9cb83e1a959dc273",
+            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/6364550f23f73584140e591bd2cfcf47d18b527a",
+            "reference": "6364550f23f73584140e591bd2cfcf47d18b527a",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-01-16T15:59:23+00:00",
+        "time": "2019-02-05T15:32:25+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
