@@ -130,18 +130,35 @@ class H5PContentUpgrade extends ControllerBase {
       }
     }
 
+    // Determine if any content has been skipped during the process
+    $skipped = filter_input(INPUT_POST, 'skipped');
+    if ($skipped !== NULL) {
+      $out->skipped = json_decode($skipped);
+      // Clean up input, only numbers
+      foreach ($out->skipped as $i => $id) {
+        $out->skipped[$i] = intval($id);
+      }
+      $skipped = implode(',', $out->skipped);
+    }
+    else {
+      $out->skipped = array();
+    }
+
     // Get number of contents for this library
-    $out['left'] = $interface->getNumContent($library_id);
+    $out['left'] = $interface->getNumContent($library_id, $skipped);
 
     if ($out['left']) {
+      $skip_query = empty($skipped) ? '' : " AND id NOT IN ($skipped)";
+
       // Find the 40 first contents using library and add to params
       $contents = $this->database->query(
-        'SELECT id, parameters AS params, title, authors, source, license,
+        "SELECT id, parameters AS params, title, authors, source, license,
                 license_version, license_extras, year_from, year_to, changes,
                 author_comments
            FROM {h5p_content}
           WHERE library_id = :id
-          LIMIT 40', [
+                {$skip_query}
+          LIMIT 40", [
         ':id' => $library_id
       ]);
 
@@ -175,9 +192,6 @@ class H5PContentUpgrade extends ControllerBase {
 
     $core = H5PDrupal::getInstance('core');
     $library->semantics = $core->loadLibrarySemantics($library->name, $library->version->major, $library->version->minor);
-    if ($library->semantics === NULL) {
-      throw new NotFoundHttpException();
-    }
 
     $upgrades_script = H5PDrupal::getRelativeH5PPath() . "/libraries/{$library->name}-{$library->version->major}.{$library->version->minor}/upgrades.js";
 
