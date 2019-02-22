@@ -6,18 +6,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
-            "reference": "415e1010646df7a99a9ed1cddcf009e8beb48a29"
+            "reference": "d3b5b076692f54fc0180a65270b991ff4a7967e6"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/415e1010646df7a99a9ed1cddcf009e8beb48a29",
-            "reference": "415e1010646df7a99a9ed1cddcf009e8beb48a29",
+            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/d3b5b076692f54fc0180a65270b991ff4a7967e6",
+            "reference": "d3b5b076692f54fc0180a65270b991ff4a7967e6",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-02-05T16:14:34+00:00",
+        "time": "2019-02-22T08:36:56+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -65,18 +65,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-editor-php-library.git",
-            "reference": "6364550f23f73584140e591bd2cfcf47d18b527a"
+            "reference": "060cd0b73a613827acfede22142b49a65b4ffa4b"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/6364550f23f73584140e591bd2cfcf47d18b527a",
-            "reference": "6364550f23f73584140e591bd2cfcf47d18b527a",
+            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/060cd0b73a613827acfede22142b49a65b4ffa4b",
+            "reference": "060cd0b73a613827acfede22142b49a65b4ffa4b",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-02-05T15:32:25+00:00",
+        "time": "2019-02-22T09:35:41+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
