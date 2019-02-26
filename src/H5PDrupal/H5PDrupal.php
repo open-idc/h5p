@@ -1354,6 +1354,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
                          WHERE l1.add_to IS NOT NULL
                            AND l2.machine_name IS NULL");
 
+    // NOTE: These are treated as library objects but are missing the following properties:
+    // title, embed_types, drop_library_css, fullscreen, runnable, semantics, has_icon
+
     $addons = array();
     while ($addon = $result->fetchObject()) {
       $addons[] = \H5PCore::snakeToCamel($addon);
