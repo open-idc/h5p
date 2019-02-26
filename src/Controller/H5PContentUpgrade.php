@@ -106,8 +106,9 @@ class H5PContentUpgrade extends ControllerBase {
       $params = json_decode($params);
       foreach ($params as $id => $param) {
         $upgraded = json_decode($param);
+        $metadata = isset($upgraded->metadata) ? $upgraded->metadata : array();
 
-        $fields = array_merge(\H5PMetadata::toDBArray($upgraded->metadata, false, false), array(
+        $fields = array_merge(\H5PMetadata::toDBArray($metadata, false, false), array(
           'library_id' => $to_library->id,
           'parameters' => json_encode($upgraded->params),
           'filtered_parameters' => '',
