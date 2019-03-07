@@ -65,6 +65,14 @@ class H5PAdminSettingsForm extends FormBase {
     );
     */
 
+    $button_behaviours_download = array(
+        \H5PDisplayOptionBehaviour::NEVER_SHOW => t('Never'),
+        \H5PDisplayOptionBehaviour::ALWAYS_SHOW => t('Always'),
+        \H5PDisplayOptionBehaviour::CONTROLLED_BY_PERMISSIONS => t('Only if permitted through permissions'),
+        \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON => t('Controlled by author, default is on'),
+        \H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF => t('Controlled by author, default is off'),
+    );
+
     $button_behaviours = array(
       \H5PDisplayOptionBehaviour::NEVER_SHOW => t('Never show'),
       \H5PDisplayOptionBehaviour::ALWAYS_SHOW => t('Always show'),
@@ -76,7 +84,7 @@ class H5PAdminSettingsForm extends FormBase {
     _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), $interface->getOption('frame', 1), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
     $form['h5p_display_options']['h5p_export'] = array(
       '#title' => t('Allow download'),
-      '#options' => $button_behaviours,
+      '#options' => $button_behaviours_download,
       '#default_value' => $interface->getOption('export'),
       '#type' => 'select',
     );
