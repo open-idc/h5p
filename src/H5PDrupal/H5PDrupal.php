@@ -1276,6 +1276,12 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $user = \Drupal::currentUser();
     switch ($permission) {
+      case \H5PPermission::COPY_H5P:
+        return $canUpdateEntity !== NULL && (
+            $user->hasPermission('copy all h5ps') ||
+            ($canUpdateEntity && $user->hasPermission('copy own h5ps'))
+          );
+
       case \H5PPermission::DOWNLOAD_H5P:
         return $canUpdateEntity !== NULL && (
             $user->hasPermission('download all h5ps') ||
