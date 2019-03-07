@@ -13,6 +13,15 @@ H5PIntegration.loadedJs = [];
 H5PIntegration.loadedCss = [];
 
 /**
+ * Constants used within editor
+ *
+ * @type {{otherLibraries: string}}
+ */
+ns.constants = {
+  otherLibraries: 'Other Libraries',
+};
+
+/**
  * Keep track of our widgets.
  */
 ns.widgets = {};
@@ -277,6 +286,98 @@ ns.resetLoadedLibraries = function () {
 };
 
 /**
+ * Render common fields of content type with given machine name
+ *
+ * @param {string} machineName Machine name of content type with common fields
+ * @param {Array} [libraries] Library data for machine name
+ */
+ns.renderCommonField = function (machineName, libraries) {
+  var commonFields = ns.renderableCommonFields[machineName].fields;
+  var renderableCommonFields = [];
+
+  commonFields.forEach(function (field) {
+    if (!field.rendered) {
+      var commonField = ns.addCommonField(field.field, field.parent, field.params, field.ancestor);
+      if (commonField.setValues.length === 1) {
+        renderableCommonFields.push({
+          field: field,
+          instance: commonField.instance
+        });
+        field.instance = commonField.instance;
+      }
+    }
+    field.rendered = true;
+  });
+
+  // Render common fields if found
+  if (renderableCommonFields.length) {
+    var libraryName = machineName === ns.constants.otherLibraries ? machineName
+      : (machineName.length ? machineName.split(' ')[0] : '');
+    if (libraries.length && libraries[0].title) {
+      libraryName = libraries[0].title;
+    }
+
+    // Create a library wrapper
+    var hasLibraryWrapper = !!ns.renderableCommonFields[machineName].wrapper;
+    var commonFieldsLibraryWrapper = ns.renderableCommonFields[machineName].wrapper;
+    if (!hasLibraryWrapper) {
+      commonFieldsLibraryWrapper = document.createElement('fieldset');
+      var libraryWrapperClass = libraryName.replace(/\s+/g, '-').toLowerCase();
+
+      commonFieldsLibraryWrapper.classList.add('common-fields-library-wrapper');
+      commonFieldsLibraryWrapper.classList.add('common-fields-' + libraryWrapperClass);
+
+      var libraryTitle = document.createElement('legend');
+      libraryTitle.classList.add('common-field-legend');
+      libraryTitle.textContent = libraryName;
+      libraryTitle.tabIndex = '0';
+      libraryTitle.setAttribute('role', 'button');
+      libraryTitle.addEventListener('click', function () {
+        commonFieldsLibraryWrapper.classList.toggle('expanded');
+      });
+      libraryTitle.addEventListener('keypress', function (e) {
+        if (e.which === 32) {
+          commonFieldsLibraryWrapper.classList.toggle('expanded');
+        }
+      });
+      commonFieldsLibraryWrapper.appendChild(libraryTitle);
+
+      ns.renderableCommonFields[machineName].wrapper = commonFieldsLibraryWrapper;
+    }
+
+    renderableCommonFields.forEach(function (commonField) {
+      commonField.instance.appendTo(ns.$(commonFieldsLibraryWrapper));
+      // Gather under a common ancestor
+      if (commonField.field && commonField.field.ancestor) {
+        ancestor = commonField.field.ancestor;
+      }
+    });
+
+    if (!hasLibraryWrapper && ancestor) {
+      ancestor.$common[0].appendChild(commonFieldsLibraryWrapper);
+    }
+  }
+};
+
+/**
+ * Recursively traverse parents to find the library our field belongs to
+ *
+ * @param parent
+ * @returns {*}
+ */
+ns.getParentLibrary = function (parent) {
+  if (!parent) {
+    return null;
+  }
+
+  if (parent.currentLibrary) {
+    return parent.currentLibrary;
+  }
+
+  return ns.getParentLibrary(parent.parent);
+};
+
+/**
  * Recursive processing of the semantics chunks.
  *
  * @param {array} semanticsChunk
@@ -329,9 +430,11 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent, m
         ancestor = ns.findAncestor(parent);
       }
 
+      var parentLibrary = ns.getParentLibrary(parent);
       var library = machineName ? machineName
         : (field.library ? field.library
-          : (parent.currentLibrary ? parent.currentLibrary : 'Other libraries'));
+          : (parentLibrary ? parentLibrary
+            : ns.constants.otherLibraries));
       ns.renderableCommonFields[library] = ns.renderableCommonFields[library] || {};
       ns.renderableCommonFields[library].fields = ns.renderableCommonFields[library].fields || [];
 
@@ -361,74 +464,17 @@ ns.processSemanticsChunk = function (semanticsChunk, params, $wrapper, parent, m
   // Render all gathered common field
   if (ns.renderableCommonFields) {
     for (var commonFieldMachineName in ns.renderableCommonFields) {
-      // Get title for common fields group
-      H5PEditor.LibraryListCache.getLibraries([commonFieldMachineName], function (libraries) {
-        var commonFields = ns.renderableCommonFields[commonFieldMachineName].fields;
-        var renderableCommonFields = [];
-
-        commonFields.forEach(function (field) {
-          if (!field.rendered) {
-            var commonField = ns.addCommonField(field.field, field.parent, field.params, field.ancestor);
-            if (commonField.setValues.length === 1) {
-              renderableCommonFields.push({
-                field: field,
-                instance: commonField.instance
-              });
-              field.instance = commonField.instance;
-            }
-          }
-          field.rendered = true;
-        });
-
-        // Render common fields if found
-        if (renderableCommonFields.length) {
-          var libraryName = commonFieldMachineName === 'Other libraries' ? commonFieldMachineName
-            : (commonFieldMachineName.length ? commonFieldMachineName.split(' ')[0] : '');
-          if (libraries.length && libraries[0].title) {
-            libraryName = libraries[0].title;
-          }
-
-          // Create a library wrapper
-          var hasLibraryWrapper = !!ns.renderableCommonFields[commonFieldMachineName].wrapper;
-          var commonFieldsLibraryWrapper = ns.renderableCommonFields[commonFieldMachineName].wrapper;
-          if (!hasLibraryWrapper) {
-            commonFieldsLibraryWrapper = document.createElement('fieldset');
-            var libraryWrapperClass = libraryName.replace(/\s+/g, '-').toLowerCase();
-
-            commonFieldsLibraryWrapper.classList.add('common-fields-library-wrapper');
-            commonFieldsLibraryWrapper.classList.add('common-fields-' + libraryWrapperClass);
-
-            var libraryTitle = document.createElement('legend');
-            libraryTitle.classList.add('common-field-legend');
-            libraryTitle.textContent = libraryName;
-            libraryTitle.tabIndex = '0';
-            libraryTitle.setAttribute('role', 'button');
-            libraryTitle.addEventListener('click', function () {
-              commonFieldsLibraryWrapper.classList.toggle('expanded');
-            });
-            libraryTitle.addEventListener('keypress', function (e) {
-              if (e.which === 32) {
-                commonFieldsLibraryWrapper.classList.toggle('expanded');
-              }
-            });
-            commonFieldsLibraryWrapper.appendChild(libraryTitle);
-
-            ns.renderableCommonFields[commonFieldMachineName].wrapper = commonFieldsLibraryWrapper;
-          }
-
-          renderableCommonFields.forEach(function (commonField) {
-            commonField.instance.appendTo(ns.$(commonFieldsLibraryWrapper));
-            // Gather under a common ancestor
-            if (commonField.field && commonField.field.ancestor) {
-              ancestor = commonField.field.ancestor;
-            }
-          });
-
-          if (!hasLibraryWrapper && ancestor) {
-            ancestor.$common[0].appendChild(commonFieldsLibraryWrapper);
-          }
-        }
-      });
+      if (commonFieldMachineName === ns.constants.otherLibraries) {
+        // No need to grab library info
+        ns.renderCommonField(commonFieldMachineName);
+      }
+      else {
+        // Get title for common fields group
+        H5PEditor.LibraryListCache.getLibraries(
+          [commonFieldMachineName],
+          ns.renderCommonField.bind(this, commonFieldMachineName)
+        );
+      }
     }
   }
 
@@ -1214,210 +1260,8 @@ ns.enableMetadata = function (library) {
   return false;
 };
 
-/**
- * Show a toast message.
- *
- * The reference element could be dom elements the toast should be attached to,
- * or e.g. the document body for general toast messages.
- *
- * @param {DOM} element Reference element to show toast message for.
- * @param {string} message Message to show.
- * @param {object} [config] Configuration.
- * @param {string} [config.style=h5p-editor-toast] Style name for the tooltip.
- * @param {number} [config.duration=3000] Toast message length in ms.
- * @param {object} [config.position] Relative positioning of the toast.
- * @param {string} [config.position.horizontal=centered] [before|left|centered|right|after].
- * @param {string} [config.position.vertical=below] [above|top|centered|bottom|below].
- * @param {number} [config.position.offsetHorizontal=0] Extra horizontal offset.
- * @param {number} [config.position.offsetVertical=0] Extra vetical offset.
- * @param {boolean} [config.position.noOverflowLeft=false] True to prevent overflow left.
- * @param {boolean} [config.position.noOverflowRight=false] True to prevent overflow right.
- * @param {boolean} [config.position.noOverflowTop=false] True to prevent overflow top.
- * @param {boolean} [config.position.noOverflowBottom=false] True to prevent overflow bottom.
- * @param {boolean} [config.position.noOverflowX=false] True to prevent overflow left and right.
- * @param {boolean} [config.position.noOverflowY=false] True to prevent overflow top and bottom.
- * @param {object} [config.position.overflowReference=document.body] DOM reference for overflow.
- */
-ns.attachToastTo = function (element, message, config) {
-  if (element === undefined || message === undefined) {
-    return;
-  }
-
-  const eventPath = function (evt) {
-    var path = (evt.composedPath && evt.composedPath()) || evt.path;
-    var target = evt.target;
-
-    if (path != null) {
-      // Safari doesn't include Window, but it should.
-      return (path.indexOf(window) < 0) ? path.concat(window) : path;
-    }
-
-    if (target === window) {
-      return [window];
-    }
-
-    function getParents(node, memo) {
-      memo = memo || [];
-      var parentNode = node.parentNode;
-
-      if (!parentNode) {
-        return memo;
-      }
-      else {
-        return getParents(parentNode, memo.concat(parentNode));
-      }
-    }
-
-    return [target].concat(getParents(target), window);
-  };
-
-  /**
-   * Handle click while toast is showing.
-   */
-  const clickHandler = function (event) {
-    /*
-     * A common use case will be to attach toasts to buttons that are clicked.
-     * The click would remove the toast message instantly without this check.
-     * Children of the clicked element are also ignored.
-     */
-    var path = eventPath(event);
-    if (path.indexOf(element) !== -1) {
-      return;
-    }
-    clearTimeout(timer);
-    removeToast();
-  };
-
-
-
-  /**
-   * Remove the toast message.
-   */
-  const removeToast = function () {
-    document.removeEventListener('click', clickHandler);
-    if (toast.parentNode) {
-      toast.parentNode.removeChild(toast);
-    }
-  };
-
-  /**
-   * Get absolute coordinates for the toast.
-   *
-   * @param {DOM} element Reference element to show toast message for.
-   * @param {DOM} toast Toast element.
-   * @param {object} [position={}] Relative positioning of the toast message.
-   * @param {string} [position.horizontal=centered] [before|left|centered|right|after].
-   * @param {string} [position.vertical=below] [above|top|centered|bottom|below].
-   * @param {number} [position.offsetHorizontal=0] Extra horizontal offset.
-   * @param {number} [position.offsetVertical=0] Extra vetical offset.
-   * @param {boolean} [position.noOverflowLeft=false] True to prevent overflow left.
-   * @param {boolean} [position.noOverflowRight=false] True to prevent overflow right.
-   * @param {boolean} [position.noOverflowTop=false] True to prevent overflow top.
-   * @param {boolean} [position.noOverflowBottom=false] True to prevent overflow bottom.
-   * @param {boolean} [position.noOverflowX=false] True to prevent overflow left and right.
-   * @param {boolean} [position.noOverflowY=false] True to prevent overflow top and bottom.
-   * @return {object}
-   */
-  const getToastCoordinates = function (element, toast, position) {
-    position = position || {};
-    position.offsetHorizontal = position.offsetHorizontal || 0;
-    position.offsetVertical = position.offsetVertical || 0;
-
-    const toastRect = toast.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-
-    let left = 0;
-    let top = 0;
-
-    // Compute horizontal position
-    switch (position.horizontal) {
-      case 'before':
-        left = elementRect.left - toastRect.width - position.offsetHorizontal;
-        break;
-      case 'after':
-        left = elementRect.left + elementRect.width + position.offsetHorizontal;
-        break;
-      case 'left':
-        left = elementRect.left + position.offsetHorizontal;
-        break;
-      case 'right':
-        left = elementRect.left + elementRect.width - toastRect.width - position.offsetHorizontal;
-        break;
-      case 'centered':
-        left = elementRect.left + elementRect.width / 2 - toastRect.width / 2 + position.offsetHorizontal;
-        break;
-      default:
-        left = elementRect.left + elementRect.width / 2 - toastRect.width / 2 + position.offsetHorizontal;
-    }
-
-    // Compute vertical position
-    switch (position.vertical) {
-      case 'above':
-        top = elementRect.top - toastRect.height - position.offsetVertical;
-        break;
-      case 'below':
-        top = elementRect.top + elementRect.height + position.offsetVertical;
-        break;
-      case 'top':
-        top = elementRect.top + position.offsetVertical;
-        break;
-      case 'bottom':
-        top = elementRect.top + elementRect.height - toastRect.height - position.offsetVertical;
-        break;
-      case 'centered':
-        top = elementRect.top + elementRect.height / 2 - toastRect.height / 2 + position.offsetVertical;
-        break;
-      default:
-        top = elementRect.top + elementRect.height + position.offsetVertical;
-    }
-
-    // Prevent overflow
-    const overflowElement = document.body;
-    const bounds = overflowElement.getBoundingClientRect();
-    if ((position.noOverflowLeft || position.noOverflowX) && (left < bounds.x)) {
-      left = bounds.x;
-    }
-    if ((position.noOverflowRight || position.noOverflowX) && ((left + toastRect.width) > (bounds.x + bounds.width))) {
-      left = bounds.x + bounds.width - toastRect.width;
-    }
-    if ((position.noOverflowTop || position.noOverflowY) && (top < bounds.y)) {
-      top = bounds.y;
-    }
-    if ((position.noOverflowBottom || position.noOverflowY) && ((top + toastRect.height) > (bounds.y + bounds.height))) {
-      left = bounds.y + bounds.height - toastRect.height;
-    }
-
-    return {left: left, top: top};
-  };
-
-  // Sanitization
-  config = config || {};
-  config.style = config.style || 'h5p-editor-toast';
-  config.duration = config.duration || 3000;
-
-  // Build toast
-  const toast = document.createElement('div');
-  toast.setAttribute('id', config.style);
-  toast.classList.add('h5p-toast-disabled');
-  toast.classList.add(config.style);
-
-  const msg = document.createElement('span');
-  msg.innerHTML = message;
-  toast.appendChild(msg);
-
-  document.body.appendChild(toast);
-
-  // The message has to be set before getting the coordinates
-  const coordinates = getToastCoordinates(element, toast, config.position);
-  toast.style.left = Math.round(coordinates.left) + 'px';
-  toast.style.top = Math.round(coordinates.top) + 'px';
-
-  toast.classList.remove('h5p-toast-disabled');
-  const timer = setTimeout(removeToast, config.duration);
-
-  // The toast can also be removed by clicking somewhere
-  document.addEventListener('click', clickHandler);
-};
+// Backwards compatibilty
+ns.attachToastTo = H5P.attachToastTo;
 
 /**
  * Check if clipboard can be pasted.
