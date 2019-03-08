@@ -45,7 +45,7 @@ class H5PEditorWidget extends H5PWidgetBase {
 
     $element['parameters'] = [
       '#type' => 'hidden',
-      '#default_value' => empty($h5p_content) ? '' : $h5p_content->getFilteredParameters(),
+      '#default_value' => empty($h5p_content) ? '' : $h5p_content->getEditorJSON(),
       '#attributes' => [
         'id' => "h5p-content-parameters-" . self::$counter,
       ],
@@ -56,6 +56,9 @@ class H5PEditorWidget extends H5PWidgetBase {
       '#default_value' => empty($h5p_content) ? '' : $h5p_content->getLibraryString(),
       '#attributes' => [
         'id' => "h5p-content-library-" . self::$counter,
+      ],
+      '#element_validate' => [
+        [$this, 'validate'],
       ],
     ];
     self::$counter++;
@@ -79,6 +82,18 @@ class H5PEditorWidget extends H5PWidgetBase {
     ];
 
     return $parentElement;
+  }
+
+  /**
+   * Validate the h5p file upload
+   */
+  public function validate($element, FormStateInterface $form_state) {
+    // Check that this is the latest version of the content type we have
+    $core = H5PDrupal::getInstance('core');
+    if ($core->h5pF->libraryHasUpgrade(\H5PCore::libraryFromString($element['#value']))) {
+      // We do not allow storing old content due to security concerns
+      $form_state->setError($element, t('Something unexpected happened. We were unable to save this content.'));
+    }
   }
 
   /**
@@ -116,11 +131,14 @@ class H5PEditorWidget extends H5PWidgetBase {
       $value['id'] = NULL; // Invalid, content has been deleted
     }
 
+    $params = json_decode($value['parameters']);
+
     // Prepare content values
     $core = H5PDrupal::getInstance('core');
     $content = [
       'library' => H5PEditorUtilities::getLibraryProperty($value['library']),
-      'params' => $value['parameters'],
+      'params' => json_encode($params->params),
+      'metadata' => $params->metadata,
       'disable' => $core->getStorableDisplayOptions($value, !empty($h5p_content) ? $h5p_content->get('disabled_features')->value : 0),
     ];
     if ($value['id'] && !$do_new_revision && !$value['new_translation']) {
@@ -141,7 +159,7 @@ class H5PEditorWidget extends H5PWidgetBase {
     $editor->processParameters(
       $return_value['h5p_content_id'],
       $content['library'],
-      json_decode($content['params']),
+      $params->params,
       $old_library,
       $old_params
     );

@@ -61,7 +61,7 @@ abstract class H5PWidgetBase extends WidgetBase {
     $display_options = $core->getDisplayOptionsForEdit($disable === \H5PCore::DISABLE_NONE ? NULL : $disable);
     $labels = [
       \H5PCore::DISPLAY_OPTION_FRAME => t('Display buttons (download, embed and copyright)'),
-      \H5PCore::DISPLAY_OPTION_DOWNLOAD => t('Download button'),
+      \H5PCore::DISPLAY_OPTION_DOWNLOAD => t('Allow users to download the content'),
       \H5PCore::DISPLAY_OPTION_EMBED => t('Embed button'),
       \H5PCore::DISPLAY_OPTION_COPYRIGHT => t('Copyright button'),
       \H5PCore::DISPLAY_OPTION_ABOUT => t('About H5P button')
@@ -83,6 +83,10 @@ abstract class H5PWidgetBase extends WidgetBase {
             '#' . str_replace('_', '-', $field_name) . "-{$delta}-h5p-content-" . \H5PCore::DISPLAY_OPTION_FRAME => ['checked' => TRUE],
           ]
         ];
+      }
+
+      if ($name === \H5PCore::DISPLAY_OPTION_DOWNLOAD) {
+        $element[$name]['#description'] = t('If checked a reuse button will always be displayed for this content and allow users to download the content as an .h5p file');
       }
     }
 

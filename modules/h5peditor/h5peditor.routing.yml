@@ -46,3 +46,10 @@ h5peditor.files:
   requirements:
     _permission: 'access editor'
 
+h5peditor.translations:
+  path: '/h5peditor/{token}/{content_id}/translations/{language}'
+  defaults:
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::translationsCallback'
+    _title: 'Get Translations'
+  requirements:
+     _permission: 'access editor'

@@ -63,6 +63,72 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       ->setSetting('size', 'small')
       ->setDefaultValue(0);
 
+    $fields['title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Title'))
+      ->setDescription(t('Title of the main content'))
+      ->setSetting('max_length', '255')
+      ->setDefaultValue(NULL);
+
+    $fields['authors'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Authors'))
+      ->setDescription(t('List of authors in json format'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['source'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Source'))
+      ->setDescription(t('Link to the source, could also be citation'))
+      ->setSetting('max_length', '2083')
+      ->setDefaultValue(NULL);
+
+    $fields['year_from'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Year (from)'))
+      ->setDescription(t('Start year for copyright'))
+      ->setSetting('unsigned', TRUE)
+      ->setSetting('size', 'normal');
+
+    $fields['year_to'] = BaseFieldDefinition::create('integer')
+    ->setLabel(t('Year (to)'))
+    ->setDescription(t('End year for copyright'))
+    ->setSetting('unsigned', TRUE)
+    ->setSetting('size', 'normal');
+
+    $fields['license'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('License'))
+      ->setDescription(t('License name of the content'))
+      ->setSetting('max_length', '32')
+      ->setDefaultValue(NULL);
+
+    $fields['license_version'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('License version'))
+      ->setDescription(t('Version of license used for the content'))
+      ->setSetting('max_length', '10')
+      ->setDefaultValue(NULL);
+
+    $fields['changes'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Changes'))
+      ->setDescription(t('List of changes in json format'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['license_extras'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('License extras'))
+      ->setDescription(t('Extra licensing terms'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['author_comments'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Authors comments'))
+      ->setDescription(t('Comments for the editor'))
+      ->setSetting('size', 'big')
+      ->setDefaultValue(NULL);
+
+    $fields['default_language'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Default Language'))
+      ->setDescription(t('Default language for common fields'))
+      ->setSetting('max_length', '32')
+      ->setDefaultValue(NULL);
+
     return $fields;
   }
 
@@ -163,7 +229,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     }
 
     $content = [
-      'title' => 'Interactive Content',
+      'title' => $this->get('title')->value,
       'id' => $this->id(),
       'slug' => 'interactive-content',
       'library' => [
@@ -174,6 +240,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'params' => $this->get('parameters')->value,
       'filtered' => $this->get('filtered_parameters')->value,
       'embedType' => 'div',
+      'metadata' => $this->getMetadata()
     ];
 
     $core = H5PDrupal::getInstance('core');
@@ -187,9 +254,48 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
   }
 
   /**
+   * Get an array containing all the metadata fields.
+   *
+   * @return array
+   */
+  public function getMetadata() {
+    $metadata = [
+      'title' => $this->get('title')->value,
+      'authors' => json_decode($this->get('authors')->value),
+      'source' => $this->get('source')->value,
+      'yearFrom' => $this->get('year_from')->value,
+      'yearTo' => $this->get('year_to')->value,
+      'license' => $this->get('license')->value,
+      'licenseVersion' => $this->get('license_version')->value,
+      'licenseExtras' => $this->get('license_extras')->value,
+      'authorComments' => $this->get('author_comments')->value,
+      'defaultLanguage' => $this->get('default_language')->value,
+      'changes' => json_decode($this->get('changes')->value),
+    ];
+    foreach ($metadata as $key => $data) {
+      if (is_null($data)) {
+        unset($metadata[$key]);
+      }
+    }
+
+    $core = H5PDrupal::getInstance('core');
+    $validator = new \H5PContentValidator($core->h5pF, $core);
+    return $validator->validateMetadata($metadata);
+  }
+
+  /**
+   * Get parameters + metadata in JSON format for the editor.
+   *
+   * @return string
+   */
+  public function getEditorJSON() {
+    return '{"params":' . $this->getFilteredParameters() . ',"metadata":' . json_encode($this->getMetadata()) . '}';
+  }
+
+  /**
    *
    */
-  public function getH5PIntegrationSettings() {
+  public function getH5PIntegrationSettings($canUpdateEntity = FALSE) {
     if (empty($this->library)) {
       $this->loadLibrary();
     }
@@ -218,7 +324,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
 
     $core = H5PDrupal::getInstance('core');
     $filtered_parameters = $this->getFilteredParameters();
-    $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $this->id());
+    $display_options = $core->getDisplayOptionsForView($this->get('disabled_features')->value, $canUpdateEntity);
 
     $h5p_module_path = drupal_get_path('module', 'h5p');
     $embed_url = Url::fromUri('internal:/h5p/' . $this->id() . '/embed', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
@@ -232,7 +338,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
-      'title' => 'Not Available',
+      'metadata' => $this->getMetadata(),
       'contentUserData' => $content_user_data,
       'displayOptions' => $display_options,
     );

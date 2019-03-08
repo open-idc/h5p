@@ -123,6 +123,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
       ),
       'hubIsEnabled' => $h5p_hub_is_enabled,
       'reportingIsEnabled' => ($interface->getOption('enable_lrs_content_types', FALSE) === 1) ? TRUE : FALSE,
+      'libraryConfig' => $core->h5pF->getLibraryConfig(),
+      'pluginCacheBuster' => '?' . \Drupal::state()->get('system.css_js_query_string', '0'),
+      'libraryUrl' => base_path() . drupal_get_path('module', 'h5p') . '/vendor/h5p/h5p-core/js',
     );
 
     if ($user->id()) {
@@ -132,7 +135,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
       ];
     }
     else {
-      $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString();
+      $settings['siteUrl'] = Url::fromUri('internal:/', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
     }
 
     return $settings;
@@ -647,6 +650,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
     if (!isset($libraryData['hasIcon'])) {
       $libraryData['hasIcon'] = 0;
     }
+
     if ($new) {
       $libraryId = db_insert('h5p_libraries')
         ->fields(array(
@@ -663,6 +667,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'metadata_settings' => $libraryData['metadataSettings'],
+          'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->execute();
       $libraryData['libraryId'] = $libraryId;
@@ -686,6 +692,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
           'drop_library_css' => $dropLibraryCss,
           'semantics' => $libraryData['semantics'],
           'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+          'metadata_settings' => $libraryData['metadataSettings'],
+          'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
         ))
         ->condition('library_id', $libraryData['libraryId'])
         ->execute();
@@ -814,7 +822,6 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements updateContent
    */
   public function updateContent($content, $contentMainId = NULL) {
-
     // Load existing entity
     $h5p_content = H5PContent::load($content['id']);
 
@@ -823,6 +830,12 @@ class H5PDrupal implements \H5PFrameworkInterface {
     $h5p_content->set('parameters', $content['params']);
     $h5p_content->set('disabled_features', $content['disable']);
     $h5p_content->set('filtered_parameters', '');
+
+    // Update metadata properties
+    $metadata_fields = \H5PMetadata::toDBArray($content['metadata']);
+    foreach ($metadata_fields as $key => $value) {
+      $h5p_content->set($key, $value);
+    }
 
     // Save changes
     $h5p_content->save();
@@ -835,13 +848,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * Implements insertContent
    */
   public function insertContent($content, $contentMainId = NULL) {
-
-    // Create new entity for content
-    $h5p_content = H5PContent::create([
+    $fields = array_merge(\H5PMetadata::toDBArray($content['metadata']), [
       'library_id' => $content['library']['libraryId'],
       'parameters' => $content['params'],
-      'disabled_features' => $content['disable'],
+      'disabled_features' => $content['disable']
     ]);
+
+    // Create new entity for content
+    $h5p_content = H5PContent::create($fields);
 
     // Save
     $h5p_content->save();
@@ -1221,8 +1235,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
   /**
    * Implements getNumContent.
    */
-  public function getNumContent($library_id) {
-    return intval(db_query('SELECT COUNT(id) FROM {h5p_content} WHERE library_id = :id', [':id' => $library_id])->fetchField());
+  public function getNumContent($library_id, $skip = NULL) {
+    $skip_query = empty($skip) ? '' : " AND id NOT IN ($skip)";
+    return intval(db_query('SELECT COUNT(id) FROM {h5p_content} WHERE library_id = :id' . $skip_query, [':id' => $library_id])->fetchField());
   }
 
   /**
@@ -1251,36 +1266,32 @@ class H5PDrupal implements \H5PFrameworkInterface {
   }
 
   /**
-   * Helper function to determine access
-   *
-   * @param int $nid
-   * @return boolean
-   */
-  private static function mayCurrentUserUpdateNode($nid) {
-    return \Drupal\node\Entity\Node::load($nid)->access('update');
-  }
-
-  /**
    * Implements hasPermission
    *
    * @param H5PPermission $permission
-   * @param int $content_id
+   * @param boolean $canUpdateEntity
    * @return bool
    */
-  public function hasPermission($permission, $content_id = NULL) {
+  public function hasPermission($permission, $canUpdateEntity = NULL) {
 
     $user = \Drupal::currentUser();
     switch ($permission) {
+      case \H5PPermission::COPY_H5P:
+        return $canUpdateEntity !== NULL && (
+            $user->hasPermission('copy all h5ps') ||
+            ($canUpdateEntity && $user->hasPermission('copy own h5ps'))
+          );
+
       case \H5PPermission::DOWNLOAD_H5P:
-        return $content_id !== NULL && (
+        return $canUpdateEntity !== NULL && (
             $user->hasPermission('download all h5ps') ||
-            (self::mayCurrentUserUpdateNode($content_id) && $user->hasPermission('download own h5ps'))
+            ($canUpdateEntity && $user->hasPermission('download own h5ps'))
           );
 
       case \H5PPermission::EMBED_H5P:
-        return $content_id !== NULL && (
+        return $canUpdateEntity !== NULL && (
             $user->hasPermission('embed all h5ps') ||
-            (self::mayCurrentUserUpdateNode($content_id) && $user->hasPermission('embed own h5ps'))
+            ($canUpdateEntity && $user->hasPermission('embed own h5ps'))
           );
 
       case \H5PPermission::CREATE_RESTRICTED:
@@ -1334,5 +1345,54 @@ class H5PDrupal implements \H5PFrameworkInterface {
         ))
         ->execute();
     }
+  }
+
+  /**
+   * Implements loadAddons
+   */
+  public function loadAddons() {
+    $result = db_query("SELECT l1.library_id, l1.machine_name, l1.major_version, l1.minor_version, l1.patch_version, l1.add_to, l1.preloaded_js, l1.preloaded_css
+                          FROM {h5p_libraries} l1
+                     LEFT JOIN {h5p_libraries} l2 ON l1.machine_name = l2.machine_name AND
+                                                     (l1.major_version < l2.major_version OR
+                                                      (l1.major_version = l2.major_version AND
+                                                       l1.minor_version < l2.minor_version))
+                         WHERE l1.add_to IS NOT NULL
+                           AND l2.machine_name IS NULL");
+
+    // NOTE: These are treated as library objects but are missing the following properties:
+    // title, embed_types, drop_library_css, fullscreen, runnable, semantics, has_icon
+
+    $addons = array();
+    while ($addon = $result->fetchObject()) {
+      $addons[] = \H5PCore::snakeToCamel($addon);
+    }
+    return $addons;
+  }
+
+  /**
+   * Implements getLibraryConfig
+   */
+  public function getLibraryConfig($libraries = NULL) {
+    return $this->getOption('library_config', NULL);
+  }
+
+  /**
+   * Implements libraryHasUpgrade
+   */
+  public function libraryHasUpgrade($library) {
+    return !!db_query(
+      "SELECT library_id
+         FROM {h5p_libraries}
+        WHERE machine_name = :name
+          AND (major_version > :major
+           OR (major_version = :major AND minor_version > :minor))
+        LIMIT 1",
+      array(
+        ':name' => $library['machineName'],
+        ':major' => $library['majorVersion'],
+        ':minor' => $library['minorVersion']
+      )
+    )->fetchField();
   }
 }

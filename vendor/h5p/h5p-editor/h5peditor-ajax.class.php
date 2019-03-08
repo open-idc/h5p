@@ -34,6 +34,11 @@ abstract class H5PEditorEndpoints {
    * Endpoint for uploading files used by the editor.
    */
   const FILES = 'files';
+
+  /**
+   * Endpoint for retrieveing translation files
+   */
+  const TRANSLATIONS = 'translations';
 }
 
 
@@ -123,6 +128,11 @@ class H5PEditorAjax {
         if (!$this->isValidEditorToken($token)) return;
         $this->fileUpload($contentId);
         break;
+
+      case H5PEditorEndpoints::TRANSLATIONS:
+        $language = func_get_arg(1);
+        H5PCore::ajaxSuccess($this->editor->getTranslations($_POST['libraries'], $language));
+        break;
     }
   }
 
@@ -145,7 +155,7 @@ class H5PEditorAjax {
     // Make sure file is valid and mark it for cleanup at a later time
     if ($file->validate()) {
       $file_id = $this->core->fs->saveFile($file, 0);
-      $this->storage->markFileForCleanup($file_id);
+      $this->storage->markFileForCleanup($file_id, 0);
     }
     $file->printResult();
   }

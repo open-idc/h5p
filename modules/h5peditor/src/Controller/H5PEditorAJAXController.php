@@ -66,7 +66,7 @@ class H5PEditorAJAXController extends ControllerBase {
 
     $editor = H5PEditorUtilities::getInstance();
     $editor->ajax->action(\H5PEditorEndpoints::SINGLE_LIBRARY, $machine_name,
-      $major_version, $minor_version, $language, H5PDrupal::getRelativeH5PPath()
+      $major_version, $minor_version, $language, H5PDrupal::getRelativeH5PPath(), '', filter_input(INPUT_GET, 'default-language')
     );
 
     // Log library loaded
@@ -86,6 +86,18 @@ class H5PEditorAJAXController extends ControllerBase {
   function filesCallback($token, $content_id) {
     $editor = H5PEditorUtilities::getInstance();
     $editor->ajax->action(\H5PEditorEndpoints::FILES, $token, $content_id);
+    exit();
+  }
+
+  /**
+   * Callback for file uploads.
+   *
+   * @param string $token Security token
+   * @param int $content_id Content id
+   */
+  function translationsCallback($token, $content_id, $language) {
+    $editor = H5PEditorUtilities::getInstance();
+    $editor->ajax->action(\H5PEditorEndpoints::TRANSLATIONS, $language);
     exit();
   }
 

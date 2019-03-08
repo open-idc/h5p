@@ -105,19 +105,24 @@ class H5PContentUpgrade extends ControllerBase {
       // Update params.
       $params = json_decode($params);
       foreach ($params as $id => $param) {
+        $upgraded = json_decode($param);
+        $metadata = isset($upgraded->metadata) ? $upgraded->metadata : array();
+
+        $fields = array_merge(\H5PMetadata::toDBArray($metadata, false, false), array(
+          'library_id' => $to_library->id,
+          'parameters' => json_encode($upgraded->params),
+          'filtered_parameters' => '',
+        ));
+
         $this->database->update('h5p_content')
-          ->fields([
-            'library_id' => $to_library->id,
-            'parameters' => $param,
-            'filtered_parameters' => ''
-          ])
+          ->fields($fields)
           ->condition('id', $id)
           ->execute();
 
         // Log content upgrade successful
         new H5PEvent('content', 'upgrade',
           $id,
-          '', // Should be title, but an entity does not have one
+          $upgraded->metadata->title ? $upgraded->metadata->title : '',
           $to_library->name,
           $to_library->major_version . '.' . $to_library->minor_version);
 
@@ -126,14 +131,42 @@ class H5PContentUpgrade extends ControllerBase {
       }
     }
 
+    // Determine if any content has been skipped during the process
+    $skipped = filter_input(INPUT_POST, 'skipped');
+    if ($skipped !== NULL) {
+      $out->skipped = json_decode($skipped);
+      // Clean up input, only numbers
+      foreach ($out->skipped as $i => $id) {
+        $out->skipped[$i] = intval($id);
+      }
+      $skipped = implode(',', $out->skipped);
+    }
+    else {
+      $out->skipped = array();
+    }
+
     // Get number of contents for this library
-    $out['left'] = $interface->getNumContent($library_id);
+    $out['left'] = $interface->getNumContent($library_id, $skipped);
 
     if ($out['left']) {
-      // Find the 10 first contents using library and add to params
-      $contents = $this->database->query('SELECT id, parameters AS params FROM {h5p_content} WHERE library_id = :id LIMIT 40', [':id' => $library_id]);
+      $skip_query = empty($skipped) ? '' : " AND id NOT IN ($skipped)";
+
+      // Find the 40 first contents using library and add to params
+      $contents = $this->database->query(
+        "SELECT id, parameters AS params, title, authors, source, license,
+                license_version, license_extras, year_from, year_to, changes,
+                author_comments, default_language
+           FROM {h5p_content}
+          WHERE library_id = :id
+                {$skip_query}
+          LIMIT 40", [
+        ':id' => $library_id
+      ]);
+
       foreach ($contents as $content) {
-        $out['params'][$content->id] = $content->params;
+        $out['params'][$content->id] =
+          '{"params":' . $content->params .
+          ',"metadata":' . \H5PMetadata::toJSON($content) . '}';
       }
     }
 
@@ -160,9 +193,6 @@ class H5PContentUpgrade extends ControllerBase {
 
     $core = H5PDrupal::getInstance('core');
     $library->semantics = $core->loadLibrarySemantics($library->name, $library->version->major, $library->version->minor);
-    if ($library->semantics === NULL) {
-      throw new NotFoundHttpException();
-    }
 
     $upgrades_script = H5PDrupal::getRelativeH5PPath() . "/libraries/{$library->name}-{$library->version->major}.{$library->version->minor}/upgrades.js";
 

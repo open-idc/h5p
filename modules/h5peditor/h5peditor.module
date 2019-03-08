@@ -21,8 +21,6 @@ function h5peditor_library_info_build() {
        'gpl-compatible' => TRUE,
      ],
      'js' => [
-       "/{$h5p_module_path}/vendor/h5p/h5p-editor/scripts/h5p-hub-client.js" => [],
-       "/{$h5p_module_path}/vendor/h5p/h5p-editor/scripts/h5peditor-selector-hub.js" => [],
        "/{$h5p_module_path}/vendor/h5p/h5p-editor/scripts/h5peditor-editor.js" => [],
      ],
      'dependencies' => [

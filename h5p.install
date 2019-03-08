@@ -6,6 +6,7 @@
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\Core\Database\Query\Condition;
+use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * Called when uninstalling H5P. Cleans up files and settings.
@@ -416,6 +417,14 @@ function h5p_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
+      ),
+      'add_to' => array(
+        'description' => 'Plugin configuration data',
+        'type' => 'text',
+      ),
+      'metadata_settings' => array(
+        'description' => 'Metadata settings',
+        'type' => 'text'
       ),
     ),
     'primary key' => array('library_id'),
@@ -829,3 +838,138 @@ function h5p_update_8001(&$sandbox) {
   drupal_set_message('Module h5p removed configuration items successfully.');
 }
 
+/**
+ * Add fields for metadata and addons.
+ */
+function h5p_update_8002() {
+  if (!db_field_exists('h5p_libraries', 'add_to')) {
+    db_add_field('h5p_libraries', 'add_to', array(
+      'description' => 'plugin configuration data',
+      'type' => 'text'
+    ));
+  }
+  if (!db_field_exists('h5p_libraries', 'metadata_settings')) {
+    db_add_field('h5p_libraries', 'metadata_settings', array(
+      'description' => 'Metadata settings',
+      'type' => 'text'
+    ));
+  }
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Title'))
+    ->setDescription(t('Title of the main content'))
+    ->setSetting('max_length', '255')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('title', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Authors'))
+    ->setDescription(t('List of authors in json format'))
+    ->setSetting('size', 'big')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('authors', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Source'))
+    ->setDescription(t('Link to the source, could also be citation'))
+    ->setSetting('max_length', '2083')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('source', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('integer')
+    ->setLabel(t('Year (from)'))
+    ->setDescription(t('Start year for copyright'))
+    ->setSetting('unsigned', TRUE)
+    ->setSetting('size', 'normal');
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('year_from', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('integer')
+  ->setLabel(t('Year (to)'))
+  ->setDescription(t('End year for copyright'))
+  ->setSetting('unsigned', TRUE)
+  ->setSetting('size', 'normal');
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('year_to', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('License'))
+    ->setDescription(t('License name of the content'))
+    ->setSetting('max_length', '32')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('license', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('License version'))
+    ->setDescription(t('Version of license used for the content'))
+    ->setSetting('max_length', '10')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('license_version', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Changes'))
+    ->setDescription(t('List of changes in json format'))
+    ->setSetting('size', 'big')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('changes', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('License extras'))
+    ->setDescription(t('Extra licensing terms'))
+    ->setSetting('size', 'big')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('license_extras', 'h5p_content', 'h5p_content', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Authors comments'))
+    ->setDescription(t('Comments for the editor'))
+    ->setSetting('size', 'big')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('author_comments', 'h5p_content', 'h5p_content', $storage_definition);
+}
+
+
+/**
+ * Make the content files permanent
+ */
+function h5p_update_8003(&$sandbox) {
+  db_update('file_managed')
+    ->fields(array(
+      'status' => 1,
+    ))
+    ->condition('uri', 'public://h5p/content/%', 'LIKE')
+    ->condition('status', 0)
+    ->execute();
+}
+
+/**
+ * Add field for default commmon field language
+ */
+function h5p_update_8004() {
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Default Language'))
+    ->setDescription(t('Default language for common fields'))
+    ->setSetting('max_length', '32')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('default_language', 'h5p_content', 'h5p_content', $storage_definition);
+}

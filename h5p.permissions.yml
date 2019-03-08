@@ -18,14 +18,24 @@ create restricted h5p content types:
   description: 'The user is allowed to create H5P content types that has been restricted in the library administration interface.'
   restrict access: TRUE
 
+copy all h5ps:
+  title: 'Copy enabled for all H5Ps'
+  description: "Copy will be available for all H5Ps."
+  restrict access: TRUE
+
+copy own h5ps:
+  title: 'Copy enabled for own H5Ps'
+  description: "Copy will be available for H5Ps the user has access to edit."
+  restrict access: TRUE
+
 download all h5ps:
   title: 'Download enabled for all H5Ps'
-  description: "The download button will be available for all H5Ps even if download button is hidden by configuration settings. This won't have any effect if download button is globally disabled"
+  description: "Download will be available for all H5Ps even if hidden by configuration settings. This won't have any effect if download is globally disabled"
   restrict access: TRUE
 
 download own h5ps:
   title: 'Download enabled for own H5Ps'
-  description: "The download button will be available for H5Ps the user has access to edit even if download button is hidden by configuration settings. This won't have any effect if download button is globally disabled"
+  description: "Download will be available for H5Ps the user has access to edit even if download is hidden by configuration settings. This won't have any effect if download is globally disabled"
   restrict access: TRUE
 
 embed all h5ps:

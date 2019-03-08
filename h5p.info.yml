@@ -4,4 +4,5 @@ description: 'Upload and view interactive HTML5 Packages to your site.'
 package: H5P
 core: 8.x
 dependencies:
-  - field
+  - drupal:field
+  - drupal:file
