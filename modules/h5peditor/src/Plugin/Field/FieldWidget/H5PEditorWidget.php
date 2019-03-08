@@ -57,6 +57,9 @@ class H5PEditorWidget extends H5PWidgetBase {
       '#attributes' => [
         'id' => "h5p-content-library-" . self::$counter,
       ],
+      '#element_validate' => [
+        [$this, 'validate'],
+      ],
     ];
     self::$counter++;
 
@@ -79,6 +82,18 @@ class H5PEditorWidget extends H5PWidgetBase {
     ];
 
     return $parentElement;
+  }
+
+  /**
+   * Validate the h5p file upload
+   */
+  public function validate($element, FormStateInterface $form_state) {
+    // Check that this is the latest version of the content type we have
+    $core = H5PDrupal::getInstance('core');
+    if ($core->h5pF->libraryHasUpgrade(\H5PCore::libraryFromString($element['#value']))) {
+      // We do not allow storing old content due to security concerns
+      $form_state->setError($element, t('Something unexpected happened. We were unable to save this content.'));
+    }
   }
 
   /**

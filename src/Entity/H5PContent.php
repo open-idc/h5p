@@ -123,6 +123,12 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       ->setSetting('size', 'big')
       ->setDefaultValue(NULL);
 
+    $fields['default_language'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Default Language'))
+      ->setDescription(t('Default language for common fields'))
+      ->setSetting('max_length', '32')
+      ->setDefaultValue(NULL);
+
     return $fields;
   }
 
@@ -263,6 +269,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'licenseVersion' => $this->get('license_version')->value,
       'licenseExtras' => $this->get('license_extras')->value,
       'authorComments' => $this->get('author_comments')->value,
+      'defaultLanguage' => $this->get('default_language')->value,
       'changes' => json_decode($this->get('changes')->value),
     ];
     foreach ($metadata as $key => $data) {

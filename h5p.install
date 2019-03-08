@@ -959,3 +959,17 @@ function h5p_update_8003(&$sandbox) {
     ->condition('status', 0)
     ->execute();
 }
+
+/**
+ * Add field for default commmon field language
+ */
+function h5p_update_8004() {
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Default Language'))
+    ->setDescription(t('Default language for common fields'))
+    ->setSetting('max_length', '32')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('default_language', 'h5p_content', 'h5p_content', $storage_definition);
+}

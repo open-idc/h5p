@@ -89,6 +89,16 @@ class H5PUploadWidget extends H5PWidgetBase {
     }
     $files[0]->delete();
 
+    foreach ($validator->h5pC->mainJsonData['preloadedDependencies'] as $dep) {
+      if ($dep['machineName'] === $validator->h5pC->mainJsonData['mainLibrary']) {
+        if ($validator->h5pF->libraryHasUpgrade($dep)) {
+          // We do not allow storing old content due to security concerns
+          $form_state->setError($element, t("You're trying to upload content of an older version of H5P. Please upgrade the content on the server it originated from and try to upload again or turn on the H5P Hub to have this server upgrade it for your automaticall."));
+          return;
+        }
+      }
+    }
+
     // Indicate that we have a valid file upload
     $form_state->setValue($element['#parents'], 1);
   }

@@ -124,6 +124,8 @@ class H5PDrupal implements \H5PFrameworkInterface {
       'hubIsEnabled' => $h5p_hub_is_enabled,
       'reportingIsEnabled' => ($interface->getOption('enable_lrs_content_types', FALSE) === 1) ? TRUE : FALSE,
       'libraryConfig' => $core->h5pF->getLibraryConfig(),
+      'pluginCacheBuster' => '?' . \Drupal::state()->get('system.css_js_query_string', '0'),
+      'libraryUrl' => base_path() . drupal_get_path('module', 'h5p') . '/vendor/h5p/h5p-core/js',
     );
 
     if ($user->id()) {
@@ -1233,8 +1235,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
   /**
    * Implements getNumContent.
    */
-  public function getNumContent($library_id) {
-    return intval(db_query('SELECT COUNT(id) FROM {h5p_content} WHERE library_id = :id', [':id' => $library_id])->fetchField());
+  public function getNumContent($library_id, $skip = NULL) {
+    $skip_query = empty($skip) ? '' : " AND id NOT IN ($skip)";
+    return intval(db_query('SELECT COUNT(id) FROM {h5p_content} WHERE library_id = :id' . $skip_query, [':id' => $library_id])->fetchField());
   }
 
   /**
@@ -1273,6 +1276,12 @@ class H5PDrupal implements \H5PFrameworkInterface {
 
     $user = \Drupal::currentUser();
     switch ($permission) {
+      case \H5PPermission::COPY_H5P:
+        return $canUpdateEntity !== NULL && (
+            $user->hasPermission('copy all h5ps') ||
+            ($canUpdateEntity && $user->hasPermission('copy own h5ps'))
+          );
+
       case \H5PPermission::DOWNLOAD_H5P:
         return $canUpdateEntity !== NULL && (
             $user->hasPermission('download all h5ps') ||
@@ -1351,6 +1360,9 @@ class H5PDrupal implements \H5PFrameworkInterface {
                          WHERE l1.add_to IS NOT NULL
                            AND l2.machine_name IS NULL");
 
+    // NOTE: These are treated as library objects but are missing the following properties:
+    // title, embed_types, drop_library_css, fullscreen, runnable, semantics, has_icon
+
     $addons = array();
     while ($addon = $result->fetchObject()) {
       $addons[] = \H5PCore::snakeToCamel($addon);
@@ -1363,5 +1375,24 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function getLibraryConfig($libraries = NULL) {
     return $this->getOption('library_config', NULL);
+  }
+
+  /**
+   * Implements libraryHasUpgrade
+   */
+  public function libraryHasUpgrade($library) {
+    return !!db_query(
+      "SELECT library_id
+         FROM {h5p_libraries}
+        WHERE machine_name = :name
+          AND (major_version > :major
+           OR (major_version = :major AND minor_version > :minor))
+        LIMIT 1",
+      array(
+        ':name' => $library['machineName'],
+        ':major' => $library['majorVersion'],
+        ':minor' => $library['minorVersion']
+      )
+    )->fetchField();
   }
 }

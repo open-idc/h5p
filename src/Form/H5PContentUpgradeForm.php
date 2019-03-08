@@ -53,6 +53,9 @@ class H5PContentUpgradeForm extends FormBase {
         'errorScript' => t('Could not load upgrades script for %lib.'),
         'errorContent' => t('Could not upgrade content %id:'),
         'errorParamsBroken' => t('Parameters are broken.'),
+        'errorLibrary' => t('Missing required library %lib.'),
+        'errorTooHighVersion' => t('Parameters contain %used while only %supported or earlier are supported.'),
+        'errorNotSupported' => t('Parameters contain %used which is not supported.'),
         'done' => t('You have successfully upgraded %num.', ['%num' => $contents_plural]) . $returnLink,
         'library' => [
           'name' => $library->machine_name,
