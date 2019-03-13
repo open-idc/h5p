@@ -51,6 +51,7 @@ class H5PEditorUtilities {
       'metadataSemantics' => $contentValidator->getMetadataSemantics(),
       'assets'             => self::getEditorAssets(),
       'apiVersion'         => \H5PCore::$coreApi,
+      'language' => \Drupal::languageManager()->getCurrentLanguage()->getId()
     ];
 
     return $settings;
