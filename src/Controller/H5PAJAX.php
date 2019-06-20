@@ -8,22 +8,28 @@ use Drupal\Core\Database\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\h5p\Event\FinishedEvent;
 
 class H5PAJAX extends ControllerBase {
 
   protected $database;
 
+  protected $eventDispatcher;
+
   /**
    * DBExample constructor.
    */
-  public function __construct(Connection $database) {
+  public function __construct(Connection $database, EventDispatcherInterface $event_dispatcher) {
     $this->database = $database;
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   public static function create(ContainerInterface $container) {
 
     $controller = new static(
-      $container->get('database')
+      $container->get('database'),
+      $container->get('event_dispatcher')
     );
     return $controller;
   }
@@ -87,6 +93,8 @@ class H5PAJAX extends ControllerBase {
       ])
       ->fields($fields)
       ->execute();
+
+    $this->eventDispatcher->dispatch(FinishedEvent::FINISHED_EVENT, new FinishedEvent($fields));
 
     return new JsonResponse(['success' => TRUE]);
   }

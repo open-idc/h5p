@@ -65,8 +65,7 @@ class H5PItem extends FieldItemBase implements FieldItemInterface {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    // TODO: Fix for Editor Form
-    return false; // empty($this->get('h5p_content_id')->getValue());
+    return (empty($this->values['h5p_content']) || empty($this->values['h5p_content']['library'])) && empty($this->get('h5p_content_id')->getValue());
   }
 
   /**

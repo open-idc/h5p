@@ -724,6 +724,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
           ->execute();
       }
     }
+    \Drupal::cache()->delete('h5p_library_info_build');
   }
 
   /**

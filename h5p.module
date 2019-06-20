@@ -22,6 +22,9 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
  * @see hook_library_info_build()
  */
 function h5p_library_info_build() {
+  if ($cached = \Drupal::cache()->get(__FUNCTION__)) {
+    return $cached->data;
+  }
   $libraries = [];
 
   // Register jQuery version that H5P depends on
@@ -198,6 +201,8 @@ function h5p_library_info_build() {
       'dependencies' => $dependencies,
     ];
   }
+
+  \Drupal::cache()->set(__FUNCTION__, $libraries);
 
   return $libraries;
 }

@@ -74,7 +74,7 @@ H5P.init = function (target) {
      * fullscreen, and the semi-fullscreen solution doesn't work when embedded.
      * @type {boolean}
      */
-    H5P.fullscreenSupported = !(H5P.isFramed && H5P.externalEmbed !== false) || !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled);
+    H5P.fullscreenSupported = !H5PIntegration.fullscreenDisabled && !H5P.fullscreenDisabled && (!(H5P.isFramed && H5P.externalEmbed !== false) || !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled));
     // -We should consider document.msFullscreenEnabled when they get their
     // -element sizing corrected. Ref. https://connect.microsoft.com/IE/feedback/details/838286/ie-11-incorrectly-reports-dom-element-sizes-in-fullscreen-mode-when-fullscreened-element-is-within-an-iframe
     // Update: Seems to be no need as they've moved on to Webkit
@@ -262,6 +262,11 @@ H5P.init = function (target) {
           // Retain parent size to avoid jumping/scrolling
           var parentHeight = iframe.parentElement.style.height;
           iframe.parentElement.style.height = iframe.parentElement.clientHeight + 'px';
+
+          // Note:  Force layout reflow
+          //        This fixes a flickering bug for embedded content on iPads
+          //        @see https://github.com/h5p/h5p-moodle-plugin/issues/237
+          iframe.getBoundingClientRect();
 
           // Reset iframe height, in case content has shrinked.
           iframe.style.height = '1px';
@@ -1932,7 +1937,13 @@ H5P.libraryFromString = function (library) {
  *   The full path to the library.
  */
 H5P.getLibraryPath = function (library) {
-  return (H5PIntegration.libraryUrl !== undefined ? H5PIntegration.libraryUrl + '/' : H5PIntegration.url + '/libraries/') + library;
+  if (H5PIntegration.urlLibraries !== undefined) {
+    // This is an override for those implementations that has a different libraries URL, e.g. Moodle
+    return H5PIntegration.urlLibraries + '/' + library;
+  }
+  else {
+    return H5PIntegration.url + '/libraries/' + library;
+  }
 };
 
 /**
