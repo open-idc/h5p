@@ -101,4 +101,15 @@ class H5PEditorAJAXController extends ControllerBase {
     exit();
   }
 
+  /**
+   * Callback for filtering.
+   *
+   * @param string $token Security token
+   * @param int $content_id Content id
+   */
+  function filterCallback($token, $content_id) {
+    $editor = H5PEditorUtilities::getInstance();
+    $editor->ajax->action(\H5PEditorEndpoints::FILTER, $token, $_POST['libraryParameters']);
+    exit();
+  }
 }

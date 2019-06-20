@@ -53,3 +53,11 @@ h5peditor.translations:
     _title: 'Get Translations'
   requirements:
      _permission: 'access editor'
+
+h5peditor.filter:
+  path: '/h5peditor/{token}/{content_id}/filter'
+  defaults:
+    _controller: 'Drupal\h5peditor\Controller\H5PEditorAJAXController::filterCallback'
+    _title: 'Filter'
+  requirements:
+    _permission: 'access editor'
