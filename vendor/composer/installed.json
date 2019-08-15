@@ -1,8 +1,8 @@
 [
     {
         "name": "h5p/h5p-core",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
+        "version": "1.23.0",
+        "version_normalized": "1.23.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
@@ -60,8 +60,8 @@
     },
     {
         "name": "h5p/h5p-editor",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
+        "version": "1.23.0",
+        "version_normalized": "1.23.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-editor-php-library.git",

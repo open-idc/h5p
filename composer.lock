@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "b576d27c600fa0f1e8b6dfbdd423b7ec",
+    "content-hash": "ce60a706c4866f6e8a87ebee8824c784",
     "packages": [
         {
             "name": "h5p/h5p-core",
-            "version": "dev-master",
+            "version": "1.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
@@ -65,7 +65,7 @@
         },
         {
             "name": "h5p/h5p-editor",
-            "version": "dev-master",
+            "version": "1.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-editor-php-library.git",
@@ -124,10 +124,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "RC",
-    "stability-flags": {
-        "h5p/h5p-core": 20,
-        "h5p/h5p-editor": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
