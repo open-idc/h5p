@@ -1,23 +1,23 @@
 [
     {
         "name": "h5p/h5p-core",
-        "version": "1.23.0",
-        "version_normalized": "1.23.0.0",
+        "version": "1.23.1",
+        "version_normalized": "1.23.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
-            "reference": "8ceb77e8812af96debe1eeeef3bf4523304ede5f"
+            "reference": "7bc8666f309220a0eb93bca49aaa741bb013b26a"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/8ceb77e8812af96debe1eeeef3bf4523304ede5f",
-            "reference": "8ceb77e8812af96debe1eeeef3bf4523304ede5f",
+            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/7bc8666f309220a0eb93bca49aaa741bb013b26a",
+            "reference": "7bc8666f309220a0eb93bca49aaa741bb013b26a",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-08-15T11:26:32+00:00",
+        "time": "2019-08-15T19:15:55+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
