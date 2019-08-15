@@ -6,18 +6,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
-            "reference": "2c15047e5009e540e1acd35682c848cf0e5b3f2f"
+            "reference": "4a9ea77d470906ce1c114361493e0c94817c29d9"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/2c15047e5009e540e1acd35682c848cf0e5b3f2f",
-            "reference": "2c15047e5009e540e1acd35682c848cf0e5b3f2f",
+            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/4a9ea77d470906ce1c114361493e0c94817c29d9",
+            "reference": "4a9ea77d470906ce1c114361493e0c94817c29d9",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-06-19T08:58:47+00:00",
+        "time": "2019-08-01T14:21:34+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -37,15 +37,15 @@
         "authors": [
             {
                 "name": "Svein-Tore Griff With",
+                "role": "CEO",
                 "email": "with@joubel.com",
-                "homepage": "http://joubel.com",
-                "role": "CEO"
+                "homepage": "http://joubel.com"
             },
             {
                 "name": "Frode Petterson",
+                "role": "Developer",
                 "email": "frode.petterson@joubel.com",
-                "homepage": "http://joubel.com",
-                "role": "Developer"
+                "homepage": "http://joubel.com"
             }
         ],
         "description": "H5P Core functionality in PHP",
@@ -65,18 +65,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-editor-php-library.git",
-            "reference": "8b2e27209475297876113cfca8b690523a0595c1"
+            "reference": "714d8a40f5a288c97292efbd6cc7ec0ce2bc4b72"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/8b2e27209475297876113cfca8b690523a0595c1",
-            "reference": "8b2e27209475297876113cfca8b690523a0595c1",
+            "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/714d8a40f5a288c97292efbd6cc7ec0ce2bc4b72",
+            "reference": "714d8a40f5a288c97292efbd6cc7ec0ce2bc4b72",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2019-06-20T09:32:31+00:00",
+        "time": "2019-08-14T14:13:44+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -95,15 +95,15 @@
         "authors": [
             {
                 "name": "Svein-Tore Griff With",
+                "role": "CEO",
                 "email": "with@joubel.com",
-                "homepage": "http://joubel.com",
-                "role": "CEO"
+                "homepage": "http://joubel.com"
             },
             {
                 "name": "Frode Petterson",
+                "role": "Developer",
                 "email": "frode.petterson@joubel.com",
-                "homepage": "http://joubel.com",
-                "role": "Developer"
+                "homepage": "http://joubel.com"
             }
         ],
         "description": "H5P Editor functionality in PHP",

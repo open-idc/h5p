@@ -1194,14 +1194,14 @@ class H5PDrupal implements \H5PFrameworkInterface {
    * library. This means that the content dependencies will have to be rebuilt,
    * and the parameters refiltered.
    *
-   * @param int $library_id
+   * @param array $library_ids
    */
-  public function clearFilteredParameters($library_id) {
+  public function clearFilteredParameters($library_ids) {
 
     // Grab all H5PContent entities
     $h5p_contents = \Drupal::entityTypeManager()
         ->getStorage('h5p_content')
-        ->loadByProperties(['library_id' => $library_id]);
+        ->loadByProperties(['library_id' => $library_ids]);
 
     // Clear their filtered_parameters
     foreach ($h5p_contents as $h5p_content) {
