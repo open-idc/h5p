@@ -8,7 +8,8 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
 
   H5P.EventDispatcher.call(this);
 
-  var defaultLibraryParameterized = selectedLibrary ? selectedLibrary.replace('.', '-').toLowerCase() : undefined;
+  var defaultLibraryParameterized = selectedLibrary ? selectedLibrary.replace('.', '-').toLowerCase() : 'H5P.InteractiveVideo 1.21';
+  var defaulLibrary = 'Interactive Video';
   this.currentLibrary = selectedLibrary;
 
   var options = '<option value="-">-</option>';
