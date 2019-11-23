@@ -26,7 +26,7 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
       )
     ) {
       options += '<option value="' + libraryName + '"';
-      if (libraryName === selectedLibrary || library.name === defaultLibraryParameterized) {
+      if (libraryName === selectedLibrary || library.name === 'H5P.InteractiveVideo 1.21') {
         options += ' selected="selected"';
       }
       if (library.tutorialUrl !== undefined) {
