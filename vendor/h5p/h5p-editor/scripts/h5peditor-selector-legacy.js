@@ -9,8 +9,9 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
   H5P.EventDispatcher.call(this);
 
   var defaultLibraryParameterized = selectedLibrary ? selectedLibrary.replace('.', '-').toLowerCase() : 'H5P.InteractiveVideo 1.21';
-  var defaulLibrary = 'Interactive Video';
+  var defaulLibrary = 'H5P.InteractiveVideo 1.21';
   this.currentLibrary = selectedLibrary;
+
 
   var options = '<option value="-">-</option>';
   for (var i = 0; i < libraries.length; i++) {
@@ -84,6 +85,21 @@ ns.SelectorLegacy.prototype.getSelectedLibrary = function (next) {
     uberName: that.currentLibrary,
     tutorialUrl: $option.data('tutorial-url'),
     exampleUrl: $option.data('example-url')
+  });
+};
+
+/**
+ * Set default library.
+ *
+ * @returns {string}
+ */
+ns.SelectorLegacy.prototype.setDefaultLibrary = function (next) {
+  var that = this;
+  var $default = this.$selector.find('[value="H5P.InteractiveVideo 1.21"]');
+  next({
+    uberName: that.defaulLibrary,
+    tutorialUrl: $default.data('tutorial-url'),
+    exampleUrl: $default.data('example-url')
   });
 };
 
