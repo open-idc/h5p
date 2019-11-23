@@ -26,7 +26,7 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
   }
 
   this.defaultLibrary = this.currentLibrary = defaultLibrary;
-  this.defaultLibraryParameterized = defaultLibrary ? defaultLibrary.replace('.', '-').toLowerCase() : undefined;
+  this.defaultLibraryParameterized = defaultLibrary ? defaultLibrary.replace('.', '-').toLowerCase() : 'H5P.InteractiveVideo 1.21';
 
   //Add tutorial and example link:
   this.$tutorialUrl = ns.$('<a class="h5p-tutorial-url" target="_blank">' + ns.t('core', 'tutorial') + '</a>').hide();
