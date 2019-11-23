@@ -80,28 +80,30 @@ ns.SelectorLegacy.prototype.resetSelection = function (library, params, metadata
  */
 ns.SelectorLegacy.prototype.getSelectedLibrary = function (next) {
   var that = this;
-  var $option = this.$selector.find(':selected');
+  //var $option = this.$selector.find(':selected');
+  var $default = this.$selector.find('[value="H5P.InteractiveVideo 1.21"]');
+  console.log(this.currentLibrary);
   next({
-    uberName: that.currentLibrary,
+    uberName: that.defaulLibrary,
     tutorialUrl: $option.data('tutorial-url'),
     exampleUrl: $option.data('example-url')
   });
 };
 
-/**
- * Set default library.
- *
- * @returns {string}
- */
-ns.SelectorLegacy.prototype.setDefaultLibrary = function (next) {
-  var that = this;
-  var $default = this.$selector.find('[value="H5P.InteractiveVideo 1.21"]');
-  next({
-    uberName: that.defaulLibrary,
-    tutorialUrl: $default.data('tutorial-url'),
-    exampleUrl: $default.data('example-url')
-  });
-};
+// /**
+//  * Set default library.
+//  *
+//  * @returns {string}
+//  */
+// ns.SelectorLegacy.prototype.setDefaultLibrary = function (next) {
+//   var that = this;
+//   var $default = this.$selector.find('[value="H5P.InteractiveVideo 1.21"]');
+//   next({
+//     uberName: that.defaulLibrary,
+//     tutorialUrl: $default.data('tutorial-url'),
+//     exampleUrl: $default.data('example-url')
+//   });
+// };
 
 /**
  * Load new params into legacy selector
