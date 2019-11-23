@@ -8,9 +8,11 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
 
   H5P.EventDispatcher.call(this);
 
-  var defaultLibraryParameterized = selectedLibrary ? selectedLibrary.replace('.', '-').toLowerCase() : 'H5P.InteractiveVideo 1.21';
+  var defaultLibraryParameterized = selectedLibrary ? selectedLibrary.replace('.', '-').toLowerCase() : undefined;
   var defaulLibrary = 'H5P.InteractiveVideo 1.21';
   this.currentLibrary = selectedLibrary;
+
+
 
 
   var options = '<option value="-">-</option>';
@@ -18,15 +20,15 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
     var library = libraries[i];
     var libraryName = ns.libraryToString(library);
 
+    if (selectedLibrary != libraryName) {
+      selectedLibrary = defaulLibrary;
+    }
+
     // Never deny editing existing content
     // For new content deny old or restricted libs.
-    if (selectedLibrary === libraryName ||
-      ((library.restricted === undefined || !library.restricted) &&
-      library.isOld !== true
-      )
-    ) {
+    if (selectedLibrary === libraryName || ((library.restricted === undefined || !library.restricted) && library.isOld !== true)) {
       options += '<option value="' + libraryName + '"';
-      if (libraryName === selectedLibrary || library.name === 'Interactive Video') {
+      if (libraryName === selectedLibrary || library.name === defaultLibraryParameterized) {
         options += ' selected="selected"';
       }
       if (library.tutorialUrl !== undefined) {
@@ -38,6 +40,9 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
       options += '>' + library.title + (library.isOld===true ? ' (deprecated)' : '') + '</option>';
     }
   }
+  // console.log("lib.name: " + library.name);
+  // console.log("selLib: " + selectedLibrary);
+  // console.log("libName: " + libraryName);
 
   this.$selector = ns.$('' +
     '<select name="h5peditor-library" title="' + ns.t('core', 'selectLibrary') + '"' + '>' +
