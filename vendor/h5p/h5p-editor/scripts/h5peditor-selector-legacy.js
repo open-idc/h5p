@@ -9,11 +9,7 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
   H5P.EventDispatcher.call(this);
 
   var defaultLibraryParameterized = selectedLibrary ? selectedLibrary.replace('.', '-').toLowerCase() : undefined;
-  var defaulLibrary = 'H5P.InteractiveVideo 1.21';
   this.currentLibrary = selectedLibrary;
-
-
-
 
   var options = '<option value="-">-</option>';
   for (var i = 0; i < libraries.length; i++) {
@@ -40,12 +36,9 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
       options += '>' + library.title + (library.isOld===true ? ' (deprecated)' : '') + '</option>';
     }
   }
-  // console.log("lib.name: " + library.name);
-  // console.log("selLib: " + selectedLibrary);
-  // console.log("libName: " + libraryName);
 
   this.$selector = ns.$('' +
-    '<select name="h5peditor-library" title="' + ns.t('core', 'selectLibrary') + '"' + '>' +
+    '<select name="h5peditor-library" style="visibility: hidden;" title="' + ns.t('core', 'selectLibrary') + '"' + '>' +
       options +
     '</select>'
   ).change(function () {
@@ -57,11 +50,12 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
         self.trigger('selected');
         return;
       }
-
       self.currentLibrary = self.$selector.val();
       changeLibraryDialog.show(self.$selector.offset().top);
     }, 0);
   });
+  var defaulLibrary = 'H5P.InteractiveVideo 1.21';
+  this.$selector.val(defaulLibrary).change();
 };
 
 /**
