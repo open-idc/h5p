@@ -51,7 +51,7 @@ ns.SelectorLegacy = function (libraries, selectedLibrary, changeLibraryDialog) {
         return;
       }
       self.currentLibrary = self.$selector.val();
-      changeLibraryDialog.show(self.$selector.offset().top);
+      //changeLibraryDialog.show(self.$selector.offset().top);
     }, 0);
   });
   var defaulLibrary = 'H5P.InteractiveVideo 1.21';
